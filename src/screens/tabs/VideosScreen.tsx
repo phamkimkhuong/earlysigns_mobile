@@ -144,7 +144,6 @@ function TopicSectionRow({
     data,
     isLoading,
     isError,
-    error,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
@@ -154,6 +153,36 @@ function TopicSectionRow({
     () => (data?.pages ? data.pages.flatMap((page) => page.videos) : []),
     [data]
   );
+
+  // 1. Khi API trả về lỗi hoặc timeout: Ẩn hoàn toàn topic đó đi thay vì hiện title mồ côi kèm box lỗi
+  if (isError && videos.length === 0) {
+    if (topicFilter) {
+      return (
+        <View className="py-12 items-center justify-center">
+          <Text className="text-xs text-slate-400 font-medium">
+            {t("videos.catalog.empty")}
+          </Text>
+        </View>
+      );
+    }
+    return null;
+  }
+
+  // 2. Khi tải xong mà chủ đề không có video nào trong danh mục chung: Ẩn luôn hàng này
+  if (!isLoading && videos.length === 0 && !topicFilter) {
+    return null;
+  }
+
+  // 3. Nếu người dùng chọn lọc riêng một chủ đề cụ thể và không có video nào
+  if (!isLoading && videos.length === 0 && topicFilter) {
+    return (
+      <View className="py-12 items-center justify-center">
+        <Text className="text-xs text-slate-400 font-medium">
+          {t("videos.catalog.empty")}
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <View className="gap-2.5 pt-1">
@@ -174,14 +203,6 @@ function TopicSectionRow({
         <View className="flex-row py-1">
           <VideoCardSkeleton horizontal={!topicFilter} />
           <VideoCardSkeleton horizontal={!topicFilter} />
-        </View>
-      ) : null}
-
-      {isError ? (
-        <View className="p-3 bg-rose-50 border border-rose-200 rounded-2xl">
-          <Text className="text-xs text-rose-600">
-            {String((error as any)?.message || error)}
-          </Text>
         </View>
       ) : null}
 

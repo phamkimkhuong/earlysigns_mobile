@@ -60,6 +60,7 @@ export function useTopicVideosInfiniteQuery(
     enabled: Boolean(topic) && (options.enabled ?? true),
     staleTime: 1000 * 60 * 20, // 20 minutes fresh
     gcTime: 1000 * 60 * 60, // 1 hour memory persistence
+    retry: false,
   });
 }
 
