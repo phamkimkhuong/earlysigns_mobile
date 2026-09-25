@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import HomeJourney from "@/components/practice/HomeJourney";
 import IPAChecking from "@/components/practice/IPAChecking";
@@ -7,8 +7,10 @@ import { PhonemesChipsSkeleton } from "@/components/ui/Skeleton";
 import ScreeningResultModal from "@/components/practice/ScreeningResultModal";
 import { accuracyBandColor } from "@/utils/checkResultScoreColor";
 import { usePhonemesViewModel } from "@/hooks/usePhonemesViewModel";
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import type { RootStackParamList } from "@/types/navigation";
 
-export default function PhonemesScreen({ navigation }: { navigation: any }) {
+export default function PhonemesScreen({ navigation, route }: NativeStackScreenProps<RootStackParamList, "Phonemes">) {
   const {
     t,
     dialect,
@@ -38,6 +40,18 @@ export default function PhonemesScreen({ navigation }: { navigation: any }) {
     loadNextLesson,
     requestSentenceWords,
   } = usePhonemesViewModel(navigation);
+
+  const startingFromHome = useRef(false);
+  useEffect(() => {
+    if (!route.params?.startLesson) {
+      startingFromHome.current = false;
+      return;
+    }
+    if (startingFromHome.current) return;
+    startingFromHome.current = true;
+    navigation.setParams({ startLesson: undefined });
+    void startPersonalizedLesson();
+  }, [navigation, route.params?.startLesson, startPersonalizedLesson]);
 
   return (
     <ScrollView className="flex-1 bg-appBg" contentContainerClassName="p-4 gap-2.5 pb-10">

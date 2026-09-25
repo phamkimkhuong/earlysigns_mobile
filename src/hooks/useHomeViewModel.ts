@@ -1,11 +1,9 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/services/Auth";
-import { resolveUserKey, resolveUserTier } from "@/services/usageLimits";
-import { buildLessonSession } from "@/utils/lessons";
+import { getMonthlyQuotaSnapshot, resolveUserKey, resolveUserTier } from "@/services/usageLimits";
 import { useBillingStore } from "@/store/useBillingStore";
-import { lessonApi } from "@/api";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import {
   useHomeSummaryQuery,
@@ -15,38 +13,40 @@ import {
   useBillingUsageQuery,
   billingKeys,
 } from "@/hooks/queries/useBillingQueries";
-import type { Dialect, LessonSession } from "@/types/domain";
+import { useProgressSoundsQuery, progressKeys } from "@/hooks/queries/useProgressQueries";
+import { getHomeClarityPercent } from "@/utils/homeProgress";
+import type { RootStackParamList } from "@/types/navigation";
+
+type FeatureRoute = "Videos" | "Text" | "Phonemes" | "Journey";
 
 export function useHomeViewModel(navigation: any) {
-  const { t, i18n } = useTranslation();
-  const { authToken, authEmail, userDialect } = useAuth();
-  const dialect: Dialect = userDialect || "uk";
+  const { t } = useTranslation();
+  const { authToken, authEmail, userDialect, scoreUnlocked } = useAuth();
+  const dialect = userDialect || "uk";
   const queryClient = useQueryClient();
 
   // TanStack Query: Home summary & Billing usage
-  const { data: homeSummaryData } = useHomeSummaryQuery(dialect, Boolean(authToken));
+  const summaryQuery = useHomeSummaryQuery(dialect, Boolean(authToken));
   const { data: usageData } = useBillingUsageQuery(Boolean(authToken));
+  const { data: sounds = [] } = useProgressSoundsQuery(dialect, Boolean(authToken));
 
   const storeHomeSummary = useBillingStore((s) => s.homeSummary);
   const storeUsage = useBillingStore((s) => s.usage);
 
-  const homeSummary = homeSummaryData || storeHomeSummary;
-  const usageStatus = usageData || storeUsage;
+  // Disabled queries may still contain cached data; never show it to guests.
+  const homeSummary = authToken ? summaryQuery.data || storeHomeSummary : null;
+  const usageStatus = authToken ? usageData || storeUsage : null;
 
   const { refreshing, onRefresh } = usePullToRefresh(
     useCallback(async () => {
+      if (!authToken) return;
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: lessonKeys.all }),
         queryClient.invalidateQueries({ queryKey: billingKeys.all }),
+        queryClient.invalidateQueries({ queryKey: progressKeys.all }),
       ]);
-    }, [queryClient])
+    }, [authToken, queryClient])
   );
-
-  const [lessonSession, setLessonSession] = useState<LessonSession | null>(null);
-  const [lessonSessionKey, setLessonSessionKey] = useState(0);
-  const [lessonLoading, setLessonLoading] = useState(false);
-  const [lessonError, setLessonError] = useState("");
-  const lessonKindRef = useRef<string | null>(null);
 
   const userTier = useMemo(
     () =>
@@ -63,7 +63,7 @@ export function useHomeViewModel(navigation: any) {
   );
 
   const navigateWithGate = useCallback(
-    (targetRoute: string, targetParams?: Record<string, any>) => {
+    <Route extends FeatureRoute>(targetRoute: Route, targetParams?: RootStackParamList[Route]) => {
       if (!authToken) {
         navigation.navigate("Login", {
           next: targetRoute,
@@ -76,43 +76,23 @@ export function useHomeViewModel(navigation: any) {
     [authToken, navigation]
   );
 
-  const startPersonalizedLesson = useCallback(async () => {
-    if (!authToken) {
-      navigation.navigate("Login", { next: "Home" });
-      return;
-    }
-    setLessonLoading(true);
-    setLessonError("");
-    try {
-      const data = await lessonApi.getPersonalizedLesson(dialect, true);
-      const session = buildLessonSession("personalized", data, { dialect }, t, i18n.language);
-      if (!session) {
-        setLessonError(t("lesson.empty"));
-        return;
-      }
-      lessonKindRef.current = session.kind;
-      setLessonSession(session);
-      setLessonSessionKey((k) => k + 1);
-    } catch (e: any) {
-      setLessonError(String(e?.message || e));
-    } finally {
-      setLessonLoading(false);
-    }
-  }, [authToken, dialect, i18n.language, navigation, t]);
-
-  const closeLessonSession = useCallback(async () => {
-    setLessonSession(null);
-    await queryClient.invalidateQueries({ queryKey: lessonKeys.homeSummary(dialect) });
-  }, [dialect, queryClient]);
-
-  const streakDays = Number(homeSummary?.streak_days || 0);
-  const clarityRatio = homeSummary?.total_accuracy != null ? Number(homeSummary.total_accuracy) : null;
-  const clarityPct = clarityRatio != null ? Math.round(clarityRatio * 100) : null;
+  const quota = authToken && usageStatus && userTier === "free"
+    ? getMonthlyQuotaSnapshot({ userKey, userTier, usageStatus })
+    : null;
+  const clarityPct = useMemo(
+    () => authToken && scoreUnlocked
+      ? getHomeClarityPercent(sounds, homeSummary?.total_accuracy)
+      : null,
+    [authToken, scoreUnlocked, sounds, homeSummary?.total_accuracy],
+  );
+  const rawStreak = Number(homeSummary?.streak_days);
+  const streakDays = homeSummary?.streak_days != null && Number.isFinite(rawStreak) && rawStreak >= 0
+    ? Math.floor(rawStreak)
+    : null;
   const journey = homeSummary?.journey || null;
-  const weakestPhonemes =
-    Array.isArray(homeSummary?.weakest_phonemes) && homeSummary.weakest_phonemes.length > 0
-      ? homeSummary.weakest_phonemes
-      : [{ sound: "ə" }, { sound: "n" }, { sound: "ɪ" }, { sound: "t" }, { sound: "r" }];
+  const weakestPhonemes: { sound: string }[] = Array.isArray(homeSummary?.weakest_phonemes)
+    ? homeSummary.weakest_phonemes.filter((item: any) => typeof item?.sound === "string" && item.sound.trim())
+    : [];
 
   return {
     t,
@@ -129,12 +109,9 @@ export function useHomeViewModel(navigation: any) {
     clarityPct,
     journey,
     weakestPhonemes,
-    lessonSession,
-    lessonSessionKey,
-    lessonLoading,
-    lessonError,
-    startPersonalizedLesson,
-    closeLessonSession,
+    quota: quota && !quota.isUnlimited ? quota : null,
+    summaryLoading: Boolean(authToken) && summaryQuery.isLoading && !homeSummary,
+    summaryError: Boolean(authToken) && summaryQuery.isError && !homeSummary,
     navigateWithGate,
   };
 }

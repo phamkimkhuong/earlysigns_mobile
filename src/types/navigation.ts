@@ -7,8 +7,8 @@ export type RootStackParamList = {
   Onboarding: undefined;
   Main: undefined;
   Videos: undefined;
-  Text: undefined;
-  Phonemes: undefined;
+  Text: { entry?: "input" | "ocr" } | undefined;
+  Phonemes: { startLesson?: boolean } | undefined;
   Journey: undefined;
   VideoPractice: { youtubeId: string };
   Terms: undefined;

@@ -20,6 +20,8 @@ import IPAChecking from "@/components/practice/IPAChecking";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import { PassageListSkeleton } from "@/components/ui/Skeleton";
 import { useTextPracticeViewModel } from "@/hooks/useTextPracticeViewModel";
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import type { RootStackParamList } from "@/types/navigation";
 
 function previewText(text: string, max = 90): string {
   const cleaned = String(text || "").replace(/\s+/g, " ").trim();
@@ -27,7 +29,7 @@ function previewText(text: string, max = 90): string {
   return `${cleaned.slice(0, max - 1)}…`;
 }
 
-export default function TextPracticeScreen({ navigation }: { navigation?: any }) {
+export default function TextPracticeScreen({ navigation, route }: NativeStackScreenProps<RootStackParamList, "Text">) {
   const {
     t,
     dialect,
@@ -55,6 +57,27 @@ export default function TextPracticeScreen({ navigation }: { navigation?: any })
     requestSampleAudio,
     closeLessonSession,
   } = useTextPracticeViewModel(navigation);
+
+  const isOcrEntry = route.params?.entry === "ocr";
+  const ocrActions = (
+    <View testID="text-ocr-actions" className="gap-2.5">
+      {isOcrEntry ? <Text className="text-sm text-slate-600">{t("homeDesign.chooseImage")}</Text> : null}
+      <View className="flex-row flex-wrap gap-2.5">
+        <TouchableOpacity accessibilityRole="button" activeOpacity={0.8} disabled={ocrLoading}
+          onPress={() => handleOcr(true)}
+          className="flex-1 min-w-[120px] flex-row items-center justify-center gap-2 bg-sky-50 border border-sky-200 py-3 px-2 rounded-2xl">
+          {ocrLoading ? <ActivityIndicator size="small" color="#0284c7" /> : <Camera size={16} color="#0284c7" />}
+          <Text className="text-xs font-bold text-sky-800 flex-shrink">{t("textPractice.ocr.camera")}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity accessibilityRole="button" activeOpacity={0.8} disabled={ocrLoading}
+          onPress={() => handleOcr(false)}
+          className="flex-1 min-w-[120px] flex-row items-center justify-center gap-2 bg-indigo-50 border border-indigo-200 py-3 px-2 rounded-2xl">
+          {ocrLoading ? <ActivityIndicator size="small" color="#4f46e5" /> : <ImageIcon size={16} color="#4f46e5" />}
+          <Text className="text-xs font-bold text-indigo-800 flex-shrink">{t("textPractice.ocr.gallery")}</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
 
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-[#1e2538]">
@@ -132,7 +155,11 @@ export default function TextPracticeScreen({ navigation }: { navigation?: any })
             </View>
 
             {/* Text Input Canvas */}
+            {isOcrEntry ? ocrActions : null}
             <TextInput
+              testID="text-practice-input"
+              accessibilityLabel={t("homeDesign.inputTitle")}
+              autoFocus={route.params?.entry === "input"}
               className="min-h-[140px] border border-slate-200 rounded-2xl p-4 text-slate-900 bg-slate-50 text-sm leading-relaxed"
               multiline
               style={{ textAlignVertical: "top" }}
@@ -152,39 +179,7 @@ export default function TextPracticeScreen({ navigation }: { navigation?: any })
             ) : null}
 
             {/* OCR Quick Capture Actions */}
-            <View className="flex-row gap-2.5">
-              <TouchableOpacity
-                activeOpacity={0.8}
-                disabled={ocrLoading}
-                onPress={() => handleOcr(true)}
-                className="flex-1 flex-row items-center justify-center gap-2 bg-sky-50 border border-sky-200 py-3 rounded-2xl"
-              >
-                {ocrLoading ? (
-                  <ActivityIndicator size="small" color="#0284c7" />
-                ) : (
-                  <Camera size={16} color="#0284c7" />
-                )}
-                <Text className="text-xs font-bold text-sky-800">
-                  {t("textPractice.ocr.camera")}
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                activeOpacity={0.8}
-                disabled={ocrLoading}
-                onPress={() => handleOcr(false)}
-                className="flex-1 flex-row items-center justify-center gap-2 bg-indigo-50 border border-indigo-200 py-3 rounded-2xl"
-              >
-                {ocrLoading ? (
-                  <ActivityIndicator size="small" color="#4f46e5" />
-                ) : (
-                  <ImageIcon size={16} color="#4f46e5" />
-                )}
-                <Text className="text-xs font-bold text-indigo-800">
-                  {t("textPractice.ocr.gallery")}
-                </Text>
-              </TouchableOpacity>
-            </View>
+            {!isOcrEntry ? ocrActions : null}
 
             {/* Start Practice CTA */}
             <PrimaryButton

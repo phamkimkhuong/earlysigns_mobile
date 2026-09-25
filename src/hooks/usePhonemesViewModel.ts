@@ -11,6 +11,7 @@ import {
   lessonKeys,
 } from "@/hooks/queries/useLessonQueries";
 import { useBillingUsageQuery } from "@/hooks/queries/useBillingQueries";
+import { progressKeys } from "@/hooks/queries/useProgressQueries";
 import type { Dialect, LessonSession } from "@/types/domain";
 
 const DEFAULT_CORE_PHONEMES = [
@@ -133,7 +134,10 @@ export function usePhonemesViewModel(navigation: any) {
 
   const closeLessonSession = useCallback(async () => {
     setLessonSession(null);
-    await queryClient.invalidateQueries({ queryKey: lessonKeys.homeSummary(dialect) });
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: lessonKeys.homeSummary(dialect) }),
+      queryClient.invalidateQueries({ queryKey: progressKeys.sounds(dialect) }),
+    ]);
     if (lessonMode === "screening") refreshScreeningStatus?.();
   }, [dialect, lessonMode, queryClient, refreshScreeningStatus]);
 
@@ -142,7 +146,10 @@ export function usePhonemesViewModel(navigation: any) {
       try {
         const res = await lessonApi.completeJourney();
         if (res?.progress) setJourneyLessonProgress(res.progress);
-        await queryClient.invalidateQueries({ queryKey: lessonKeys.homeSummary(dialect) });
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: lessonKeys.homeSummary(dialect) }),
+          queryClient.invalidateQueries({ queryKey: progressKeys.sounds(dialect) }),
+        ]);
       } catch {
         /* ignore */
       }
