@@ -1,0 +1,1033 @@
+{
+  "seo": {
+    "title": "Kiểm tra phát âm tiếng Anh – Luyện tập với phản hồi IPA",
+    "description": "Luyện nói tiếng Anh với phản hồi phát âm theo từng từ dựa trên IPA. Nhận phản hồi rõ ràng, đáng tin cậy để phát âm tự nhiên hơn."
+  },
+  "app": {
+    "title": "Kiểm tra phát âm tiếng Anh",
+    "subtitle": "Luyện nói tiếng Anh với nhận xét theo từ dựa trên IPA."
+  },
+  "auth": {
+    "checkingSession": "Đang kiểm tra phiên đăng nhập...",
+    "signedInAs": "Đã đăng nhập với",
+    "unknownUser": "Người dùng ẩn danh",
+    "paidPackageActive": "EarlySigns Pro",
+    "freePlan": "Gói miễn phí",
+    "freeChecksLeft": "{{remaining}}/{{limit}} lượt kiểm tra miễn phí còn lại",
+    "sendFeedback": "Gửi phản hồi",
+    "logout": "Đăng xuất"
+  },
+  "login": {
+    "title": "Đăng nhập",
+    "appTitle": "Kiểm tra phát âm tiếng Anh",
+    "subtitle": "Đăng nhập để luyện nói tiếng Anh với nhận xét theo IPA.",
+    "heroTitle": "Luyện phát âm",
+    "heroTitleAccent": "chuẩn như người bản ngữ",
+    "subtitlePart1": "Nhận xét chi tiết theo phiên âm",
+    "ipaBadge": "IPA",
+    "subtitlePart2": "cho từng âm tiết bạn nói.",
+    "note": "Đăng nhập bằng mã xác minh gửi tới email của bạn.",
+    "emailLabel": "Địa chỉ email",
+    "emailPlaceholder": "Nhập email của bạn...",
+    "sendOtp": "Gửi mã OTP",
+    "sendingOtp": "Đang gửi OTP...",
+    "otpLabel": "Mã OTP",
+    "otpPlaceholder": "Mã 6 chữ số",
+    "verifyOtp": "Xác minh OTP",
+    "verifyingOtp": "Đang xác minh...",
+    "otpScreenTitle": "Kiểm tra email của bạn",
+    "otpScreenSentTo": "Chúng tôi đã gửi mã xác minh tới {{email}}.",
+    "resendOtp": "Gửi lại mã",
+    "resendingOtp": "Đang gửi lại...",
+    "otpResent": "Mã mới đã được gửi.",
+    "backToEmail": "Dùng email khác",
+    "googleSignIn": "Tiếp tục với Google",
+    "appleSignIn": "Tiếp tục với Apple",
+    "appleSignInFailed": "Đăng nhập Apple không thành công. Vui lòng thử lại.",
+    "loginToContinue": "Vui lòng đăng nhập để tiếp tục tính năng này.",
+    "orDivider": "Hoặc tiếp tục với email",
+    "googleSignInFailed": "Đăng nhập Google không thành công. Vui lòng thử lại.",
+    "googleMissingClientId": "Chưa cấu hình Google Client ID trên môi trường.",
+    "countdownSeconds": "Gửi lại mã sau {{seconds}}s",
+    "continueAsGuest": "Tiếp tục với tư cách Khách",
+    "guestExploreHint": "Khám phá các bài luyện tập mà không cần đăng nhập",
+    "legalPrefix": "Bằng việc tiếp tục, bạn đồng ý với",
+    "termsOfService": "Điều khoản dịch vụ",
+    "and": "và",
+    "privacyPolicy": "Chính sách bảo mật",
+    "invalidEmail": "Vui lòng nhập địa chỉ email hợp lệ",
+    "editEmail": "Đổi",
+    "enterOtpPrompt": "Nhập mã gồm 6 chữ số đã được gửi tới email của bạn.",
+    "otpCodeInvalid": "Mã xác thực không hợp lệ hoặc đã hết hạn."
+  },
+  "onboarding": {
+    "brandName": "EarlySigns",
+    "welcomeTitle": "Luyện phát âm chuẩn xác",
+    "welcomeSubtitle": "Phản hồi phát âm từng âm tiết theo chuẩn phiên âm quốc tế IPA trong thời gian thực.",
+    "selectLanguage": "Ngôn ngữ hiển thị",
+    "languageSelectionTitle": "Chọn ngôn ngữ",
+    "languageSelectionSubtitle": "Bạn có thể thay đổi sau trong phần Cài đặt",
+    "continue": "Tiếp tục",
+    "slide1Title": "Luyện với video",
+    "slide1Desc": "Học phát âm qua các video thực tế, hội thoại đời sống.",
+    "slide2Title": "Luyện với văn bản tự do",
+    "slide2Desc": "Nhập, dán hoặc quét văn bản bất kỳ để luyện phát âm.",
+    "slide3Title": "Theo dõi tiến bộ",
+    "slide3Desc": "Nhận phản hồi chi tiết và bài học cá nhân hóa.",
+    "getStarted": "Bắt đầu",
+    "alreadyHaveAccount": "Đã có tài khoản? Đăng nhập",
+    "skip": "Bỏ qua",
+    "next": "Tiếp theo"
+  },
+  "input": {
+    "label": "Nhập văn bản",
+    "placeholder": "Dán hoặc gõ văn bản tiếng Anh vào đây...",
+    "ipaAccent": "Giọng IPA:",
+    "generateSentences": "Tạo câu luyện tập"
+  },
+  "history": {
+    "title": "Lịch sử đoạn văn",
+    "empty": "Chưa có đoạn văn đã lưu.",
+    "loadingMore": "Đang tải thêm...",
+    "loginToStore": "Đăng nhập để lưu lịch sử đoạn văn."
+  },
+  "sentence": {
+    "current": "{{current}} / {{total}}",
+    "previous": "Trước",
+    "next": "Sau",
+    "nextLesson": "Bài tiếp theo",
+    "nextLessonLoading": "Đang tải bài tiếp theo...",
+    "nextLessonError": "Không tải được bài tiếp theo.",
+    "practicePhonemeError": "Không mở được bài luyện cho âm này.",
+    "startRecording": "Bắt đầu ghi âm",
+    "stopRecording": "Dừng ghi âm",
+    "checkPronunciation": "Kiểm tra phát âm",
+    "listenToRecording": "Nghe bản ghi âm",
+    "listenToSample": "Nghe phát âm mẫu",
+    "sampleUnavailable": "Chưa có audio mẫu cho câu này. Vui lòng thử lại sau.",
+    "checking": "Đang kiểm tra...",
+    "aiProgress": {
+      "title": "AI đang phân tích phát âm",
+      "step1": "Nhận diện giọng nói",
+      "step2": "Phân tích ngữ âm AI",
+      "step3": "Chấm điểm phát âm"
+    },
+    "tryAgainLowScore": "Hãy thử lại",
+    "tryAgainCheckFailed": "Vui lòng thử lại",
+    "recordingLimitNote": "Ghi âm đã tự dừng sau 5 phút.",
+    "serverError": {
+      "asrUnavailable": "Hệ thống chấm phát âm đang kết nối lại. Vui lòng chờ vài giây rồi nhấn ghi âm và thử lại.",
+      "checkFailed": "Kiểm tra thất bại. Hãy ghi âm lại."
+    },
+    "micError": {
+      "denied": {
+        "title": "Quyền truy cập micro bị từ chối",
+        "body": "Trình duyệt đã chặn quyền truy cập micro. Hãy cấp quyền và thử lại.",
+        "hint": "Nhấp vào biểu tượng khóa hoặc micro trên thanh địa chỉ, chọn \"Cho phép\" cho Micro, rồi tải lại trang."
+      },
+      "notFound": {
+        "title": "Không tìm thấy micro",
+        "body": "Không phát hiện được micro nào trên thiết bị. Hãy kết nối micro và thử lại.",
+        "hint": "Đảm bảo micro đã được cắm vào, không bị tắt tiếng và hệ điều hành đã nhận diện được."
+      },
+      "inUse": {
+        "title": "Micro đang bận",
+        "body": "Micro có thể đang được ứng dụng khác sử dụng. Hãy đóng các ứng dụng đó và thử lại.",
+        "hint": "Hãy thử đóng các ứng dụng gọi video, phần mềm ghi âm hoặc các tab trình duyệt khác đang dùng micro."
+      },
+      "generic": {
+        "title": "Không thể truy cập micro",
+        "body": "Đã xảy ra lỗi khi cố gắng truy cập micro của bạn."
+      },
+      "tryAgain": "Thử lại"
+    }
+  },
+  "result": {
+    "pronunciationScore": "Điểm phát âm",
+    "lessonProgress": {
+      "improved": "Bạn đã cải thiện điểm phát âm",
+      "decreased": "Điểm phát âm của bạn đã giảm"
+    },
+    "howToRead": "Cách đọc kết quả",
+    "correctSound": "Xanh = phát âm đúng",
+    "missedSound": "Đỏ = thiếu âm",
+    "extraSound": "Xanh dương +x = thừa âm",
+    "saidInstead": "Cam a→b = nói b thay vì a",
+    "countsLegend": "C/D/I/S = Số Đúng/Thiếu/Thừa/Thay thế",
+    "phoneDetail": {
+      "title": "Chi tiết phát âm",
+      "titleWithWord": "Chi tiết phát âm: {{word}}",
+      "expectedIpa": "IPA đúng:",
+      "noDetails": "Chưa có chi tiết theo âm cho từ này.",
+      "openAria": "Mở chi tiết phát âm cho {{word}}",
+      "added": "Bạn đã thêm âm “{{phone}}”.",
+      "missed": "Bạn đã thiếu âm “{{phone}}”.",
+      "substituted": "Bạn nói “{{said}}” nhưng đúng phải là “{{expected}}”.",
+      "correct": "Đúng: “{{phone}}”."
+    },
+    "soundAnalysis": {
+      "title": "Phân tích chi tiết từng âm",
+      "empty": "Chưa có dữ liệu phân tích từng âm.",
+      "soundColumn": "Âm",
+      "analysisColumn": "Phân tích",
+      "nonePronounced": "(không phát âm)",
+      "correct": "Bạn đã phát âm đúng âm này.",
+      "missed": "Bạn đã thiếu âm này.",
+      "replaced": "Bạn đã nhầm âm này với /{{pronounced}}/.",
+      "tipLabel": "Mẹo:",
+      "viewDetails": "Xem phân tích chi tiết",
+      "hideDetails": "Ẩn chi tiết",
+      "videoLabel": "Xem video hướng dẫn",
+      "learnPhoneme": "Học âm /{{phoneme}}/",
+      "learnLoading": "Đang tải bài...",
+      "marker": {
+        "stress": {
+          "explanation": "Lỗi dấu trọng âm: bạn chưa đặt trọng âm đúng vị trí.",
+          "tip": "Trong IPA, /ˈ/ là dấu trọng âm chính và được đọc là: nhấn vào âm tiết ngay sau ký hiệu này. Hãy phát âm âm tiết đó rõ hơn, dài hơn và to hơn nhé."
+        },
+        "separator": {
+          "explanation": "Lỗi dấu tách âm tiết: ranh giới âm tiết chưa rõ.",
+          "tip": "Chia từ thành từng âm tiết và đọc rõ từng phần trước khi nối lại mượt mà."
+        }
+      }
+    }
+  },
+  "feedback": {
+    "title": "Gửi phản hồi",
+    "description": "Mô tả lỗi hoặc gợi ý. Ngữ cảnh luyện tập hiện tại (văn bản, câu, điểm, kết quả) sẽ được gửi kèm để chúng tôi kiểm tra.",
+    "messageLabel": "Nội dung phản hồi",
+    "messagePlaceholder": "Ví dụ: Điểm có vẻ không đúng với câu này...",
+    "includeContext": "Bao gồm ngữ cảnh luyện tập (đoạn văn, kết quả, điểm)",
+    "submit": "Gửi phản hồi",
+    "sending": "Đang gửi…",
+    "cancel": "Hủy",
+    "success": "Cảm ơn bạn. Phản hồi đã được lưu.",
+    "close": "Đóng"
+  },
+  "loginGate": {
+    "title": "Đăng nhập để tiếp tục",
+    "message": "Tạo tài khoản miễn phí để luyện từng âm và theo dõi tiến độ của bạn.",
+    "loginCta": "Đăng nhập",
+    "close": "Đóng"
+  },
+  "usageLimit": {
+    "title": "Đã đạt giới hạn hàng ngày",
+    "anonymousMessage": "Bạn đã hết lượt miễn phí hôm nay. Đăng nhập để nhận giới hạn cao gấp 4 lần.",
+    "freeMessage": "Bạn đã hết lượt miễn phí hôm nay. Hãy quay lại vào ngày mai hoặc nâng cấp lên gói Pro để dùng không giới hạn.",
+    "trialMessage": "Bạn đang được dùng không giới hạn trong thời gian dùng thử 7 ngày miễn phí.",
+    "loginCta": "Đăng nhập",
+    "upgradeCta": "Nâng cấp lên Pro",
+    "close": "Đóng"
+  },
+  "package": {
+    "planName": "EarlySigns Pro",
+    "choosePackage": "Nâng cấp lên Pro để dùng không giới hạn.",
+    "paymentUnavailable": "Thanh toán hiện không khả dụng.",
+    "months": "{{count}} tháng",
+    "redirecting": "Đang chuyển hướng...",
+    "buyWithPayOS": "Mua EarlySigns Pro",
+    "buyTitle": "Mua EarlySigns Pro",
+    "selectPackage": "Chọn gói",
+    "selected": "Đã chọn",
+    "close": "Đóng"
+  },
+  "checkout": {
+    "title": "Thanh Toán Đơn Hàng",
+    "legalNote": "Đây là các thông tin bắt buộc (Thông tin người mua hàng) theo Nghị định 70/2025/NĐ-CP và Thông tư 32/2025/TT-BTC về hóa đơn điện tử",
+    "billingTitle": "Thông tin thanh toán",
+    "additionalTitle": "Thông tin bổ sung",
+    "fields": {
+      "lastName": "Họ (Bắt buộc có tên đệm, ví dụ: Nguyễn Thị)",
+      "firstName": "Tên",
+      "addressDetail": "Địa chỉ chi tiết",
+      "street": "Tên đường / phố",
+      "ward": "Phường / xã",
+      "city": "Thị trấn / thành phố",
+      "phone": "Số điện thoại",
+      "email": "Địa chỉ email",
+      "taxCode": "Căn cước công dân/ mã số thuế cá nhân (tùy chọn)",
+      "notes": "Ghi chú đơn hàng (tùy chọn)",
+      "vatCompanyName": "Tên Doanh nghiệp/tổ chức",
+      "vatTaxCode": "Mã số thuế",
+      "vatCompanyAddress": "Địa chỉ theo ĐKKD",
+      "vatInvoiceEmail": "Email nhận hóa đơn",
+      "vatInvoicePhone": "Số điện thoại"
+    },
+    "vatInvoiceTitle": "Thông tin xuất hóa đơn:",
+    "wantVatInvoice": "Anh/Chị có muốn xuất hóa đơn giá trị gia tăng về cho Doanh nghiệp/tổ chức này không?",
+    "agreeTerms": "Tôi đồng ý với các điều kiện và chính sách của website",
+    "agreeTermsWithLinks": "Tôi đồng ý với <termsLink>Điều khoản sử dụng</termsLink> và <privacyLink>Chính sách bảo mật</privacyLink> của website",
+    "saveProfile": "Tôi muốn lưu thông tin cho lần sau thanh toán.",
+    "confirm": "Xác nhận thanh toán",
+    "submitting": "Đang chuyển hướng...",
+    "chooseFirst": "Vui lòng chọn một gói dịch vụ.",
+    "mustAgree": "Bạn cần đồng ý với điều khoản để tiếp tục.",
+    "selectedPackage": "Gói đã chọn",
+    "totalAmount": "Tổng thanh toán",
+    "optional": "tùy chọn",
+    "validation": {
+      "required": "{{field}} là bắt buộc.",
+      "minLength": "{{field}} phải có ít nhất {{min}} ký tự.",
+      "maxLength": "{{field}} không được vượt quá {{max}} ký tự.",
+      "invalidEmail": "Vui lòng nhập email hợp lệ cho {{field}}, có tên miền sau @ (ví dụ: ten@example.com).",
+      "invalidPhone": "{{field}} chỉ được gồm chữ số, khoảng trắng, dấu ngoặc (), và có thể có dấu + ở đầu.",
+      "generic422": "Một số thông tin không hợp lệ. Vui lòng kiểm tra và thử lại.",
+      "serverPrefix": "Vui lòng sửa các mục sau:",
+      "genericField": "Không thể xác thực {{field}}."
+    }
+  },
+  "paymentResult": {
+    "verifyingTitle": "Đang xác nhận thanh toán…",
+    "verifyingMessage": "Vui lòng chờ trong giây lát để chúng tôi kích hoạt gói của bạn.",
+    "successTitle": "Thanh toán thành công",
+    "successMessage": "Gói EarlySigns Pro của bạn đã được kích hoạt.",
+    "successMessageWithExpiry": "Gói EarlySigns Pro của bạn đã được kích hoạt đến ngày {{date}}.",
+    "pendingTitle": "Đã nhận thanh toán, đang chờ xác nhận",
+    "pendingMessage": "Chúng tôi chưa nhận được xác nhận cuối cùng. Bạn có thể thử lại sau ít phút, hoặc kiểm tra trong trang cá nhân — gói sẽ tự động kích hoạt ngay khi cổng thanh toán xác nhận.",
+    "cancelledTitle": "Đã hủy thanh toán",
+    "cancelledMessage": "Thanh toán của bạn đã bị hủy. Không có khoản phí nào được thu.",
+    "errorTitle": "Không thể xác nhận thanh toán",
+    "errorMessage": "Đã xảy ra lỗi khi xác nhận thanh toán. Vui lòng thử lại.",
+    "notLoggedIn": "Vui lòng đăng nhập lại để xác nhận thanh toán.",
+    "missingOrder": "Không tìm thấy mã đơn hàng để xác nhận.",
+    "orderCode": "Mã đơn hàng",
+    "goToProfile": "Đến trang cá nhân",
+    "backToHome": "Về trang chủ",
+    "retryVerify": "Kiểm tra lại",
+    "tryAgain": "Thử thanh toán lại"
+  },
+  "common": {
+    "loading": "Đang tải...",
+    "close": "Đóng",
+    "open": "Mở",
+    "unknownUser": "Người dùng ẩn danh"
+  },
+  "footer": {
+    "termsOfUse": "Điều khoản sử dụng",
+    "privacyPolicy": "Chính sách bảo mật",
+    "contactInfo": "Thông tin liên hệ",
+    "zaloContact": "Liên hệ Zalo",
+    "companyName": "Tên công ty",
+    "companyLegalName": "CÔNG TY TNHH EARLYSIGNS VIỆT NAM",
+    "headquarters": "Trụ sở chính",
+    "headquartersAddress": "Tầng 4, Tòa nhà Anh Minh, số 63 Hoàng Cầu, Phường Ô Chợ Dừa, Thành phố Hà Nội, Việt Nam"
+  },
+  "legal": {
+    "termsTitle": "Điều khoản sử dụng",
+    "privacyTitle": "Chính sách bảo mật",
+    "lastUpdated": "Cập nhật lần cuối: Tháng 3 năm 2025"
+  },
+  "language": {
+    "label": "Ngôn ngữ",
+    "en": "English",
+    "vi": "Tiếng Việt"
+  },
+  "nav": {
+    "aria": "Điều hướng chính",
+    "menu": "Mục",
+    "closeMenu": "Đóng menu",
+    "home": "Trang chủ",
+    "profile": "Trang cá nhân",
+    "videos": "Luyện Video",
+    "text": "Luyện Văn bản",
+    "phonemes": "Luyện Ngữ âm",
+    "intro": "Giới thiệu"
+  },
+  "upgradePro": {
+    "title": "Nâng cấp Pro",
+    "genericMessage": "Tính năng này dành cho EarlySigns Pro.",
+    "sampleAudioMessage": "Nghe mẫu phát âm chuẩn với EarlySigns Pro. Nâng cấp để mở khóa audio cho văn bản luyện tập của bạn.",
+    "ocrMessage": "Trích văn bản tiếng Anh từ ảnh với EarlySigns Pro.",
+    "cta": "Nâng cấp Pro",
+    "close": "Đóng"
+  },
+  "textPractice": {
+    "title": "Luyện văn bản của bạn",
+    "subtitle": "Dán câu hoặc chụp ảnh, chúng tôi sẽ tách thành các câu luyện tập.",
+    "screenTitle": "Văn Bản Tự Do & OCR",
+    "practiceContent": "NỘI DUNG LUYỆN TẬP",
+    "saveToCollection": "Lưu bài đọc vào bộ sưu tập",
+    "savedPassagesCount": "Bài đọc đã lưu ({{count}})",
+    "untitledPassage": "Bài đọc không tên",
+    "ocrExhausted": "Bạn đã dùng hết hạn mức chuyển ảnh OCR trong tháng. Vui lòng nâng cấp Pro để quét không giới hạn.",
+    "inputHeading": "Văn bản của bạn",
+    "label": "Văn bản luyện tập",
+    "placeholder": "Gõ hoặc dán văn bản tiếng Anh tại đây. Dùng . ? ! hoặc xuống dòng để tách câu.",
+    "start": "Bắt đầu luyện",
+    "preparing": "Đang chuẩn bị...",
+    "practiceTitle": "Văn bản luyện tập của bạn",
+    "errorEmpty": "Vui lòng nhập ít nhất một câu.",
+    "errorPrepare": "Không thể chuẩn bị văn bản. Vui lòng thử lại.",
+    "errorTitle": "Vui lòng nhập tiêu đề để lưu văn bản.",
+    "audio": {
+      "error": "Không thể tải audio mẫu. Vui lòng thử lại."
+    },
+    "ipa": {
+      "error": "Không thể tải phiên âm IPA. Vui lòng thử lại."
+    },
+    "save": "Lưu",
+    "saving": "Đang lưu...",
+    "saveTitlePlaceholder": "Tiêu đề cho văn bản này",
+    "dialect": "Giọng",
+    "ocr": {
+      "title": "Quét ảnh OCR",
+      "camera": "Chụp ảnh",
+      "gallery": "Chọn ảnh",
+      "working": "Đang đọc ảnh...",
+      "error": "Không đọc được văn bản từ ảnh này.",
+      "empty": "Không tìm thấy văn bản tiếng Anh trong ảnh.",
+      "cameraTitle": "Chụp ảnh",
+      "capture": "Chụp",
+      "cancel": "Hủy",
+      "cameraError": "Không thể truy cập webcam. Hãy kiểm tra quyền trình duyệt và thử lại.",
+      "cameraUnsupported": "Trình duyệt này không hỗ trợ chụp bằng webcam.",
+      "cameraNotReady": "Webcam chưa sẵn sàng.",
+      "captureError": "Không thể chụp ảnh."
+    },
+    "saved": {
+      "heading": "Văn bản đã lưu",
+      "loading": "Đang tải văn bản đã lưu...",
+      "empty": "Chưa có văn bản đã lưu. Thêm tiêu đề và lưu văn bản luyện tập của bạn.",
+      "errorLoad": "Không tải được danh sách đã lưu.",
+      "errorSave": "Không lưu được văn bản này."
+    }
+  },
+  "home": {
+    "brand": "EarlySigns",
+    "logIn": "Đăng nhập",
+    "yourProgress": "Tiến độ của bạn",
+    "profile": "Hồ sơ",
+    "videos": "YouTube",
+    "upgrade": "NÂNG CẤP",
+    "aria": {
+      "home": "Trang chủ"
+    },
+    "hero": {
+      "title": "Làm chủ phát âm tiếng Anh IPA 🎙️",
+      "subtitle": {
+        "checkFree": "Kiểm tra phát âm của bạn MIỄN PHÍ.",
+        "noCard": "Không cần thẻ tín dụng."
+      }
+    },
+    "sample": {
+      "label": "Văn bản mẫu",
+      "placeholder": "Nhập câu của riêng bạn...",
+      "clear": "Xóa",
+      "addYourOwn": "Nhập văn bản của bạn"
+    },
+    "mic": {
+      "tapToSpeak": "Nhấn để nói",
+      "listening": "Đang nghe..."
+    },
+    "error": {
+      "noSentence": "Vui lòng nhập một câu để kiểm tra."
+    },
+    "sampleSentence": "Never look at the lonely moon.",
+    "usageBanner": {
+      "aria": "Lượt dùng miễn phí và nâng cấp",
+      "message": "Bạn đã dùng {{used}}/{{limit}} lượt kiểm tra miễn phí. Nâng cấp lên EarlySigns Pro để có lượt kiểm tra phát âm không giới hạn mỗi ngày và trải nghiệm luyện tập đầy đủ.",
+      "messagePending": "Nâng cấp lên EarlySigns Pro để có lượt kiểm tra phát âm không giới hạn mỗi ngày và trải nghiệm luyện tập đầy đủ.",
+      "cta": "Nâng cấp",
+      "trialMessage": "Bạn đang dùng thử 7 ngày miễn phí — không giới hạn lượt kiểm tra đến {{date}}. Nâng cấp Pro để tiếp tục dùng không giới hạn.",
+      "trialCta": "Nâng cấp lên Pro"
+    },
+    "referralBanner": {
+      "aria": "Thông báo chương trình giới thiệu",
+      "message": "Mời bạn bè — cả hai đều nhận 7 ngày Pro! Tìm hiểu chương trình giới thiệu.",
+      "learnMore": "Tìm hiểu thêm",
+      "close": "Đóng"
+    },
+    "stats": {
+      "scoreSectionAria": "Điểm phát âm",
+      "clarity": "{{percent}}% rõ ràng",
+      "clarityAria": "Mở trang tiến độ (độ rõ hiện tại {{percent}}%)"
+    },
+    "streak": {
+      "active": "{{count}} ngày liên tiếp",
+      "zero": "Hãy bắt đầu chuỗi ngày của bạn hôm nay",
+      "shortLabel": "Chuỗi"
+    },
+    "journey": {
+      "title": "Bản đồ",
+      "aria": "Hành trình học tập của bạn",
+      "loading": "Đang tải hành trình...",
+      "module": "Module {{n}}",
+      "milestone": "Cột mốc {{n}}",
+      "milestoneNames": {
+        "1": "Tìm điểm xuất phát",
+        "2": "Xây nền tảng âm cốt lõi",
+        "3": "Nói trôi chảy, liền mạch",
+        "4": "Luyện các cặp âm khó",
+        "5": "Nói tự tin",
+        "fallback": "Tiếp tục luyện tập ({{n}})"
+      },
+      "lessonOf": "Bài {{current}} / {{total}}",
+      "moduleOf": "Module {{current}} / {{total}}",
+      "milestonesCompleted": "{{count}} cột mốc hoàn thành",
+      "startLesson": "Bắt đầu bài học",
+      "done": "Hoàn thành",
+      "milestoneComplete": "Hoàn thành",
+      "milestoneCurrent": "Đang thực hiện",
+      "heroStreakActive": "Duy trì chuỗi {{streak}} ngày — Module {{module}}, Bài {{lesson}}",
+      "heroStreakZero": "Hãy bắt đầu chuỗi ngày đầu tiên của bạn",
+      "adaptive": "Lộ trình của bạn cập nhật sau mỗi bài học hoàn thành.",
+      "lessonComplete": "Bài học hoàn thành",
+      "viewAll": "Xem toàn bộ hành trình"
+    },
+    "mission": {
+      "label": "Nhiệm vụ hôm nay",
+      "improve": "Cải thiện {{phonemes}}",
+      "noFocus": "Hãy luyện tập tiếp để chúng tôi tìm âm cần ưu tiên cho bạn.",
+      "loading": "Đang tạo bài học...",
+      "start": "Bắt đầu bài học 3 phút",
+      "starting": "Đang mở...",
+      "errorLoad": "Không tải được nhiệm vụ hôm nay.",
+      "errorStart": "Không mở được bài học."
+    },
+    "weakestPhonemes": "Âm cần cải thiện nhất:",
+    "weakest": {
+      "title": "Bài học ngữ âm được đề xuất cho bạn",
+      "subtitle": "Nhấn vào thẻ để bắt đầu một bài học tập trung.",
+      "empty": "Chưa có bài học. Hãy luyện một vài câu để mở khóa bài học ngữ âm ở đây.",
+      "loadMore": "Thêm bài học",
+      "cardLabel": "Học ngữ âm",
+      "loading": "Đang tải..."
+    },
+    "freeInput": {
+      "title": "Luyện văn bản của bạn",
+      "subtitle": "Dán vài câu. Chúng tôi sẽ tách thành các câu luyện tập.",
+      "label": "Văn bản tự nhập",
+      "placeholder": "Gõ hoặc dán văn bản tiếng Anh tại đây. Dùng . ? ! hoặc xuống dòng để tách câu.",
+      "start": "Bắt đầu luyện",
+      "preparing": "Đang chuẩn bị...",
+      "practiceTitle": "Văn bản luyện tập của bạn",
+      "errorEmpty": "Vui lòng nhập ít nhất một câu.",
+      "errorPrepare": "Không thể chuẩn bị văn bản. Vui lòng thử lại."
+    }
+  },
+  "landing": {
+    "hook": {
+      "title": "Nói tiếng Anh rõ ràng chỉ với 3 phút mỗi ngày",
+      "subtitle": "Sửa phát âm của bạn với phản hồi IPA bằng AI",
+      "cta": "Bắt đầu"
+    },
+    "expectation": {
+      "title": "Cách hoạt động",
+      "step1Icon": "1",
+      "step1": "Bạn nói",
+      "step2Icon": "2",
+      "step2": "Chúng tôi phân tích phát âm của bạn",
+      "step3Icon": "3",
+      "step3": "Bạn sửa lỗi ngay lập tức",
+      "cta": "Thử ngay"
+    },
+    "demo": {
+      "title": "Thử ngay",
+      "sentence": "Food is good",
+      "cta": "Nhấn để nói",
+      "preparing": "Đang chuẩn bị...",
+      "errorPrepare": "Không thể chuẩn bị câu mẫu. Vui lòng thử lại."
+    },
+    "videos": {
+      "title": "Luyện với video YouTube thật",
+      "subtitle": "Chọn clip, nhắc lại từng câu và nhận phản hồi IPA ngay.",
+      "cta": "Xem danh sách video"
+    },
+    "personalization": {
+      "title": "Chúng tôi sẽ cá nhân hoá bài học hằng ngày của bạn",
+      "bullet1Icon": "1",
+      "bullet1": "Tập trung vào những âm bạn còn yếu",
+      "bullet2Icon": "2",
+      "bullet2": "Chỉ 3–5 phút mỗi ngày",
+      "cta": "Tiếp tục"
+    },
+    "accountGate": {
+      "title": "Lưu tiến độ và tiến bộ mỗi ngày",
+      "bullet1Icon": "1",
+      "bullet1": "Theo dõi tiến bộ của bạn",
+      "bullet2Icon": "2",
+      "bullet2": "Nhận bài học cá nhân hoá",
+      "cta": "Đăng nhập"
+    },
+    "usageBanner": {
+      "text": "Bạn đã dùng {{used}}/{{limit}} lượt kiểm tra miễn phí. Đăng nhập để nhận thêm {{multiplier}} lần lượt miễn phí.",
+      "cta": "Đăng nhập"
+    }
+  },
+  "profile": {
+    "tabs": {
+      "progress": "Tiến độ",
+      "account": "Cài đặt tài khoản",
+      "logout": "Đăng xuất"
+    },
+    "progressTitle": "Biểu đồ tiến độ phát âm 7 ngày",
+    "sidebarAria": "Mục hồ sơ",
+    "openMenu": "Mở menu",
+    "accountTitle": "Tài khoản",
+    "signedInAs": "Đã đăng nhập với",
+    "plan": "Gói",
+    "subscriptionExpires": "Hết hạn vào",
+    "upgradeCta": "Nâng cấp lên Pro",
+    "trialCta": "Nâng cấp lên Pro (đang dùng thử)",
+    "accentTitle": "Giọng",
+    "accentDescription": "Chọn giọng tiếng Anh dùng cho các câu luyện tập và bài học của bạn.",
+    "accentUk": "UK",
+    "accentUs": "US",
+    "accentSaving": "Đang lưu...",
+    "paymentHistoryTitle": "Lịch sử thanh toán",
+    "paymentHistoryDescription": "Các giao dịch đã thanh toán thành công của bạn.",
+    "paymentHistoryEmpty": "Bạn chưa có giao dịch thanh toán thành công nào.",
+    "paymentOrderCode": "Mã đơn hàng",
+    "paymentStatusPaid": "Đã thanh toán",
+    "referralTitle": "Chương trình giới thiệu",
+    "referralDescription": "Mời bạn bè — cả hai đều nhận 7 ngày EarlySigns Pro.",
+    "referralLearnMore": "Cách tham gia",
+    "referralYourCode": "Mã giới thiệu của bạn",
+    "referralGenerate": "Tạo mã giới thiệu",
+    "referralGenerating": "Đang tạo...",
+    "referralCopy": "Sao chép mã",
+    "referralCopied": "Đã sao chép!",
+    "referralRedeemTitle": "Bạn có mã của bạn bè?",
+    "referralRedeemHint": "Nhập mã 6 ký tự trong vòng 24 giờ sau khi đăng ký. Mỗi tài khoản chỉ nhập một lần.",
+    "referralRedeemPlaceholder": "Nhập mã",
+    "referralRedeem": "Áp dụng mã",
+    "referralRedeeming": "Đang áp dụng...",
+    "referralRedeemSuccess": "Thành công! Bạn và người giới thiệu đều nhận 7 ngày Pro.",
+    "referralAlreadyRedeemed": "Bạn đã nhập mã giới thiệu: {{code}}",
+    "referralWindowExpired": "Mã giới thiệu chỉ có thể nhập trong vòng 24 giờ sau khi tạo tài khoản.",
+    "referralTimeLeft": "Thời gian còn lại để nhập mã: {{hours}}g {{minutes}}ph"
+  },
+  "referral": {
+    "pageTitle": "Chương trình giới thiệu",
+    "intro": "Giới thiệu EarlySigns cho bạn bè. Khi người dùng mới nhập mã của bạn trong Cài đặt tài khoản, cả hai đều nhận 7 ngày EarlySigns Pro.",
+    "stepCreateTitle": "Tạo mã của bạn",
+    "stepCreateBody": "Mở Hồ sơ → Cài đặt tài khoản → Chương trình giới thiệu và nhấn Tạo mã giới thiệu. Mã 6 ký tự duy nhất của bạn sẽ hiển thị ngay.",
+    "stepRedeemTitle": "Nhập mã của bạn bè",
+    "stepRedeemBody": "Nếu bạn đăng ký trong vòng 24 giờ qua, vào cùng mục Chương trình giới thiệu, nhập mã của bạn bè và nhấn Áp dụng mã. Mỗi tài khoản chỉ nhập một lần.",
+    "rulesTitle": "Quy định",
+    "ruleReward": "Cả người giới thiệu và người mới đều nhận 7 ngày Pro.",
+    "ruleWindow": "Người dùng mới chỉ có thể nhập mã trong 24 giờ đầu sau khi tạo tài khoản.",
+    "ruleOnce": "Mỗi người chỉ tạo một mã giới thiệu và chỉ nhập một mã giới thiệu.",
+    "ruleTrial": "Số ngày Pro được cộng sau thời gian dùng thử miễn phí còn lại (nếu có).",
+    "ctaCreate": "Tạo mã giới thiệu",
+    "ctaRedeem": "Nhập mã giới thiệu",
+    "ctaLogin": "Đăng nhập để tham gia",
+    "backHome": "Về trang chủ"
+  },
+  "scoreLocked": {
+    "title": "Điểm phát âm chưa mở khóa",
+    "body": "Hoàn thành bài kiểm tra sàng lọc hoặc luyện ít nhất 5 lần với 80% âm để mở khóa điểm của bạn.",
+    "progress": "{{checked}} / {{required}} âm đã sẵn sàng",
+    "cta": "Làm bài kiểm tra sàng lọc"
+  },
+  "progress": {
+    "title": "Tiến độ của bạn",
+    "description": "Độ chính xác phát âm trung bình cho từng âm IPA dựa trên các lần kiểm tra của bạn.",
+    "empty": "Chưa có dữ liệu tiến bộ. Hãy bắt đầu luyện nói để xây dựng hồ sơ của bạn.",
+    "totalAccuracy": "Điểm phát âm của bạn",
+    "totalAccuracySub": "",
+    "chartTitle": "Một tuần qua của bạn",
+    "chartDescription": "Điểm phát âm của bạn đã thay đổi như thế nào trong tuần qua.",
+    "accent": "Giọng",
+    "soundsTitle": "Các âm",
+    "soundsDescription": "Sắp xếp theo mức độ phổ biến của từng âm trong tiếng Anh (phổ biến nhất trước).",
+    "sampleUnit": "mẫu",
+    "phonemeChartTitle": "Tiến bộ tuần này",
+    "phonemeNoData": "Chưa có dữ liệu lịch sử cho âm này.",
+    "learn": "Học",
+    "learnLoading": "Đang tải...",
+    "columns": {
+      "sound": "Âm",
+      "accuracy": "Độ chính xác",
+      "samples": "Số mẫu"
+    }
+  },
+  "lesson": {
+    "personalized": {
+      "title": "Bài học cá nhân hoá",
+      "subtitle": "Bộ luyện tập ngắn tập trung vào những âm bạn cần cải thiện nhất.",
+      "start": "Bắt đầu bài học cá nhân hoá",
+      "loading": "Đang tạo bài học cho bạn...",
+      "signedOut": {
+        "title": "Đăng nhập để nhận bài học cá nhân hoá",
+        "subtitle": "Đăng nhập để chúng tôi theo dõi các âm bạn cần luyện nhất và tạo bộ bài tập riêng cho bạn.",
+        "login": "Đăng nhập"
+      }
+    },
+    "titlePhoneme": "Học âm /{{phoneme}}/",
+    "titlePersonalized": "Bài cá nhân hoá · {{phonemes}}",
+    "titlePersonalizedShort": "Bài học cá nhân hoá",
+    "empty": "Chưa có nội dung cho bài học này.",
+    "startPracticing": "Bắt đầu luyện tập"
+  },
+  "screening": {
+    "title": "Bài học đầu tiên",
+    "banner": "Bài học đầu tiên",
+    "optional": {
+      "eyebrow": "Tùy chọn",
+      "title": "Nhận bài học cá nhân hóa",
+      "description": "Hoàn thành bài kiểm tra sàng lọc để nhận bài học cá nhân hóa của bạn.",
+      "cta": "Làm bài kiểm tra sàng lọc"
+    },
+    "card": {
+      "title": "Bắt đầu bài học đầu tiên",
+      "description": "Hoàn thành ít nhất 1 bài học để mở khoá điểm phát âm và bài luyện tập cá nhân hoá.",
+      "cta": "Bắt đầu bài học",
+      "loading": "Đang tải bài học...",
+      "error": "Không tải được bài học. Vui lòng thử lại."
+    },
+    "lockedCta": "Hoàn thành ít nhất 1 bài học để bắt đầu",
+    "notice": {
+      "title": "Trước khi bắt đầu",
+      "singleAttempt": "Bạn chỉ được nói một lần cho mỗi câu.",
+      "manualMic": "Micro sẽ không tự bật — hãy nhấn Ghi âm khi bạn sẵn sàng.",
+      "maxPause": "Khi nói, bạn có thể tạm dừng tối đa 1 giây. Im lặng lâu hơn sẽ kết thúc bản ghi."
+    },
+    "placeholder": {
+      "score": "—",
+      "scoreCaption": "Hoàn thành ít nhất 1 bài học để xem điểm của bạn.",
+      "weakestEmpty": "Hoàn thành ít nhất 1 bài học để xem các âm yếu nhất của bạn.",
+      "progressTitle": "Hồ sơ phát âm đang khoá",
+      "progressBody": "Hoàn thành ít nhất 1 bài học để mở khoá tiến độ từng âm và bài học cá nhân hoá.",
+      "progressCta": "Bắt đầu bài học đầu tiên"
+    },
+    "result": {
+      "title": "Bạn đã hoàn thành bài học đầu tiên!",
+      "scoreLabel": "Điểm phát âm ước lượng của bạn",
+      "levels": {
+        "beginner": {
+          "label": "Mới bắt đầu",
+          "message": "Bạn chỉ vừa mới bắt đầu — và điều đó hoàn toàn bình thường.\n\nTin tốt là phát âm của bạn có thể tiến bộ rất nhanh nếu luyện tập đúng cách.\n\nChúng tôi sẽ hướng dẫn bạn từng bước, tập trung vào những âm bạn cần nhất. Chỉ 3-5 phút mỗi ngày là đủ để bạn thấy được sự tiến bộ thật sự.",
+          "cta": "Bắt đầu luyện tập"
+        },
+        "elementary": {
+          "label": "Sơ cấp",
+          "message": "Bạn đã có nền tảng vững chắc và gần với mục tiêu hơn bạn nghĩ.\n\nMột vài âm chính đang cản trở bạn — nhưng chúng dễ khắc phục nếu luyện tập có trọng tâm. Chỉ cần vài phút mỗi ngày, bạn sẽ phát âm rõ ràng và tự tin hơn.",
+          "cta": "Cải thiện các âm yếu nhất hôm nay"
+        },
+        "intermediate": {
+          "label": "Trung cấp",
+          "message": "Bạn giao tiếp khá tốt và phần lớn phát âm của bạn đã rõ ràng.\n\nGiờ là lúc tinh chỉnh các chi tiết để giọng bạn nghe tự nhiên và trôi chảy hơn. Chúng tôi sẽ giúp bạn phát hiện và sửa những lỗi nhỏ mà hầu hết người học bỏ qua.",
+          "cta": "Luyện tập hôm nay để nâng cao độ trôi chảy"
+        },
+        "upperIntermediate": {
+          "label": "Trên trung cấp",
+          "message": "Phát âm của bạn đã tốt và lời nói rõ ràng.\n\nBước tiếp theo là sự nhất quán — làm cho từng câu nghe mượt và tự nhiên. Luyện tập hằng ngày sẽ giúp bạn loại bỏ những lỗi nhỏ và đạt được sự lưu loát thật sự.",
+          "cta": "Duy trì chuỗi luyện tập với bài học hôm nay"
+        },
+        "advanced": {
+          "label": "Nâng cao",
+          "message": "Phát âm của bạn rất tốt — bạn nghe rõ ràng và tự nhiên.\n\nĐể giữ vững mức này, sự nhất quán là chìa khoá. Ngay cả người ở trình độ nâng cao cũng có thể giảm độ sắc bén nếu không luyện tập thường xuyên. Chúng tôi sẽ giúp bạn duy trì độ chính xác và tiến gần hơn đến mức gần như bản ngữ.",
+          "cta": "Giữ phong độ với bài luyện tập hôm nay"
+        }
+      }
+    }
+  },
+  "activation": {
+    "title": "Bạn có mã kích hoạt?",
+    "desc": "Nhập mã kích hoạt 6 ký tự để mở khoá 3 tháng Pro ngay lập tức.",
+    "placeholder": "ABC123",
+    "apply": "Kích hoạt",
+    "applying": "Đang kích hoạt…",
+    "success": "Kích hoạt thành công! Gói Pro của bạn đã được gia hạn thêm 3 tháng.",
+    "expiresAt": "Pro có hiệu lực đến {{date}}.",
+    "error": "Không thể kích hoạt mã. Vui lòng thử lại.",
+    "errors": {
+      "invalidFormat": "Định dạng mã kích hoạt không hợp lệ.",
+      "notFound": "Không tìm thấy mã kích hoạt.",
+      "expired": "Mã kích hoạt này đã hết hạn.",
+      "maxUses": "Mã kích hoạt này đã đạt số lần sử dụng tối đa.",
+      "alreadyUsed": "Bạn đã sử dụng mã kích hoạt này rồi.",
+      "userNotFound": "Không tìm thấy người dùng."
+    }
+  },
+  "journeyPage": {
+    "title": "Hành trình học tập của bạn",
+    "back": "Quay lại"
+  },
+  "videos": {
+    "nav": "Luyện với YouTube",
+    "screenTitle": "Luyện Shadowing",
+    "speakingLevel": "CẤP ĐỘ NÓI",
+    "conversationTopic": "CHỦ ĐỀ HỘI THOẠI",
+    "loadingCatalog": "Đang tải danh mục bài học...",
+    "breadcrumb": {
+      "home": "Trang chủ",
+      "videos": "Video"
+    },
+    "topics": {
+      "movie-short-clip": "Đoạn phim ngắn",
+      "Interview": "Phỏng vấn",
+      "News": "Tin tức",
+      "Movie clip": "Đoạn phim",
+      "Conversation": "Hội thoại",
+      "Vlog": "Vlog",
+      "English lesson": "Bài học tiếng Anh",
+      "Science": "Khoa học",
+      "Nature": "Thiên nhiên",
+      "Entertainment": "Giải trí",
+      "Kids": "Thiếu nhi",
+      "Tips & Tricks": "Mẹo & Thủ thuật",
+      "Others": "Khác",
+      "interview": "Phỏng vấn",
+      "news": "Tin tức",
+      "movie-clip": "Đoạn phim",
+      "conversation": "Hội thoại",
+      "vlog": "Vlog",
+      "english-lesson": "Bài học tiếng Anh",
+      "science": "Khoa học",
+      "nature": "Thiên nhiên",
+      "entertainment": "Giải trí",
+      "kids": "Thiếu nhi",
+      "tips-tricks": "Mẹo & Thủ thuật",
+      "others": "Khác"
+    },
+    "catalog": {
+      "title": "Luyện nói với YouTube",
+      "subtitle": "Nghe và nhắc lại các đoạn video chọn lọc, rồi ghi âm để nhận phản hồi IPA.",
+      "filters": "Bộ lọc",
+      "topic": "Chủ đề",
+      "level": "Trình độ",
+      "allTopics": "Tất cả chủ đề",
+      "allLevels": "Tất cả trình độ",
+      "loading": "Đang tải video…",
+      "empty": "Chưa có video nào khớp bộ lọc này.",
+      "segments": "{{count}} câu",
+      "viewAll": "Xem tất cả",
+      "loadMore": "Tải thêm"
+    },
+    "viewed": {
+      "title": "Tiếp tục luyện tập",
+      "progress": "{{played}}/{{total}} câu ({{pct}}%)",
+      "showLess": "Thu gọn"
+    },
+    "practice": {
+      "loading": "Đang tải video…",
+      "notFound": "Không tìm thấy video.",
+      "playerLoading": "Đang tải trình phát…",
+      "mainAria": "Luyện với video",
+      "transcriptAria": "Bản chép",
+      "transcript": "Bản chép",
+      "autoPause": "Tự động dừng",
+      "pausesAfterEach": "Tự dừng sau mỗi câu",
+      "goToStart": "Về đầu câu",
+      "replaySentence": "Phát lại câu",
+      "nextSentence": "Câu tiếp theo",
+      "sentenceControlsAria": "Điều khiển phát câu",
+      "start": "Bắt đầu",
+      "record": "Ghi âm",
+      "stopRecord": "Dừng",
+      "startingMic": "Đang mở mic…",
+      "replay": "Phát lại ghi âm",
+      "hideTranscript": "Ẩn transcript",
+      "showTranscript": "Hiện transcript",
+      "sentenceProgress": "Câu {{current}}/{{total}}",
+      "toggleTranslation": "Dịch nghĩa",
+      "prevSentence": "Câu trước",
+      "tapToRecord": "Chạm để luyện nói",
+      "recordingNow": "Đang ghi âm... Chạm để dừng",
+      "excellentScore": "Xuất sắc! 🎉",
+      "goodScore": "Khá tốt! 👍",
+      "practiceMoreScore": "Cần cố gắng! 💪",
+      "viewPhonemeDetails": "Phân tích âm vị",
+      "listenMyVoice": "Nghe lại giọng tôi"
+    }
+  },
+  "quota": {
+    "monthlyTitle": "HẠN MỨC HÀNG THÁNG",
+    "freeChecksThisMonth": "Lượt học miễn phí tháng này",
+    "proMember": "Thành viên Pro",
+    "unlimited": "VÔ HẠN",
+    "unlimitedDesc": "Tự do luyện âm AI, quét ảnh OCR & sinh audio UK không giới hạn.",
+    "items": {
+      "pronunciation": "Chấm phát âm AI",
+      "ocr": "Quét ảnh OCR",
+      "audio": "Audio giọng đọc UK"
+    },
+    "remaining": "{{remaining}} / {{limit}} còn lại",
+    "exhausted": "Đã hết lượt (0/{{limit}})",
+    "warningLow": "Bạn sắp dùng hết hạn mức miễn phí tháng này.",
+    "unlockPro": "Mở khóa Pro",
+    "upgradePro": "Nâng cấp Pro"
+  },
+  "legalContent": {
+    "terms": {
+      "sec1Title": "1. Chấp thuận Điều khoản",
+      "sec1Body": "Bằng việc truy cập hoặc sử dụng ứng dụng EarlySigns (\"Dịch vụ\"), bạn đồng ý chịu sự ràng buộc của các Điều khoản sử dụng này. Nếu không đồng ý, vui lòng không sử dụng Dịch vụ.",
+      "sec2Title": "2. Mô tả Dịch vụ",
+      "sec2Body": "Dịch vụ cung cấp tính năng luyện phát âm và nhận phản hồi ngữ âm tiếng Anh dựa trên hệ thống phân tích chuẩn quốc tế IPA. Dịch vụ bao gồm các hạn mức sử dụng miễn phí và trả phí, quản lý tài khoản và thiết bị được mô tả chi tiết trong sản phẩm.",
+      "sec3Title": "3. Trách nhiệm của Người dùng",
+      "sec3Body": "Người dùng cam kết cung cấp thông tin chính xác, bảo mật thông tin tài khoản, sử dụng Dịch vụ đúng pháp luật và không tìm cách vượt qua các hạn mức hệ thống hoặc khai thác thương mại trái phép.",
+      "sec4Title": "4. Quyền Sở hữu Trí tuệ",
+      "sec4Body": "Toàn bộ Dịch vụ bao gồm thiết kế, giao diện, nội dung bài học và công nghệ AI thuộc quyền sở hữu của EarlySigns. Bạn được cấp quyền sử dụng có giới hạn theo các điều khoản này.",
+      "sec5Title": "5. Tuyên bố Miễn trừ",
+      "sec5Body": "Dịch vụ được cung cấp trên nguyên tắc \"nguyên trạng\". Phản hồi phát âm AI phục vụ mục đích học tập và luyện tập, không thể đảm bảo tuyệt đối không có sai sót trong mọi ngữ cảnh phức tạp.",
+      "sec6Title": "6. Giới hạn Trách nhiệm",
+      "sec6Body": "Trong phạm vi tối đa được pháp luật cho phép, chúng tôi không chịu trách nhiệm đối với bất kỳ thiệt hại gián tiếp, ngẫu nhiên hoặc mang tính hệ quả nào phát sinh từ việc sử dụng Dịch vụ.",
+      "sec7Title": "7. Thay đổi Điều khoản",
+      "sec7Body": "Chúng tôi có thể cập nhật các Điều khoản sử dụng này theo thời gian. Việc bạn tiếp tục sử dụng Dịch vụ sau các thay đổi đồng nghĩa với việc bạn chấp thuận các điều khoản cập nhật.",
+      "sec8Title": "8. Liên hệ",
+      "sec8Body": "Nếu có câu hỏi về các điều khoản này, vui lòng gửi phản hồi trực tiếp qua ứng dụng hoặc liên hệ email support@earlysigns.app."
+    },
+    "privacy": {
+      "sec1Title": "1. Thông tin Chúng tôi Thu thập",
+      "sec1Body": "Thông tin tài khoản (email), dữ liệu sử dụng (văn bản luyện tập, bản ghi âm giọng nói, lịch sử kiểm tra, định danh thiết bị) và các dữ liệu kỹ thuật dùng để xác thực và kiểm soát truy cập.",
+      "sec2Title": "2. Mục đích Sử dụng Thông tin",
+      "sec2Body": "Chúng tôi sử dụng thông tin để vận hành và nâng cao chất lượng bộ chấm phát âm AI, xác thực phiên học, áp dụng hạn mức sử dụng, xử lý gói hội viên và tuân thủ các quy định pháp luật.",
+      "sec3Title": "3. Dữ liệu Âm thanh và Văn bản",
+      "sec3Body": "Giọng nói được ghi âm và văn bản nhập vào được xử lý để sinh phản hồi ngữ âm IPA và độ rõ ràng. Dữ liệu này có thể được lưu trữ ẩn danh để cải thiện mô hình nhận diện giọng nói.",
+      "sec4Title": "4. Chia sẻ Thông tin",
+      "sec4Body": "Chúng tôi không bán thông tin cá nhân của bạn cho bên thứ ba. Dữ liệu chỉ có thể được chia sẻ với các nhà cung cấp dịch vụ hạ tầng đám mây và xử lý thanh toán tuân thủ nghĩa vụ bảo mật nghiêm ngặt.",
+      "sec5Title": "5. Bảo mật Thông tin",
+      "sec5Body": "Chúng tôi áp dụng các biện pháp kỹ thuật và tổ chức hợp lý để bảo vệ dữ liệu cá nhân của bạn khỏi truy cập trái phép hoặc mất mát.",
+      "sec6Title": "6. Quyền Lựa chọn của Bạn",
+      "sec6Body": "Bạn có thể xem và cập nhật thông tin trong ứng dụng bất kỳ lúc nào. Bạn cũng có quyền yêu cầu xóa vĩnh viễn tài khoản và toàn bộ dữ liệu qua email support@earlysigns.app hoặc chức năng xóa trong hồ sơ.",
+      "sec7Title": "7. Thay đổi Chính sách",
+      "sec7Body": "Chúng tôi có thể cập nhật Chính sách bảo mật này theo thời gian. Việc bạn tiếp tục sử dụng Dịch vụ sau các thay đổi đồng nghĩa với việc bạn đồng ý với chính sách đã cập nhật."
+    }
+  },
+  "payment": {
+    "screenTitle": "Nâng cấp tài khoản",
+    "heroTitle": "EarlySigns Pro",
+    "heroSubtitle": "Nâng tầm kỹ năng phát âm tiếng Anh chuẩn Anh - Anh (RP) với công nghệ AI và lộ trình cá nhân hóa.",
+    "badgeUnlock": "Mở khóa Pro",
+    "restore": "Khôi phục",
+    "badgeUnlimited": "Không giới hạn AI",
+    "badgeNative": "🇬🇧 Chuẩn RP Bản ngữ",
+    "badgePhonemes": "📊 Trọn bộ 44 Âm",
+    "benefitsTitle": "QUYỀN LỢI THÀNH VIÊN PRO",
+    "vipAccess": "VIP ACCESS",
+    "benefits": {
+      "b1": "Không giới hạn lượt chấm phát âm AI",
+      "b2": "Luyện văn bản tự do & Quét ảnh OCR",
+      "b3": "Giọng đọc mẫu chuẩn UK bản xứ chất lượng cao",
+      "b4": "Bản đồ phân tích 44 âm IPA chuyên sâu"
+    },
+    "selectPackage": "Chọn gói đăng ký:",
+    "perMonth": "/ tháng",
+    "billedYearly": "Thanh toán 1 năm",
+    "billedQuarterly": "Thanh toán 3 tháng",
+    "billedMonthly": "Thanh toán hàng tháng",
+    "assuranceGuarantee": "✓ Không trừ tiền nếu chưa xác nhận • Hủy gia hạn bất cứ lúc nào",
+    "restorePurchases": "Khôi phục giao dịch",
+    "manageSubscriptions": "Quản lý gói Store",
+    "giftCodeTitle": "Bạn có mã kích hoạt quà tặng / Học đường?",
+    "giftCodePlaceholder": "Nhập mã kích hoạt (VD: PRO-UK-2026)",
+    "applyCode": "Kích hoạt mã",
+    "applyingCode": "Đang áp dụng...",
+    "autoRenewDisclaimerTitle": "Điều khoản đăng ký tự động",
+    "autoRenewDisclaimerText": "Gói đăng ký sẽ tự động gia hạn khi kết thúc mỗi chu kỳ trừ khi bạn hủy ít nhất 24 giờ trước thời điểm gia hạn trong phần Cài đặt tài khoản Apple ID / Google Play. Khoản thanh toán sẽ được trừ trực tiếp qua phương thức thanh toán đã liên kết trên thiết bị của bạn.",
+    "eula": "Điều khoản sử dụng (EULA)",
+    "privacyPolicy": "Chính sách bảo mật",
+    "ctaApple": "Đăng ký qua Apple App Store",
+    "ctaGoogle": "Đăng ký qua Google Play",
+    "ctaDefault": "Đăng ký EarlySigns Pro",
+    "processing": "Đang xử lý giao dịch Store...",
+    "successTitle": "Đăng ký thành công!",
+    "successMessage": "Chào mừng bạn đến với EarlySigns Pro ({{product}}).",
+    "restoreSuccess": "Khôi phục thành công",
+    "restoreTitle": "Khôi phục giao dịch",
+    "activateSuccess": "Kích hoạt thành công!",
+    "activateSuccessMsg": "Tài khoản của bạn đã được nâng cấp Pro.",
+    "transactionFailed": "Giao dịch không thành công."
+  },
+  "profileExtra": {
+    "screenTitle": "Hồ sơ cá nhân",
+    "proBadge": "EARLYSIGNS PRO",
+    "upgradePro": "Nâng cấp Pro",
+    "guestUser": "Khách EarlySigns",
+    "rpStandard": "🇬🇧 Tiêu chuẩn Anh - Anh (RP chuẩn)",
+    "planExpiry": "Hạn gói: {{date}}",
+    "proBannerTitle": "EarlySigns Pro",
+    "proBannerSubtitle": "Mở khóa phân tích AI chuyên sâu và trọn bộ 44 âm bản ngữ",
+    "phonemeDetails": "Chi tiết từng âm ({{count}} âm đã luyện)",
+    "membershipGroup": "Gói hội viên & Đăng ký Store",
+    "proBenefitsTitle": "Quyền lợi EarlySigns Pro",
+    "proUpgradeTitle": "Nâng cấp lên EarlySigns Pro",
+    "proActiveDesc": "Đang kích hoạt • Vô hạn lượt AI",
+    "proUpgradeDesc": "Chỉ từ 83.250đ/tháng • Huấn luyện AI chuyên sâu",
+    "restoreTitle": "Khôi phục giao dịch Store",
+    "restoreDesc": "Lấy lại quyền Pro khi đổi thiết bị",
+    "manageStoreTitle": "Quản lý trên Apple ID / Google Play",
+    "manageStoreDesc": "Hủy hoặc thay đổi gói định kỳ Store",
+    "notifGroup": "Cài đặt thông báo & Nhắc học",
+    "notifGroupDesc": "Duy trì thói quen luyện phát âm mỗi ngày",
+    "dailyReminder": "Nhắc nhở học tập hàng ngày",
+    "dailyReminderDesc": "Gửi thông báo nhắc giữ chuỗi streak",
+    "notifPermissionWarning": "⚠️ Chưa được cấp quyền thông báo trên máy. Nhấn \"Mở Cài đặt thông báo trên thiết bị\" phía dưới để bật thông báo.",
+    "chooseReminderTime": "Chọn khung giờ nhắc học:",
+    "contentUpdates": "Cập nhật bài học & tính năng mới",
+    "promotions": "Thông báo khuyến mại & ưu đãi",
+    "openDeviceSettings": "Mở Cài đặt thông báo trên thiết bị",
+    "voiceLangGroup": "Giọng đọc & Ngôn ngữ",
+    "voiceLangDesc": "Chuẩn phát âm mục tiêu và hiển thị",
+    "supportLegalGroup": "Trung tâm hỗ trợ & Pháp lý",
+    "referralFriends": "Chương trình giới thiệu bạn bè",
+    "contactSupport": "Thông tin liên hệ & hỗ trợ",
+    "aboutApp": "Giới thiệu EarlySigns",
+    "termsPrivacy": "Điều khoản sử dụng & Bảo mật",
+    "deleteAccountBtn": "Yêu cầu xóa tài khoản & toàn bộ dữ liệu",
+    "avgAccuracy": "Độ chính xác TB",
+    "qualifiedSounds": "Âm đạt chuẩn (≥5 lần)",
+    "upgradeBtn": "Nâng cấp",
+    "streakTitle": "Chuỗi ngày rèn luyện",
+    "streakDesc": "Duy trì học mỗi ngày để chuẩn hóa giọng",
+    "streakDays": "{{days}} ngày",
+    "profileBuildingTitle": "Hồ sơ phát âm đang xây dựng",
+    "profileBuildingSubtitle": "Yêu cầu tối thiểu 80% âm IPA",
+    "profileBuildingPart1": "Để đảm bảo độ chính xác học thuật, hệ thống chỉ hiển thị điểm tổng và biểu đồ sau khi bạn hoàn thành tối thiểu",
+    "profileBuildingMinChecks": "5 lượt kiểm tra",
+    "profileBuildingForAtLeast": "cho ít nhất",
+    "profileBuildingThreshold": "80% các âm IPA ({{count}}/{{total}} âm)",
+    "unlockProgress": "Tiến độ mở khóa âm:",
+    "unlockTip": "Luyện tập các bài Luyện Video hoặc Luyện Văn bản để mở khóa hồ sơ chi tiết.",
+    "practiceNowBtn": "Luyện tập mở khóa ngay",
+    "unlocked": "Đã mở khóa",
+    "reminderUpdatedTitle": "Đã cập nhật giờ nhắc",
+    "reminderUpdatedMsg": "Thông báo học tập lúc {{time}} mỗi ngày.",
+    "restoreError": "Lỗi khôi phục",
+    "notifPermissionDialog": {
+      "title": "Cần quyền thông báo",
+      "message": "Để EarlySigns có thể nhắc nhở bạn luyện phát âm mỗi ngày, vui lòng cho phép quyền thông báo trong Cài đặt thiết bị.",
+      "later": "Để sau",
+      "openSettings": "Mở Cài đặt"
+    },
+    "reminderToastEnabled": "Đã bật nhắc nhở học tập",
+    "reminderToastDisabled": "Đã tắt nhắc nhở học tập",
+    "reminderToastSchedule": "Sẽ gửi thông báo lúc {{time}} mỗi ngày.",
+    "supportDialog": {
+      "title": "Liên hệ hỗ trợ EarlySigns",
+      "message": "Đội ngũ hỗ trợ học viên luôn sẵn sàng giải đáp thắc mắc về lộ trình học và hỗ trợ kỹ thuật:\n\n• Email: support@earlysigns.app\n• Thời gian hỗ trợ: 8:00 - 22:00 hàng ngày",
+      "close": "Đóng",
+      "sendEmail": "Gửi Email"
+    },
+    "deleteDialog": {
+      "title": "Xác nhận xóa tài khoản",
+      "message": "Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản EarlySigns? Toàn bộ lịch sử luyện phát âm, chuỗi streak và quyền lợi gói dịch vụ sẽ bị xóa vĩnh viễn và không thể khôi phục.",
+      "cancel": "Hủy bỏ",
+      "confirm": "Xác nhận xóa",
+      "toastSuccess": "Đã xóa tài khoản",
+      "toastMessage": "Toàn bộ dữ liệu phiên trên máy đã được dọn sạch."
+    }
+  },
+  "homeExtra": {
+    "brandSubtitle": "EarlySigns • AI Pronunciation",
+    "accentBadge": "🇬🇧 UK RP",
+    "clarityLabel": "Độ chuẩn",
+    "upgradeBadge": "Nâng cấp",
+    "videoSubtitle": "Shadowing theo ngữ điệu bản ngữ chuẩn xác",
+    "videoLevels": "Cấp độ A1 đến C2 · Đa dạng chủ đề giao tiếp",
+    "exploreVideos": "Khám phá danh mục Video",
+    "freeTextSubtitle": "Dán bài đọc hoặc chụp ảnh trang sách",
+    "phonemesTitle": "Luyện Ngữ âm & Lộ trình",
+    "phonemesSubtitle": "Luyện phát âm chuẩn 44 âm IPA tiếng Anh",
+    "phonemesExplore": "Khám phá toàn bộ 44 âm",
+    "phonemesDetail": "Nguyên âm đơn, nguyên âm đôi & phụ âm",
+    "journeyTitle": "Lộ trình học cá nhân hóa",
+    "journeyStages": "Lộ trình phát âm theo từng chặng",
+    "journeyAdaptive": "Bài tập thích ứng theo điểm yếu ngữ âm của bạn",
+    "screeningTitle": "Bắt đầu bài kiểm tra sàng lọc",
+    "screeningDesc": "Đánh giá toàn diện 44 âm để mở khóa điểm số",
+    "screeningAction": "Làm bài test (3 phút)"
+  }
+}

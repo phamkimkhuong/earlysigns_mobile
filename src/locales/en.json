@@ -1,0 +1,1034 @@
+{
+  "seo": {
+    "title": "English Pronunciation Checker – Practice with IPA Feedback",
+    "description": "Practice spoken English with IPA-based, per-word pronunciation feedback. Get clear, trustworthy feedback to sound more native."
+  },
+  "app": {
+    "title": "English Pronunciation Checker",
+    "subtitle": "Practice spoken English with IPA-based, per-word pronunciation feedback."
+  },
+  "auth": {
+    "checkingSession": "Checking login session...",
+    "signedInAs": "Signed in as",
+    "unknownUser": "Unknown user",
+    "paidPackageActive": "EarlySigns Pro",
+    "freePlan": "Free plan",
+    "freeChecksLeft": "{{remaining}}/{{limit}} free checks left",
+    "sendFeedback": "Send feedback",
+    "logout": "Logout"
+  },
+  "legal": {
+    "termsTitle": "Terms of Use",
+    "privacyTitle": "Privacy Policy",
+    "lastUpdated": "Last updated: March 2025"
+  },
+  "login": {
+    "title": "Sign in",
+    "appTitle": "English Pronunciation Checker",
+    "subtitle": "Sign in to practice spoken English with IPA-based feedback.",
+    "heroTitle": "Pronounce English",
+    "heroTitleAccent": "like a native speaker",
+    "subtitlePart1": "Detailed feedback per syllable using",
+    "ipaBadge": "IPA",
+    "subtitlePart2": "phonetic transcription.",
+    "note": "Sign in with a verification code sent to your email.",
+    "emailLabel": "Email address",
+    "emailPlaceholder": "Enter your email...",
+    "sendOtp": "Send OTP code",
+    "sendingOtp": "Sending OTP...",
+    "otpLabel": "OTP code",
+    "otpPlaceholder": "6-digit code",
+    "verifyOtp": "Verify OTP",
+    "verifyingOtp": "Verifying...",
+    "otpScreenTitle": "Check your email",
+    "otpScreenSentTo": "We sent a verification code to {{email}}.",
+    "resendOtp": "Resend code",
+    "resendingOtp": "Resending...",
+    "otpResent": "A new code has been sent.",
+    "backToEmail": "Use a different email",
+    "googleSignIn": "Continue with Google",
+    "appleSignIn": "Continue with Apple",
+    "appleSignInFailed": "Apple Sign-In failed. Please try again.",
+    "loginToContinue": "Please log in to continue with this feature.",
+    "orDivider": "Or continue with email",
+    "googleSignInFailed": "Google Sign-In failed. Please try again.",
+    "googleMissingClientId": "Google Client ID is not configured.",
+    "countdownSeconds": "Resend code in {{seconds}}s",
+    "continueAsGuest": "Continue as Guest",
+    "guestExploreHint": "Explore practice exercises without signing in",
+    "legalPrefix": "By continuing, you agree to our",
+    "termsOfService": "Terms of Service",
+    "and": "and",
+    "privacyPolicy": "Privacy Policy",
+    "invalidEmail": "Please enter a valid email address",
+    "editEmail": "Edit",
+    "enterOtpPrompt": "Enter the 6-digit verification code sent to your email.",
+    "otpCodeInvalid": "Verification code is invalid or has expired."
+  },
+  "onboarding": {
+    "brandName": "EarlySigns",
+    "welcomeTitle": "Master English Pronunciation",
+    "welcomeSubtitle": "Real-time IPA phonetic feedback for every sound you speak.",
+    "selectLanguage": "Display Language",
+    "languageSelectionTitle": "Select Language",
+    "languageSelectionSubtitle": "You can change this later in Settings",
+    "continue": "Continue",
+    "slide1Title": "Practice with video",
+    "slide1Desc": "Master pronunciation with real-world videos and daily conversations.",
+    "slide2Title": "Practice with custom text",
+    "slide2Desc": "Type, paste, or scan any text to practice your pronunciation.",
+    "slide3Title": "Track your progress",
+    "slide3Desc": "Get detailed feedback and personalized lessons.",
+    "getStarted": "Get Started",
+    "alreadyHaveAccount": "Already have an account? Sign In",
+    "skip": "Skip",
+    "next": "Next"
+  },
+  "input": {
+    "label": "Input text",
+    "placeholder": "Paste or type your English text here...",
+    "ipaAccent": "IPA Accent:",
+    "generateSentences": "Generate Practice Sentences"
+  },
+  "history": {
+    "title": "Passage History",
+    "empty": "No saved passages yet.",
+    "loadingMore": "Loading more...",
+    "loginToStore": "Sign in to store your passage history."
+  },
+  "sentence": {
+    "current": "{{current}} / {{total}}",
+    "previous": "Previous",
+    "next": "Next",
+    "nextLesson": "Next lesson",
+    "nextLessonLoading": "Loading next lesson...",
+    "nextLessonError": "Could not load the next lesson.",
+    "practicePhonemeError": "Could not start the phoneme lesson.",
+    "startRecording": "Start Recording",
+    "stopRecording": "Stop Recording",
+    "checkPronunciation": "Check Pronunciation",
+    "listenToRecording": "Listen to recording",
+    "listenToSample": "Listen to sample pronunciation",
+    "sampleUnavailable": "Sample audio is not available for this sentence yet. Please try again later.",
+    "checking": "Checking...",
+    "aiProgress": {
+      "title": "AI Pronunciation Analysis",
+      "step1": "Speech recognition",
+      "step2": "AI phonetic analysis",
+      "step3": "Pronunciation scoring"
+    },
+    "tryAgainLowScore": "Try again",
+    "tryAgainCheckFailed": "Please try again",
+    "recordingLimitNote": "Recording stopped automatically after 5 minutes.",
+    "serverError": {
+      "asrUnavailable": "The pronunciation service is reconnecting. Please tap record and try again in a moment.",
+      "checkFailed": "Check failed. Try recording again."
+    },
+    "micError": {
+      "denied": {
+        "title": "Microphone access denied",
+        "body": "Your browser has blocked microphone access. Allow it and try again.",
+        "hint": "Click the lock or microphone icon in the address bar, set Microphone to \"Allow\", then reload the page."
+      },
+      "notFound": {
+        "title": "No microphone found",
+        "body": "No microphone was detected on your device. Connect one and try again.",
+        "hint": "Make sure your microphone is plugged in, not muted, and recognized by your operating system."
+      },
+      "inUse": {
+        "title": "Microphone is busy",
+        "body": "Your microphone may be in use by another app. Close other apps using the mic and try again.",
+        "hint": "Try closing video call apps, recording software, or other browser tabs that might be using the microphone."
+      },
+      "generic": {
+        "title": "Cannot access microphone",
+        "body": "Something went wrong while trying to access your microphone."
+      },
+      "tryAgain": "Try Again"
+    }
+  },
+  "result": {
+    "pronunciationScore": "Pronunciation score",
+    "lessonProgress": {
+      "improved": "You improved your pronunciation score",
+      "decreased": "Your pronunciation score is decreased"
+    },
+    "howToRead": "How to read this result",
+    "correctSound": "Green = correct sound",
+    "missedSound": "Red = missed sound",
+    "extraSound": "Blue +x = extra sound",
+    "saidInstead": "Orange a→b = said b instead of a",
+    "countsLegend": "C/D/I/S = Correct/Deleted/Inserted/Substituted counts",
+    "phoneDetail": {
+      "title": "Pronunciation details",
+      "titleWithWord": "Pronunciation details: {{word}}",
+      "expectedIpa": "Expected IPA:",
+      "noDetails": "No phone-level details available for this word.",
+      "openAria": "Open pronunciation details for {{word}}",
+      "added": "You added “{{phone}}”.",
+      "missed": "You missed “{{phone}}”.",
+      "substituted": "You said “{{said}}” but it should be “{{expected}}”.",
+      "correct": "Correct: “{{phone}}”."
+    },
+    "soundAnalysis": {
+      "title": "Detailed sound analysis",
+      "empty": "No sound-by-sound analysis is available yet.",
+      "soundColumn": "Sound",
+      "analysisColumn": "Analysis",
+      "nonePronounced": "(not pronounced)",
+      "correct": "You pronounced it correctly.",
+      "missed": "You missed this sound.",
+      "replaced": "You mistaked this sound with /{{pronounced}}/.",
+      "tipLabel": "Tip:",
+      "viewDetails": "View detailed analysis",
+      "hideDetails": "Hide details",
+      "videoLabel": "Watch tutorial video",
+      "learnPhoneme": "Learn /{{phoneme}}/",
+      "learnLoading": "Loading lesson...",
+      "marker": {
+        "stress": {
+          "explanation": "Stress mark error: word stress was not placed correctly.",
+          "tip": "In IPA, /ˈ/ marks the primary stress and is read as: stress the syllable right after this symbol. Make that syllable clearer, longer, and slightly louder."
+        },
+        "separator": {
+          "explanation": "Syllable-separation mark error: the syllable boundary was not clear.",
+          "tip": "Split the word into syllables and pronounce each part clearly before blending them smoothly."
+        }
+      }
+    }
+  },
+  "feedback": {
+    "title": "Send feedback",
+    "description": "Describe an issue or suggestion. Your current practice context (text, sentence, score, result) will be included so we can investigate.",
+    "messageLabel": "Your message",
+    "messagePlaceholder": "e.g. The score seems wrong for this sentence...",
+    "includeContext": "Include current practice context (passage, result, score)",
+    "submit": "Submit feedback",
+    "sending": "Sending…",
+    "cancel": "Cancel",
+    "success": "Thank you. Your feedback has been saved.",
+    "close": "Close"
+  },
+  "loginGate": {
+    "title": "Log in to continue",
+    "message": "Create a free account to practice phoneme lessons and track your progress.",
+    "loginCta": "Log in",
+    "close": "Close"
+  },
+  "usageLimit": {
+    "title": "Daily limit reached",
+    "anonymousMessage": "You have reached the free limit for today. Log in to get a 4x higher limit.",
+    "freeMessage": "You have reached the free usage limit for today. Come back tomorrow or upgrade to a Pro account for unlimited access.",
+    "trialMessage": "You're enjoying unlimited checks during your 7-day free trial.",
+    "loginCta": "Log in",
+    "upgradeCta": "Upgrade to Pro",
+    "close": "Close"
+  },
+  "package": {
+    "planName": "EarlySigns Pro",
+    "choosePackage": "Upgrade to Pro for unlimited access.",
+    "paymentUnavailable": "Payment is not available now.",
+    "months": "{{count}} months",
+    "redirecting": "Redirecting...",
+    "buyWithPayOS": "Buy EarlySigns Pro",
+    "buyTitle": "Buy EarlySigns Pro",
+    "selectPackage": "Select plan",
+    "selected": "Selected",
+    "close": "Close"
+  },
+  "checkout": {
+    "title": "Order Payment",
+    "legalNote": "These are mandatory buyer details required by Decree 70/2025/NĐ-CP and Circular 32/2025/TT-BTC on electronic invoices.",
+    "billingTitle": "Billing information",
+    "additionalTitle": "Additional information",
+    "fields": {
+      "lastName": "Last name (family + middle, e.g. Nguyễn Thị)",
+      "firstName": "First name",
+      "addressDetail": "Address details",
+      "street": "Street",
+      "ward": "Ward / commune",
+      "city": "Town / city",
+      "phone": "Phone number",
+      "email": "Email address",
+      "taxCode": "National ID / personal tax code (optional)",
+      "notes": "Order notes (optional)",
+      "vatCompanyName": "Company / organization name",
+      "vatTaxCode": "Tax code",
+      "vatCompanyAddress": "Address on business registration",
+      "vatInvoiceEmail": "Invoice recipient email",
+      "vatInvoicePhone": "Phone number"
+    },
+    "vatInvoiceTitle": "VAT invoice details:",
+    "wantVatInvoice": "Would you like a VAT invoice issued to your business/organization?",
+    "agreeTerms": "I agree to the website terms and policies",
+    "agreeTermsWithLinks": "I agree to the <termsLink>Terms of Use</termsLink> and <privacyLink>Privacy Policy</privacyLink> of the website",
+    "saveProfile": "I want to save this information for future orders.",
+    "confirm": "Confirm payment",
+    "submitting": "Redirecting...",
+    "chooseFirst": "Please choose a subscription plan.",
+    "mustAgree": "You must agree to the terms to continue.",
+    "selectedPackage": "Selected plan",
+    "totalAmount": "Total",
+    "optional": "optional",
+    "validation": {
+      "required": "{{field}} is required.",
+      "minLength": "{{field}} must be at least {{min}} characters.",
+      "maxLength": "{{field}} must be at most {{max}} characters.",
+      "invalidEmail": "Enter a valid email for {{field}} with a domain name (e.g. name@example.com).",
+      "invalidPhone": "{{field}} may only include digits, spaces, parentheses, and an optional + at the beginning.",
+      "generic422": "Some information could not be validated. Please check your details and try again.",
+      "serverPrefix": "Please correct the following:",
+      "genericField": "{{field}} could not be validated."
+    }
+  },
+  "paymentResult": {
+    "verifyingTitle": "Confirming your payment…",
+    "verifyingMessage": "Please wait a moment while we activate your subscription.",
+    "successTitle": "Payment successful",
+    "successMessage": "Your EarlySigns Pro subscription is now active.",
+    "successMessageWithExpiry": "Your EarlySigns Pro subscription is active until {{date}}.",
+    "pendingTitle": "Payment received, still confirming",
+    "pendingMessage": "We have not received the final confirmation yet. You can retry in a moment, or check your profile — the subscription will activate automatically as soon as the payment provider confirms.",
+    "cancelledTitle": "Payment cancelled",
+    "cancelledMessage": "Your payment was cancelled. No charge was made.",
+    "errorTitle": "Could not confirm payment",
+    "errorMessage": "Something went wrong while verifying your payment. Please try again.",
+    "notLoggedIn": "Please sign in again to verify your payment.",
+    "missingOrder": "We couldn't find an order code to verify.",
+    "orderCode": "Order code",
+    "goToProfile": "Go to my profile",
+    "backToHome": "Back to home",
+    "retryVerify": "Check again",
+    "tryAgain": "Try the payment again"
+  },
+  "common": {
+    "loading": "Loading...",
+    "close": "Close",
+    "open": "Open",
+    "unknownUser": "Unknown user"
+  },
+  "footer": {
+    "termsOfUse": "Terms of Use",
+    "privacyPolicy": "Privacy Policy",
+    "contactInfo": "Contact information",
+    "zaloContact": "Zalo contact",
+    "companyName": "Company name",
+    "companyLegalName": "EARLYSIGNS VIETNAM COMPANY LIMITED",
+    "headquarters": "Headquarters",
+    "headquartersAddress": "4th Floor, Anh Minh Building, No. 63 Hoang Cau, O Cho Dua Ward, Hanoi City, Vietnam"
+  },
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "vi": "Tiếng Việt"
+  },
+  "nav": {
+    "aria": "Main",
+    "menu": "Sections",
+    "closeMenu": "Close menu",
+    "home": "Home",
+    "profile": "Profile",
+    "videos": "Videos",
+    "text": "Text",
+    "phonemes": "Phonemes",
+    "intro": "Introduction"
+  },
+  "upgradePro": {
+    "title": "Upgrade to Pro",
+    "genericMessage": "This feature is available on EarlySigns Pro.",
+    "sampleAudioMessage": "Listen to native sample audio with EarlySigns Pro. Upgrade to unlock pronunciation models for your practice text.",
+    "ocrMessage": "Extract English practice text from photos with EarlySigns Pro.",
+    "cta": "Upgrade to Pro",
+    "close": "Close"
+  },
+  "textPractice": {
+    "title": "Practice your own text",
+    "subtitle": "Paste sentences or take a photo, and we'll split them into practice prompts.",
+    "screenTitle": "Free Text & OCR",
+    "practiceContent": "PRACTICE CONTENT",
+    "saveToCollection": "Save passage to collection",
+    "savedPassagesCount": "Saved passages ({{count}})",
+    "untitledPassage": "Untitled passage",
+    "ocrExhausted": "You have reached your monthly OCR scanning limit. Please upgrade to Pro for unlimited scans.",
+    "inputHeading": "Your text",
+    "label": "Practice text",
+    "placeholder": "Type or paste English text here. Use . ? ! or a new line to separate sentences.",
+    "start": "Start practice",
+    "preparing": "Preparing...",
+    "practiceTitle": "Your practice text",
+    "errorEmpty": "Please enter at least one sentence.",
+    "errorPrepare": "Could not prepare your text. Please try again.",
+    "errorTitle": "Please enter a title to save this text.",
+    "audio": {
+      "error": "Could not load sample audio. Please try again."
+    },
+    "ipa": {
+      "error": "Could not load the IPA transcription. Please try again."
+    },
+    "save": "Save",
+    "saving": "Saving...",
+    "saveTitlePlaceholder": "Title for this text",
+    "dialect": "Dialect",
+    "ocr": {
+      "title": "OCR Text Scan",
+      "camera": "Take photo",
+      "gallery": "Choose photo",
+      "working": "Reading photo...",
+      "error": "Could not read text from this photo.",
+      "empty": "No English practice text found in this photo.",
+      "cameraTitle": "Take a photo",
+      "capture": "Capture photo",
+      "cancel": "Cancel",
+      "cameraError": "Could not access the webcam. Check your browser permission and try again.",
+      "cameraUnsupported": "This browser does not support webcam capture.",
+      "cameraNotReady": "The webcam is not ready yet.",
+      "captureError": "Could not capture the photo."
+    },
+    "saved": {
+      "heading": "Saved texts",
+      "loading": "Loading saved texts...",
+      "empty": "No saved texts yet. Add a title and save your practice text.",
+      "errorLoad": "Could not load saved texts.",
+      "errorSave": "Could not save this text."
+    }
+  },
+  "home": {
+    "brand": "EarlySigns",
+    "logIn": "Log in",
+    "yourProgress": "Your Progress",
+    "profile": "Profile",
+    "videos": "YouTube",
+    "upgrade": "UPGRADE",
+    "aria": {
+      "home": "Home"
+    },
+    "hero": {
+      "title": "Master Your English IPA 🎙️",
+      "subtitle": {
+        "checkFree": "Check your pronunciation for FREE.",
+        "noCard": "No credit card required."
+      }
+    },
+    "sample": {
+      "label": "Sample text",
+      "placeholder": "Type your own sentence...",
+      "clear": "Clear",
+      "addYourOwn": "Input your text"
+    },
+    "mic": {
+      "tapToSpeak": "Tap to Speak",
+      "listening": "Listening..."
+    },
+    "error": {
+      "noSentence": "Please enter a sentence to check."
+    },
+    "sampleSentence": "Never look at the lonely moon.",
+    "usageBanner": {
+      "aria": "Free plan usage and upgrade",
+      "message": "You have used {{used}}/{{limit}} free pronunciation checks today. Upgrade to EarlySigns Pro for unlimited daily checks and the full practice experience.",
+      "messagePending": "Upgrade to EarlySigns Pro for unlimited daily pronunciation checks and the full practice experience.",
+      "cta": "Upgrade",
+      "trialMessage": "You're on a 7-day free trial — unlimited checks until {{date}}. Upgrade to Pro for continued unlimited access.",
+      "trialCta": "Upgrade to Pro"
+    },
+    "referralBanner": {
+      "aria": "Referral program announcement",
+      "message": "Invite friends — you both get 7 days of Pro! Learn how the referral program works.",
+      "learnMore": "Learn more",
+      "close": "Dismiss"
+    },
+    "stats": {
+      "scoreSectionAria": "Pronunciation score",
+      "clarity": "{{percent}}% clarity",
+      "clarityAria": "Open progress page (current clarity {{percent}}%)"
+    },
+    "streak": {
+      "active": "{{count}}-day streak",
+      "zero": "Start your streak today",
+      "shortLabel": "Streak"
+    },
+    "journey": {
+      "title": "Journey Map",
+      "aria": "Your learning journey",
+      "loading": "Loading your journey...",
+      "module": "Module {{n}}",
+      "milestone": "Milestone {{n}}",
+      "milestoneNames": {
+        "1": "Find Your Baseline",
+        "2": "Build Clear Core Sounds",
+        "3": "Smooth Connected Speech",
+        "4": "Sharpen Difficult Contrasts",
+        "5": "Speak with Confidence",
+        "fallback": "Keep Practicing ({{n}})"
+      },
+      "lessonOf": "Lesson {{current}} of {{total}}",
+      "moduleOf": "Module {{current}} of {{total}}",
+      "milestonesCompleted": "{{count}} milestone completed",
+      "milestonesCompleted_plural": "{{count}} milestones completed",
+      "startLesson": "Start lesson",
+      "done": "Complete",
+      "milestoneComplete": "Complete",
+      "milestoneCurrent": "In progress",
+      "heroStreakActive": "Keep your {{streak}}-day streak going — Module {{module}}, Lesson {{lesson}}",
+      "heroStreakZero": "Start your first streak today",
+      "adaptive": "Your path updates after every completed lesson.",
+      "lessonComplete": "Lesson complete",
+      "viewAll": "View full journey"
+    },
+    "mission": {
+      "label": "Today's mission",
+      "improve": "Improve {{phonemes}}",
+      "noFocus": "Keep practicing to find your next focus sounds.",
+      "loading": "Building your mission...",
+      "start": "Start 3-minute lesson",
+      "starting": "Starting...",
+      "errorLoad": "Could not load today's mission.",
+      "errorStart": "Could not start the lesson."
+    },
+    "weakestPhonemes": "Weakest phonemes to improve:",
+    "weakest": {
+      "title": "Your recommended phoneme lessons",
+      "subtitle": "Tap a card to start a focused lesson.",
+      "empty": "No lessons yet. Practice a few sentences to unlock phoneme lessons here.",
+      "loadMore": "More lessons",
+      "cardLabel": "Learn phoneme",
+      "loading": "Loading..."
+    },
+    "freeInput": {
+      "title": "Practice your own text",
+      "subtitle": "Paste a few sentences. We will split them into practice prompts.",
+      "label": "Free input",
+      "placeholder": "Type or paste English text here. Use . ? ! or a new line to separate sentences.",
+      "start": "Start practice",
+      "preparing": "Preparing...",
+      "practiceTitle": "Your practice text",
+      "errorEmpty": "Please enter at least one sentence.",
+      "errorPrepare": "Could not prepare your text. Please try again."
+    }
+  },
+  "landing": {
+    "hook": {
+      "title": "Speak English clearly in 3 minutes a day",
+      "subtitle": "Fix your pronunciation with AI-powered IPA feedback",
+      "cta": "Start"
+    },
+    "expectation": {
+      "title": "Here's how it works",
+      "step1Icon": "1",
+      "step1": "You speak",
+      "step2Icon": "2",
+      "step2": "We analyze your pronunciation",
+      "step3Icon": "3",
+      "step3": "You fix mistakes instantly",
+      "cta": "Try it now"
+    },
+    "demo": {
+      "title": "Try it now",
+      "sentence": "Food is good",
+      "cta": "Tap to speak",
+      "preparing": "Preparing demo...",
+      "errorPrepare": "Could not prepare the demo sentence. Please try again."
+    },
+    "videos": {
+      "title": "Practice with real YouTube videos",
+      "subtitle": "Pick a clip, shadow each sentence, and get instant IPA feedback.",
+      "cta": "Browse videos"
+    },
+    "personalization": {
+      "title": "We'll personalize your daily lessons",
+      "bullet1Icon": "1",
+      "bullet1": "Focus on your weak sounds",
+      "bullet2Icon": "2",
+      "bullet2": "Only 3–5 minutes per day",
+      "cta": "Continue"
+    },
+    "accountGate": {
+      "title": "Save your progress and improve daily",
+      "bullet1Icon": "1",
+      "bullet1": "Track your improvement",
+      "bullet2Icon": "2",
+      "bullet2": "Get personalized lessons",
+      "cta": "Login"
+    },
+    "usageBanner": {
+      "text": "You have used {{used}}/{{limit}} free checks. Log in to get {{multiplier}} times more free checks.",
+      "cta": "Log in"
+    }
+  },
+  "profile": {
+    "tabs": {
+      "progress": "Progress",
+      "account": "Account settings",
+      "logout": "Logout"
+    },
+    "progressTitle": "7-day pronunciation progress",
+    "sidebarAria": "Profile sections",
+    "openMenu": "Open menu",
+    "accountTitle": "Account",
+    "signedInAs": "Signed in as",
+    "plan": "Plan",
+    "subscriptionExpires": "Expires on",
+    "upgradeCta": "Upgrade to Pro",
+    "trialCta": "Upgrade to Pro (trial active)",
+    "accentTitle": "Accent",
+    "accentDescription": "Choose the English accent used for your practice sentences and lessons.",
+    "accentUk": "UK",
+    "accentUs": "US",
+    "accentSaving": "Saving...",
+    "paymentHistoryTitle": "Payment history",
+    "paymentHistoryDescription": "Your successful payments.",
+    "paymentHistoryEmpty": "You don't have any successful payments yet.",
+    "paymentOrderCode": "Order code",
+    "paymentStatusPaid": "Paid",
+    "referralTitle": "Referral program",
+    "referralDescription": "Invite friends and both of you get 7 days of EarlySigns Pro.",
+    "referralLearnMore": "How it works",
+    "referralYourCode": "Your referral code",
+    "referralGenerate": "Generate referral code",
+    "referralGenerating": "Generating...",
+    "referralCopy": "Copy code",
+    "referralCopied": "Copied!",
+    "referralRedeemTitle": "Have a friend's code?",
+    "referralRedeemHint": "Enter a 6-character code within 24 hours of signing up. Each account can redeem once.",
+    "referralRedeemPlaceholder": "Enter code",
+    "referralRedeem": "Apply code",
+    "referralRedeeming": "Applying...",
+    "referralRedeemSuccess": "Success! You and your friend each received 7 days of Pro.",
+    "referralAlreadyRedeemed": "You already redeemed a referral code: {{code}}",
+    "referralWindowExpired": "Referral codes can only be entered within 24 hours of creating your account.",
+    "referralTimeLeft": "Time left to redeem: {{hours}}h {{minutes}}m"
+  },
+  "referral": {
+    "pageTitle": "Referral program",
+    "intro": "Share EarlySigns with friends. When a new user enters your code in Account settings, you both receive 7 days of EarlySigns Pro.",
+    "stepCreateTitle": "Create your code",
+    "stepCreateBody": "Open Profile → Account settings → Referral program and tap Generate referral code. Your unique 6-character code appears instantly.",
+    "stepRedeemTitle": "Redeem a friend's code",
+    "stepRedeemBody": "If you joined within the last 24 hours, go to the same Referral program section, enter your friend's code, and tap Apply code. Each account can redeem only once.",
+    "rulesTitle": "Rules",
+    "ruleReward": "Both the referrer and the new user receive 7 days of Pro access.",
+    "ruleWindow": "New users can enter a code only during the first 24 hours after account creation.",
+    "ruleOnce": "Each user can generate one referral code and redeem one referral code.",
+    "ruleTrial": "Pro days are added after any remaining free trial time.",
+    "ctaCreate": "Create my referral code",
+    "ctaRedeem": "Enter a referral code",
+    "ctaLogin": "Log in to participate",
+    "backHome": "Back to home"
+  },
+  "scoreLocked": {
+    "title": "Pronunciation score locked",
+    "body": "Complete the screening test or practice at least 5 times on 80% of sounds to unlock your score.",
+    "progress": "{{checked}} / {{required}} sounds ready",
+    "cta": "Take the screening test"
+  },
+  "progress": {
+    "title": "Your Progress",
+    "description": "Average pronunciation accuracy for each IPA sound based on your checks.",
+    "empty": "No progress data yet. Start speaking to build your profile.",
+    "totalAccuracy": "Your pronunciation score",
+    "totalAccuracySub": "",
+    "chartTitle": "Your week at a glance",
+    "chartDescription": "How your pronunciation score has been trending this past week.",
+    "accent": "Accent",
+    "soundsTitle": "Sounds",
+    "soundsDescription": "Sorted by how common each sound is in English (most common first).",
+    "sampleUnit": "samples",
+    "phonemeChartTitle": "This week's progress",
+    "phonemeNoData": "No history data for this sound yet.",
+    "learn": "Learn",
+    "learnLoading": "Loading...",
+    "columns": {
+      "sound": "Sound",
+      "accuracy": "Accuracy",
+      "samples": "Samples"
+    }
+  },
+  "lesson": {
+    "personalized": {
+      "title": "Personalized lesson",
+      "subtitle": "A short practice set focused on the sounds you need most.",
+      "start": "Start personalized lesson",
+      "loading": "Building your lesson...",
+      "signedOut": {
+        "title": "Log in to get personalized lessons",
+        "subtitle": "Sign in so we can track the sounds you need most and build a practice set just for you.",
+        "login": "Log in"
+      }
+    },
+    "titlePhoneme": "Learning /{{phoneme}}/",
+    "titlePersonalized": "Personalized lesson · {{phonemes}}",
+    "titlePersonalizedShort": "Personalized lesson",
+    "empty": "No items available for this lesson yet.",
+    "startPracticing": "Start practicing"
+  },
+  "screening": {
+    "title": "Your first lesson",
+    "banner": "First lesson",
+    "optional": {
+      "eyebrow": "Optional",
+      "title": "Get your personalized lessons",
+      "description": "Complete this screening test to get your personalized lessons.",
+      "cta": "Take the screening test"
+    },
+    "card": {
+      "title": "Start your first lesson",
+      "description": "Complete at least 1 lesson to unlock your pronunciation score and personalized practice.",
+      "cta": "Start lesson",
+      "loading": "Loading lesson...",
+      "error": "Could not load the lesson. Please try again."
+    },
+    "lockedCta": "Complete at least 1 lesson to begin",
+    "notice": {
+      "title": "Before you begin",
+      "singleAttempt": "You have only one attempt per sentence.",
+      "manualMic": "The microphone does not start automatically — tap Record when you're ready.",
+      "maxPause": "While speaking, you may pause at most 1 second. Longer silences will end the recording."
+    },
+    "placeholder": {
+      "score": "—",
+      "scoreCaption": "Complete at least 1 lesson to see your score.",
+      "weakestEmpty": "Complete at least 1 lesson to see your weakest sounds here.",
+      "progressTitle": "Pronunciation profile is locked",
+      "progressBody": "Complete at least 1 lesson to unlock your phoneme progress and personalized lessons.",
+      "progressCta": "Start your first lesson"
+    },
+    "result": {
+      "title": "Great work completing your first lesson!",
+      "scoreLabel": "Your estimated pronunciation score",
+      "levels": {
+        "beginner": {
+          "label": "Beginner",
+          "message": "You're just getting started—and that's perfectly fine.\n\nThe good news is your pronunciation can improve quickly with the right practice.\n\nWe'll guide you step by step, focusing on the exact sounds you need most. Just 3-5 minutes a day is enough to start hearing real progress.",
+          "cta": "Start practicing"
+        },
+        "elementary": {
+          "label": "Elementary",
+          "message": "You've built a solid foundation, and you're closer than you think.\n\nA few key sounds are holding you back—but they're easy to fix with focused practice. With just a few minutes each day, you'll start sounding clearer and more confident.",
+          "cta": "Improve your weakest sounds today"
+        },
+        "intermediate": {
+          "label": "Intermediate",
+          "message": "You're communicating well, and most of your pronunciation is clear.\n\nNow it's about refining the details that make you sound natural and fluent. We'll help you spot and fix subtle mistakes that most learners miss.",
+          "cta": "Practice today to level up your fluency"
+        },
+        "upperIntermediate": {
+          "label": "Upper Intermediate",
+          "message": "You have strong pronunciation and clear speech.\n\nThe next step is consistency—making every sentence sound smooth and natural. Daily practice will help you eliminate small slips and build true fluency.",
+          "cta": "Keep your streak going with today's lesson"
+        },
+        "advanced": {
+          "label": "Advanced",
+          "message": "Your pronunciation is excellent—you sound clear and natural.\n\nTo stay at this level, consistent practice is key. Even advanced speakers can lose sharpness without regular use. We'll help you maintain precision and push toward near-native fluency.",
+          "cta": "Stay sharp with today's practice"
+        }
+      }
+    }
+  },
+  "activation": {
+    "title": "Have an activation code?",
+    "desc": "Enter your 6-character activation code to unlock 3 months of Pro access instantly.",
+    "placeholder": "ABC123",
+    "apply": "Activate",
+    "applying": "Activating…",
+    "success": "Activation successful! Your Pro subscription has been extended by 3 months.",
+    "expiresAt": "Pro access valid until {{date}}.",
+    "error": "Failed to activate code. Please try again.",
+    "errors": {
+      "invalidFormat": "Invalid activation code format.",
+      "notFound": "Activation code not found.",
+      "expired": "This activation code has expired.",
+      "maxUses": "This activation code has reached its maximum number of uses.",
+      "alreadyUsed": "You have already used this activation code.",
+      "userNotFound": "User not found."
+    }
+  },
+  "journeyPage": {
+    "title": "Your Learning Journey",
+    "back": "Back"
+  },
+  "videos": {
+    "nav": "YouTube practice",
+    "screenTitle": "Shadowing Practice",
+    "speakingLevel": "SPEAKING LEVEL",
+    "conversationTopic": "CONVERSATION TOPIC",
+    "loadingCatalog": "Loading lesson catalog...",
+    "breadcrumb": {
+      "home": "Home",
+      "videos": "Videos"
+    },
+    "topics": {
+      "movie-short-clip": "Movie short clip",
+      "Interview": "Interview",
+      "News": "News",
+      "Movie clip": "Movie clip",
+      "Conversation": "Conversation",
+      "Vlog": "Vlog",
+      "English lesson": "English lesson",
+      "Science": "Science",
+      "Nature": "Nature",
+      "Entertainment": "Entertainment",
+      "Kids": "Kids",
+      "Tips & Tricks": "Tips & Tricks",
+      "Others": "Others",
+      "interview": "Interview",
+      "news": "News",
+      "movie-clip": "Movie clip",
+      "conversation": "Conversation",
+      "vlog": "Vlog",
+      "english-lesson": "English lesson",
+      "science": "Science",
+      "nature": "Nature",
+      "entertainment": "Entertainment",
+      "kids": "Kids",
+      "tips-tricks": "Tips & Tricks",
+      "others": "Others"
+    },
+    "catalog": {
+      "title": "Practice with YouTube",
+      "subtitle": "Shadow native speech from curated clips, then record and get IPA feedback.",
+      "filters": "Filters",
+      "topic": "Topic",
+      "level": "Level",
+      "allTopics": "All topics",
+      "allLevels": "All levels",
+      "loading": "Loading videos…",
+      "empty": "No videos match these filters yet.",
+      "segments": "{{count}} lines",
+      "viewAll": "View all",
+      "loadMore": "Load more"
+    },
+    "viewed": {
+      "title": "Continue practicing",
+      "progress": "{{played}}/{{total}} lines ({{pct}}%)",
+      "showLess": "Show less"
+    },
+    "practice": {
+      "loading": "Loading video…",
+      "notFound": "Video not found.",
+      "playerLoading": "Loading player…",
+      "mainAria": "Video practice",
+      "transcriptAria": "Transcript",
+      "transcript": "Transcript",
+      "autoPause": "Auto-pause",
+      "pausesAfterEach": "Pauses after each sentence",
+      "goToStart": "Go to start",
+      "replaySentence": "Replay sentence",
+      "nextSentence": "Next sentence",
+      "sentenceControlsAria": "Sentence playback",
+      "start": "Start",
+      "record": "Record",
+      "stopRecord": "Stop",
+      "startingMic": "Starting…",
+      "replay": "Replay recording",
+      "hideTranscript": "Hide transcript",
+      "showTranscript": "Show transcript",
+      "sentenceProgress": "Sentence {{current}}/{{total}}",
+      "toggleTranslation": "Translation",
+      "prevSentence": "Previous",
+      "tapToRecord": "Tap to speak",
+      "recordingNow": "Recording... Tap to stop",
+      "excellentScore": "Excellent! 🎉",
+      "goodScore": "Good job! 👍",
+      "practiceMoreScore": "Keep trying! 💪",
+      "viewPhonemeDetails": "Phoneme analysis",
+      "listenMyVoice": "Listen to my voice"
+    }
+  },
+  "quota": {
+    "monthlyTitle": "MONTHLY QUOTA",
+    "freeChecksThisMonth": "Free practice checks this month",
+    "proMember": "Pro Member",
+    "unlimited": "UNLIMITED",
+    "unlimitedDesc": "Unlimited AI pronunciation checks, OCR scanning & native UK audio generation.",
+    "items": {
+      "pronunciation": "AI Pronunciation Checks",
+      "ocr": "OCR Text Scan",
+      "audio": "UK Native Audio"
+    },
+    "remaining": "{{remaining}} / {{limit}} remaining",
+    "exhausted": "Exhausted (0/{{limit}})",
+    "warningLow": "You are running low on your free practice quota this month.",
+    "unlockPro": "Unlock Pro",
+    "upgradePro": "Upgrade to Pro"
+  },
+  "legalContent": {
+    "terms": {
+      "sec1Title": "1. Acceptance of Terms",
+      "sec1Body": "By accessing or using the EarlySigns service (\"Service\"), you agree to be bound by these Terms of Use. If you do not agree, do not use the Service.",
+      "sec2Title": "2. Description of Service",
+      "sec2Body": "The Service provides English pronunciation practice and feedback based on international IPA phonetics analysis. It includes free and paid usage tiers, account management, and device-based access rules described in the product.",
+      "sec3Title": "3. User Responsibilities",
+      "sec3Body": "You agree to provide accurate information, keep your account secure, use the Service lawfully, and not circumvent usage limits or commercially exploit the Service without authorization.",
+      "sec4Title": "4. Intellectual Property",
+      "sec4Body": "The Service, including its design, content, practice lessons, and AI technology, is owned by EarlySigns. You receive a limited right to use the Service under these terms.",
+      "sec5Title": "5. Disclaimer",
+      "sec5Body": "The Service is provided \"as is.\" AI pronunciation feedback is intended for learning and practice purposes and may not be completely error-free in all complex contexts.",
+      "sec6Title": "6. Limitation of Liability",
+      "sec6Body": "To the fullest extent permitted by law, we are not liable for indirect, incidental, special, or consequential damages arising from your use of the Service.",
+      "sec7Title": "7. Changes to Terms",
+      "sec7Body": "We may update these Terms of Use from time to time. Continued use of the Service after changes constitutes acceptance of the updated terms.",
+      "sec8Title": "8. Contact",
+      "sec8Body": "For questions about these terms, please submit feedback in the app or contact support@earlysigns.app."
+    },
+    "privacy": {
+      "sec1Title": "1. Information We Collect",
+      "sec1Body": "Account information (email), usage data (practice text, recorded audio, check counts, device identifiers), and technical diagnostic data used for authentication and access control.",
+      "sec2Title": "2. How We Use Information",
+      "sec2Body": "We use information to provide and improve the AI pronunciation checker, authenticate sessions, enforce quota limits, process memberships, and comply with legal requirements.",
+      "sec3Title": "3. Audio and Text Data",
+      "sec3Body": "Recorded voice audio and input text are processed to compute IPA phoneme scores and speech clarity. This data may be retained anonymously to improve speech recognition models.",
+      "sec4Title": "4. Information Sharing",
+      "sec4Body": "We do not sell your personal information. Data is only shared with trusted cloud infrastructure and payment processing partners bound by strict confidentiality.",
+      "sec5Title": "5. Security",
+      "sec5Body": "We employ reasonable technical and organizational security measures to protect your personal data against unauthorized access, alteration, or loss.",
+      "sec6Title": "6. Your Choices",
+      "sec6Body": "You can view and update your information in the app at any time. You may also request permanent account and data deletion via support@earlysigns.app or the in-app delete account action.",
+      "sec7Title": "7. Changes to Privacy Policy",
+      "sec7Body": "We may update this Privacy Policy periodically. Continued use of the Service after changes constitutes acceptance of the revised policy."
+    }
+  },
+  "payment": {
+    "screenTitle": "Upgrade Account",
+    "heroTitle": "EarlySigns Pro",
+    "heroSubtitle": "Elevate your British English (RP) pronunciation with cutting-edge AI and personalized learning paths.",
+    "badgeUnlock": "Unlock Pro",
+    "restore": "Restore",
+    "badgeUnlimited": "Unlimited AI",
+    "badgeNative": "🇬🇧 Native RP Standard",
+    "badgePhonemes": "📊 Full 44 Phonemes",
+    "benefitsTitle": "PRO MEMBER PRIVILEGES",
+    "vipAccess": "VIP ACCESS",
+    "benefits": {
+      "b1": "Unlimited AI pronunciation scoring",
+      "b2": "Free text practice & Camera OCR scanning",
+      "b3": "High-fidelity native British (RP) audio models",
+      "b4": "In-depth 44 IPA phonemes analytic diagnostic"
+    },
+    "selectPackage": "Select a subscription plan:",
+    "perMonth": "/ month",
+    "billedYearly": "Billed annually",
+    "billedQuarterly": "Billed quarterly",
+    "billedMonthly": "Billed monthly",
+    "assuranceGuarantee": "✓ No charge without confirmation • Cancel anytime",
+    "restorePurchases": "Restore Purchases",
+    "manageSubscriptions": "Manage Store Subscriptions",
+    "giftCodeTitle": "Have a gift or institutional activation code?",
+    "giftCodePlaceholder": "Enter code (e.g. PRO-UK-2026)",
+    "applyCode": "Redeem Code",
+    "applyingCode": "Applying...",
+    "autoRenewDisclaimerTitle": "Auto-Renewal Terms",
+    "autoRenewDisclaimerText": "Subscriptions automatically renew at the end of each billing cycle unless cancelled at least 24 hours prior in your Apple ID / Google Play account settings. Payment will be charged directly through your linked device payment method.",
+    "eula": "Terms of Use (EULA)",
+    "privacyPolicy": "Privacy Policy",
+    "ctaApple": "Subscribe with Apple App Store",
+    "ctaGoogle": "Subscribe with Google Play",
+    "ctaDefault": "Subscribe to EarlySigns Pro",
+    "processing": "Processing Store purchase...",
+    "successTitle": "Subscription Successful!",
+    "successMessage": "Welcome to EarlySigns Pro ({{product}}).",
+    "restoreSuccess": "Restore Successful",
+    "restoreTitle": "Restore Purchases",
+    "activateSuccess": "Activation Successful!",
+    "activateSuccessMsg": "Your account has been upgraded to Pro.",
+    "transactionFailed": "Transaction could not be completed."
+  },
+  "profileExtra": {
+    "screenTitle": "User Profile",
+    "proBadge": "EARLYSIGNS PRO",
+    "upgradePro": "Upgrade to Pro",
+    "guestUser": "EarlySigns Guest",
+    "rpStandard": "🇬🇧 Standard British (Received Pronunciation)",
+    "planExpiry": "Expires: {{date}}",
+    "proBannerTitle": "EarlySigns Pro",
+    "proBannerSubtitle": "Unlock in-depth AI phoneme analytics and full 44 native sounds",
+    "phonemeDetails": "Phoneme Details ({{count}} practiced)",
+    "membershipGroup": "Membership & Store Subscription",
+    "proBenefitsTitle": "EarlySigns Pro Benefits",
+    "proUpgradeTitle": "Upgrade to EarlySigns Pro",
+    "proActiveDesc": "Active • Unlimited AI checks",
+    "proUpgradeDesc": "From only 83,250đ/mo • In-depth AI coaching",
+    "restoreTitle": "Restore Store Purchases",
+    "restoreDesc": "Retrieve Pro access when switching devices",
+    "manageStoreTitle": "Manage on Apple ID / Google Play",
+    "manageStoreDesc": "Cancel or change recurring store subscription",
+    "notifGroup": "Notifications & Study Reminders",
+    "notifGroupDesc": "Maintain daily pronunciation practice habits",
+    "dailyReminder": "Daily Study Reminders",
+    "dailyReminderDesc": "Send reminders to keep your daily streak",
+    "notifPermissionWarning": "⚠️ Notifications permission not granted. Tap \"Open Device Notification Settings\" below to enable.",
+    "chooseReminderTime": "Select reminder time:",
+    "contentUpdates": "Lesson & new feature updates",
+    "promotions": "Promotional notifications & offers",
+    "openDeviceSettings": "Open Device Notification Settings",
+    "voiceLangGroup": "Accent & Language",
+    "voiceLangDesc": "Target pronunciation accent & display language",
+    "supportLegalGroup": "Support & Legal Center",
+    "referralFriends": "Friend Referral Program",
+    "contactSupport": "Contact & Learner Support",
+    "aboutApp": "About EarlySigns",
+    "termsPrivacy": "Terms of Use & Privacy",
+    "deleteAccountBtn": "Request account & data deletion",
+    "avgAccuracy": "Avg. Accuracy",
+    "qualifiedSounds": "Mastered Sounds (≥5 checks)",
+    "upgradeBtn": "Upgrade",
+    "streakTitle": "Practice Streak",
+    "streakDesc": "Practice daily to build natural muscle memory",
+    "streakDays": "{{days}} days",
+    "profileBuildingTitle": "Pronunciation Profile Building",
+    "profileBuildingSubtitle": "Requires 80% IPA coverage",
+    "profileBuildingPart1": "To ensure academic accuracy, overall diagnostic score and charts unlock after completing at least",
+    "profileBuildingMinChecks": "5 checks",
+    "profileBuildingForAtLeast": "for at least",
+    "profileBuildingThreshold": "80% of IPA phonemes ({{count}}/{{total}} sounds)",
+    "unlockProgress": "Sound unlock progress:",
+    "unlockTip": "Practice with Video or Free Text lessons to unlock detailed diagnostic insights.",
+    "practiceNowBtn": "Practice to Unlock Now",
+    "unlocked": "Unlocked",
+    "reminderUpdatedTitle": "Reminder Time Updated",
+    "reminderUpdatedMsg": "Daily study notification set for {{time}}.",
+    "restoreError": "Restore Failed",
+    "notifPermissionDialog": {
+      "title": "Notification Permission Required",
+      "message": "To allow EarlySigns to remind you to practice pronunciation daily, please enable notifications in Device Settings.",
+      "later": "Later",
+      "openSettings": "Open Settings"
+    },
+    "reminderToastEnabled": "Study reminder enabled",
+    "reminderToastDisabled": "Study reminder disabled",
+    "reminderToastSchedule": "Notification will be sent at {{time}} daily.",
+    "supportDialog": {
+      "title": "Contact EarlySigns Support",
+      "message": "Our learner support team is always ready to answer questions about learning paths and technical support:\n\n• Email: support@earlysigns.app\n• Support hours: 8:00 - 22:00 daily",
+      "close": "Close",
+      "sendEmail": "Send Email"
+    },
+    "deleteDialog": {
+      "title": "Confirm Account Deletion",
+      "message": "Are you sure you want to permanently delete your EarlySigns account? All pronunciation history, streaks, and subscription benefits will be permanently lost and cannot be recovered.",
+      "cancel": "Cancel",
+      "confirm": "Confirm Delete",
+      "toastSuccess": "Account Deleted",
+      "toastMessage": "All local session data has been cleared."
+    }
+  },
+  "homeExtra": {
+    "brandSubtitle": "EarlySigns • AI Pronunciation",
+    "accentBadge": "🇬🇧 UK RP",
+    "clarityLabel": "Clarity",
+    "upgradeBadge": "Upgrade",
+    "videoSubtitle": "Shadow native intonation with precision",
+    "videoLevels": "Levels A1 to C2 · Rich communication topics",
+    "exploreVideos": "Explore Video Catalog",
+    "freeTextSubtitle": "Paste reading passages or capture book pages",
+    "phonemesTitle": "Phonemes & Journey",
+    "phonemesSubtitle": "Master 44 English IPA phonemes",
+    "phonemesExplore": "Explore all 44 phonemes",
+    "phonemesDetail": "Monophthongs, diphthongs & consonants",
+    "journeyTitle": "Personalized Learning Path",
+    "journeyStages": "Step-by-step pronunciation milestones",
+    "journeyAdaptive": "Adaptive practice tailored to your weak sounds",
+    "screeningTitle": "Start Initial Screening Test",
+    "screeningDesc": "Comprehensive 44-phoneme assessment to unlock clarity score",
+    "screeningAction": "Take test (3 mins)"
+  }
+}

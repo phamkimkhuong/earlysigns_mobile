@@ -1,0 +1,56 @@
+{
+  "expo": {
+    "name": "EarlySigns",
+    "slug": "earlysigns",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/logo.png",
+    "userInterfaceStyle": "light",
+    "scheme": "earlysigns",
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "EarlySigns records your voice to check English pronunciation.",
+        "NSCameraUsageDescription": "EarlySigns uses the camera to scan text for pronunciation practice.",
+        "NSPhotoLibraryUsageDescription": "EarlySigns uses your photos to scan text for pronunciation practice.",
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        }
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#f7f6f3",
+        "foregroundImage": "./assets/logo.png"
+      },
+      "permissions": [
+        "RECORD_AUDIO",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE"
+      ],
+      "usesCleartextTraffic": true,
+      "softwareKeyboardLayoutMode": "resize"
+    },
+    "web": {
+      "favicon": "./assets/logo.png"
+    },
+    "plugins": [
+      "expo-web-browser",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "EarlySigns records your voice to check English pronunciation."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "EarlySigns uses your photos to scan text for pronunciation practice.",
+          "cameraPermission": "EarlySigns uses the camera to scan text for pronunciation practice."
+        }
+      ],
+      "expo-splash-screen",
+      "expo-secure-store"
+    ]
+  }
+}
