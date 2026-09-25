@@ -23,7 +23,7 @@ export const API_ENDPOINTS = {
   },
 
   // 2. Pronunciation AI Check Engine
-  CHECK: "/api/check",
+  CHECK: "/api/check/",
 
   // 3. Lessons & Learning Journey
   LESSONS: {
@@ -50,7 +50,7 @@ export const API_ENDPOINTS = {
 
   // 5. YouTube Video Practice Catalog
   VIDEOS: {
-    LIST: "/api/videos",
+    LIST: "/api/videos/",
     TOPICS: "/api/videos/topics",
     VIEWED: (limit?: number) =>
       limit ? `/api/videos/viewed?limit=${encodeURIComponent(String(limit))}` : "/api/videos/viewed",
@@ -64,7 +64,7 @@ export const API_ENDPOINTS = {
 
   // 6. Free Text & Camera OCR Practice
   TEXT_PRACTICE: {
-    PREPARE: "/api/prepare",
+    PREPARE: "/api/prepare/",
     OCR: "/api/text-practice/ocr",
     IPA: "/api/text-practice/ipa",
     AUDIO: "/api/text-practice/audio",
@@ -92,7 +92,7 @@ export const API_ENDPOINTS = {
   },
 
   // 9. Error Telemetry Reporting
-  ERROR_REPORT: "/api/error-report",
+  ERROR_REPORT: "/api/error-report/",
 } as const;
 
 export default API_ENDPOINTS;

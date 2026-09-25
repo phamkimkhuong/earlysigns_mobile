@@ -812,7 +812,7 @@
       "pausesAfterEach": "Tự dừng sau mỗi câu",
       "goToStart": "Về đầu câu",
       "replaySentence": "Phát lại câu",
-      "nextSentence": "Câu tiếp theo",
+      "nextSentence": "Câu tiếp",
       "sentenceControlsAria": "Điều khiển phát câu",
       "start": "Bắt đầu",
       "record": "Ghi âm",
@@ -828,9 +828,13 @@
       "recordingNow": "Đang ghi âm... Chạm để dừng",
       "excellentScore": "Xuất sắc! 🎉",
       "goodScore": "Khá tốt! 👍",
-      "practiceMoreScore": "Cần cố gắng! 💪",
+      "practiceMoreScore": "Cần luyện tập thêm! 💪",
       "viewPhonemeDetails": "Phân tích âm vị",
-      "listenMyVoice": "Nghe lại giọng tôi"
+      "listenMyVoice": "Nghe lại giọng tôi",
+      "practiceSentence": "Luyện phát âm",
+      "listeningModeActive": "Chế độ luyện nghe (phụ đề đang ẩn)",
+      "showSubtitles": "Hiện phụ đề",
+      "pausesOnSilence": "Nói to rõ ràng, chạm để dừng sớm"
     }
   },
   "quota": {

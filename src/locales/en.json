@@ -829,9 +829,13 @@
       "recordingNow": "Recording... Tap to stop",
       "excellentScore": "Excellent! 🎉",
       "goodScore": "Good job! 👍",
-      "practiceMoreScore": "Keep trying! 💪",
+      "practiceMoreScore": "Keep practicing! 💪",
       "viewPhonemeDetails": "Phoneme analysis",
-      "listenMyVoice": "Listen to my voice"
+      "listenMyVoice": "Listen to my voice",
+      "practiceSentence": "Practice sentence",
+      "listeningModeActive": "Listening mode active (subtitles hidden)",
+      "showSubtitles": "Show subtitles",
+      "pausesOnSilence": "Speak clearly, tap to finish"
     }
   },
   "quota": {

@@ -83,11 +83,15 @@ export function xhrFormDataFetch(
     };
 
     xhr.onload = () => finish(resolve, createXhrResponse(xhr));
-    xhr.onerror = () =>
+    xhr.onerror = (e: any) => {
+      if (__DEV__) {
+        console.warn(`[XHR Form Err] URL: ${url} | Status: ${xhr.status} | ReadyState: ${xhr.readyState}`, e);
+      }
       finish(
         reject,
         Object.assign(new TypeError("Network request failed"), { name: "TypeError" })
       );
+    };
     xhr.ontimeout = () =>
       finish(reject, Object.assign(new Error("Upload timed out."), { name: "TypeError" }));
     xhr.onabort = () =>

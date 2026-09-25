@@ -109,7 +109,7 @@ export default function RootNavigator() {
         <Stack.Screen
           name="VideoPractice"
           component={VideoPracticeScreen}
-          options={{ title: t("nav.videos") }}
+          options={{ headerShown: false }}
         />
         <Stack.Screen name="Terms" component={TermsScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Privacy" component={PrivacyScreen} options={{ headerShown: false }} />

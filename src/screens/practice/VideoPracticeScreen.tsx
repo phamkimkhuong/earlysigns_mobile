@@ -1,7 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  Animated,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -14,11 +12,7 @@ import {
   Eye,
   EyeOff,
   Film,
-  Mic,
   RotateCcw,
-  Sparkles,
-  Square,
-  Volume2,
 } from "lucide-react-native";
 import YoutubePlayer from "@/components/practice/YoutubePlayer";
 import { useTranslation } from "react-i18next";
@@ -28,30 +22,23 @@ import { useSegmentIpa } from "@/hooks/useSegmentIpa";
 import { buildSoundAnalysisRows } from "@/utils/pronunciationAnalysis";
 import { resolveUserKey, resolveUserTier } from "@/services/usageLimits";
 import { useBillingStore } from "@/store/useBillingStore";
-import { checkResultScoreColorFromPct } from "@/utils/checkResultScoreColor";
-import { formatMs, topicLabel } from "@/utils/errors";
+import { topicLabel } from "@/utils/errors";
 import DialectToggle from "@/components/ui/DialectToggle";
 import IPAChecking from "@/components/practice/IPAChecking";
 import ScoreWords from "@/components/practice/ScoreWords";
-import SoundAnalysis from "@/components/practice/SoundAnalysis";
-import StagedAiProgress from "@/components/practice/StagedAiProgress";
+import VideoRecordingHub from "@/components/practice/VideoRecordingHub";
 import { VideoPracticeSkeleton } from "@/components/ui/Skeleton";
 import { videoApi, lessonApi, billingApi } from "@/api";
 import type { Dialect, VideoSegment } from "@/types/domain";
 
-const SENTENCE_PRE_ROLL_MS = 500;
-const SENTENCE_END_ROLL_MS = 500;
+const SENTENCE_PRE_ROLL_MS = 250;
 
-function segmentSeekSec(seg: VideoSegment): number {
-  return Math.max(0, (seg.start_ms - SENTENCE_PRE_ROLL_MS) / 1000);
-}
-
-function segmentEndMs(
-  seg: VideoSegment,
-  { endRoll = false, durationMs = Infinity }: { endRoll?: boolean; durationMs?: number } = {}
-): number {
-  const extra = endRoll ? SENTENCE_END_ROLL_MS : 0;
-  return Math.min(seg.end_ms + extra, durationMs);
+function segmentSeekSec(seg: VideoSegment, prevSeg?: VideoSegment | null): number {
+  let seekMs = Math.max(0, seg.start_ms - SENTENCE_PRE_ROLL_MS);
+  if (prevSeg && prevSeg.end_ms > 0 && seekMs < prevSeg.end_ms) {
+    seekMs = Math.min(seg.start_ms, prevSeg.end_ms + 40);
+  }
+  return seekMs / 1000;
 }
 
 export default function VideoPracticeScreen({ route, navigation }: { route: any; navigation: any }) {
@@ -78,15 +65,18 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
   const [dialectSaving, setDialectSaving] = useState(false);
   const usageStatus = useBillingStore((s) => s.usage);
 
-  // React 19 safe Animated Value for Mic Pulse
-  const [recordPulse] = useState(() => new Animated.Value(1));
-
   const playerRef = useRef<any>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const fallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pauseLockRef = useRef(true);
-  const completedSentenceRef = useRef(false);
-  const playTargetRef = useRef<{ index: number; endMs: number; continuous: boolean } | null>(null);
-  const programmaticPlayRef = useRef(false);
+  const pauseTimestampRef = useRef<number>(0);
+  const seekTimeRef = useRef<number>(0);
+  const playTargetRef = useRef<{
+    index: number;
+    startMs: number;
+    endMs: number;
+    seekMs: number;
+  } | null>(null);
   const activeIndexRef = useRef(0);
   const segmentsRef = useRef<VideoSegment[]>([]);
   const videoDurationRef = useRef(Infinity);
@@ -94,7 +84,16 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
   const reportedSegmentsRef = useRef(new Set<number>());
   const videoRef = useRef<any>(null);
   const practiceDialectRef = useRef<Dialect>(userDialect || "uk");
-  practiceDialectRef.current = practiceDialect;
+  const playingRef = useRef(playing);
+  const isCheckingTimeRef = useRef(false);
+
+  useEffect(() => {
+    practiceDialectRef.current = practiceDialect;
+  }, [practiceDialect]);
+
+  useEffect(() => {
+    playingRef.current = playing;
+  }, [playing]);
 
   const userTier = useMemo(
     () =>
@@ -127,35 +126,9 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
     onUsageUpdated: (u) => useBillingStore.getState().setUsage(u),
   });
 
-  // Pulsing ring animation when recording
   useEffect(() => {
-    if (!isRecording) {
-      recordPulse.setValue(1);
-      return;
-    }
-    const pulseLoop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(recordPulse, {
-          toValue: 1.25,
-          duration: 650,
-          useNativeDriver: true,
-        }),
-        Animated.timing(recordPulse, {
-          toValue: 1,
-          duration: 650,
-          useNativeDriver: true,
-        }),
-      ])
-    );
-    pulseLoop.start();
-    return () => {
-      pulseLoop.stop();
-    };
-  }, [isRecording, recordPulse]);
-
-  useEffect(() => {
-    if (!authToken) return;
-    billingApi.getUsage().catch(() => {});
+    if (!authToken || useBillingStore.getState().usage) return;
+    billingApi.getUsage().catch(() => { });
   }, [authToken]);
 
   const notifyViewStart = useCallback(() => {
@@ -189,10 +162,30 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
     [youtubeId, notifyViewStart]
   );
 
+  const stopPlayback = useCallback(
+    (index: number) => {
+      if (fallbackTimerRef.current) {
+        clearTimeout(fallbackTimerRef.current);
+        fallbackTimerRef.current = null;
+      }
+      pauseTimestampRef.current = Date.now();
+      pauseLockRef.current = true;
+      playingRef.current = false;
+      setPlaying(false);
+      playTargetRef.current = null;
+      notifySegmentPlayed(index);
+    },
+    [notifySegmentPlayed]
+  );
+
   const armSentence = useCallback(
     async (
       index: number,
-      { play, seek = "none", endRoll = false }: { play: boolean; seek?: "none" | "preroll"; endRoll?: boolean }
+      {
+        play,
+        seek = "none",
+        endRoll = false,
+      }: { play: boolean; seek?: "none" | "preroll"; endRoll?: boolean }
     ) => {
       const segs = segmentsRef.current;
       const seg = segs[index];
@@ -200,33 +193,55 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
       activeIndexRef.current = index;
       setActiveIndex(index);
       clearResult();
-      notifySegmentPlayed(index);
-      const targetEndMs = segmentEndMs(seg, {
-        endRoll,
-        durationMs: videoDurationRef.current,
-      });
+
+      if (fallbackTimerRef.current) {
+        clearTimeout(fallbackTimerRef.current);
+        fallbackTimerRef.current = null;
+      }
+
+      const prevSeg = segs[index - 1] || null;
+      const nextSeg = segs[index + 1] || null;
+      let targetEndMs = seg.end_ms + (endRoll ? 250 : 0);
+      if (nextSeg && targetEndMs > nextSeg.start_ms) {
+        targetEndMs = Math.max(seg.end_ms, nextSeg.start_ms - 30);
+      }
+      targetEndMs = Math.min(targetEndMs, videoDurationRef.current);
+
+      const seekSec = segmentSeekSec(seg, prevSeg);
+      const seekMs = Math.round(seekSec * 1000);
+
       playTargetRef.current = {
         index,
+        startMs: seg.start_ms,
         endMs: targetEndMs,
-        continuous: false,
+        seekMs,
       };
-      completedSentenceRef.current = false;
-      pauseLockRef.current = true;
+
       if (seek === "preroll" && playerRef.current) {
-        playerRef.current.seekTo(segmentSeekSec(seg), true);
+        seekTimeRef.current = Date.now();
+        playerRef.current.seekTo?.(seekSec, true);
       }
+
       if (play) {
-        programmaticPlayRef.current = true;
+        pauseLockRef.current = false;
+        playingRef.current = true;
         setPlaying(true);
+
+        // Fallback safety timeout: guarantees the video pauses even if WebView bridge stalls
+        const maxDurationMs = Math.max(1200, targetEndMs - seekMs + 600);
+        fallbackTimerRef.current = setTimeout(() => {
+          if (playingRef.current && playTargetRef.current?.index === index) {
+            stopPlayback(index);
+          }
+        }, maxDurationMs);
       } else {
+        pauseLockRef.current = true;
+        playingRef.current = false;
         setPlaying(false);
       }
     },
-    [clearResult, notifySegmentPlayed]
+    [clearResult, stopPlayback]
   );
-
-  const armSentenceRef = useRef(armSentence);
-  armSentenceRef.current = armSentence;
 
   useEffect(() => {
     let cancelled = false;
@@ -250,7 +265,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
         if (segs.length > 0) {
           activeIndexRef.current = 0;
           setActiveIndex(0);
-          armSentenceRef.current(0, { play: false, seek: "preroll" });
+          armSentence(0, { play: false, seek: "preroll" });
         }
       } catch (err: any) {
         if (!cancelled) setError(err?.message || t("videos.practice.notFound"));
@@ -261,26 +276,55 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
     return () => {
       cancelled = true;
     };
-  }, [youtubeId, t]);
+  }, [youtubeId, armSentence, t]);
 
   useEffect(() => {
     pollRef.current = setInterval(async () => {
       const player = playerRef.current;
       const target = playTargetRef.current;
-      if (!player || !target) return;
-      const sec = await player.getCurrentTime();
-      const ms = sec * 1000;
-      if (ms >= target.endMs) {
-        completedSentenceRef.current = true;
-        pauseLockRef.current = true;
-        setPlaying(false);
-        playTargetRef.current = null;
+      if (!playingRef.current || !player || !target || isCheckingTimeRef.current) return;
+
+      // Skip early ticks while player WebView is seeking to seekSec
+      if (Date.now() - seekTimeRef.current < 250) return;
+
+      isCheckingTimeRef.current = true;
+      try {
+        const sec = await Promise.race([
+          player.getCurrentTime(),
+          new Promise<number>((_, reject) =>
+            setTimeout(() => reject(new Error("time query timeout")), 350)
+          ),
+        ]);
+        const ms = Number(sec) * 1000;
+
+        // Skip stale pre-seek time if seek was backward
+        if (Date.now() - seekTimeRef.current < 1200 && ms > target.endMs + 1000) {
+          return;
+        }
+
+        // Sentence playback finished speaking: stop and pause definitively!
+        if (ms >= target.endMs) {
+          stopPlayback(target.index);
+        }
+      } catch {
+        // ignore player query errors / timeouts
+      } finally {
+        isCheckingTimeRef.current = false;
       }
     }, 100);
+
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
+      if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current);
     };
-  }, []);
+  }, [stopPlayback]);
+
+  // Ghi nhận câu khi người dùng thực hiện luyện nói và nhận được kết quả chấm điểm AI
+  useEffect(() => {
+    if (result) {
+      notifySegmentPlayed(activeIndexRef.current);
+    }
+  }, [result, notifySegmentPlayed]);
 
   const segments = video?.segments || [];
   const current = segments[activeIndex] || null;
@@ -358,7 +402,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
         />
 
         {/* 1. LUXURY TOP NAVIGATION BAR */}
-        <View className="bg-[#1e2538] px-4 pt-3 pb-7 gap-3">
+        <View className="bg-[#1e2538] px-4 pt-3 pb-6 gap-3.5">
           <View className="flex-row items-center justify-between">
             {/* Back Button */}
             <TouchableOpacity
@@ -370,20 +414,23 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                   navigation?.navigate?.("Videos");
                 }
               }}
-              className="w-10 h-10 rounded-2xl bg-slate-800 items-center justify-center border border-slate-700"
+              className="w-10 h-10 rounded-2xl bg-slate-800/90 items-center justify-center border border-slate-700/80"
             >
               <ChevronLeft size={22} color="#ffffff" />
             </TouchableOpacity>
 
             {/* Video Title / Topic Header */}
-            <View className="flex-1 px-3">
+            <View className="flex-1 px-3 items-center">
               <Text
-                className="text-2xs font-bold text-indigo-400 uppercase tracking-wider"
+                className="text-[10px] font-black text-indigo-400 uppercase tracking-widest"
                 numberOfLines={1}
               >
                 {video ? topicLabel(video.topic, t) : t("videos.breadcrumb.videos")}
               </Text>
-              <Text className="text-sm font-black text-white" numberOfLines={1}>
+              <Text
+                className="text-sm font-extrabold text-white text-center mt-0.5"
+                numberOfLines={1}
+              >
                 {video?.title || t("videos.practice.mainAria")}
               </Text>
             </View>
@@ -404,10 +451,33 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
               }}
             />
           </View>
+
+          {/* Integrated Header Progress Bar */}
+          {video && segments.length > 0 ? (
+            <View className="gap-1.5 pt-1">
+              <View className="flex-row items-center justify-between px-1">
+                <Text className="text-2xs font-bold text-slate-300">
+                  {t("videos.practice.sentenceProgress", {
+                    current: activeIndex + 1,
+                    total: segments.length || 1,
+                  })}
+                </Text>
+                <Text className="text-2xs font-extrabold text-indigo-300">
+                  {progressPercent}%
+                </Text>
+              </View>
+              <View className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                <View
+                  className="h-full bg-indigo-500 rounded-full"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </View>
+            </View>
+          ) : null}
         </View>
 
         {/* 2. LAYERED OVERLAPPING CANVAS SHEET */}
-        <View className="flex-1 bg-appBg -mt-4 rounded-t-[32px] px-4 pt-5 pb-24 gap-4">
+        <View className="flex-1 bg-appBg -mt-3 rounded-t-[32px] px-4 pt-4 pb-24 gap-3.5">
           {loading ? <VideoPracticeSkeleton /> : null}
 
           {error ? (
@@ -418,76 +488,63 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
 
           {video ? (
             <>
-              {/* CARD 1: CINEMATIC VIDEO PLAYER & STEPPER */}
-              <View className="bg-white rounded-3xl p-3.5 border border-slate-200/90 shadow-sm gap-3">
-                {/* YouTube Video Frame */}
-                <View className="rounded-2xl overflow-hidden bg-black shadow-inner">
-                  <YoutubePlayer
-                    ref={playerRef}
-                    height={210}
-                    videoId={youtubeId}
-                    play={playing}
-                    onReady={() => setPlayerReady(true)}
-                    onChangeState={(state: string) => {
-                      if (
-                        state === "playing" &&
-                        pauseLockRef.current &&
-                        !programmaticPlayRef.current
-                      ) {
-                        const idx = completedSentenceRef.current
-                          ? Math.min(
-                              activeIndexRef.current + 1,
-                              segmentsRef.current.length - 1
-                            )
-                          : activeIndexRef.current;
-                        armSentence(idx, { play: true, seek: "none" });
+              {/* CARD 1: CINEMATIC VIDEO PLAYER */}
+              <View
+                className="rounded-3xl overflow-hidden bg-black"
+                style={{
+                  elevation: 4,
+                  shadowColor: "#0f172a",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.15,
+                  shadowRadius: 10,
+                }}
+              >
+                <YoutubePlayer
+                  ref={playerRef}
+                  height={205}
+                  videoId={youtubeId}
+                  play={playing}
+                  onReady={() => setPlayerReady(true)}
+                  onChangeState={(state: string) => {
+                    if (state === "playing") {
+                      // Discard ghost "playing" events fired by WebView right after a programmatic pause
+                      if (pauseLockRef.current && Date.now() - pauseTimestampRef.current < 800) {
+                        playingRef.current = false;
+                        setPlaying(false);
+                        return;
                       }
-                    }}
-                  />
-                </View>
-
-                {/* Sentence Stepper & Progress Tracker */}
-                <View className="px-1 gap-1.5">
-                  <View className="flex-row items-center justify-between">
-                    <View className="flex-row items-center gap-1.5">
-                      <Text className="text-xs font-black text-slate-800">
-                        {t("videos.practice.sentenceProgress", {
-                          current: activeIndex + 1,
-                          total: segments.length || 1,
-                        })}
-                      </Text>
-                      <Text className="text-2xs font-semibold text-indigo-600">
-                        ({progressPercent}%)
-                      </Text>
-                    </View>
-                    <Text className="text-2xs font-bold text-slate-500">
-                      ⏱️ {current ? formatMs(current.start_ms) : "0:00"}
-                    </Text>
-                  </View>
-
-                  {/* Progress Line */}
-                  <View className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                    <View
-                      className="h-full bg-indigo-600 rounded-full"
-                      style={{ width: `${progressPercent}%` }}
-                    />
-                  </View>
-                </View>
+                      pauseLockRef.current = false;
+                      notifyViewStart();
+                      playingRef.current = true;
+                      setPlaying(true);
+                    } else if (state === "paused" || state === "ended") {
+                      playingRef.current = false;
+                      setPlaying(false);
+                    }
+                  }}
+                />
               </View>
 
               {/* CARD 2: INTERACTIVE SUBTITLE & KARAOKE CARD */}
-              <View className="bg-white rounded-3xl p-5 border border-slate-200/90 shadow-sm gap-3.5">
-                {/* Card Sub-header */}
+              <View
+                className="bg-white rounded-3xl p-5 gap-3"
+                style={{
+                  borderColor: "#f1f5f9",
+                  borderWidth: 1,
+                  elevation: 2,
+                  shadowColor: "#0f172a",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.04,
+                  shadowRadius: 8,
+                }}
+              >
+                {/* Card Sub-header Toolbar */}
                 <View className="flex-row items-center justify-between border-b border-slate-100 pb-2.5">
-                  <View className="flex-row items-center gap-2">
-                    <View className="bg-indigo-50 border border-indigo-100 px-2.5 py-0.5 rounded-full">
-                      <Text className="text-2xs font-black text-indigo-700">
-                        {t("videos.practice.sentenceProgress", {
-                          current: activeIndex + 1,
-                          total: segments.length,
-                        })}
-                      </Text>
-                    </View>
+                  <View className="flex-row items-center gap-1.5">
+                    <View className="w-2 h-2 rounded-full bg-indigo-500" />
+                    <Text className="text-2xs font-extrabold uppercase tracking-wider text-slate-500">
+                      {t("videos.practice.practiceSentence")}
+                    </Text>
                   </View>
 
                   <View className="flex-row items-center gap-2">
@@ -496,11 +553,10 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                       <TouchableOpacity
                         activeOpacity={0.7}
                         onPress={() => setShowTranslation((v) => !v)}
-                        className={`flex-row items-center gap-1 px-2.5 py-1 rounded-full border ${
-                          showTranslation
+                        className={`flex-row items-center gap-1 px-2.5 py-1 rounded-full border ${showTranslation
                             ? "bg-indigo-50 border-indigo-200"
                             : "bg-slate-50 border-slate-200"
-                        }`}
+                          }`}
                       >
                         {showTranslation ? (
                           <EyeOff size={13} color="#4f46e5" />
@@ -508,9 +564,8 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                           <Eye size={13} color="#64748b" />
                         )}
                         <Text
-                          className={`text-2xs font-bold ${
-                            showTranslation ? "text-indigo-700" : "text-slate-600"
-                          }`}
+                          className={`text-2xs font-bold ${showTranslation ? "text-indigo-700" : "text-slate-600"
+                            }`}
                         >
                           {t("videos.practice.toggleTranslation")}
                         </Text>
@@ -521,21 +576,35 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                     <TouchableOpacity
                       activeOpacity={0.7}
                       onPress={() => setHideTranscript((v) => !v)}
-                      className="p-1.5 rounded-full bg-slate-50 border border-slate-200"
+                      className={`p-1.5 rounded-full border ${hideTranscript
+                          ? "bg-indigo-50 border-indigo-200"
+                          : "bg-slate-50 border-slate-200"
+                        }`}
                     >
-                      <Film size={14} color="#64748b" />
+                      <Film size={14} color={hideTranscript ? "#4f46e5" : "#64748b"} />
                     </TouchableOpacity>
                   </View>
                 </View>
 
                 {/* Subtitle Content */}
-                {!hideTranscript && current?.text ? (
-                  <View className="gap-2.5">
-                    <Text className="text-lg font-black text-slate-900 leading-relaxed tracking-tight">
-                      {current.text}
+                {hideTranscript ? (
+                  <View className="py-6 items-center justify-center gap-2">
+                    <Text className="text-xs text-slate-400 font-medium">
+                      {t("videos.practice.listeningModeActive")}
                     </Text>
-
-                    {/* IPA Word Breakdown with Accuracy Alignment */}
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={() => setHideTranscript(false)}
+                      className="px-3 py-1 bg-slate-100 rounded-full"
+                    >
+                      <Text className="text-2xs font-bold text-slate-700">
+                        {t("videos.practice.showSubtitles")}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : current?.text ? (
+                  <View className="gap-2.5 py-1">
+                    {/* IPA Word Breakdown with Alignment */}
                     <ScoreWords
                       words={practiceWords}
                       alignment={result?.char_alignment}
@@ -545,8 +614,8 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
 
                     {/* Collapsible Vietnamese Translation */}
                     {showTranslation && current.translation_vi ? (
-                      <View className="bg-indigo-50/60 border border-indigo-100 rounded-2xl p-3.5 mt-1">
-                        <Text className="text-xs text-indigo-950 font-medium leading-relaxed">
+                      <View className="bg-indigo-50/50 border border-indigo-100/70 rounded-2xl p-3.5 mt-1">
+                        <Text className="text-xs text-indigo-950 font-medium leading-relaxed italic">
                           💡 {current.translation_vi}
                         </Text>
                       </View>
@@ -559,19 +628,27 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
               </View>
 
               {/* TOOLBAR: THUMB-FRIENDLY SENTENCE NAVIGATION */}
-              <View className="flex-row items-center justify-between gap-2 px-1">
+              <View className="flex-row items-center justify-between gap-2.5 px-0.5">
                 {/* Previous Sentence */}
                 <TouchableOpacity
                   activeOpacity={0.8}
                   disabled={!playerReady || activeIndex === 0}
                   onPress={() =>
-                    armSentence(activeIndex - 1, { play: true, seek: "preroll" })
+                    armSentence(activeIndex - 1, {
+                      play: true,
+                      seek: "preroll",
+                      endRoll: false,
+                    })
                   }
-                  className={`flex-1 py-3 rounded-2xl border items-center justify-center flex-row gap-1 ${
-                    activeIndex === 0
-                      ? "bg-slate-100 border-slate-200 opacity-40"
-                      : "bg-white border-slate-200 active:bg-slate-50 shadow-sm"
-                  }`}
+                  className={`flex-1 py-3 rounded-2xl items-center justify-center flex-row gap-1 ${activeIndex === 0
+                      ? "bg-slate-100 opacity-40"
+                      : "bg-white active:bg-slate-50"
+                    }`}
+                  style={{
+                    borderWidth: 1,
+                    borderColor: activeIndex === 0 ? "#e2e8f0" : "#cbd5e1",
+                    elevation: activeIndex === 0 ? 0 : 1,
+                  }}
                 >
                   <ChevronLeft
                     size={16}
@@ -582,21 +659,28 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                   </Text>
                 </TouchableOpacity>
 
-                {/* Replay Video Sentence (Highlighted) */}
+                {/* Replay Video Sentence (Hero Action) */}
                 <TouchableOpacity
-                  activeOpacity={0.8}
+                  activeOpacity={0.85}
                   disabled={!playerReady || !current}
                   onPress={() =>
                     armSentence(activeIndex, {
                       play: true,
                       seek: "preroll",
-                      endRoll: true,
+                      endRoll: false,
                     })
                   }
-                  className="flex-1 py-3 rounded-2xl bg-indigo-50 border border-indigo-200 active:bg-indigo-100 shadow-sm items-center justify-center flex-row gap-1.5"
+                  className="flex-[1.25] py-3.5 rounded-2xl bg-indigo-600 active:bg-indigo-700 items-center justify-center flex-row gap-2"
+                  style={{
+                    elevation: 3,
+                    shadowColor: "#4f46e5",
+                    shadowOffset: { width: 0, height: 3 },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 6,
+                  }}
                 >
-                  <RotateCcw size={16} color="#4f46e5" />
-                  <Text className="text-xs font-black text-indigo-700">
+                  <RotateCcw size={16} color="#ffffff" />
+                  <Text className="text-xs font-black text-white tracking-wide">
                     {t("videos.practice.replaySentence")}
                   </Text>
                 </TouchableOpacity>
@@ -606,13 +690,21 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                   activeOpacity={0.8}
                   disabled={!playerReady || activeIndex >= segments.length - 1}
                   onPress={() =>
-                    armSentence(activeIndex + 1, { play: true, seek: "none" })
+                    armSentence(activeIndex + 1, {
+                      play: true,
+                      seek: "preroll",
+                      endRoll: false,
+                    })
                   }
-                  className={`flex-1 py-3 rounded-2xl border items-center justify-center flex-row gap-1 ${
-                    activeIndex >= segments.length - 1
-                      ? "bg-slate-100 border-slate-200 opacity-40"
-                      : "bg-white border-slate-200 active:bg-slate-50 shadow-sm"
-                  }`}
+                  className={`flex-1 py-3 rounded-2xl items-center justify-center flex-row gap-1 ${activeIndex >= segments.length - 1
+                      ? "bg-slate-100 opacity-40"
+                      : "bg-white active:bg-slate-50"
+                    }`}
+                  style={{
+                    borderWidth: 1,
+                    borderColor: activeIndex >= segments.length - 1 ? "#e2e8f0" : "#cbd5e1",
+                    elevation: activeIndex >= segments.length - 1 ? 0 : 1,
+                  }}
                 >
                   <Text className="text-xs font-bold text-slate-700">
                     {t("videos.practice.nextSentence")}
@@ -625,161 +717,45 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
               </View>
 
               {/* CARD 3: HERO RECORDING CTA & AI FEEDBACK HUB */}
-              <View className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-sm items-center gap-4">
-                {/* Circular Hero Microphone Button */}
-                <View className="items-center justify-center relative my-1">
-                  {isRecording ? (
-                    <Animated.View
-                      style={{
-                        position: "absolute",
-                        width: 96,
-                        height: 96,
-                        borderRadius: 48,
-                        backgroundColor: "rgba(244, 63, 94, 0.25)",
-                        transform: [{ scale: recordPulse }],
-                      }}
-                    />
-                  ) : null}
-
-                  <TouchableOpacity
-                    activeOpacity={0.85}
-                    disabled={isStarting || checking || !current?.text}
-                    onPress={handleRecordToggle}
-                    className={`w-20 h-20 rounded-full items-center justify-center shadow-lg ${
-                      isRecording
-                        ? "bg-rose-500 shadow-rose-300"
-                        : isStarting
-                        ? "bg-slate-400"
-                        : "bg-indigo-600 shadow-indigo-300"
-                    }`}
-                    style={{ elevation: 6 }}
-                  >
-                    {isStarting ? (
-                      <ActivityIndicator size="small" color="#ffffff" />
-                    ) : isRecording ? (
-                      <Square size={26} color="#ffffff" fill="#ffffff" />
-                    ) : (
-                      <Mic size={32} color="#ffffff" />
-                    )}
-                  </TouchableOpacity>
-                </View>
-
-                {/* Status Text under Mic */}
-                <View className="items-center">
-                  <Text className="text-sm font-black text-slate-900">
-                    {isStarting
-                      ? t("videos.practice.startingMic")
-                      : isRecording
-                      ? t("videos.practice.recordingNow")
-                      : checking
-                      ? t("sentence.checking")
-                      : t("videos.practice.tapToRecord")}
-                  </Text>
-                  <Text className="text-2xs font-medium text-slate-400 mt-0.5">
-                    {t("videos.practice.pausesAfterEach")}
-                  </Text>
-                </View>
-
-                {/* Staged AI Progress when checking */}
-                {checking ? (
-                  <View className="w-full">
-                    <StagedAiProgress active={checking} variant="compact" />
-                  </View>
-                ) : null}
-
-                {/* Error messages */}
-                {micError ? (
-                  <View className="bg-rose-50 border border-rose-200 rounded-2xl p-3 w-full">
-                    <Text className="text-danger text-xs text-center font-semibold">
-                      {t(`sentence.micError.${micError.type}.title`)}
-                    </Text>
-                  </View>
-                ) : null}
-                {checkError ? (
-                  <View className="bg-rose-50 border border-rose-200 rounded-2xl p-3 w-full">
-                    <Text className="text-danger text-xs text-center font-semibold">
-                      {checkError}
-                    </Text>
-                  </View>
-                ) : null}
-
-                {/* AI Evaluation Score Banner */}
-                {showResultDetails ? (
-                  <View className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 items-center gap-3 mt-1">
-                    <View className="items-center">
-                      <Text
-                        className="text-4xl font-black tracking-tight"
-                        style={{ color: checkResultScoreColorFromPct(scorePct) }}
-                      >
-                        {scorePct}%
-                      </Text>
-                      <Text className="text-xs font-extrabold text-slate-700 mt-1">
-                        {scorePct >= 80
-                          ? t("videos.practice.excellentScore")
-                          : scorePct >= 50
-                          ? t("videos.practice.goodScore")
-                          : t("videos.practice.practiceMoreScore")}
-                      </Text>
-                    </View>
-
-                    {/* Result Actions */}
-                    <View className="flex-row items-center gap-2 w-full pt-1">
-                      <TouchableOpacity
-                        activeOpacity={0.8}
-                        onPress={replayRecording}
-                        className="flex-1 py-2.5 bg-white border border-slate-200 rounded-xl items-center justify-center flex-row gap-1.5 shadow-2xs"
-                      >
-                        <Volume2 size={16} color="#4f46e5" />
-                        <Text className="text-xs font-bold text-slate-800">
-                          {t("videos.practice.listenMyVoice")}
-                        </Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        activeOpacity={0.8}
-                        onPress={() =>
-                          setDetailsExpandedFor((prev) =>
-                            prev === currentResultKey ? null : currentResultKey
-                          )
-                        }
-                        className="flex-1 py-2.5 bg-indigo-600 rounded-xl items-center justify-center flex-row gap-1.5 shadow-sm"
-                      >
-                        <Sparkles size={16} color="#ffffff" />
-                        <Text className="text-xs font-bold text-white">
-                          {t("videos.practice.viewPhonemeDetails")}
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-
-                    {/* Expandable Sound Analysis */}
-                    {showDetails ? (
-                      <View className="w-full pt-2">
-                        <SoundAnalysis
-                          rows={soundRows}
-                          onPracticePhoneme={async (phoneme) => {
-                            const data = await lessonApi.getPhonemeLesson(
-                              phoneme,
-                              practiceDialect,
-                              false
-                            );
-                            const sentences = Array.isArray(data?.sentences)
-                              ? data.sentences
-                              : [];
-                            if (!sentences.length) return;
-                            setPhonemeLesson({
-                              phoneme,
-                              dialect: data.dialect || practiceDialect,
-                              sentences,
-                              title: t("lesson.titlePhoneme", { phoneme }),
-                              sessionKey: Date.now(),
-                            });
-                          }}
-                        />
-                      </View>
-                    ) : null}
-                  </View>
-                ) : null}
-              </View>
+              <VideoRecordingHub
+                isRecording={isRecording}
+                isStarting={isStarting}
+                checking={checking}
+                onRecordToggle={handleRecordToggle}
+                disabled={!playerReady}
+                micError={micError}
+                checkError={checkError}
+                result={result}
+                scorePct={scorePct}
+                showResultDetails={showResultDetails}
+                showDetails={showDetails}
+                replayRecording={replayRecording}
+                onToggleDetails={() =>
+                  setDetailsExpandedFor((prev) =>
+                    prev === currentResultKey ? null : currentResultKey
+                  )
+                }
+                soundRows={soundRows}
+                onPracticePhoneme={async (phoneme) => {
+                  const data = await lessonApi.getPhonemeLesson(
+                    phoneme,
+                    practiceDialect,
+                    false
+                  );
+                  const sentences = Array.isArray(data?.sentences)
+                    ? data.sentences
+                    : [];
+                  if (!sentences.length) return;
+                  setPhonemeLesson({
+                    phoneme,
+                    dialect: data.dialect || practiceDialect,
+                    sentences,
+                    title: t("lesson.titlePhoneme", { phoneme }),
+                    sessionKey: Date.now(),
+                  });
+                }}
+                hasSentence={Boolean(current?.text)}
+              />
             </>
           ) : null}
         </View>
