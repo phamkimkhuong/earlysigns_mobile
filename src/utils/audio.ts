@@ -34,6 +34,31 @@ export function float32ToWavBytes(samples: Float32Array | number[], sampleRate: 
   return new Uint8Array(buffer);
 }
 
+export function pcm16ToWavBytes(
+  pcmBytes: Uint8Array,
+  sampleRate: number = 16000,
+  numChannels: number = 1
+): Uint8Array {
+  const bytesPerSample = 2;
+  const buffer = new ArrayBuffer(44 + pcmBytes.byteLength);
+  const view = new DataView(buffer);
+  writeString(view, 0, "RIFF");
+  view.setUint32(4, 36 + pcmBytes.byteLength, true);
+  writeString(view, 8, "WAVE");
+  writeString(view, 12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true); // PCM
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * numChannels * bytesPerSample, true);
+  view.setUint16(32, numChannels * bytesPerSample, true);
+  view.setUint16(34, 16, true); // 16 bits per sample
+  writeString(view, 36, "data");
+  view.setUint32(40, pcmBytes.byteLength, true);
+  new Uint8Array(buffer, 44).set(pcmBytes);
+  return new Uint8Array(buffer);
+}
+
 export function uint8ToBase64(bytes: Uint8Array): string {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
   let result = "";

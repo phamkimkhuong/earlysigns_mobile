@@ -7,7 +7,10 @@ import {
   requestRecordingPermissionsAsync,
   setAudioModeAsync,
   useAudioRecorder,
+  useAudioStream,
 } from "expo-audio";
+import type { AudioStreamBuffer } from "expo-audio";
+import { File, Paths } from "expo-file-system";
 import { useTranslation } from "react-i18next";
 import { MOBILE_FREE_ACCESS, API_ENDPOINTS } from "@/core/config";
 import { incrementDailyUsage, isPronunciationQuotaExhausted } from "@/services/usageLimits";
@@ -16,6 +19,7 @@ import { appendLocalFile } from "@/utils/formDataFile";
 import { progressApi } from "@/api";
 import { useBillingStore } from "@/store/useBillingStore";
 import { httpClient, AppHttpError } from "@/core/httpClient";
+import { float32ToWavBytes, pcm16ToWavBytes, uint8ToBase64 } from "@/utils/audio";
 import type { SentenceCheckResult, UserTier, MicError, Dialect } from "@/types/domain";
 
 const MAX_RECORDING_MS = 5 * 60_000;
@@ -27,18 +31,21 @@ const LOW_SCORE_THRESHOLD = 0.4;
 
 const RECORDING_OPTIONS: any = {
   isMeteringEnabled: true,
-  extension: Platform.OS === "web" ? ".webm" : ".m4a",
+  extension: ".wav",
   sampleRate: 16000,
   numberOfChannels: 1,
   bitRate: 128000,
   android: {
+    extension: ".wav",
     outputFormat: "mpeg4",
     audioEncoder: "aac",
+    sampleRate: 16000,
   },
   ios: {
-    outputFormat: IOSOutputFormat.MPEG4AAC,
+    extension: ".wav",
+    outputFormat: IOSOutputFormat.LINEARPCM,
     audioQuality: AudioQuality.HIGH,
-    sampleRate: 44100,
+    sampleRate: 16000,
     linearPCMBitDepth: 16,
     linearPCMIsBigEndian: false,
     linearPCMIsFloat: false,
@@ -95,16 +102,31 @@ function normalizeAccuracy(value: unknown): number | null {
 }
 
 function nativeAudioPart() {
-  return { name: "speech.m4a", type: "audio/mp4" };
+  return { name: "speech.wav", type: "audio/wav" };
 }
 
 async function appendAudio(form: FormData, uri: string) {
   if (Platform.OS === "web") {
     const res = await fetch(uri);
     const blob = await res.blob();
-    const type = blob.type || "audio/webm";
-    const ext = type.includes("wav") ? "wav" : type.includes("mp4") || type.includes("m4a") ? "m4a" : "webm";
-    form.append("audio", blob, `speech.${ext}`);
+    if (!blob.type.includes("wav")) {
+      try {
+        const arrayBuffer = await blob.arrayBuffer();
+        const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+        if (AudioCtx) {
+          const audioCtx = new AudioCtx();
+          const decoded = await audioCtx.decodeAudioData(arrayBuffer);
+          const pcm = decoded.getChannelData(0);
+          const wavBytes = float32ToWavBytes(pcm, decoded.sampleRate || 16000);
+          const wavBlob = new Blob([wavBytes as any], { type: "audio/wav" });
+          form.append("audio", wavBlob, "speech.wav");
+          return;
+        }
+      } catch {
+        /* fallback below */
+      }
+    }
+    form.append("audio", blob, "speech.wav");
     return;
   }
   await appendLocalFile(form, "audio", uri, nativeAudioPart().name, nativeAudioPart().type);
@@ -171,6 +193,50 @@ export function usePronunciationCheck({
   const sessionCountedRef = useRef(false);
   const soundRef = useRef<any>(null);
 
+  const streamChunksRef = useRef<Uint8Array[]>([]);
+  const useStreamRef = useRef(false);
+  const stopRecordingRef = useRef<((options?: { check?: boolean }) => Promise<SentenceCheckResult | null>) | null>(null);
+
+  const handleBuffer = useCallback((buffer: AudioStreamBuffer) => {
+    if (!recordingRef.current) return;
+    const chunk = new Uint8Array(buffer.data);
+    streamChunksRef.current.push(chunk);
+
+    const int16 = new Int16Array(buffer.data);
+    if (int16.length > 0) {
+      let sumSq = 0;
+      for (let i = 0; i < int16.length; i++) {
+        const s = int16[i] / 32768.0;
+        sumSq += s * s;
+      }
+      const rms = Math.sqrt(sumSq / int16.length);
+      const db = rms > 0 ? 20 * Math.log10(rms) : -160;
+
+      if (db > SPEECH_DB) {
+        speechSeenRef.current = true;
+        if (silenceTimerRef.current) {
+          clearTimeout(silenceTimerRef.current);
+          silenceTimerRef.current = null;
+        }
+      } else if (speechSeenRef.current && !silenceTimerRef.current) {
+        const currentSession = sessionRef.current;
+        silenceTimerRef.current = setTimeout(() => {
+          silenceTimerRef.current = null;
+          if (sessionRef.current === currentSession) {
+            void stopRecordingRef.current?.({ check: true });
+          }
+        }, SHORT_SILENCE_MS);
+      }
+    }
+  }, []);
+
+  const { stream } = useAudioStream({
+    sampleRate: 16000,
+    channels: 1,
+    encoding: "int16",
+    onBuffer: handleBuffer,
+  });
+
   const clearTimers = useCallback(() => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
@@ -193,6 +259,43 @@ export function usePronunciationCheck({
     clearMeterTimer();
     if (!recordingRef.current) return null;
     recordingRef.current = false;
+
+    if (useStreamRef.current && stream) {
+      try {
+        stream.stop();
+      } catch {
+        /* ignore */
+      }
+      try {
+        await setAudioModeAsync({
+          allowsRecording: false,
+          playsInSilentMode: true,
+          interruptionMode: "mixWithOthers",
+        });
+      } catch {
+        /* ignore */
+      }
+
+      const chunks = streamChunksRef.current;
+      let totalBytes = 0;
+      for (const c of chunks) totalBytes += c.byteLength;
+      if (totalBytes === 0) return null;
+
+      const allPcm = new Uint8Array(totalBytes);
+      let offset = 0;
+      for (const c of chunks) {
+        allPcm.set(c, offset);
+        offset += c.byteLength;
+      }
+      const wavBytes = pcm16ToWavBytes(allPcm, 16000, 1);
+      const destFile = new File(Paths.cache, `speech-${Date.now()}.wav`);
+      if (destFile.exists) destFile.delete();
+      await destFile.create();
+      const base64 = uint8ToBase64(wavBytes);
+      await destFile.write(base64, { encoding: "base64" });
+      return destFile.uri;
+    }
+
     const uriBeforeStop = recorder.uri || recorder.getStatus?.()?.url || null;
     try {
       await recorder.stop();
@@ -209,7 +312,7 @@ export function usePronunciationCheck({
       /* ignore */
     }
     return uriBeforeStop || recorder.uri || recorder.getStatus?.()?.url || null;
-  }, [clearMeterTimer, recorder]);
+  }, [clearMeterTimer, recorder, stream]);
 
   const logSoundProgress = useCallback(
     async (charAlignment: any) => {
@@ -376,7 +479,6 @@ export function usePronunciationCheck({
     [checkPronunciation, clearTimers, stopRecorder]
   );
 
-  const stopRecordingRef = useRef(stopRecording);
   useEffect(() => {
     stopRecordingRef.current = stopRecording;
   }, [stopRecording]);
@@ -417,45 +519,65 @@ export function usePronunciationCheck({
           shouldRouteThroughEarpiece: false,
         });
         if (sessionRef.current !== sessionId) return;
-        await recorder.prepareToRecordAsync();
-        recorder.record();
+
+        let streamStarted = false;
+        if (Platform.OS !== "web" && stream && typeof stream.start === "function") {
+          try {
+            streamChunksRef.current = [];
+            await stream.start();
+            streamStarted = true;
+            useStreamRef.current = true;
+          } catch (streamErr) {
+            console.warn("AudioStream start failed, falling back to recorder:", streamErr);
+            streamStarted = false;
+          }
+        }
+
+        if (!streamStarted) {
+          useStreamRef.current = false;
+          await recorder.prepareToRecordAsync();
+          recorder.record();
+          meterTimerRef.current = setInterval(() => {
+            if (sessionRef.current !== sessionId) return;
+            const status = recorder.getStatus();
+            if (!status?.isRecording) return;
+            const metering = Number(status.metering);
+            const isSpeech = Number.isFinite(metering) && metering > SPEECH_DB;
+            if (isSpeech) {
+              speechSeenRef.current = true;
+              if (silenceTimerRef.current) {
+                clearTimeout(silenceTimerRef.current);
+                silenceTimerRef.current = null;
+              }
+              return;
+            }
+            if (speechSeenRef.current && !silenceTimerRef.current) {
+              silenceTimerRef.current = setTimeout(() => {
+                silenceTimerRef.current = null;
+                if (sessionRef.current === sessionId) {
+                  void stopRecordingRef.current?.({ check: true });
+                }
+              }, SHORT_SILENCE_MS);
+            }
+          }, 80);
+        }
+
         if (sessionRef.current !== sessionId) {
           try {
-            await recorder.stop();
+            if (useStreamRef.current && stream) stream.stop();
+            else await recorder.stop();
           } catch {
             /* ignore */
           }
           return;
         }
+
         recordingRef.current = true;
-        meterTimerRef.current = setInterval(() => {
-          if (sessionRef.current !== sessionId) return;
-          const status = recorder.getStatus();
-          if (!status?.isRecording) return;
-          const metering = Number(status.metering);
-          const isSpeech = Number.isFinite(metering) && metering > SPEECH_DB;
-          if (isSpeech) {
-            speechSeenRef.current = true;
-            if (silenceTimerRef.current) {
-              clearTimeout(silenceTimerRef.current);
-              silenceTimerRef.current = null;
-            }
-            return;
-          }
-          if (speechSeenRef.current && !silenceTimerRef.current) {
-            silenceTimerRef.current = setTimeout(() => {
-              silenceTimerRef.current = null;
-              if (sessionRef.current === sessionId) {
-                void stopRecordingRef.current({ check: true });
-              }
-            }, SHORT_SILENCE_MS);
-          }
-        }, 80);
         setIsRecording(true);
         setIsStarting(false);
         timeoutRef.current = setTimeout(() => {
           if (sessionRef.current === sessionId) {
-            void stopRecordingRef.current({ check: true });
+            void stopRecordingRef.current?.({ check: true });
           }
         }, MAX_RECORDING_MS);
       } catch (e: any) {
@@ -465,7 +587,7 @@ export function usePronunciationCheck({
         setMicError(classifyMicError(e));
       }
     },
-    [clearTimers, onDailyLimitReached, recorder, stopRecorder, userKey, userTier]
+    [clearTimers, onDailyLimitReached, recorder, stopRecorder, stream, userKey, userTier]
   );
 
   const clearResult = useCallback(() => {

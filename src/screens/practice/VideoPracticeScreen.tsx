@@ -172,7 +172,6 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
       pauseLockRef.current = true;
       playingRef.current = false;
       setPlaying(false);
-      playTargetRef.current = null;
       notifySegmentPlayed(index);
     },
     [notifySegmentPlayed]
@@ -520,6 +519,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                     } else if (state === "paused" || state === "ended") {
                       playingRef.current = false;
                       setPlaying(false);
+                      playTargetRef.current = null;
                     }
                   }}
                 />
