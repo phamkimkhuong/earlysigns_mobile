@@ -29,6 +29,7 @@ import ScoreWords from "@/components/practice/ScoreWords";
 import VideoRecordingHub from "@/components/practice/VideoRecordingHub";
 import { VideoPracticeSkeleton } from "@/components/ui/Skeleton";
 import { videoApi, lessonApi, billingApi } from "@/api";
+import { useVideoDetailQuery } from "@/hooks/queries/useVideoQueries";
 import type { Dialect, VideoSegment } from "@/types/domain";
 
 const SENTENCE_PRE_ROLL_MS = 250;
@@ -51,9 +52,16 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
     updateUserDialect,
   } = useAuth();
 
-  const [video, setVideo] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const {
+    data: detailData,
+    isLoading: detailLoading,
+    error: detailError,
+  } = useVideoDetailQuery(youtubeId);
+
+  const loading = detailLoading && !detailData;
+  const error = detailError ? String((detailError as any)?.message || t("videos.practice.notFound")) : "";
+
+  const video = detailData;
   const [activeIndex, setActiveIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [playerReady, setPlayerReady] = useState(false);
@@ -61,7 +69,8 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
   const [showTranslation, setShowTranslation] = useState(false);
   const [detailsExpandedFor, setDetailsExpandedFor] = useState<string | null>(null);
   const [phonemeLesson, setPhonemeLesson] = useState<any>(null);
-  const [practiceDialect, setPracticeDialect] = useState<Dialect>(userDialect || "uk");
+  const [userSelectedDialect, setUserSelectedDialect] = useState<Dialect | null>(null);
+  const practiceDialect: Dialect = userSelectedDialect || detailData?.dialect || userDialect || "uk";
   const [dialectSaving, setDialectSaving] = useState(false);
   const usageStatus = useBillingStore((s) => s.usage);
 
@@ -243,39 +252,22 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
   );
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      setError("");
-      try {
-        const data = await videoApi.getVideoDetail(youtubeId);
-        if (cancelled) return;
-        videoRef.current = data;
-        setVideo(data);
-        const segs = (data?.segments || []).sort(
-          (a: VideoSegment, b: VideoSegment) => a.start_ms - b.start_ms
-        );
-        segmentsRef.current = segs;
-        videoDurationRef.current = Number(data?.duration_ms || Infinity);
-        if (data?.dialect) {
-          setPracticeDialect(data.dialect);
-          practiceDialectRef.current = data.dialect;
-        }
-        if (segs.length > 0) {
-          activeIndexRef.current = 0;
-          setActiveIndex(0);
-          armSentence(0, { play: false, seek: "preroll" });
-        }
-      } catch (err: any) {
-        if (!cancelled) setError(err?.message || t("videos.practice.notFound"));
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [youtubeId, armSentence, t]);
+    if (!detailData) return;
+    videoRef.current = detailData;
+    const segs = (detailData?.segments || []).sort(
+      (a: VideoSegment, b: VideoSegment) => a.start_ms - b.start_ms
+    );
+    segmentsRef.current = segs;
+    videoDurationRef.current = Number(detailData?.duration_ms || Infinity);
+    if (detailData?.dialect) {
+      practiceDialectRef.current = detailData.dialect;
+    }
+    if (segs.length > 0) {
+      activeIndexRef.current = 0;
+      setActiveIndex(0);
+      armSentence(0, { play: false, seek: "preroll" });
+    }
+  }, [detailData, armSentence]);
 
   useEffect(() => {
     pollRef.current = setInterval(async () => {
@@ -442,7 +434,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                 setDialectSaving(true);
                 try {
                   await updateUserDialect(next);
-                  setPracticeDialect(next);
+                  setUserSelectedDialect(next);
                   clearResult();
                 } finally {
                   setDialectSaving(false);

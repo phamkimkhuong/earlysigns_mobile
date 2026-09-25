@@ -1,10 +1,16 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/services/Auth";
 import { resolveUserKey, resolveUserTier } from "@/services/usageLimits";
 import { buildLessonSession } from "@/utils/lessons";
 import { useBillingStore } from "@/store/useBillingStore";
-import { lessonApi, billingApi, textPracticeApi } from "@/api";
+import { lessonApi, textPracticeApi } from "@/api";
+import {
+  useHomeSummaryQuery,
+  lessonKeys,
+} from "@/hooks/queries/useLessonQueries";
+import { useBillingUsageQuery } from "@/hooks/queries/useBillingQueries";
 import type { Dialect, LessonSession } from "@/types/domain";
 
 const DEFAULT_CORE_PHONEMES = [
@@ -17,6 +23,7 @@ const DEFAULT_CORE_PHONEMES = [
 
 export function usePhonemesViewModel(navigation: any) {
   const { t, i18n } = useTranslation();
+  const queryClient = useQueryClient();
   const {
     authToken,
     authEmail,
@@ -26,6 +33,10 @@ export function usePhonemesViewModel(navigation: any) {
     refreshScreeningStatus,
   } = useAuth();
   const dialect: Dialect = userDialect || "uk";
+
+  // TanStack Query: Home summary & Billing usage
+  useHomeSummaryQuery(dialect, Boolean(authToken && !authLoading));
+  useBillingUsageQuery(Boolean(authToken && !authLoading));
 
   const homeSummary = useBillingStore((s) => s.homeSummary);
   const usageStatus = useBillingStore((s) => s.usage);
@@ -53,13 +64,6 @@ export function usePhonemesViewModel(navigation: any) {
     () => resolveUserKey({ authToken, authEmail }),
     [authToken, authEmail]
   );
-
-  useEffect(() => {
-    if (authToken && !authLoading) {
-      lessonApi.getHomeSummary(dialect).catch(() => {});
-      billingApi.getUsage().catch(() => {});
-    }
-  }, [authToken, authLoading, dialect]);
 
   const startPersonalizedLesson = useCallback(async () => {
     if (!authToken) {
@@ -129,21 +133,21 @@ export function usePhonemesViewModel(navigation: any) {
 
   const closeLessonSession = useCallback(async () => {
     setLessonSession(null);
-    await lessonApi.getHomeSummary(dialect).catch(() => {});
+    await queryClient.invalidateQueries({ queryKey: lessonKeys.homeSummary(dialect) });
     if (lessonMode === "screening") refreshScreeningStatus?.();
-  }, [dialect, lessonMode, refreshScreeningStatus]);
+  }, [dialect, lessonMode, queryClient, refreshScreeningStatus]);
 
   const handleLessonAllCompleted = useCallback(async () => {
     if (lessonKindRef.current === "journey" || lessonKindRef.current === "personalized") {
       try {
         const res = await lessonApi.completeJourney();
         if (res?.progress) setJourneyLessonProgress(res.progress);
-        await lessonApi.getHomeSummary(dialect).catch(() => {});
+        await queryClient.invalidateQueries({ queryKey: lessonKeys.homeSummary(dialect) });
       } catch {
         /* ignore */
       }
     }
-  }, [dialect]);
+  }, [dialect, queryClient]);
 
   const handleScreeningHalfReached = useCallback(async () => {
     await lessonApi.completeScreening().catch(() => {});

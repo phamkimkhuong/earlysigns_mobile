@@ -1,5 +1,4 @@
-import React from "react";
-import { ScrollView, Text } from "react-native";
+import { RefreshControl, ScrollView, Text } from "react-native";
 import { WindingPath } from "@/components/practice/HomeJourney";
 import IPAChecking from "@/components/practice/IPAChecking";
 import { JourneyPathSkeleton } from "@/components/ui/Skeleton";
@@ -10,6 +9,8 @@ export default function JourneyScreen({ navigation }: { navigation?: any }) {
     t,
     dialect,
     loading,
+    refreshing,
+    onRefresh,
     error,
     lessonError,
     displayJourney,
@@ -28,7 +29,17 @@ export default function JourneyScreen({ navigation }: { navigation?: any }) {
   } = useJourneyViewModel(navigation);
 
   return (
-    <ScrollView className="flex-1 bg-appBg" contentContainerClassName="p-4 gap-2.5 pb-10">
+    <ScrollView
+      className="flex-1 bg-appBg"
+      contentContainerClassName="p-4 gap-2.5 pb-10"
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor="#f59e0b"
+        />
+      }
+    >
       <Text className="text-2xl font-extrabold text-appText">{t("journeyPage.title")}</Text>
       {displayJourney ? (
         <Text className="text-appTextSecondary">

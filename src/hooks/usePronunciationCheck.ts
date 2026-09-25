@@ -19,12 +19,13 @@ import { appendLocalFile } from "@/utils/formDataFile";
 import { progressApi } from "@/api";
 import { useBillingStore } from "@/store/useBillingStore";
 import { httpClient, AppHttpError } from "@/core/httpClient";
-import { float32ToWavBytes, pcm16ToWavBytes, uint8ToBase64 } from "@/utils/audio";
+import { float32ToWavBytes, pcm16ToWavBytes } from "@/utils/audio";
 import type { SentenceCheckResult, UserTier, MicError, Dialect } from "@/types/domain";
 
-const MAX_RECORDING_MS = 5 * 60_000;
+const MAX_RECORDING_MS = 60_000;
 const SHORT_SILENCE_MS = 700;
-const SPEECH_DB = -32;
+const VAD_CALIBRATION_MS = 350;
+const DEFAULT_NOISE_FLOOR_DB = -50;
 const CHECK_RETRY_DELAY_MS = 400;
 const CHECK_TIMEOUT_MS = 90_000;
 const LOW_SCORE_THRESHOLD = 0.4;
@@ -194,31 +195,80 @@ export function usePronunciationCheck({
   const soundRef = useRef<any>(null);
 
   const streamChunksRef = useRef<Uint8Array[]>([]);
+  const streamFormatRef = useRef<{ sampleRate: number; channels: number } | null>(null);
   const useStreamRef = useRef(false);
   const stopRecordingRef = useRef<((options?: { check?: boolean }) => Promise<SentenceCheckResult | null>) | null>(null);
 
+  const noiseFloorDbRef = useRef<number>(DEFAULT_NOISE_FLOOR_DB);
+  const noiseSamplesRef = useRef<number[]>([]);
+  const isCalibratedRef = useRef<boolean>(false);
+  const recordingStartTimeRef = useRef<number>(0);
+
   const handleBuffer = useCallback((buffer: AudioStreamBuffer) => {
     if (!recordingRef.current) return;
+
+    // Track actual stream format provided by hardware/OS
+    if (!streamFormatRef.current && buffer.sampleRate && buffer.channels) {
+      streamFormatRef.current = {
+        sampleRate: buffer.sampleRate,
+        channels: buffer.channels,
+      };
+    }
+
     const chunk = new Uint8Array(buffer.data);
     streamChunksRef.current.push(chunk);
 
     const int16 = new Int16Array(buffer.data);
-    if (int16.length > 0) {
-      let sumSq = 0;
-      for (let i = 0; i < int16.length; i++) {
-        const s = int16[i] / 32768.0;
-        sumSq += s * s;
-      }
-      const rms = Math.sqrt(sumSq / int16.length);
-      const db = rms > 0 ? 20 * Math.log10(rms) : -160;
+    if (int16.length === 0) return;
 
-      if (db > SPEECH_DB) {
+    let sumSq = 0;
+    for (let i = 0; i < int16.length; i++) {
+      const s = int16[i] / 32768.0;
+      sumSq += s * s;
+    }
+    const rms = Math.sqrt(sumSq / int16.length);
+    const db = rms > 0.00001 ? 20 * Math.log10(rms) : -120;
+    const elapsed = Date.now() - recordingStartTimeRef.current;
+
+    // Phase 1: Calibrate ambient noise floor during initial ~350ms
+    if (!isCalibratedRef.current) {
+      if (db > -25) {
+        // Immediate loud speech
+        noiseFloorDbRef.current = DEFAULT_NOISE_FLOOR_DB;
+        isCalibratedRef.current = true;
+        speechSeenRef.current = true;
+      } else {
+        noiseSamplesRef.current.push(db);
+        if (elapsed >= VAD_CALIBRATION_MS) {
+          const sorted = [...noiseSamplesRef.current].sort((a, b) => a - b);
+          const medianNoise = sorted[Math.floor(sorted.length / 2)] ?? DEFAULT_NOISE_FLOOR_DB;
+          // Clamp noise floor between -65 dB (quiet) and -30 dB (noisy room)
+          noiseFloorDbRef.current = Math.min(-30, Math.max(-65, medianNoise));
+          isCalibratedRef.current = true;
+        }
+      }
+    }
+
+    // Phase 2: Adaptive speech thresholds with hysteresis
+    const noiseFloor = noiseFloorDbRef.current;
+    const speechStartThreshold = Math.max(-42, noiseFloor + 12);
+    const speechEndThreshold = Math.max(-48, noiseFloor + 6);
+
+    if (!speechSeenRef.current) {
+      if (db > speechStartThreshold) {
         speechSeenRef.current = true;
         if (silenceTimerRef.current) {
           clearTimeout(silenceTimerRef.current);
           silenceTimerRef.current = null;
         }
-      } else if (speechSeenRef.current && !silenceTimerRef.current) {
+      }
+    } else {
+      if (db > speechEndThreshold) {
+        if (silenceTimerRef.current) {
+          clearTimeout(silenceTimerRef.current);
+          silenceTimerRef.current = null;
+        }
+      } else if (!silenceTimerRef.current) {
         const currentSession = sessionRef.current;
         silenceTimerRef.current = setTimeout(() => {
           silenceTimerRef.current = null;
@@ -279,7 +329,10 @@ export function usePronunciationCheck({
       const chunks = streamChunksRef.current;
       let totalBytes = 0;
       for (const c of chunks) totalBytes += c.byteLength;
-      if (totalBytes === 0) return null;
+      if (totalBytes === 0) {
+        streamChunksRef.current = [];
+        return null;
+      }
 
       const allPcm = new Uint8Array(totalBytes);
       let offset = 0;
@@ -287,12 +340,18 @@ export function usePronunciationCheck({
         allPcm.set(c, offset);
         offset += c.byteLength;
       }
-      const wavBytes = pcm16ToWavBytes(allPcm, 16000, 1);
+      // Immediately free chunk arrays to release memory
+      streamChunksRef.current = [];
+
+      const actualSampleRate = streamFormatRef.current?.sampleRate ?? 16000;
+      const actualChannels = streamFormatRef.current?.channels ?? 1;
+
+      const wavBytes = pcm16ToWavBytes(allPcm, actualSampleRate, actualChannels);
       const destFile = new File(Paths.cache, `speech-${Date.now()}.wav`);
       if (destFile.exists) destFile.delete();
       await destFile.create();
-      const base64 = uint8ToBase64(wavBytes);
-      await destFile.write(base64, { encoding: "base64" });
+      // Write Uint8Array directly - no base64 string allocations
+      destFile.write(wavBytes);
       return destFile.uri;
     }
 
@@ -520,20 +579,22 @@ export function usePronunciationCheck({
         });
         if (sessionRef.current !== sessionId) return;
 
-        let streamStarted = false;
-        if (Platform.OS !== "web" && stream && typeof stream.start === "function") {
-          try {
-            streamChunksRef.current = [];
-            await stream.start();
-            streamStarted = true;
-            useStreamRef.current = true;
-          } catch (streamErr) {
-            console.warn("AudioStream start failed, falling back to recorder:", streamErr);
-            streamStarted = false;
-          }
-        }
+        // Reset VAD state & stream format
+        noiseFloorDbRef.current = DEFAULT_NOISE_FLOOR_DB;
+        noiseSamplesRef.current = [];
+        isCalibratedRef.current = false;
+        recordingStartTimeRef.current = Date.now();
+        streamChunksRef.current = [];
+        streamFormatRef.current = null;
 
-        if (!streamStarted) {
+        if (Platform.OS !== "web") {
+          if (!stream || typeof stream.start !== "function") {
+            throw new Error(t("sentence.micError.generic.body") || "Microphone stream is not available on this device.");
+          }
+          useStreamRef.current = true;
+          await stream.start();
+        } else {
+          // Web fallback: useAudioRecorder (decoded to WAV in appendAudio via Web Audio API)
           useStreamRef.current = false;
           await recorder.prepareToRecordAsync();
           recorder.record();
@@ -542,7 +603,7 @@ export function usePronunciationCheck({
             const status = recorder.getStatus();
             if (!status?.isRecording) return;
             const metering = Number(status.metering);
-            const isSpeech = Number.isFinite(metering) && metering > SPEECH_DB;
+            const isSpeech = Number.isFinite(metering) && metering > -32;
             if (isSpeech) {
               speechSeenRef.current = true;
               if (silenceTimerRef.current) {
@@ -584,10 +645,18 @@ export function usePronunciationCheck({
         if (sessionRef.current !== sessionId) return;
         setIsRecording(false);
         setIsStarting(false);
-        setMicError(classifyMicError(e));
+        const classified = classifyMicError(e);
+        setMicError(classified);
+        setError(
+          classified.type === "denied"
+            ? t("sentence.micError.denied.body")
+            : classified.type === "notFound"
+            ? t("sentence.micError.notFound.body")
+            : t("sentence.micError.generic.body") || "Unable to start microphone recording. Please try again."
+        );
       }
     },
-    [clearTimers, onDailyLimitReached, recorder, stopRecorder, stream, userKey, userTier]
+    [clearTimers, onDailyLimitReached, recorder, stopRecorder, stream, t, userKey, userTier]
   );
 
   const clearResult = useCallback(() => {
@@ -623,6 +692,7 @@ export function usePronunciationCheck({
     return () => {
       clearTimers();
       sessionRef.current += 1;
+      streamChunksRef.current = [];
       void stopRecorder();
       releasePlayer(soundRef.current);
       soundRef.current = null;

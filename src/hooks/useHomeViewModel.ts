@@ -1,20 +1,46 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/services/Auth";
 import { resolveUserKey, resolveUserTier } from "@/services/usageLimits";
 import { buildLessonSession } from "@/utils/lessons";
 import { useBillingStore } from "@/store/useBillingStore";
-import { lessonApi, billingApi } from "@/api";
+import { lessonApi } from "@/api";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import {
+  useHomeSummaryQuery,
+  lessonKeys,
+} from "@/hooks/queries/useLessonQueries";
+import {
+  useBillingUsageQuery,
+  billingKeys,
+} from "@/hooks/queries/useBillingQueries";
 import type { Dialect, LessonSession } from "@/types/domain";
 
 export function useHomeViewModel(navigation: any) {
   const { t, i18n } = useTranslation();
   const { authToken, authEmail, userDialect } = useAuth();
   const dialect: Dialect = userDialect || "uk";
+  const queryClient = useQueryClient();
 
-  const [refreshing, setRefreshing] = useState(false);
-  const homeSummary = useBillingStore((s) => s.homeSummary);
-  const usageStatus = useBillingStore((s) => s.usage);
+  // TanStack Query: Home summary & Billing usage
+  const { data: homeSummaryData } = useHomeSummaryQuery(dialect, Boolean(authToken));
+  const { data: usageData } = useBillingUsageQuery(Boolean(authToken));
+
+  const storeHomeSummary = useBillingStore((s) => s.homeSummary);
+  const storeUsage = useBillingStore((s) => s.usage);
+
+  const homeSummary = homeSummaryData || storeHomeSummary;
+  const usageStatus = usageData || storeUsage;
+
+  const { refreshing, onRefresh } = usePullToRefresh(
+    useCallback(async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: lessonKeys.all }),
+        queryClient.invalidateQueries({ queryKey: billingKeys.all }),
+      ]);
+    }, [queryClient])
+  );
 
   const [lessonSession, setLessonSession] = useState<LessonSession | null>(null);
   const [lessonSessionKey, setLessonSessionKey] = useState(0);
@@ -35,25 +61,6 @@ export function useHomeViewModel(navigation: any) {
     () => resolveUserKey({ authToken, authEmail }),
     [authToken, authEmail]
   );
-
-  useEffect(() => {
-    if (authToken) {
-      lessonApi.getHomeSummary(dialect).catch(() => {});
-      billingApi.getUsage().catch(() => {});
-    }
-  }, [authToken, dialect]);
-
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      await Promise.all([
-        lessonApi.getHomeSummary(dialect),
-        billingApi.getUsage(),
-      ]);
-    } finally {
-      setRefreshing(false);
-    }
-  }, [dialect]);
 
   const navigateWithGate = useCallback(
     (targetRoute: string, targetParams?: Record<string, any>) => {
@@ -95,8 +102,8 @@ export function useHomeViewModel(navigation: any) {
 
   const closeLessonSession = useCallback(async () => {
     setLessonSession(null);
-    await lessonApi.getHomeSummary(dialect).catch(() => {});
-  }, [dialect]);
+    await queryClient.invalidateQueries({ queryKey: lessonKeys.homeSummary(dialect) });
+  }, [dialect, queryClient]);
 
   const streakDays = Number(homeSummary?.streak_days || 0);
   const clarityRatio = homeSummary?.total_accuracy != null ? Number(homeSummary.total_accuracy) : null;

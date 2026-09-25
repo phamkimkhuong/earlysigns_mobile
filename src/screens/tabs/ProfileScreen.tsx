@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   Dimensions,
   Linking,
+  RefreshControl,
   ScrollView,
   Switch,
   Text,
@@ -13,6 +14,15 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LineChart } from "react-native-chart-kit";
 import { useTranslation } from "react-i18next";
+import { useQueryClient } from "@tanstack/react-query";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import {
+  useProgressSoundsQuery,
+  useProgressHistoryQuery,
+  progressKeys,
+} from "@/hooks/queries/useProgressQueries";
+import { billingKeys } from "@/hooks/queries/useBillingQueries";
+import { lessonKeys } from "@/hooks/queries/useLessonQueries";
 import {
   Award,
   Bell,
@@ -43,7 +53,7 @@ import PrimaryButton from "@/components/ui/PrimaryButton";
 import MonthlyQuotaCard from "@/components/ui/MonthlyQuotaCard";
 import { ProfileProgressSkeleton } from "@/components/ui/Skeleton";
 import { useBillingStore } from "@/store/useBillingStore";
-import { progressApi, authApi } from "@/api";
+import { authApi } from "@/api";
 import {
   getNotificationPermissionStatus,
   getStoredNotificationSettings,
@@ -143,10 +153,6 @@ export default function ProfileScreen({ navigation, route }: ProfileScreenProps)
     setActiveTab(route?.params?.tab === "account" ? TAB_ACCOUNT : TAB_PROGRESS);
   }
 
-  const [items, setItems] = useState<any[]>([]);
-  const [history, setHistory] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [dialectSaving, setDialectSaving] = useState(false);
 
   // Billing usage and Home summary from Zustand store
@@ -161,6 +167,44 @@ export default function ProfileScreen({ navigation, route }: ProfileScreenProps)
   const [notifPermissionGranted, setNotifPermissionGranted] = useState(true);
 
   const dates = useMemo(() => dateRange(HISTORY_DAYS), []);
+  const startDate = dates[0];
+  const endDate = dates[dates.length - 1];
+
+  // TanStack Query: Sounds & History progress with 15m staleTime
+  const {
+    data: items = [],
+    isLoading: soundsLoading,
+    error: soundsError,
+  } = useProgressSoundsQuery(userDialect || "uk", Boolean(authToken));
+
+  const {
+    data: history = [],
+    isLoading: historyLoading,
+    error: historyError,
+  } = useProgressHistoryQuery(startDate, endDate, Boolean(authToken));
+
+  const loading = soundsLoading || historyLoading;
+  const error = soundsError
+    ? String((soundsError as any)?.message || soundsError)
+    : historyError
+    ? String((historyError as any)?.message || historyError)
+    : "";
+
+  const queryClient = useQueryClient();
+  const { refreshing, onRefresh } = usePullToRefresh(
+    useCallback(async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: progressKeys.all }),
+        queryClient.invalidateQueries({ queryKey: billingKeys.all }),
+        queryClient.invalidateQueries({ queryKey: lessonKeys.all }),
+      ]);
+    }, [queryClient]),
+    {
+      tintColor: "#f59e0b",
+      enableHaptics: true,
+      minDurationMs: 450,
+    }
+  );
 
   // Check notification permission on mount
   useEffect(() => {
@@ -169,38 +213,6 @@ export default function ProfileScreen({ navigation, route }: ProfileScreenProps)
       setNotifPermissionGranted(perm.granted);
     })();
   }, []);
-
-  // Fetch progress data
-  useEffect(() => {
-    let active = true;
-    async function load() {
-      if (!authToken) {
-        setLoading(false);
-        return;
-      }
-      setLoading(true);
-      setError("");
-      try {
-        const start = dates[0];
-        const end = dates[dates.length - 1];
-        const [soundsList, historyList] = await Promise.all([
-          progressApi.getSounds(userDialect || "uk"),
-          progressApi.getHistory(start, end),
-        ]);
-        if (!active) return;
-        setItems(soundsList);
-        setHistory(historyList);
-      } catch (e: any) {
-        if (active) setError(String(e.message || e));
-      } finally {
-        if (active) setLoading(false);
-      }
-    }
-    load();
-    return () => {
-      active = false;
-    };
-  }, [authToken, dates, userDialect]);
 
   // Threshold calculation (Spec Section 13.1):
   // Phonemes with at least 5 checks
@@ -374,6 +386,13 @@ export default function ProfileScreen({ navigation, route }: ProfileScreenProps)
         className="flex-1 bg-appBg"
         contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#f59e0b"
+          />
+        }
       >
         {/* Top elastic overscroll filler */}
         <View

@@ -1,12 +1,15 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
   Image,
+  RefreshControl,
   ScrollView,
   Text,
   TouchableOpacity,
   View,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
@@ -18,36 +21,20 @@ import {
 } from "lucide-react-native";
 import { useAuth } from "@/services/Auth";
 import { formatDuration, topicLabel, videoThumbnail } from "@/utils/errors";
-import { videoApi } from "@/api";
+import { useQueryClient } from "@tanstack/react-query";
 import { VideoCardSkeleton, VideoCatalogSkeleton } from "@/components/ui/Skeleton";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import {
+  useTopicsQuery,
+  useViewedVideosQuery,
+  useTopicVideosInfiniteQuery,
+  videoKeys,
+} from "@/hooks/queries/useVideoQueries";
 import type { VideoItem } from "@/types/domain";
 
-const TOPIC_PAGE_SIZE = 8;
 const VIEWED_PREVIEW_SIZE = 4;
-
-interface TopicStateItem {
-  videos: VideoItem[];
-  nextCursor: string | null;
-  loading: boolean;
-  loadingMore: boolean;
-  error: string;
-}
-
-function emptyTopicState(): TopicStateItem {
-  return { videos: [], nextCursor: null, loading: false, loadingMore: false, error: "" };
-}
-
-function mergeUniqueVideos(existing: VideoItem[], incoming: VideoItem[]): VideoItem[] {
-  const seen = new Set((existing || []).map((v) => String(v?.youtube_id || "")).filter(Boolean));
-  const merged = [...(existing || [])];
-  for (const video of incoming || []) {
-    const id = String(video?.youtube_id || "");
-    if (!id || seen.has(id)) continue;
-    seen.add(id);
-    merged.push(video);
-  }
-  return merged;
-}
+const INITIAL_TOPIC_COUNT = 2;
+const BATCH_TOPIC_COUNT = 1;
 
 function VideoCard({
   video,
@@ -138,24 +125,104 @@ function VideoCard({
   );
 }
 
+function TopicSectionRow({
+  topic,
+  level,
+  topicFilter,
+  t,
+  onSelectTopic,
+  onOpenVideo,
+}: {
+  topic: string;
+  level: string;
+  topicFilter: string;
+  t: (key: string, opts?: any) => string;
+  onSelectTopic: (topic: string) => void;
+  onOpenVideo: (youtubeId: string) => void;
+}) {
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useTopicVideosInfiniteQuery(topic, level);
+
+  const videos = useMemo(
+    () => (data?.pages ? data.pages.flatMap((page) => page.videos) : []),
+    [data]
+  );
+
+  return (
+    <View className="gap-2.5 pt-1">
+      <View className="flex-row justify-between items-center px-1">
+        <Text className="text-base font-extrabold text-slate-900">
+          {topicLabel(topic, t)}
+        </Text>
+        {!topicFilter ? (
+          <TouchableOpacity onPress={() => onSelectTopic(topic)}>
+            <Text className="text-xs text-indigo-600 font-bold">
+              {t("videos.catalog.viewAll")}
+            </Text>
+          </TouchableOpacity>
+        ) : null}
+      </View>
+
+      {isLoading && videos.length === 0 ? (
+        <View className="flex-row py-1">
+          <VideoCardSkeleton horizontal={!topicFilter} />
+          <VideoCardSkeleton horizontal={!topicFilter} />
+        </View>
+      ) : null}
+
+      {isError ? (
+        <View className="p-3 bg-rose-50 border border-rose-200 rounded-2xl">
+          <Text className="text-xs text-rose-600">
+            {String((error as any)?.message || error)}
+          </Text>
+        </View>
+      ) : null}
+
+      <FlatList
+        horizontal={!topicFilter}
+        showsHorizontalScrollIndicator={false}
+        data={videos}
+        keyExtractor={(item) => `${topic}-${item.youtube_id}`}
+        renderItem={({ item }) => (
+          <VideoCard video={item} t={t} onPress={() => onOpenVideo(item.youtube_id)} />
+        )}
+        onEndReached={() => {
+          if (hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
+          }
+        }}
+        onEndReachedThreshold={0.4}
+        scrollEnabled={!topicFilter}
+      />
+      {isFetchingNextPage ? <ActivityIndicator color="#4f46e5" size="small" /> : null}
+    </View>
+  );
+}
+
 export default function VideosScreen({ navigation }: { navigation: any }) {
   const { t } = useTranslation();
   const { authToken } = useAuth();
-  const [topics, setTopics] = useState<string[]>([]);
-  const [topicsLoading, setTopicsLoading] = useState(true);
+  const queryClient = useQueryClient();
+
   const [topicFilter, setTopicFilter] = useState("");
   const [level, setLevel] = useState("");
-  const [topicState, setTopicState] = useState<Record<string, TopicStateItem>>({});
-  const [viewedVideos, setViewedVideos] = useState<VideoItem[]>([]);
-  const topicStateRef = useRef(topicState);
-  const levelRef = useRef(level);
+  const [visibleTopicLimit, setVisibleTopicLimit] = useState(INITIAL_TOPIC_COUNT);
 
-  useEffect(() => {
-    topicStateRef.current = topicState;
-  }, [topicState]);
-  useEffect(() => {
-    levelRef.current = level;
-  }, [level]);
+  // TanStack Query: Topics catalog
+  const { data: topics = [], isLoading: topicsLoading } = useTopicsQuery();
+
+  // TanStack Query: Recently viewed videos
+  const { data: viewedVideos = [] } = useViewedVideosQuery(
+    VIEWED_PREVIEW_SIZE,
+    Boolean(authToken)
+  );
 
   const openVideo = useCallback(
     (youtubeId: string) => {
@@ -171,136 +238,63 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
     [authToken, navigation]
   );
 
-  const fetchTopicPage = useCallback(
-    async (sectionTopic: string, { cursor, level: levelFilter }: { cursor?: string | null; level?: string } = {}) => {
-      const { videos, next_cursor } = await videoApi.getVideos(sectionTopic, {
-        cursor,
-        level: levelFilter,
-        limit: TOPIC_PAGE_SIZE,
-      });
-      return {
-        videos,
-        nextCursor: next_cursor,
-      };
-    },
-    []
-  );
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setTopicsLoading(true);
-      try {
-        const topicsList = await videoApi.getTopics();
-        if (!cancelled) setTopics(topicsList);
-      } catch {
-        /* ignore */
-      } finally {
-        if (!cancelled) setTopicsLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
+  const handleSelectLevel = useCallback((lv: string) => {
+    setLevel(lv);
+    setVisibleTopicLimit(INITIAL_TOPIC_COUNT);
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-    if (!authToken) {
-      setViewedVideos([]);
-      return undefined;
-    }
-    (async () => {
-      try {
-        const viewedList = await videoApi.getViewedVideos(VIEWED_PREVIEW_SIZE);
-        if (!cancelled) setViewedVideos(viewedList);
-      } catch {
-        if (!cancelled) setViewedVideos([]);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [authToken]);
+  const handleSelectTopic = useCallback((tp: string) => {
+    setTopicFilter(tp);
+    setVisibleTopicLimit(INITIAL_TOPIC_COUNT);
+  }, []);
 
-  useEffect(() => {
-    if (topicsLoading) return undefined;
-    const sectionTopics = topicFilter ? [topicFilter] : topics;
-    if (!sectionTopics.length) {
-      setTopicState({});
-      return undefined;
-    }
-    const initialState: Record<string, TopicStateItem> = {};
-    sectionTopics.forEach((sectionTopic) => {
-      initialState[sectionTopic] = { ...emptyTopicState(), loading: true };
-    });
-    setTopicState(initialState);
-    let cancelled = false;
-    (async () => {
-      for (const sectionTopic of sectionTopics) {
-        if (cancelled) return;
-        try {
-          const { videos, nextCursor } = await fetchTopicPage(sectionTopic, { level });
-          if (cancelled) return;
-          setTopicState((prev) => ({
-            ...prev,
-            [sectionTopic]: { videos, nextCursor, loading: false, loadingMore: false, error: "" },
-          }));
-        } catch (err: any) {
-          if (cancelled) return;
-          setTopicState((prev) => ({
-            ...prev,
-            [sectionTopic]: {
-              ...emptyTopicState(),
-              loading: false,
-              error: String(err?.message || err),
-            },
-          }));
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [topics, topicsLoading, topicFilter, level, fetchTopicPage]);
-
-  const loadMore = useCallback(
-    async (sectionTopic: string) => {
-      const state = topicStateRef.current[sectionTopic];
-      if (!state?.nextCursor || state.loadingMore) return;
-      setTopicState((prev) => ({
-        ...prev,
-        [sectionTopic]: { ...prev[sectionTopic], loadingMore: true },
-      }));
-      try {
-        const { videos, nextCursor } = await fetchTopicPage(sectionTopic, {
-          cursor: state.nextCursor,
-          level: levelRef.current,
-        });
-        setTopicState((prev) => {
-          const current = prev[sectionTopic] || emptyTopicState();
-          return {
-            ...prev,
-            [sectionTopic]: {
-              ...current,
-              videos: mergeUniqueVideos(current.videos, videos),
-              nextCursor,
-              loadingMore: false,
-            },
-          };
-        });
-      } catch (err: any) {
-        setTopicState((prev) => ({
-          ...prev,
-          [sectionTopic]: { ...(prev[sectionTopic] || emptyTopicState()), loadingMore: false, error: String(err) },
-        }));
-      }
-    },
-    [fetchTopicPage]
+  const allSectionTopics = useMemo(
+    () => (topicFilter ? [topicFilter] : topics),
+    [topicFilter, topics]
   );
 
+  const sectionTopics = useMemo(
+    () => (topicFilter ? allSectionTopics : allSectionTopics.slice(0, visibleTopicLimit)),
+    [allSectionTopics, topicFilter, visibleTopicLimit]
+  );
+
+  // Infinite vertical scrolling: load next batch of topics when near bottom
+  const handleScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      if (topicFilter || visibleTopicLimit >= allSectionTopics.length) return;
+
+      const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+      if (contentOffset.y < 80 || contentSize.height <= layoutMeasurement.height + 50) {
+        return;
+      }
+
+      const paddingToBottom = 250;
+      const isCloseToBottom =
+        layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom;
+
+      if (isCloseToBottom) {
+        setVisibleTopicLimit((prev) => {
+          if (prev >= allSectionTopics.length) return prev;
+          return Math.min(prev + BATCH_TOPIC_COUNT, allSectionTopics.length);
+        });
+      }
+    },
+    [allSectionTopics.length, topicFilter, visibleTopicLimit]
+  );
+
+  // Pull-to-refresh: invalidate all video queries via TanStack Query
+  const handleRefresh = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: videoKeys.all });
+    setVisibleTopicLimit(INITIAL_TOPIC_COUNT);
+  }, [queryClient]);
+
+  const { refreshing, onRefresh } = usePullToRefresh(handleRefresh, {
+    tintColor: "#f59e0b",
+    enableHaptics: true,
+    minDurationMs: 450,
+  });
+
   const levels = useMemo(() => ["A1", "A2", "B1", "B2", "C1", "C2"], []);
-  const sectionTopics = topicFilter ? [topicFilter] : topics;
 
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-[#1e2538]">
@@ -308,6 +302,15 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
         className="flex-1 bg-appBg"
         contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}
+        scrollEventThrottle={32}
+        onScroll={handleScroll}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#f59e0b"
+          />
+        }
       >
         {/* Top elastic overscroll filler */}
         <View
@@ -374,7 +377,7 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
             <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-grow-0">
               <TouchableOpacity
                 activeOpacity={0.8}
-                onPress={() => setLevel("")}
+                onPress={() => handleSelectLevel("")}
                 className={`px-3.5 py-1.5 rounded-full mr-2 border ${
                   !level
                     ? "bg-indigo-600 border-indigo-600"
@@ -395,7 +398,7 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
                   <TouchableOpacity
                     key={lv}
                     activeOpacity={0.8}
-                    onPress={() => setLevel(lv)}
+                    onPress={() => handleSelectLevel(lv)}
                     className={`px-3.5 py-1.5 rounded-full mr-2 border ${
                       isSelected
                         ? "bg-indigo-600 border-indigo-600"
@@ -423,7 +426,7 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
             <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-grow-0">
               <TouchableOpacity
                 activeOpacity={0.8}
-                onPress={() => setTopicFilter("")}
+                onPress={() => handleSelectTopic("")}
                 className={`px-3.5 py-1.5 rounded-full mr-2 border ${
                   !topicFilter
                     ? "bg-slate-900 border-slate-900"
@@ -444,7 +447,7 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
                   <TouchableOpacity
                     key={tp}
                     activeOpacity={0.8}
-                    onPress={() => setTopicFilter(tp)}
+                    onPress={() => handleSelectTopic(tp)}
                     className={`px-3.5 py-1.5 rounded-full mr-2 border ${
                       isSelected
                         ? "bg-slate-900 border-slate-900"
@@ -491,52 +494,18 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
 
           {topicsLoading ? <VideoCatalogSkeleton /> : null}
 
-          {/* Catalog Sections by Topic */}
-          {sectionTopics.map((sectionTopic) => {
-            const state = topicState[sectionTopic] || emptyTopicState();
-            return (
-              <View key={sectionTopic} className="gap-2.5 pt-1">
-                <View className="flex-row justify-between items-center px-1">
-                  <Text className="text-base font-extrabold text-slate-900">
-                    {topicLabel(sectionTopic, t)}
-                  </Text>
-                  {!topicFilter ? (
-                    <TouchableOpacity onPress={() => setTopicFilter(sectionTopic)}>
-                      <Text className="text-xs text-indigo-600 font-bold">
-                        {t("videos.catalog.viewAll")}
-                      </Text>
-                    </TouchableOpacity>
-                  ) : null}
-                </View>
-
-                {state.loading && state.videos.length === 0 ? (
-                  <View className="flex-row py-1">
-                    <VideoCardSkeleton horizontal={!topicFilter} />
-                    <VideoCardSkeleton horizontal={!topicFilter} />
-                  </View>
-                ) : null}
-                {state.error ? (
-                  <View className="p-3 bg-rose-50 border border-rose-200 rounded-2xl">
-                    <Text className="text-xs text-rose-600">{state.error}</Text>
-                  </View>
-                ) : null}
-
-                <FlatList
-                  horizontal={!topicFilter}
-                  showsHorizontalScrollIndicator={false}
-                  data={state.videos}
-                  keyExtractor={(item) => `${sectionTopic}-${item.youtube_id}`}
-                  renderItem={({ item }) => (
-                    <VideoCard video={item} t={t} onPress={() => openVideo(item.youtube_id)} />
-                  )}
-                  onEndReached={() => loadMore(sectionTopic)}
-                  onEndReachedThreshold={0.4}
-                  scrollEnabled={!topicFilter}
-                />
-                {state.loadingMore ? <ActivityIndicator color="#4f46e5" size="small" /> : null}
-              </View>
-            );
-          })}
+          {/* Catalog Sections by Topic via TanStack Query */}
+          {sectionTopics.map((sectionTopic) => (
+            <TopicSectionRow
+              key={`${sectionTopic}-${level}`}
+              topic={sectionTopic}
+              level={level}
+              topicFilter={topicFilter}
+              t={t}
+              onSelectTopic={handleSelectTopic}
+              onOpenVideo={openVideo}
+            />
+          ))}
         </View>
       </ScrollView>
     </SafeAreaView>

@@ -4,7 +4,8 @@ import React, { useEffect, useState } from "react";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import * as SplashScreen from "expo-splash-screen";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "@/core/queryClient";
 import Toast from "react-native-toast-message";
 
 import { LogBox } from "react-native";
@@ -35,15 +36,6 @@ LogBox.ignoreLogs([
 
 // Keep native splash screen visible while app hydrates
 SplashScreen.preventAutoHideAsync().catch(() => {});
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 2,
-      staleTime: 1000 * 60 * 5,
-    },
-  },
-});
 
 export default function App() {
   const [booted, setBooted] = useState(false);

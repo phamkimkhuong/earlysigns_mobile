@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import * as ImagePicker from "expo-image-picker";
 import { useTranslation } from "react-i18next";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/services/Auth";
 import {
   resolveUserKey,
@@ -10,13 +11,30 @@ import {
   incrementQuotaUsage,
 } from "@/services/usageLimits";
 import { useBillingStore } from "@/store/useBillingStore";
-import { textPracticeApi, billingApi } from "@/api";
+import { textPracticeApi } from "@/api";
+import {
+  useSavedPassagesQuery,
+  textPracticeKeys,
+} from "@/hooks/queries/useTextPracticeQueries";
+import { useBillingUsageQuery } from "@/hooks/queries/useBillingQueries";
 import type { Dialect, LessonSession } from "@/types/domain";
 
 export function useTextPracticeViewModel(navigation?: any) {
   const { t } = useTranslation();
   const { authToken, authEmail, userDialect } = useAuth();
-  const [dialect, setDialect] = useState<Dialect>(userDialect || "uk");
+  const queryClient = useQueryClient();
+
+  const [selectedDialect, setSelectedDialect] = useState<Dialect | null>(null);
+  const dialect: Dialect = selectedDialect || userDialect || "uk";
+  const setDialect = useCallback((d: Dialect) => setSelectedDialect(d), []);
+
+  // TanStack Query: Billing usage & Saved passages
+  useBillingUsageQuery(Boolean(authToken));
+  const { data: passages = [], isLoading: passagesLoading } = useSavedPassagesQuery(
+    30,
+    Boolean(authToken)
+  );
+
   const usageStatus = useBillingStore((s) => s.usage);
   const [inputText, setInputText] = useState("");
   const [saveTitle, setSaveTitle] = useState("");
@@ -24,8 +42,6 @@ export function useTextPracticeViewModel(navigation?: any) {
   const [prepareLoading, setPrepareLoading] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
   const [ocrLoading, setOcrLoading] = useState(false);
-  const [passages, setPassages] = useState<any[]>([]);
-  const [passagesLoading, setPassagesLoading] = useState(false);
   const [lessonSession, setLessonSession] = useState<LessonSession | null>(null);
   const [lessonSessionKey, setLessonSessionKey] = useState(0);
 
@@ -42,34 +58,6 @@ export function useTextPracticeViewModel(navigation?: any) {
     () => resolveUserKey({ authToken, authEmail }),
     [authToken, authEmail]
   );
-
-  const loadPassages = useCallback(async () => {
-    if (!authToken) {
-      setPassages([]);
-      setPassagesLoading(false);
-      return;
-    }
-    setPassagesLoading(true);
-    try {
-      const items = await textPracticeApi.getSavedPassages(30);
-      setPassages(items);
-    } catch {
-      /* ignore */
-    } finally {
-      setPassagesLoading(false);
-    }
-  }, [authToken]);
-
-  useEffect(() => {
-    if (userDialect) setDialect(userDialect);
-  }, [userDialect]);
-
-  useEffect(() => {
-    if (authToken) {
-      billingApi.getUsage().catch(() => {});
-    }
-    loadPassages();
-  }, [authToken, loadPassages]);
 
   const startPractice = useCallback(async () => {
     if (!authToken) {
@@ -122,13 +110,13 @@ export function useTextPracticeViewModel(navigation?: any) {
     try {
       await textPracticeApi.savePassage(text, title, dialect);
       setSaveTitle("");
-      await loadPassages();
+      await queryClient.invalidateQueries({ queryKey: textPracticeKeys.passages(30) });
     } catch (e: any) {
       setError(String(e?.message || e));
     } finally {
       setSaveLoading(false);
     }
-  }, [authToken, dialect, inputText, loadPassages, navigation, saveTitle, t]);
+  }, [authToken, dialect, inputText, navigation, queryClient, saveTitle, t]);
 
   const handleOcr = useCallback(
     async (fromCamera: boolean) => {

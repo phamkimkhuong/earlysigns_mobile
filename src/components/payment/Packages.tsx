@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Platform, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import AppModal from "@/components/ui/AppModal";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import { formatVnd } from "@/utils/errors";
 import { STORE_PRODUCTS } from "@/services/iap";
-import { billingApi } from "@/api";
+import { usePackagesQuery } from "@/hooks/queries/useBillingQueries";
 
 export interface PackagesProps {
   open: boolean;
@@ -23,27 +23,8 @@ export default function Packages({
   onBuyPackage,
 }: PackagesProps) {
   const { t } = useTranslation();
-  const [packageList, setPackageList] = useState<any[]>([]);
-  const [purchaseError, setPurchaseError] = useState("");
-
-  useEffect(() => {
-    if (!open) return undefined;
-    let cancelled = false;
-    (async () => {
-      try {
-        const packages = await billingApi.getPackages();
-        if (cancelled) return;
-        if (Array.isArray(packages)) {
-          setPackageList(packages);
-        }
-      } catch (e: any) {
-        if (!cancelled) setPurchaseError(String(e.message || e));
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [open]);
+  const { data: packageList = [], error } = usePackagesQuery({ enabled: open });
+  const purchaseError = error ? String((error as any)?.message || error) : "";
 
   if (!open) return null;
 

@@ -1,24 +1,61 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/services/Auth";
 import { resolveUserKey, resolveUserTier } from "@/services/usageLimits";
 import { buildLessonSession } from "@/utils/lessons";
 import { buildItems } from "@/components/practice/HomeJourney";
 import { useBillingStore } from "@/store/useBillingStore";
-import { lessonApi, billingApi } from "@/api";
+import { lessonApi } from "@/api";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import {
+  useHomeSummaryQuery,
+  lessonKeys,
+} from "@/hooks/queries/useLessonQueries";
+import {
+  useBillingUsageQuery,
+  billingKeys,
+} from "@/hooks/queries/useBillingQueries";
 import type { Dialect, LessonSession } from "@/types/domain";
 
 export function useJourneyViewModel(navigation?: any) {
   const { t, i18n } = useTranslation();
   const { authToken, authEmail, userDialect } = useAuth();
   const dialect: Dialect = userDialect || "uk";
+  const queryClient = useQueryClient();
 
-  const homeSummary = useBillingStore((s) => s.homeSummary);
-  const usageStatus = useBillingStore((s) => s.usage);
+  // TanStack Query: Home summary & Billing usage
+  const {
+    data: homeSummaryData,
+    isLoading: homeLoading,
+    error: homeError,
+  } = useHomeSummaryQuery(dialect, Boolean(authToken));
+
+  const {
+    data: usageData,
+    isLoading: usageLoading,
+  } = useBillingUsageQuery(Boolean(authToken));
+
+  const storeHomeSummary = useBillingStore((s) => s.homeSummary);
+  const storeUsage = useBillingStore((s) => s.usage);
+
+  const homeSummary = homeSummaryData || storeHomeSummary;
+  const usageStatus = usageData || storeUsage;
+
+  const loading = homeLoading || usageLoading;
+  const error = homeError ? String((homeError as any)?.message || homeError) : "";
+
+  const { refreshing, onRefresh } = usePullToRefresh(
+    useCallback(async () => {
+      if (!authToken) return;
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: lessonKeys.all }),
+        queryClient.invalidateQueries({ queryKey: billingKeys.all }),
+      ]);
+    }, [authToken, queryClient])
+  );
 
   const [journeyLessonProgress, setJourneyLessonProgress] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [lessonSession, setLessonSession] = useState<LessonSession | null>(null);
   const [lessonSessionKey, setLessonSessionKey] = useState(0);
   const [lessonLoading, setLessonLoading] = useState(false);
@@ -38,18 +75,6 @@ export function useJourneyViewModel(navigation?: any) {
     () => resolveUserKey({ authToken, authEmail }),
     [authToken, authEmail]
   );
-
-  useEffect(() => {
-    if (authToken) {
-      setLoading(true);
-      Promise.all([
-        lessonApi.getHomeSummary(dialect),
-        billingApi.getUsage(),
-      ])
-        .catch((e: any) => setError(String(e.message || e)))
-        .finally(() => setLoading(false));
-    }
-  }, [authToken, dialect]);
 
   const startPersonalizedLesson = useCallback(async () => {
     if (!authToken) {
@@ -77,8 +102,8 @@ export function useJourneyViewModel(navigation?: any) {
 
   const closeLessonSession = useCallback(async () => {
     setLessonSession(null);
-    await lessonApi.getHomeSummary(dialect).catch(() => {});
-  }, [dialect]);
+    await queryClient.invalidateQueries({ queryKey: lessonKeys.homeSummary(dialect) });
+  }, [dialect, queryClient]);
 
   const loadNextLesson = useCallback(async () => {
     await lessonApi.markPracticed(lessonSession?.phonemes || []).catch(() => {});
@@ -93,7 +118,8 @@ export function useJourneyViewModel(navigation?: any) {
   const handleLessonAllCompleted = useCallback(async () => {
     const data = await lessonApi.completeJourney();
     if (data?.journey) setJourneyLessonProgress(data.journey);
-  }, []);
+    await queryClient.invalidateQueries({ queryKey: lessonKeys.homeSummary(dialect) });
+  }, [dialect, queryClient]);
 
   const journey = homeSummary?.journey || null;
   const streakDays = Number(homeSummary?.streak_days ?? 0);
@@ -104,6 +130,8 @@ export function useJourneyViewModel(navigation?: any) {
     t,
     dialect,
     loading,
+    refreshing,
+    onRefresh,
     error,
     lessonError,
     displayJourney,
