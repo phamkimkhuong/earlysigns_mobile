@@ -92,6 +92,9 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
   const videoDurationRef = useRef(Infinity);
   const viewStartedRef = useRef(false);
   const reportedSegmentsRef = useRef(new Set<number>());
+  const videoRef = useRef<any>(null);
+  const practiceDialectRef = useRef<Dialect>(userDialect || "uk");
+  practiceDialectRef.current = practiceDialect;
 
   const userTier = useMemo(
     () =>
@@ -158,7 +161,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
   const notifyViewStart = useCallback(() => {
     if (!youtubeId || viewStartedRef.current) return;
     viewStartedRef.current = true;
-    const v = video;
+    const v = videoRef.current;
     const segs = segmentsRef.current;
     videoApi.notifyViewStart(youtubeId, {
       segment_count: segs.length,
@@ -168,11 +171,11 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
       topic: v?.topic || "",
       channel: v?.channel || "",
       duration_ms: v?.duration_ms || 0,
-      dialect: v?.dialect || practiceDialect,
+      dialect: v?.dialect || practiceDialectRef.current,
     }).catch(() => {
       viewStartedRef.current = false;
     });
-  }, [youtubeId, video, practiceDialect]);
+  }, [youtubeId]);
 
   const notifySegmentPlayed = useCallback(
     (index: number) => {
@@ -222,6 +225,9 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
     [clearResult, notifySegmentPlayed]
   );
 
+  const armSentenceRef = useRef(armSentence);
+  armSentenceRef.current = armSentence;
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -230,17 +236,21 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
       try {
         const data = await videoApi.getVideoDetail(youtubeId);
         if (cancelled) return;
+        videoRef.current = data;
         setVideo(data);
         const segs = (data?.segments || []).sort(
           (a: VideoSegment, b: VideoSegment) => a.start_ms - b.start_ms
         );
         segmentsRef.current = segs;
         videoDurationRef.current = Number(data?.duration_ms || Infinity);
-        if (data?.dialect) setPracticeDialect(data.dialect);
+        if (data?.dialect) {
+          setPracticeDialect(data.dialect);
+          practiceDialectRef.current = data.dialect;
+        }
         if (segs.length > 0) {
           activeIndexRef.current = 0;
           setActiveIndex(0);
-          armSentence(0, { play: false, seek: "preroll" });
+          armSentenceRef.current(0, { play: false, seek: "preroll" });
         }
       } catch (err: any) {
         if (!cancelled) setError(err?.message || t("videos.practice.notFound"));
@@ -251,7 +261,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
     return () => {
       cancelled = true;
     };
-  }, [youtubeId, armSentence, t]);
+  }, [youtubeId, t]);
 
   useEffect(() => {
     pollRef.current = setInterval(async () => {
