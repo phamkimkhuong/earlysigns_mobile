@@ -14,6 +14,7 @@ import {
   billingKeys,
 } from "@/hooks/queries/useBillingQueries";
 import { useProgressSoundsQuery, progressKeys } from "@/hooks/queries/useProgressQueries";
+import { useViewedVideosQuery, videoKeys } from "@/hooks/queries/useVideoQueries";
 import { getHomeClarityPercent } from "@/utils/homeProgress";
 import type { RootStackParamList } from "@/types/navigation";
 
@@ -25,10 +26,11 @@ export function useHomeViewModel(navigation: any) {
   const dialect = userDialect || "uk";
   const queryClient = useQueryClient();
 
-  // TanStack Query: Home summary & Billing usage
+  // TanStack Query: Home summary, Billing usage, Sounds & Viewed videos
   const summaryQuery = useHomeSummaryQuery(dialect, Boolean(authToken));
   const { data: usageData } = useBillingUsageQuery(Boolean(authToken));
   const { data: sounds = [] } = useProgressSoundsQuery(dialect, Boolean(authToken));
+  const { data: viewedVideos = [] } = useViewedVideosQuery(1, Boolean(authToken));
 
   const storeHomeSummary = useBillingStore((s) => s.homeSummary);
   const storeUsage = useBillingStore((s) => s.usage);
@@ -44,6 +46,7 @@ export function useHomeViewModel(navigation: any) {
         queryClient.invalidateQueries({ queryKey: lessonKeys.all }),
         queryClient.invalidateQueries({ queryKey: billingKeys.all }),
         queryClient.invalidateQueries({ queryKey: progressKeys.all }),
+        queryClient.invalidateQueries({ queryKey: videoKeys.all }),
       ]);
     }, [authToken, queryClient])
   );
@@ -76,7 +79,7 @@ export function useHomeViewModel(navigation: any) {
     [authToken, navigation]
   );
 
-  const quota = authToken && usageStatus && userTier === "free"
+  const quota = authToken && userTier === "free"
     ? getMonthlyQuotaSnapshot({ userKey, userTier, usageStatus })
     : null;
   const clarityPct = useMemo(
@@ -90,15 +93,64 @@ export function useHomeViewModel(navigation: any) {
     ? Math.floor(rawStreak)
     : null;
   const journey = homeSummary?.journey || null;
-  const weakestPhonemes: { sound: string }[] = Array.isArray(homeSummary?.weakest_phonemes)
-    ? homeSummary.weakest_phonemes.filter((item: any) => typeof item?.sound === "string" && item.sound.trim())
+
+  // Real video progress from viewed videos API
+  const recentVideo = authToken && viewedVideos && viewedVideos.length > 0 ? viewedVideos[0] : null;
+  const videoProgress = useMemo(() => {
+    if (!recentVideo) return null;
+    const played = Number(recentVideo.played_count) || 0;
+    const total = Number(recentVideo.segment_count) || 0;
+    const pct = typeof recentVideo.played_pct === "number"
+      ? Math.min(100, Math.max(0, Math.round(recentVideo.played_pct)))
+      : total > 0
+      ? Math.min(100, Math.max(0, Math.round((played / total) * 100)))
+      : 0;
+    return {
+      youtubeId: recentVideo.youtube_id,
+      title: recentVideo.title,
+      topic: recentVideo.topic || "EVERYDAY ENGLISH",
+      played,
+      total,
+      pct,
+    };
+  }, [recentVideo]);
+
+  // Robust phonemes extraction
+  const rawWeakest = homeSummary?.weakest_phonemes || homeSummary?.weak_phonemes;
+  const weakestPhonemes: { sound: string }[] = Array.isArray(rawWeakest)
+    ? rawWeakest
+        .map((item: any) => {
+          if (typeof item === "string") {
+            const clean = item.replace(/^\/+|\/+$/g, "").trim();
+            return clean ? { sound: clean } : null;
+          }
+          if (item && typeof item === "object") {
+            const raw = String(item.sound || item.phoneme || item.ipa || "");
+            const clean = raw.replace(/^\/+|\/+$/g, "").trim();
+            return clean ? { sound: clean } : null;
+          }
+          return null;
+        })
+        .filter((item): item is { sound: string } => Boolean(item && item.sound))
     : [];
+
+  // Journey progress percentage from journey milestones or clarity
+  const journeyProgressPct = useMemo(() => {
+    if (clarityPct != null) return clarityPct;
+    if (journey?.milestones && Array.isArray(journey.milestones)) {
+      const completed = journey.milestones.filter((ms: any) => ms.status === "completed").length;
+      const total = journey.milestones.length;
+      if (total > 0) return Math.min(100, Math.round((completed / total) * 100));
+    }
+    return null;
+  }, [clarityPct, journey]);
 
   return {
     t,
     dialect,
     authToken,
     authEmail,
+    userName: authEmail?.split("@")[0] || "",
     refreshing,
     onRefresh,
     homeSummary,
@@ -108,7 +160,10 @@ export function useHomeViewModel(navigation: any) {
     streakDays,
     clarityPct,
     journey,
+    journeyProgressPct,
     weakestPhonemes,
+    recentVideo,
+    videoProgress,
     quota: quota && !quota.isUnlimited ? quota : null,
     summaryLoading: Boolean(authToken) && summaryQuery.isLoading && !homeSummary,
     summaryError: Boolean(authToken) && summaryQuery.isError && !homeSummary,

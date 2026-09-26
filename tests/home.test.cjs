@@ -14,7 +14,21 @@ function loadSource(relativePath, mocks = {}) {
   }).outputText;
   const module = { exports: {} };
   vm.runInThisContext(`(function(require,module,exports){${source}\n})`, { filename: file })(
-    (name) => Object.hasOwn(mocks, name) ? mocks[name] : require(name), module, module.exports,
+    (name) => {
+      if (Object.hasOwn(mocks, name)) return mocks[name];
+      if (name.startsWith("@assets/") || name.endsWith(".jpg") || name.endsWith(".png")) return 1;
+      if (name.startsWith("@/")) {
+        const candidate = path.resolve(__dirname, "..", "src", name.slice(2));
+        for (const ext of [".ts", ".tsx", ".js", ".jsx"]) {
+          if (fs.existsSync(candidate + ext)) {
+            return loadSource(path.relative(path.resolve(__dirname, ".."), candidate + ext), mocks);
+          }
+        }
+      }
+      return require(name);
+    },
+    module,
+    module.exports,
   );
   return module.exports;
 }
@@ -56,6 +70,7 @@ function createHome({ signedIn = false, summary = null, soundData = [], unlocked
     "@/hooks/queries/useLessonQueries": { useHomeSummaryQuery: () => ({ data: summary, isLoading: false, isError: false }), lessonKeys: { all: ["lessons"] } },
     "@/hooks/queries/useBillingQueries": { useBillingUsageQuery: () => ({ data: null }), billingKeys: { all: ["billing"] } },
     "@/hooks/queries/useProgressQueries": { useProgressSoundsQuery: () => ({ data: soundData }), progressKeys: { all: ["progress"] } },
+    "@/hooks/queries/useVideoQueries": { useViewedVideosQuery: () => ({ data: [] }), videoKeys: { all: ["videos"] } },
     "@/utils/homeProgress": { getHomeClarityPercent },
   });
   return { model: useHomeViewModel({ navigate: (...args) => calls.push(args) }), calls };
@@ -98,7 +113,7 @@ test("signed-in Home has no fabricated weak sounds or premature score", () => {
 });
 
 const nativeMocks = {
-  View: "View", Text: "Text", Pressable: "Pressable", ScrollView: "ScrollView", RefreshControl: "RefreshControl", ActivityIndicator: "ActivityIndicator", TouchableOpacity: "TouchableOpacity", TextInput: "TextInput",
+  View: "View", Text: "Text", Pressable: "Pressable", ScrollView: "ScrollView", RefreshControl: "RefreshControl", ActivityIndicator: "ActivityIndicator", TouchableOpacity: "TouchableOpacity", TextInput: "TextInput", Image: "Image",
   StyleSheet: { create: (styles) => styles, absoluteFill: {} },
   useWindowDimensions: () => ({ width: 390, fontScale: 1 }),
 };
@@ -115,9 +130,10 @@ test("Home renders video, text, phonemes in order and wires all feature actions"
   const { default: HomeScreen } = loadSource("src/screens/tabs/HomeScreen.tsx", {
     "react-native": nativeMocks,
     "react-native-safe-area-context": { SafeAreaView: "SafeAreaView" },
-    "react-native-svg": { __esModule: true, default: "Svg", Defs: "Defs", LinearGradient: "LinearGradient", Rect: "Rect", Stop: "Stop" },
+    "react-native-svg": { __esModule: true, default: "Svg", Defs: "Defs", LinearGradient: "LinearGradient", Rect: "Rect", Stop: "Stop", Path: "Path", Text: "Text" },
     "lucide-react-native": icons,
     "@/hooks/useHomeViewModel": { useHomeViewModel: () => model },
+    "@/components/ui/BrandWaveform": { BrandWaveform: () => null },
   });
   const nodes = flatten(HomeScreen({ navigation: {} }));
   const node = (id) => nodes.find((item) => item.props.testID === id);

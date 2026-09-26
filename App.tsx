@@ -15,7 +15,8 @@ import { AuthProvider } from "@/services/Auth";
 import { getStoredLanguage, initI18n } from "@/core/i18n";
 import { hydrateStorage } from "@/services/storage";
 import { initNotifications } from "@/services/notifications";
-import RootNavigator from "@/navigation/RootNavigator";
+import { NavigationContainer } from "@react-navigation/native";
+import RootNavigator, { navTheme } from "@/navigation/RootNavigator";
 import DevNetworkInspector from "@/components/dev/DevNetworkInspector";
 
 // Neutralize noisy console outputs in production while keeping error trackers intact
@@ -70,10 +71,12 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <SafeAreaProvider>
         <AuthProvider>
-          <StatusBar style="dark" />
-          <RootNavigator />
-          <DevNetworkInspector />
-          <Toast />
+          <NavigationContainer theme={navTheme}>
+            <StatusBar style="dark" />
+            <RootNavigator />
+            <DevNetworkInspector />
+            <Toast />
+          </NavigationContainer>
         </AuthProvider>
       </SafeAreaProvider>
     </QueryClientProvider>

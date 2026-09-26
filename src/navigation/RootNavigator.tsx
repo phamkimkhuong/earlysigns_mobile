@@ -1,5 +1,4 @@
-import React from "react";
-import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
+import { DefaultTheme } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { useTranslation } from "react-i18next";
@@ -30,7 +29,7 @@ import {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-const navTheme = {
+export const navTheme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
@@ -89,37 +88,35 @@ export default function RootNavigator() {
   }
 
   return (
-    <NavigationContainer theme={navTheme}>
-      <Stack.Navigator
-        id="root-stack"
-        initialRouteName={hasOnboarded ? "Main" : "Onboarding"}
-        screenOptions={{
-          headerStyle: { backgroundColor: colors.bg },
-          headerShadowVisible: false,
-          headerTintColor: colors.text,
-          contentStyle: { backgroundColor: colors.bg },
-        }}
-      >
-        <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Main" component={MainTabs} options={{ headerShown: false }} />
-        <Stack.Screen name="Videos" component={VideosScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Text" component={TextPracticeScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Phonemes" component={PhonemesScreen} options={{ title: t("nav.phonemes") }} />
-        <Stack.Screen name="Journey" component={JourneyScreen} options={{ title: t("home.journey.viewAll") }} />
-        <Stack.Screen
-          name="VideoPractice"
-          component={VideoPracticeScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen name="Terms" component={TermsScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Privacy" component={PrivacyScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Referral" component={ReferralScreen} options={{ title: t("referral.pageTitle") }} />
-        <Stack.Screen name="About" component={AboutScreen} options={{ title: t("nav.intro") }} />
-        <Stack.Screen name="Login" component={LoginScreen} options={{ title: t("login.title") }} />
-        <Stack.Screen name="Payment" component={PaymentScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="PaymentWebView" component={PaymentWebViewScreen} options={{ title: t("package.planName") }} />
-        <Stack.Screen name="PaymentResult" component={PaymentResultScreen} options={{ title: t("package.planName") }} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <Stack.Navigator
+      id="root-stack"
+      initialRouteName={hasOnboarded ? "Main" : "Onboarding"}
+      screenOptions={{
+        headerStyle: { backgroundColor: colors.bg },
+        headerShadowVisible: false,
+        headerTintColor: colors.text,
+        contentStyle: { backgroundColor: colors.bg },
+      }}
+    >
+      <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Main" component={MainTabs} options={{ headerShown: false }} />
+      <Stack.Screen name="Videos" component={VideosScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Text" component={TextPracticeScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Phonemes" component={PhonemesScreen} options={{ title: t("nav.phonemes") }} />
+      <Stack.Screen name="Journey" component={JourneyScreen} options={{ title: t("home.journey.viewAll") }} />
+      <Stack.Screen
+        name="VideoPractice"
+        component={VideoPracticeScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen name="Terms" component={TermsScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Privacy" component={PrivacyScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Referral" component={ReferralScreen} options={{ title: t("referral.pageTitle") }} />
+      <Stack.Screen name="About" component={AboutScreen} options={{ title: t("nav.intro") }} />
+      <Stack.Screen name="Login" component={LoginScreen} options={{ title: t("login.title") }} />
+      <Stack.Screen name="Payment" component={PaymentScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="PaymentWebView" component={PaymentWebViewScreen} options={{ title: t("package.planName") }} />
+      <Stack.Screen name="PaymentResult" component={PaymentResultScreen} options={{ title: t("package.planName") }} />
+    </Stack.Navigator>
   );
 }
