@@ -1,3 +1,17 @@
+import { createNavigationContainerRef } from "@react-navigation/native";
+import type { RootStackParamList } from "@/types/navigation";
+
+export const navigationRef = createNavigationContainerRef<RootStackParamList>();
+
+export function safeNavigate<RouteName extends keyof RootStackParamList>(
+  name: RouteName,
+  params?: RootStackParamList[RouteName]
+): void {
+  if (navigationRef.isReady()) {
+    (navigationRef.navigate as any)(name, params);
+  }
+}
+
 const TAB_SCREENS = new Set(["Home", "Profile"]);
 
 export function navigateAfterLogin(

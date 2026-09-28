@@ -1,20 +1,45 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  Dimensions,
+  Image,
   Linking,
+  Modal,
   RefreshControl,
   ScrollView,
-  Switch,
   Text,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from "react-native";
+import { customAlert } from "@/utils/customAlert";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LineChart } from "react-native-chart-kit";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
+import {
+  AudioLines,
+  Award,
+  Bell,
+  Check,
+  ChevronRight,
+  Crown,
+  ExternalLink,
+  Flame,
+  FileText,
+  Gift,
+  Globe,
+  HelpCircle,
+  Info,
+  LogOut,
+  Mail,
+  Mic,
+  ShieldCheck,
+  Sparkles,
+  Target,
+  Trash2,
+  User,
+  X,
+} from "lucide-react-native";
+import { useAuth } from "@/services/Auth";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import {
   useProgressSoundsQuery,
@@ -23,68 +48,25 @@ import {
 } from "@/hooks/queries/useProgressQueries";
 import { billingKeys } from "@/hooks/queries/useBillingQueries";
 import { lessonKeys } from "@/hooks/queries/useLessonQueries";
-import {
-  Award,
-  Bell,
-  CheckCircle2,
-  ChevronRight,
-  Clock,
-  Crown,
-  ExternalLink,
-  Flame,
-  Gift,
-  HelpCircle,
-  LogOut,
-  RefreshCw,
-  ShieldCheck,
-  Sparkles,
-  Star,
-  Target,
-  Trash2,
-  Volume2,
-} from "lucide-react-native";
-import { useAuth } from "@/services/Auth";
-import { MOBILE_FREE_ACCESS } from "@/core/config";
-import { accuracyBandColor } from "@/utils/checkResultScoreColor";
-import { showToast } from "@/utils/toast";
-import DialectToggle from "@/components/ui/DialectToggle";
-import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
-import PrimaryButton from "@/components/ui/PrimaryButton";
-import MonthlyQuotaCard from "@/components/ui/MonthlyQuotaCard";
-import { ProfileProgressSkeleton } from "@/components/ui/Skeleton";
 import { useBillingStore } from "@/store/useBillingStore";
+import { accuracyBandColor } from "@/utils/checkResultScoreColor";
 import { authApi } from "@/api";
-import {
-  getNotificationPermissionStatus,
-  getStoredNotificationSettings,
-  openNotificationSettings,
-  requestNotificationPermission,
-  saveNotificationSettings,
-  type NotificationSettings,
-} from "@/services/notifications";
-import {
-  openManageSubscriptions,
-  restoreStorePurchases,
-} from "@/services/iap";
-import { resolveUserKey, resolveUserTier } from "@/services/usageLimits";
+import { showToast } from "@/utils/toast";
+import PrimaryButton from "@/components/ui/PrimaryButton";
+import { ProfileProgressSkeleton } from "@/components/ui/Skeleton";
+import { GuestProfileView } from "@/components";
+import { getIpaSoundMeta } from "@/utils/ipaData";
+import { resolveUserTier } from "@/services/usageLimits";
+import { getItem } from "@/services/storage";
+import { setStoredLanguage } from "@/core/i18n";
 
-const HISTORY_DAYS = 7;
 const TAB_PROGRESS = "progress";
 const TAB_ACCOUNT = "account";
-
-// Total IPA phonemes tracked in standard English (RP/UK)
+const HISTORY_DAYS = 7;
 const TOTAL_IPA_PHONEMES = 44;
 const MIN_CHECKS_PER_PHONEME = 5;
-// 80% coverage threshold: 44 * 0.8 = 35.2 -> 35 phonemes
-const PHONEME_THRESHOLD_COUNT = 35;
-
-const PRESET_REMINDER_TIMES = [
-  { label: "08:00", hour: 8, minute: 0 },
-  { label: "12:00", hour: 12, minute: 0 },
-  { label: "19:00", hour: 19, minute: 0 },
-  { label: "20:00", hour: 20, minute: 0 },
-  { label: "21:30", hour: 21, minute: 30 },
-];
+// 80% coverage requirement: Math.ceil(44 * 0.8) = 36 phonemes
+const PHONEME_THRESHOLD_COUNT = Math.ceil(TOTAL_IPA_PHONEMES * 0.8);
 
 const WEEK_DAYS_VI = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
 const WEEK_DAYS_EN = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -100,95 +82,110 @@ function dateRange(days: number): string[] {
   return dates;
 }
 
-function fillDailyAccuracy(historyItems: any[], dates: string[], key: string): number[] {
-  const byDate: Record<string, number> = {};
-  for (const item of historyItems) {
-    if (item.accuracy && item.accuracy[key] != null) {
-      byDate[item.date] = Number(item.accuracy[key]);
+function formatDateLabel(dStr: string): string {
+  const p = dStr.split("-");
+  return p.length >= 3 ? `${p[2]}/${p[1]}` : dStr;
+}
+
+function fillDailyAccuracy(
+  history: any[],
+  dates: string[],
+  key: "total" | "vowels" | "consonants" = "total"
+): number[] {
+  const map = new Map<string, number>();
+  for (const h of history) {
+    if (h && typeof h.date === "string") {
+      const v = Number(h[key]);
+      if (Number.isFinite(v)) map.set(h.date.slice(0, 10), Math.round(v * 100));
     }
   }
-  const filled: number[] = [];
+
   let last = 0;
-  for (const d of dates) {
-    if (byDate[d] != null) last = byDate[d];
-    filled.push(Math.round((last || 0) * 1000) / 10);
-  }
-  return filled;
+  return dates.map((d) => {
+    if (map.has(d)) {
+      last = map.get(d)!;
+      return last;
+    }
+    return last;
+  });
 }
 
-function formatDateLabel(dateStr: string): string {
-  const [, m, d] = dateStr.split("-");
-  return `${parseInt(d, 10)}/${parseInt(m, 10)}`;
-}
 
-interface ProfileScreenProps {
-  navigation: any;
-  route?: {
-    params?: {
-      tab?: "progress" | "account";
-      [key: string]: any;
-    };
-  };
-}
-
-export default function ProfileScreen({ navigation, route }: ProfileScreenProps) {
+export default function ProfileScreen({ route, navigation }: { route: any; navigation: any }) {
   const { t, i18n } = useTranslation();
-  const weekDays = i18n.language?.startsWith("vi") ? WEEK_DAYS_VI : WEEK_DAYS_EN;
+  const { width } = useWindowDimensions();
   const {
     authToken,
     authEmail,
-    userDialect,
-    updateUserDialect,
     scoreUnlocked,
+    screeningCompleted,
     handleLogout,
+    updateUserLanguage,
   } = useAuth();
 
-  const [activeTab, setActiveTab] = useState(
-    route?.params?.tab === "account" ? TAB_ACCOUNT : TAB_PROGRESS
-  );
-  const [prevRouteTab, setPrevRouteTab] = useState(route?.params?.tab);
+  const [languageModalVisible, setLanguageModalVisible] = useState(false);
+  const currentLang = String(i18n.resolvedLanguage || i18n.language || "vi").startsWith("vi") ? "vi" : "en";
 
-  if (route?.params?.tab !== prevRouteTab) {
-    setPrevRouteTab(route?.params?.tab);
-    setActiveTab(route?.params?.tab === "account" ? TAB_ACCOUNT : TAB_PROGRESS);
+  const handleSelectLanguage = useCallback(
+    async (lng: "vi" | "en") => {
+      if (lng !== currentLang) {
+        setStoredLanguage(lng);
+        await i18n.changeLanguage(lng);
+        try {
+          await updateUserLanguage(lng);
+        } catch {
+          /* keep local */
+        }
+      }
+      setLanguageModalVisible(false);
+    },
+    [currentLang, i18n, updateUserLanguage]
+  );
+
+  const displayEmail = useMemo(() => {
+    return authEmail || t("profile.noEmailLinked") || "Chưa liên kết email";
+  }, [authEmail, t]);
+
+  const headerDisplayName = useMemo(() => {
+    if (!authToken) return t("profile.guestUser") || "Khách EarlySigns";
+    if (!authEmail) return t("profile.studentName") || "Học viên EarlySigns";
+    if (authEmail.includes("@")) {
+      return authEmail.split("@")[0];
+    }
+    return authEmail;
+  }, [authToken, authEmail, t]);
+
+  const routeTab = route?.params?.tab === "account" ? TAB_ACCOUNT : TAB_PROGRESS;
+  const [tabOverride, setTabOverride] = useState<"progress" | "account" | null>(null);
+  const [prevRouteTab, setPrevRouteTab] = useState(routeTab);
+
+  if (prevRouteTab !== routeTab) {
+    setPrevRouteTab(routeTab);
+    setTabOverride(null);
   }
 
-  const [dialectSaving, setDialectSaving] = useState(false);
+  const activeTab = tabOverride ?? routeTab;
+  const setActiveTab = (tab: "progress" | "account") => setTabOverride(tab);
 
-  // Billing usage and Home summary from Zustand store
   const usage = useBillingStore((s) => s.usage);
   const homeSummary = useBillingStore((s) => s.homeSummary);
-  const [restoringIap, setRestoringIap] = useState(false);
-
-  // Notification settings state
-  const [notifSettings, setNotifSettings] = useState<NotificationSettings>(
-    getStoredNotificationSettings
-  );
-  const [notifPermissionGranted, setNotifPermissionGranted] = useState(true);
 
   const dates = useMemo(() => dateRange(HISTORY_DAYS), []);
   const startDate = dates[0];
   const endDate = dates[dates.length - 1];
 
-  // TanStack Query: Sounds & History progress with 15m staleTime
+  // TanStack Query for Progress Sounds & History
   const {
     data: items = [],
     isLoading: soundsLoading,
-    error: soundsError,
-  } = useProgressSoundsQuery(userDialect || "uk", Boolean(authToken));
+  } = useProgressSoundsQuery("uk", Boolean(authToken));
 
   const {
     data: history = [],
     isLoading: historyLoading,
-    error: historyError,
   } = useProgressHistoryQuery(startDate, endDate, Boolean(authToken));
 
   const loading = soundsLoading || historyLoading;
-  const error = soundsError
-    ? String((soundsError as any)?.message || soundsError)
-    : historyError
-    ? String((historyError as any)?.message || historyError)
-    : "";
 
   const queryClient = useQueryClient();
   const { refreshing, onRefresh } = usePullToRefresh(
@@ -200,179 +197,172 @@ export default function ProfileScreen({ navigation, route }: ProfileScreenProps)
       ]);
     }, [queryClient]),
     {
-      tintColor: "#f59e0b",
+      tintColor: "#0284c7",
       enableHaptics: true,
       minDurationMs: 450,
     }
   );
 
-  // Check notification permission on mount
-  useEffect(() => {
-    (async () => {
-      const perm = await getNotificationPermissionStatus();
-      setNotifPermissionGranted(perm.granted);
-    })();
-  }, []);
-
-  // Threshold calculation (Spec Section 13.1):
-  // Phonemes with at least 5 checks
-  const qualifiedPhonemes = useMemo(() => {
-    return items.filter(
-      (item) =>
-        (item.checks_count ?? item.count ?? (item.accuracy != null ? 5 : 0)) >=
-        MIN_CHECKS_PER_PHONEME
-    );
-  }, [items]);
-
-  // Average score calculation across all tested phonemes
-  const avgScore = useMemo(() => {
-    if (!items.length) return 0;
-    const sum = items.reduce((acc, it) => acc + (Number(it.accuracy) || 0), 0);
-    return Math.round((sum / items.length) * 100);
-  }, [items]);
-
-  const isThresholdMet = useMemo(() => {
-    if (MOBILE_FREE_ACCESS) return true;
-    return scoreUnlocked && qualifiedPhonemes.length >= PHONEME_THRESHOLD_COUNT;
-  }, [scoreUnlocked, qualifiedPhonemes.length]);
-
-  const labels = dates.map(formatDateLabel);
-  const totalData = fillDailyAccuracy(history, dates, "total");
-  const chartWidth = Math.min(Dimensions.get("window").width - 64, 480);
-
-  // Streak days
-  const streakDays = Number(homeSummary?.streak_days || 0);
-  const todayWeekIndex = (new Date().getDay() + 6) % 7; // 0 = Mon, ..., 6 = Sun
-
-  // Handle reminder toggle
-  async function handleToggleDailyReminder(val: boolean) {
-    if (val) {
-      const perm = await getNotificationPermissionStatus();
-      if (!perm.granted) {
-        const req = await requestNotificationPermission();
-        if (!req.granted) {
-          Alert.alert(
-            t("profileExtra.notifPermissionDialog.title"),
-            t("profileExtra.notifPermissionDialog.message"),
-            [
-              { text: t("profileExtra.notifPermissionDialog.later"), style: "cancel" },
-              { text: t("profileExtra.notifPermissionDialog.openSettings"), onPress: openNotificationSettings },
-            ]
-          );
-          setNotifPermissionGranted(false);
-          return;
-        }
-        setNotifPermissionGranted(true);
-      }
-    }
-    const updated = await saveNotificationSettings({ dailyReminderEnabled: val });
-    setNotifSettings(updated);
-    showToast.success(
-      val ? t("profileExtra.reminderToastEnabled") : t("profileExtra.reminderToastDisabled"),
-      val
-        ? t("profileExtra.reminderToastSchedule", {
-          time: `${String(updated.dailyReminderHour).padStart(2, "0")}:${String(updated.dailyReminderMinute).padStart(2, "0")}`,
-        })
-        : undefined
-    );
-  }
-
-  // Handle time selection
-  async function handleSelectReminderTime(hour: number, minute: number) {
-    const updated = await saveNotificationSettings({
-      dailyReminderHour: hour,
-      dailyReminderMinute: minute,
-    });
-    setNotifSettings(updated);
-    if (notifSettings.dailyReminderEnabled) {
-      showToast.info(
-        t("profileExtra.reminderUpdatedTitle"),
-        t("profileExtra.reminderUpdatedMsg", {
-          time: `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`,
-        })
-      );
-    }
-  }
-
-  // Handle toggle other notifications
-  async function handleToggleContentUpdates(val: boolean) {
-    const updated = await saveNotificationSettings({ contentUpdatesEnabled: val });
-    setNotifSettings(updated);
-  }
-
-  async function handleTogglePromotions(val: boolean) {
-    const updated = await saveNotificationSettings({ promotionsEnabled: val });
-    setNotifSettings(updated);
-  }
-
-  // Handle Restore Purchases
-  async function handleRestorePurchases() {
-    setRestoringIap(true);
-    try {
-      const res = await restoreStorePurchases({ authToken });
-      if (res.restored) {
-        showToast.success(t("payment.restoreSuccess"), res.message);
-      } else {
-        Alert.alert(t("payment.restoreTitle"), res.message);
-      }
-    } catch (e: any) {
-      showToast.error(t("profileExtra.restoreError"), String(e.message || e));
-    } finally {
-      setRestoringIap(false);
-    }
-  }
-
-  const isPro = Boolean(usage?.has_active_subscription || usage?.tier === "pro");
-
+  // User Tier (Free, Trial, Pro)
   const userTier = useMemo(
     () =>
       resolveUserTier({
         authToken,
-        hasActiveSubscription: isPro,
+        hasActiveSubscription: Boolean(usage?.has_active_subscription),
         isInTrial: Boolean(usage?.is_in_trial),
       }),
-    [authToken, isPro, usage]
+    [authToken, usage]
   );
-  const userKey = useMemo(() => resolveUserKey({ authToken, authEmail }), [authToken, authEmail]);
+  const isPro = userTier === "pro";
 
-  function handleOpenSupport() {
-    Alert.alert(
-      t("profileExtra.supportDialog.title"),
-      t("profileExtra.supportDialog.message"),
+  // Strict Threshold Calculation (Spec Section 13.1):
+  // 1. Each qualified phoneme must have at least 5 checks (never inferring 5 checks from accuracy presence).
+  // 2. Must cover at least 36 distinct phonemes (Math.ceil(44 * 0.8) = 36).
+  const qualifiedPhonemes = useMemo(() => {
+    const set = new Set<string>();
+    items.forEach((item: any) => {
+      if (!item || typeof item.sound !== "string") return;
+      const cleanSound = item.sound.trim().replace(/^\/+|\/+$/g, "");
+      const checks = Number(item.checks_count ?? item.count);
+      if (cleanSound && Number.isFinite(checks) && checks >= MIN_CHECKS_PER_PHONEME) {
+        set.add(cleanSound.toLowerCase());
+      }
+    });
+    return set;
+  }, [items]);
+
+  // isThresholdMet: Unlocked when user completes screening test OR achieves 36 qualified phonemes (>= 5 checks)
+  const isThresholdMet = Boolean(
+    authToken && (scoreUnlocked || qualifiedPhonemes.size >= PHONEME_THRESHOLD_COUNT)
+  );
+
+  // Average score across qualified phonemes or home summary total accuracy
+  const avgScore = useMemo(() => {
+    if (homeSummary?.total_accuracy != null) {
+      const parsed = Number(homeSummary.total_accuracy);
+      if (Number.isFinite(parsed) && parsed >= 0) return Math.round(parsed * 100);
+    }
+    if (!items.length) return 0;
+    const sum = items.reduce((acc: number, it: any) => acc + (Number(it.accuracy) || 0), 0);
+    return Math.round((sum / items.length) * 100);
+  }, [homeSummary?.total_accuracy, items]);
+
+  // Weakest sounds for actionable section
+  const topWeakSounds = useMemo(() => {
+    return items
+      .filter((it: any) => it?.sound && it.accuracy != null)
+      .sort((a: any, b: any) => Number(a.accuracy) - Number(b.accuracy))
+      .slice(0, 3);
+  }, [items]);
+
+  // Streak days & weekday indicators (real data from API homeSummary)
+  const rawStreak = Number(homeSummary?.streak_days ?? homeSummary?.daily_streak);
+  const streakDays = Number.isFinite(rawStreak) && rawStreak >= 0 ? Math.floor(rawStreak) : 0;
+  const todayWeekIndex = (new Date().getDay() + 6) % 7; // 0 = Mon, ..., 6 = Sun
+
+  const todayStr = useMemo(() => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }, []);
+
+  const todayPracticed = useMemo(() => {
+    if (Boolean(homeSummary?.today_practiced)) return true;
+    if (Array.isArray(history)) {
+      const todayEntry = history.find(
+        (h) => typeof h?.date === "string" && h.date.slice(0, 10) === todayStr
+      );
+      if (todayEntry && (Number(todayEntry.count) > 0 || Number(todayEntry.total) > 0)) {
+        return true;
+      }
+    }
+    return false;
+  }, [homeSummary?.today_practiced, history, todayStr]);
+
+  // Screening test progress state (matches 5-sentence screening flow)
+  const totalScreeningCount = 5;
+  const completedScreeningCount = useMemo(() => {
+    if (screeningCompleted || scoreUnlocked) return totalScreeningCount;
+    const stored = getItem("earlysigns_screening_progress");
+    if (stored != null) {
+      const num = Number(stored);
+      if (Number.isFinite(num) && num >= 0) return Math.min(num, totalScreeningCount);
+    }
+    return 0;
+  }, [screeningCompleted, scoreUnlocked, totalScreeningCount]);
+  const remainingScreeningCount = Math.max(0, totalScreeningCount - completedScreeningCount);
+  const screeningProgressPct = Math.round((completedScreeningCount / totalScreeningCount) * 100);
+
+  // Responsive screening card illustration size (prominent 3D hero asset)
+  const screeningImageSize = useMemo(() => {
+    const availableWidth = width - 72; // screen padding (16*2) + card padding (20*2)
+    return Math.min(156, Math.max(130, Math.round(availableWidth * 0.46)));
+  }, [width]);
+
+  // Responsive chart width
+  const chartWidth = Math.max(280, Math.min(width - 48, 520));
+  const labels = dates.map(formatDateLabel);
+  const totalData = fillDailyAccuracy(history, dates, "total");
+
+  // Safe navigation handler
+  const handleNavigate = useCallback(
+    (screen: string, params?: any) => {
+      try {
+        if (navigation?.navigate) {
+          navigation.navigate(screen, params);
+          return;
+        }
+        const parent = navigation?.getParent?.();
+        if (parent?.navigate) {
+          parent.navigate(screen, params);
+        }
+      } catch (err) {
+        console.warn("handleNavigate error:", err);
+      }
+    },
+    [navigation]
+  );
+
+  // Account actions
+  async function confirmLogout() {
+    customAlert.alert(
+      t("auth.logout") || "Đăng xuất",
+      t("profile.confirmLogout") || "Bạn có chắc chắn muốn đăng xuất tài khoản?",
       [
-        { text: t("profileExtra.supportDialog.close"), style: "cancel" },
+        { text: t("common.cancel", "Hủy"), style: "cancel" },
         {
-          text: t("profileExtra.supportDialog.sendEmail"),
-          onPress: () =>
-            Linking.openURL("mailto:support@earlysigns.app?subject=EarlySigns Support Request").catch(
-              () => { }
-            ),
+          text: t("auth.logout") || "Đăng xuất",
+          style: "destructive",
+          onPress: async () => {
+            await handleLogout();
+            queryClient.clear();
+            showToast.success(t("profile.loggedOut") || "Đã đăng xuất thành công");
+          },
         },
       ]
     );
   }
 
-  function handleDeleteAccount() {
-    Alert.alert(
-      t("profileExtra.deleteDialog.title"),
-      t("profileExtra.deleteDialog.message"),
+  async function confirmDeleteAccount() {
+    customAlert.alert(
+      t("profile.deleteAccount") || "Xóa tài khoản",
+      t("profile.confirmDelete") ||
+      "Hành động này sẽ xóa vĩnh viễn dữ liệu tiến độ và gói cước của bạn. Không thể hoàn tác.",
       [
-        { text: t("profileExtra.deleteDialog.cancel"), style: "cancel" },
+        { text: t("common.cancel", "Hủy"), style: "cancel" },
         {
-          text: t("profileExtra.deleteDialog.confirm"),
+          text: t("common.delete", "Xóa vĩnh viễn"),
           style: "destructive",
           onPress: async () => {
             try {
-              if (authToken) {
-                await authApi.deleteAccount().catch(() => { });
-              }
-            } finally {
-              handleLogout();
-              showToast.info(
-                t("profileExtra.deleteDialog.toastSuccess"),
-                t("profileExtra.deleteDialog.toastMessage")
-              );
-              navigation.navigate("Home");
+              await authApi.deleteAccount();
+              await handleLogout();
+              queryClient.clear();
+              showToast.info(t("profile.accountDeletedSuccess") || "Tài khoản của bạn đã được xóa thành công.");
+            } catch {
+              showToast.error(t("profile.accountDeleteError") || "Không thể xóa tài khoản. Vui lòng thử lại sau.");
             }
           },
         },
@@ -380,789 +370,920 @@ export default function ProfileScreen({ navigation, route }: ProfileScreenProps)
     );
   }
 
+  if (!authToken) {
+    return (
+      <SafeAreaView edges={["top"]} className="flex-1 bg-[#f8fafc]">
+        <GuestProfileView navigation={navigation} />
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-[#1e2538]">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-[#f8fafc]">
       <ScrollView
-        className="flex-1 bg-appBg"
-        contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 48, gap: 16 }}
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor="#f59e0b"
-          />
+          authToken ? (
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#0284c7"
+            />
+          ) : undefined
         }
       >
-        {/* Top elastic overscroll filler */}
+        {/* 1. PROFILE HEADER: USER IDENTITY SURFACE */}
         <View
           style={{
-            position: "absolute",
-            top: -1000,
-            left: 0,
-            right: 0,
-            height: 1000,
-            backgroundColor: "#1e2538",
+            backgroundColor: "#0a2644",
+            borderColor: "#1e3a8a",
+            shadowColor: "#0a2644",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.15,
+            shadowRadius: 10,
+            elevation: 4,
           }}
-        />
-
-        {/* 1. SOFT NAVY HERO HEADER */}
-        <View className="bg-[#1e2538] pt-4 pb-9 px-5">
-          <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-white text-xl font-black tracking-tight">
-              {t("profileExtra.screenTitle")}
-            </Text>
-            {isPro ? (
-              <View className="flex-row items-center gap-1.5 bg-amber-500 px-3 py-1 rounded-full">
-                <Crown size={12} color="#ffffff" strokeWidth={2.4} />
-                <Text className="text-xs font-black text-white">
-                  {t("profileExtra.proBadge")}
+          className="rounded-3xl p-5 border gap-3"
+        >
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center gap-3.5 flex-1 pr-2">
+              {/* User Avatar Circle */}
+              <View
+                style={{ backgroundColor: "rgba(255, 255, 255, 0.12)", borderColor: "rgba(255, 255, 255, 0.25)" }}
+                className="w-14 h-14 rounded-2xl items-center justify-center border"
+              >
+                <Text className="text-xl font-black text-white">
+                  {headerDisplayName ? headerDisplayName.charAt(0).toUpperCase() : "E"}
                 </Text>
               </View>
-            ) : (
-              <TouchableOpacity
-                activeOpacity={0.85}
-                onPress={() => navigation.navigate("Payment")}
-                className="flex-row items-center gap-1.5 bg-amber-500 active:bg-amber-600 px-3.5 py-1.5 rounded-full"
-              >
-                <Crown size={13} color="#ffffff" />
-                <Text className="text-white text-xs font-bold">
-                  {t("profileExtra.upgradePro")}
-                </Text>
-              </TouchableOpacity>
-            )}
-          </View>
 
-          {/* User Card */}
-          <View className="flex-row items-center gap-3.5">
-            <View className="w-14 h-14 rounded-2xl bg-indigo-600 items-center justify-center">
-              <Text className="text-white text-xl font-black">
-                {authEmail ? authEmail[0].toUpperCase() : "E"}
-              </Text>
-            </View>
-            <View className="flex-1">
-              <Text className="text-white text-base font-bold" numberOfLines={1}>
-                {authEmail || t("profileExtra.guestUser")}
-              </Text>
-              <Text className="text-slate-300 text-xs mt-0.5">
-                {t("profileExtra.rpStandard")}
-              </Text>
-              {usage?.subscription_expires_at ? (
-                <Text className="text-slate-300 text-2xs mt-0.5">
-                  {t("profileExtra.planExpiry", {
-                    date: new Date(usage.subscription_expires_at).toLocaleDateString(),
-                  })}
+              <View className="flex-1 gap-0.5">
+                <View className="flex-row items-center gap-2">
+                  <Text numberOfLines={1} className="text-base font-black text-white">
+                    {headerDisplayName}
+                  </Text>
+
+                  {/* Plan Badge */}
+                  {authToken ? (
+                    <View
+                      style={{
+                        backgroundColor: isPro ? "#f59e0b" : "rgba(255, 255, 255, 0.15)",
+                      }}
+                      className="px-2.5 py-0.5 rounded-full"
+                    >
+                      <Text
+                        style={{ color: isPro ? "#0f172a" : "#38bdf8" }}
+                        className="text-xs font-black uppercase tracking-wider"
+                      >
+                        {isPro ? "PRO" : "FREE"}
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
+
+                <Text numberOfLines={1} className="text-[13px] text-slate-300">
+                  {authToken
+                    ? (isPro ? t("profile.proMember") || "Thành viên EarlySigns Pro" : t("profile.freeAccount") || "Tài khoản học miễn phí")
+                    : t("profile.notLoggedIn") || "Chưa đăng nhập tài khoản"}
                 </Text>
-              ) : null}
+              </View>
             </View>
           </View>
         </View>
 
-        {/* 2. LAYERED OVERLAPPING CANVAS SHEET */}
-        <View className="flex-1 bg-appBg -mt-5 rounded-t-[32px] px-4 pt-5 pb-20 gap-3.5">
-          {/* CAPSULE PILL SEGMENTED CONTROL */}
-          <View className="bg-slate-200 p-1.5 rounded-2xl flex-row items-center mb-1">
-            <TouchableOpacity
-              activeOpacity={0.8}
-              className={`flex-1 py-2.5 rounded-xl items-center justify-center ${activeTab === TAB_PROGRESS ? "bg-white" : "bg-transparent"
-                }`}
-              style={
-                activeTab === TAB_PROGRESS
-                  ? {
-                    elevation: 2,
-                    shadowColor: "#000",
-                    shadowOpacity: 0.06,
-                    shadowRadius: 4,
-                    shadowOffset: { width: 0, height: 1 },
-                  }
-                  : undefined
-              }
-              onPress={() => setActiveTab(TAB_PROGRESS)}
+        {/* 2. SEGMENTED TABS: [ 📊 Tiến độ ]  [ ⚙️ Tài khoản ] */}
+        <View
+          style={{ backgroundColor: "#e2e8f0" }}
+          className="flex-row rounded-2xl p-1 gap-1"
+        >
+          <TouchableOpacity
+            accessible={true}
+            accessibilityRole="tab"
+            accessibilityLabel={t("profile.tabs.progress", "Tiến độ học tập")}
+            accessibilityState={{ selected: activeTab === TAB_PROGRESS }}
+            onPress={() => setActiveTab(TAB_PROGRESS)}
+            style={{
+              flex: 1,
+              backgroundColor: activeTab === TAB_PROGRESS ? "#ffffff" : "transparent",
+            }}
+            className="flex-row items-center justify-center gap-2 py-2.5 rounded-xl"
+          >
+            <Target size={16} color={activeTab === TAB_PROGRESS ? "#0c2340" : "#64748b"} />
+            <Text
+              style={{ color: activeTab === TAB_PROGRESS ? "#0c2340" : "#64748b" }}
+              className="text-sm font-bold"
             >
-              <Text
-                className={`text-xs font-bold ${activeTab === TAB_PROGRESS ? "text-slate-900" : "text-slate-500"
-                  }`}
-              >
-                {t("profile.tabs.progress")}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              activeOpacity={0.8}
-              className={`flex-1 py-2.5 rounded-xl items-center justify-center ${activeTab === TAB_ACCOUNT ? "bg-white" : "bg-transparent"
-                }`}
-              style={
-                activeTab === TAB_ACCOUNT
-                  ? {
-                    elevation: 2,
-                    shadowColor: "#000",
-                    shadowOpacity: 0.06,
-                    shadowRadius: 4,
-                    shadowOffset: { width: 0, height: 1 },
-                  }
-                  : undefined
-              }
-              onPress={() => setActiveTab(TAB_ACCOUNT)}
-            >
-              <Text
-                className={`text-xs font-bold ${activeTab === TAB_ACCOUNT ? "text-slate-900" : "text-slate-500"
-                  }`}
-              >
-                {t("profile.tabs.account")}
-              </Text>
-            </TouchableOpacity>
-          </View>
+              {t("profile.tabs.progress") || "Tiến độ"}
+            </Text>
+          </TouchableOpacity>
 
-          {/* TAB 1: PROGRESS */}
-          {activeTab === TAB_PROGRESS ? (
-            loading ? (
-              <ProfileProgressSkeleton />
-            ) : (
-              <>
-                {error ? (
-                  <View className="p-3 bg-rose-50 border border-rose-200 rounded-2xl">
-                    <Text className="text-danger text-xs">{error}</Text>
+          <TouchableOpacity
+            accessible={true}
+            accessibilityRole="tab"
+            accessibilityLabel={t("profile.tabs.account", "Cài đặt tài khoản")}
+            accessibilityState={{ selected: activeTab === TAB_ACCOUNT }}
+            onPress={() => setActiveTab(TAB_ACCOUNT)}
+            style={{
+              flex: 1,
+              backgroundColor: activeTab === TAB_ACCOUNT ? "#ffffff" : "transparent",
+            }}
+            className="flex-row items-center justify-center gap-2 py-2.5 rounded-xl"
+          >
+            <User size={16} color={activeTab === TAB_ACCOUNT ? "#0c2340" : "#64748b"} />
+            <Text
+              style={{ color: activeTab === TAB_ACCOUNT ? "#0c2340" : "#64748b" }}
+              className="text-sm font-bold"
+            >
+              {t("profile.tabs.account") || "Tài khoản"}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* ========================================================================= */}
+        {/* 3. TAB 1: TIẾN ĐỘ HỌC TẬP (PROGRESS TAB)                                  */}
+        {/* ========================================================================= */}
+        {activeTab === TAB_PROGRESS ? (
+          loading ? (
+            <ProfileProgressSkeleton />
+          ) : !authToken ? (
+            /* ------------------------------------------------------------- */
+            /* STATE A: GUEST USER (Chưa đăng nhập)                          */
+            /* ------------------------------------------------------------- */
+            <View
+              style={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0" }}
+              className="rounded-3xl p-6 border items-center text-center gap-4 my-2"
+            >
+              <View
+                style={{ backgroundColor: "#e0f2fe" }}
+                className="w-16 h-16 rounded-2xl items-center justify-center"
+              >
+                <Sparkles size={28} color="#0284c7" />
+              </View>
+
+              <View className="items-center gap-1.5 px-4">
+                <Text className="text-lg font-black text-[#0f172a] text-center">
+                  {t("profile.saveJourneyTitle") || "Lưu giữ hành trình phát âm của bạn"}
+                </Text>
+                <Text className="text-[13px] text-slate-500 text-center leading-relaxed">
+                  {t("profile.saveJourneyDesc") ||
+                    "Đăng nhập để hệ thống AI lưu điểm số phát âm, chuỗi streak và mở khóa bài học cá nhân hóa cho riêng bạn."}
+                </Text>
+              </View>
+
+              <View className="w-full pt-2">
+                <PrimaryButton
+                  title={t("profile.loginOrRegisterBtn") || "Đăng nhập hoặc Tạo tài khoản"}
+                  onPress={() => handleNavigate("Login", { next: "Profile" })}
+                />
+              </View>
+            </View>
+          ) : !isThresholdMet ? (
+            /* ------------------------------------------------------------- */
+            /* STATE B: PRE-THRESHOLD (Đang xây dựng hồ sơ: < 36 âm)         */
+            /* ------------------------------------------------------------- */
+            <View className="gap-3">
+              {/* 1. HỒ SƠ PHÁT ÂM (CARD SÀNG LỌC CHUẨN DESIGN) */}
+              <View
+                style={{
+                  backgroundColor: "#ffffff",
+                  borderWidth: 0.5,
+                  borderColor: "#f1f5f9",
+                  shadowColor: "#0c2340",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.05,
+                  shadowRadius: 10,
+                  elevation: 2,
+                }}
+                className="rounded-3xl p-5 gap-3"
+              >
+                {/* Header line: Audio waveform icon + Title + Help icon */}
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-row items-center gap-1.5">
+                    <AudioLines size={18} color="#0066ff" />
+                    <Text className="text-sm font-extrabold text-[#0f172a]">
+                      {t("profile.screeningTitle") || "Hồ sơ phát âm"}
+                    </Text>
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={() =>
+                        customAlert.info(
+                          t("profile.screeningTitle") || "Hồ sơ phát âm",
+                          t("profile.screeningHelpBody") ||
+                          "Bài kiểm tra sàng lọc gồm các câu ngắn bao phủ 80% âm IPA cốt lõi để EarlySigns đánh giá phát âm và mở khóa toàn bộ hồ sơ của bạn."
+                        )
+                      }
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                      <HelpCircle size={15} color="#94a3b8" />
+                    </TouchableOpacity>
                   </View>
-                ) : null}
+                </View>
 
-                {/* DUAL CIRCULAR / STAT BUBBLES */}
+                {/* Split Row: Left text + Right 3D illustration asset */}
+                <View style={{ marginVertical: -4 }} className="flex-row items-center justify-between">
+                  <View className="flex-1 pr-2 gap-1">
+                    <Text className="text-[19px] font-black text-[#0f172a] leading-tight">
+                      {completedScreeningCount > 0
+                        ? t("profile.screeningHeaderContinue") || "Tiếp tục bài kiểm tra\nsàng lọc"
+                        : t("profile.screeningHeaderStart") || "Bắt đầu bài kiểm tra\nsàng lọc"}
+                    </Text>
+                    <Text className="text-[13px] text-slate-500 leading-relaxed font-medium">
+                      {completedScreeningCount > 0
+                        ? t("profile.screeningDescContinue") ||
+                        "Hoàn thành các câu còn lại để EarlySigns đánh giá phát âm và mở hồ sơ phát âm của bạn."
+                        : t("profile.screeningDescStart") ||
+                        "Hoàn thành bài kiểm tra để EarlySigns đánh giá phát âm và mở hồ sơ phát âm của bạn."}
+                    </Text>
+                  </View>
+
+                  <View
+                    style={{ width: screeningImageSize, height: screeningImageSize, marginVertical: -8 }}
+                    className="items-center justify-center -mr-3"
+                  >
+                    <Image
+                      source={require("@assets/profile_icon.png")}
+                      style={{ width: screeningImageSize, height: screeningImageSize }}
+                      resizeMode="contain"
+                    />
+                  </View>
+                </View>
+
+                {/* Progress Numbers */}
+                <View className="flex-row items-baseline">
+                  <Text style={{ color: "#0066ff" }} className="text-2xl font-black">
+                    {completedScreeningCount}
+                  </Text>
+                  <Text className="text-base font-bold text-slate-400"> / {totalScreeningCount}</Text>
+                  <Text className="text-xs font-semibold text-slate-500 ml-1.5">
+                    {t("profile.sentencesCompleted") || "câu đã hoàn thành"}
+                  </Text>
+                </View>
+
+                {/* Progress Bar + % */}
                 <View className="flex-row items-center gap-3">
-                  {/* Stat 1: Average Accuracy */}
-                  <View className="flex-1 bg-white border border-slate-100 rounded-2xl p-4 items-center">
-                    <View className="w-10 h-10 rounded-2xl bg-indigo-50 items-center justify-center mb-2">
-                      <Target size={20} color="#4f46e5" />
+                  <View className="flex-1 h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                    <View
+                      style={{
+                        width: `${screeningProgressPct}%`,
+                        backgroundColor: "#0066ff",
+                      }}
+                      className="h-full rounded-full"
+                    />
+                  </View>
+                  <Text className="text-xs font-bold text-slate-600">
+                    {screeningProgressPct}%
+                  </Text>
+                </View>
+
+                {/* Info Hint */}
+                <View className="flex-row items-center gap-1.5">
+                  <Info size={13} color="#0066ff" />
+                  <Text className="text-xs text-slate-500">
+                    {remainingScreeningCount > 0
+                      ? t("profile.screeningRemainingHint", { count: remainingScreeningCount }) ||
+                      `Cần hoàn thành thêm ${remainingScreeningCount} câu để mở hồ sơ phát âm.`
+                      : t("profile.screeningDoneHint") || "Bạn đã hoàn thành đủ số câu, sẵn sàng mở khóa hồ sơ!"}
+                  </Text>
+                </View>
+
+                {/* Primary Button */}
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  onPress={() => handleNavigate("Phonemes", { startScreening: true })}
+                  style={{
+                    backgroundColor: "#0066ff",
+                    shadowColor: "#0066ff",
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.2,
+                    shadowRadius: 8,
+                    elevation: 3,
+                  }}
+                  className="w-full py-3.5 rounded-2xl items-center justify-center mt-1"
+                >
+                  <Text className="text-[15px] font-extrabold text-white">
+                    {completedScreeningCount > 0
+                      ? t("profile.screeningContinueBtn") || "Tiếp tục kiểm tra"
+                      : t("profile.screeningStartBtn") || "Bắt đầu kiểm tra"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* 2. CHUỖI LUYỆN TẬP (STREAK CARD CHUẨN DESIGN) */}
+              <TouchableOpacity
+                activeOpacity={0.9}
+                style={{
+                  backgroundColor: "#ffffff",
+                  borderWidth: 0.5,
+                  borderColor: "#f1f5f9",
+                  shadowColor: "#0c2340",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.04,
+                  shadowRadius: 8,
+                  elevation: 1.5,
+                }}
+                className="rounded-3xl p-5 gap-4"
+              >
+                {/* Header Row */}
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-row items-center gap-3">
+                    <View
+                      style={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: 20,
+                        backgroundColor: "#fff7ed",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Image
+                        source={require("@assets/fire.png")}
+                        style={{ width: 26, height: 26 }}
+                        resizeMode="contain"
+                      />
                     </View>
-                    <Text className="text-2xl font-black text-slate-900">
-                      {avgScore > 0 ? `${avgScore}%` : "--"}
+                    <View className="flex-row items-baseline gap-2">
+                      <Text className="text-base font-black text-[#0f172a]">
+                        {t("profile.streakTitle") || "Chuỗi luyện tập"}
+                      </Text>
+                      <View className="flex-row items-baseline gap-1">
+                        <Text style={{ color: "#0066ff" }} className="text-xl font-black">
+                          {streakDays}
+                        </Text>
+                        <Text className="text-sm font-bold text-slate-600">
+                          {t("profile.streakDaysUnit") || "ngày"}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  <ChevronRight size={18} color="#94a3b8" />
+                </View>
+
+                {/* 7 Days Row */}
+                <View className="flex-row items-center justify-between pt-1">
+                  {(i18n.language.startsWith("vi") ? WEEK_DAYS_VI : WEEK_DAYS_EN).map((day, idx) => {
+                    const isToday = idx === todayWeekIndex;
+                    const isCompleted = isToday
+                      ? todayPracticed
+                      : idx < todayWeekIndex && streakDays >= (todayWeekIndex - idx);
+
+                    return (
+                      <View key={day} className="items-center gap-1.5">
+                        <View
+                          style={{
+                            width: 36,
+                            height: 36,
+                            borderRadius: 18,
+                            backgroundColor: isCompleted
+                              ? "#fff7ed"
+                              : isToday
+                                ? "#eff6ff"
+                                : "#f8fafc",
+                            borderColor: isCompleted
+                              ? "#fed7aa"
+                              : isToday
+                                ? "#93c5fd"
+                                : "#e2e8f0",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          {isCompleted ? (
+                            <Image
+                              source={require("@assets/fire.png")}
+                              style={{ width: 20, height: 20 }}
+                              resizeMode="contain"
+                            />
+                          ) : isToday ? (
+                            <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#0066ff" }} />
+                          ) : null}
+                        </View>
+                        <Text
+                          style={{ color: isToday ? "#0066ff" : "#64748b" }}
+                          className="text-xs font-bold"
+                        >
+                          {day}
+                        </Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            /* ------------------------------------------------------------- */
+            /* STATE C & D: UNLOCKED DASHBOARD (Đủ >= 36 âm & 5 checks)       */
+            /* ------------------------------------------------------------- */
+            <View className="gap-4">
+              {/* 1. Hero Pronunciation Overview Card */}
+              <View
+                style={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0" }}
+                className="rounded-3xl p-5 border gap-3.5"
+              >
+                <View className="flex-row items-center justify-between">
+                  <View className="gap-0.5">
+                    <Text className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                      {t("profile.overallProfile") || "Hồ sơ phát âm tổng thể"}
                     </Text>
-                    <Text className="text-2xs font-semibold text-slate-400 mt-0.5">
-                      {t("profileExtra.avgAccuracy")}
+                    <Text className="text-base font-extrabold text-[#0f172a]">
+                      {t("profile.accuracyScore") || "Độ chuẩn xác phát âm"}
                     </Text>
                   </View>
 
-                  {/* Stat 2: Sounds Mastered */}
-                  <View className="flex-1 bg-white border border-slate-100 rounded-2xl p-4 items-center">
-                    <View className="w-10 h-10 rounded-2xl bg-emerald-50 items-center justify-center mb-2">
-                      <Award size={20} color="#059669" />
-                    </View>
-                    <Text className="text-2xl font-black text-slate-900">
-                      {qualifiedPhonemes.length}/{TOTAL_IPA_PHONEMES}
-                    </Text>
-                    <Text className="text-2xs font-semibold text-slate-400 mt-0.5">
-                      {t("profileExtra.qualifiedSounds")}
+                  <View
+                    style={{ backgroundColor: "#ecfdf5", borderColor: "#a7f3d0" }}
+                    className="px-3 py-1 rounded-full border"
+                  >
+                    <Text className="text-xs font-bold text-emerald-700">
+                      {avgScore >= 80 ? t("profile.clarityClear") || "Phát âm rõ ràng" : t("profile.clarityGood") || "Khá tốt"}
                     </Text>
                   </View>
                 </View>
 
-                {/* PRO CTA BANNER (IF NOT PRO) */}
-                {!isPro ? (
-                  <View className="bg-[#1e2538] rounded-2xl p-4 border border-amber-400 flex-row items-center justify-between">
-                    <View className="flex-1 pr-3">
-                      <View className="flex-row items-center gap-1.5 mb-1">
-                        <Crown size={14} color="#f59e0b" />
-                        <Text className="text-amber-400 font-bold text-xs uppercase tracking-wide">
-                          {t("profileExtra.proBannerTitle")}
-                        </Text>
-                      </View>
-                      <Text className="text-slate-200 text-xs font-medium leading-relaxed">
-                        {t("profileExtra.proBannerSubtitle")}
-                      </Text>
-                    </View>
-                    <TouchableOpacity
-                      activeOpacity={0.85}
-                      onPress={() => navigation.navigate("Payment")}
-                      className="bg-amber-500 active:bg-amber-600 px-3.5 py-2.5 rounded-xl items-center justify-center"
-                    >
-                      <Text className="text-white font-bold text-xs">
-                        {t("profileExtra.upgradeBtn")}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                ) : null}
+                {/* Score Number Display */}
+                <View className="flex-row items-baseline gap-1.5 py-1">
+                  <Text
+                    style={{ color: accuracyBandColor(avgScore / 100) }}
+                    className="text-4xl font-black"
+                  >
+                    {avgScore}
+                  </Text>
+                  <Text className="text-lg font-bold text-slate-400">/100</Text>
+                </View>
 
-                {/* 7-DAY STREAK TRACKER */}
-                <View className="bg-white rounded-2xl p-4 border border-slate-100 gap-3">
-                  <View className="flex-row items-center justify-between">
-                    <View className="flex-row items-center gap-2">
-                      <View className="w-8 h-8 rounded-xl bg-amber-50 items-center justify-center">
-                        <Flame size={18} color="#f59e0b" />
-                      </View>
-                      <View>
-                        <Text className="text-sm font-bold text-slate-900">
-                          {t("profileExtra.streakTitle")}
-                        </Text>
-                        <Text className="text-xs text-slate-400">
-                          {t("profileExtra.streakDesc")}
-                        </Text>
-                      </View>
-                    </View>
-                    <View className="bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
-                      <Text className="text-xs font-bold text-amber-700">
-                        {t("profileExtra.streakDays", { days: streakDays })}
-                      </Text>
-                    </View>
+                {/* Sub metrics */}
+                <View className="flex-row items-center gap-4 pt-2 border-t border-slate-100">
+                  <View className="flex-row items-center gap-1.5">
+                    <Award size={14} color="#0284c7" />
+                    <Text className="text-[13px] font-medium text-slate-600">
+                      <Text className="font-bold text-[#0f172a]">{qualifiedPhonemes.size}</Text>/44{" "}
+                      {t("profile.qualifiedSoundsSuffix") || "âm đạt chuẩn"}
+                    </Text>
                   </View>
+                  <View className="flex-row items-center gap-1.5">
+                    <Flame size={14} color="#d97706" />
+                    <Text className="text-[13px] font-medium text-slate-600">
+                      {t("profile.streakCount", { days: streakDays }) || `Chuỗi ${streakDays} ngày`}
+                    </Text>
+                  </View>
+                </View>
+              </View>
 
-                  {/* Weekly Day Pills */}
-                  <View className="flex-row justify-between items-center pt-2 border-t border-slate-100">
-                    {weekDays.map((dayLabel, index) => {
-                      const isPast = index < todayWeekIndex;
-                      const isToday = index === todayWeekIndex;
-                      const isActive =
-                        isToday || (isPast && streakDays > todayWeekIndex - index);
+              {/* 2. Responsive Progress Trend Chart (7 days) */}
+              <View
+                style={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0" }}
+                className="rounded-3xl p-5 border gap-3"
+              >
+                <View className="flex-row items-center justify-between">
+                  <Text className="text-sm font-extrabold text-[#0f172a]">
+                    {t("profile.progressChart7Days") || "Biểu đồ tiến độ 7 ngày"}
+                  </Text>
+                  <Text className="text-xs font-bold text-slate-500">
+                    {t("profile.overallScore") || "Điểm tổng quát"}
+                  </Text>
+                </View>
+
+                <View className="items-center -ml-4">
+                  <LineChart
+                    data={{
+                      labels,
+                      datasets: [{ data: totalData.length ? totalData : [0, 0, 0, 0, 0, 0, 0] }],
+                    }}
+                    width={chartWidth}
+                    height={190}
+                    yAxisSuffix="%"
+                    yAxisInterval={1}
+                    chartConfig={{
+                      backgroundColor: "#ffffff",
+                      backgroundGradientFrom: "#ffffff",
+                      backgroundGradientTo: "#ffffff",
+                      decimalPlaces: 0,
+                      color: () => "#0284c7",
+                      labelColor: () => "#94a3b8",
+                      propsForDots: { r: "4", strokeWidth: "2", stroke: "#0284c7" },
+                      propsForBackgroundLines: { strokeDasharray: "4", stroke: "#f1f5f9" },
+                    }}
+                    bezier
+                    style={{ borderRadius: 16 }}
+                  />
+                </View>
+              </View>
+
+              {/* 3. Actionable Priority Weak Sounds */}
+              <View
+                style={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0" }}
+                className="rounded-3xl p-5 border gap-3.5"
+              >
+                <View className="flex-row items-center justify-between">
+                  <View className="gap-0.5">
+                    <Text className="text-sm font-extrabold text-[#0f172a]">
+                      {t("profile.weakSoundsTitle") || "Âm cần ưu tiên cải thiện"}
+                    </Text>
+                    <Text className="text-xs text-slate-500">
+                      {t("profile.weakSoundsDesc") || "Các âm có độ chính xác thấp nhất cần luyện tập thêm"}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    activeOpacity={0.75}
+                    onPress={() => handleNavigate("PronunciationProfile")}
+                    className="flex-row items-center gap-0.5"
+                  >
+                    <Text style={{ color: "#0c2340" }} className="text-sm font-bold">
+                      {t("profile.viewAllSounds") || "Xem tất cả âm"}
+                    </Text>
+                    <ChevronRight size={14} color="#0c2340" />
+                  </TouchableOpacity>
+                </View>
+
+                {topWeakSounds.length === 0 ? (
+                  <View className="p-4 items-center">
+                    <Text className="text-xs text-slate-500">{t("profile.noWeakSounds") || "Chưa có âm nào bị đánh giá thấp."}</Text>
+                  </View>
+                ) : (
+                  <View className="gap-2">
+                    {topWeakSounds.map((it: any) => {
+                      const sound = String(it.sound || "").replace(/^\/+|\/+$/g, "");
+                      const acc = Math.round(Number(it.accuracy || 0) * 100);
+                      const meta = getIpaSoundMeta(sound);
+
                       return (
-                        <View key={dayLabel} className="items-center flex-1">
-                          <Text
-                            className={`text-2xs font-bold mb-1.5 ${isToday ? "text-amber-500 font-extrabold" : "text-slate-400"
-                              }`}
-                          >
-                            {dayLabel}
-                          </Text>
-                          <View
-                            className={`w-8 h-8 rounded-full items-center justify-center ${isToday
-                              ? "bg-amber-500 border-2 border-amber-300"
-                              : isActive
-                                ? "bg-amber-100 border border-amber-300"
-                                : "bg-slate-100 border border-slate-200"
-                              }`}
-                          >
-                            {isToday ? (
-                              <Flame size={16} color="#ffffff" />
-                            ) : isActive ? (
-                              <Star size={14} color="#d97706" fill="#f59e0b" />
-                            ) : (
-                              <View className="w-1.5 h-1.5 rounded-full bg-slate-300" />
-                            )}
+                        <TouchableOpacity
+                          key={sound}
+                          activeOpacity={0.85}
+                          onPress={() => handleNavigate("Phonemes")}
+                          style={{ backgroundColor: "#f8fafc", borderColor: "#e2e8f0" }}
+                          className="rounded-2xl p-3.5 border flex-row items-center justify-between"
+                        >
+                          <View className="flex-row items-center gap-3">
+                            <View
+                              style={{ backgroundColor: "#fee2e2" }}
+                              className="w-10 h-10 rounded-xl items-center justify-center"
+                            >
+                              <Text className="text-base font-black text-rose-600">/{sound}/</Text>
+                            </View>
+                            <View>
+                              <Text className="text-sm font-extrabold text-[#0f172a]">
+                                {i18n.language.startsWith("vi") ? meta.categoryLabelVi : meta.categoryLabelEn}
+                              </Text>
+                              <Text className="text-xs text-slate-500">{meta.example}</Text>
+                            </View>
                           </View>
-                        </View>
+
+                          <View className="flex-row items-center gap-2">
+                            <Text className="text-base font-black text-rose-500">{acc}%</Text>
+                            <View
+                              style={{ backgroundColor: "#0c2340" }}
+                              className="px-2.5 py-1 rounded-xl flex-row items-center gap-1"
+                            >
+                              <Mic size={11} color="#ffffff" />
+                              <Text className="text-xs font-extrabold text-white">
+                                {t("profile.practiceBtn") || "Luyện"}
+                              </Text>
+                            </View>
+                          </View>
+                        </TouchableOpacity>
                       );
                     })}
                   </View>
-                </View>
-
-                {/* THRESHOLD 80% COVERAGE GATE OR CHART */}
-                {!loading && !isThresholdMet ? (
-                  <View className="bg-white rounded-2xl p-5 border border-slate-100 gap-3.5">
-                    <View className="flex-row items-center gap-3">
-                      <View className="w-11 h-11 rounded-2xl bg-indigo-50 items-center justify-center">
-                        <Sparkles size={20} color="#4f46e5" />
-                      </View>
-                      <View className="flex-1">
-                        <Text className="text-base font-bold text-slate-900">
-                          {t("profileExtra.profileBuildingTitle")}
-                        </Text>
-                        <Text className="text-xs text-slate-400">
-                          {t("profileExtra.profileBuildingSubtitle")}
-                        </Text>
-                      </View>
+                )}
+              </View>
+            </View>
+          )
+        ) : (
+          /* ========================================================================= */
+          /* 4. TAB 2: CÀI ĐẶT TÀI KHOẢN (ACCOUNT SETTINGS - GROUPED ROWS)              */
+          /* ========================================================================= */
+          <View className="gap-4">
+            {/* GROUP 1: THÔNG TIN TÀI KHOẢN */}
+            <View>
+              <Text className="text-base font-extrabold text-[#0f172a] mb-2 px-1">
+                {t("profile.accountGroup") || "Tài khoản"}
+              </Text>
+              <View
+                style={{
+                  backgroundColor: "#ffffff",
+                  borderColor: "#f1f5f9",
+                  borderWidth: 1,
+                  shadowColor: "#0f172a",
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.04,
+                  shadowRadius: 6,
+                  elevation: 1,
+                }}
+                className="rounded-2xl overflow-hidden"
+              >
+                {/* Row 1: Email */}
+                <View className="flex-row items-center justify-between p-3.5 border-b border-slate-100">
+                  <View className="flex-row items-center gap-3">
+                    <View
+                      style={{ backgroundColor: "#eff6ff" }}
+                      className="w-9 h-9 rounded-xl items-center justify-center"
+                    >
+                      <Mail size={18} color="#0066ff" />
                     </View>
-
-                    <Text className="text-xs text-slate-600 leading-relaxed">
-                      {t("profileExtra.profileBuildingPart1")}{" "}
-                      <Text className="text-slate-900 font-bold">{t("profileExtra.profileBuildingMinChecks")}</Text>{" "}
-                      {t("profileExtra.profileBuildingForAtLeast")}{" "}
-                      <Text className="text-indigo-600 font-bold">
-                        {t("profileExtra.profileBuildingThreshold", {
-                          count: PHONEME_THRESHOLD_COUNT,
-                          total: TOTAL_IPA_PHONEMES,
-                        })}
-                      </Text>.
+                    <Text className="text-[15px] font-semibold text-[#0f172a]">
+                      {t("profile.email") || "Email"}
                     </Text>
-
-                    {/* Progress bar */}
-                    <View className="gap-1.5">
-                      <View className="flex-row justify-between items-center">
-                        <Text className="text-xs font-semibold text-slate-500">
-                          {t("profileExtra.unlockProgress")}
-                        </Text>
-                        <Text className="text-xs font-bold text-indigo-600">
-                          {qualifiedPhonemes.length} / {PHONEME_THRESHOLD_COUNT} âm (
-                          {Math.min(
-                            100,
-                            Math.round(
-                              (qualifiedPhonemes.length / PHONEME_THRESHOLD_COUNT) * 100
-                            )
-                          )}
-                          %)
-                        </Text>
-                      </View>
-                      <View className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
-                        <View
-                          className="h-full bg-indigo-600 rounded-full"
-                          style={{
-                            width: `${Math.min(
-                              100,
-                              (qualifiedPhonemes.length / PHONEME_THRESHOLD_COUNT) * 100
-                            )}%`,
-                          }}
-                        />
-                      </View>
-                    </View>
-
-                    <View className="flex-row items-center gap-2 p-3 bg-slate-50 rounded-xl border border-slate-100">
-                      <Target size={16} color="#4f46e5" />
-                      <Text className="text-xs text-slate-600 flex-1">
-                        {t("profileExtra.unlockTip")}
-                      </Text>
-                    </View>
-
-                    <PrimaryButton
-                      title={t("profileExtra.practiceNowBtn")}
-                      variant="primary"
-                      onPress={() => navigation.navigate("Home")}
-                    />
                   </View>
-                ) : !loading && isThresholdMet ? (
-                  <>
-                    {/* CHART CARD */}
-                    <View className="bg-white rounded-2xl p-4 border border-slate-100 gap-3">
-                      <View className="flex-row justify-between items-center">
-                        <Text className="text-sm font-bold text-slate-900">
-                          {t("profile.progressTitle")}
-                        </Text>
-                        <View className="flex-row items-center gap-1 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-                          <CheckCircle2 size={13} color="#059669" />
-                          <Text className="text-2xs font-bold text-emerald-700">
-                            {t("profileExtra.unlocked")}
-                          </Text>
-                        </View>
-                      </View>
-
-                      <View className="items-center py-2">
-                        <LineChart
-                          data={{
-                            labels,
-                            datasets: [{ data: totalData.length ? totalData : [0] }],
-                          }}
-                          width={chartWidth}
-                          height={190}
-                          yAxisSuffix="%"
-                          chartConfig={{
-                            backgroundColor: "#ffffff",
-                            backgroundGradientFrom: "#ffffff",
-                            backgroundGradientTo: "#ffffff",
-                            decimalPlaces: 0,
-                            color: (opacity = 1) => `rgba(79, 70, 229, ${opacity})`,
-                            labelColor: () => "#64748b",
-                            style: {
-                              borderRadius: 16,
-                            },
-                            propsForDots: {
-                              r: "4",
-                              strokeWidth: "2",
-                              stroke: "#4f46e5",
-                            },
-                            propsForBackgroundLines: {
-                              strokeDasharray: "4 4",
-                              stroke: "#f1f5f9",
-                            },
-                          }}
-                          bezier
-                          style={{ borderRadius: 16 }}
-                        />
-                      </View>
-                    </View>
-
-                    {/* INDIVIDUAL PHONEMES GRID */}
-                    <View className="bg-white rounded-2xl p-4 border border-slate-100 gap-3">
-                      <Text className="text-sm font-bold text-slate-900">
-                        {t("profileExtra.phonemeDetails", { count: items.length })}
-                      </Text>
-                      <View className="flex-row flex-wrap gap-2">
-                        {items.map((item) => {
-                          const acc = Math.round((item.accuracy || 0) * 100);
-                          const isQualified =
-                            (item.checks_count ?? item.count ?? 5) >= MIN_CHECKS_PER_PHONEME;
-                          return (
-                            <View
-                              key={item.sound}
-                              className="border border-slate-200 bg-slate-50 rounded-xl px-3 py-1.5 flex-row items-center gap-1.5"
-                            >
-                              <Text
-                                className="font-bold text-xs"
-                                style={{ color: accuracyBandColor(item.accuracy || 0) }}
-                              >
-                                /{item.sound}/ {acc}%
-                              </Text>
-                              {isQualified ? (
-                                <View className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                              ) : (
-                                <View className="w-1.5 h-1.5 rounded-full bg-slate-300" />
-                              )}
-                            </View>
-                          );
-                        })}
-                      </View>
-                    </View>
-                  </>
-                ) : null}
-              </>
-            )
-          ) : (
-            /* TAB 2: ACCOUNT SETTINGS */
-            <>
-              {/* MONTHLY QUOTA CARD */}
-              <MonthlyQuotaCard
-                userKey={userKey}
-                userTier={userTier}
-                usageStatus={usage}
-                onUpgradePress={() => navigation.navigate("Payment")}
-              />
-
-              {/* MASTER CARD 1: STORE IAP & SUBSCRIPTION MANAGEMENT */}
-              <View className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
-                <View className="px-4 pt-3.5 pb-2">
-                  <Text className="text-2xs font-bold text-slate-400 uppercase tracking-wider">
-                    {t("profileExtra.membershipGroup")}
+                  <Text className="text-[14px] font-medium text-slate-500">
+                    {displayEmail}
                   </Text>
                 </View>
 
-                {/* Upgrade Item */}
+                {/* Row 2: Ngôn ngữ */}
                 <TouchableOpacity
                   activeOpacity={0.7}
-                  className="flex-row items-center justify-between p-3.5"
-                  onPress={() => navigation.navigate("Payment")}
+                  onPress={() => setLanguageModalVisible(true)}
+                  className="flex-row items-center justify-between p-3.5 border-b border-slate-100"
                 >
                   <View className="flex-row items-center gap-3">
-                    <View className="w-10 h-10 rounded-2xl bg-amber-100 items-center justify-center">
-                      <Crown size={20} color="#d97706" />
+                    <View
+                      style={{ backgroundColor: "#eff6ff" }}
+                      className="w-9 h-9 rounded-xl items-center justify-center"
+                    >
+                      <Globe size={18} color="#0066ff" />
                     </View>
-                    <View>
-                      <Text className="text-sm font-bold text-slate-900">
-                        {isPro ? t("profileExtra.proBenefitsTitle") : t("profileExtra.proUpgradeTitle")}
-                      </Text>
-                      <Text className="text-xs text-slate-400">
-                        {isPro ? t("profileExtra.proActiveDesc") : t("profileExtra.proUpgradeDesc")}
-                      </Text>
-                    </View>
+                    <Text className="text-[15px] font-semibold text-[#0f172a]">
+                      {t("language.label") || "Ngôn ngữ"}
+                    </Text>
                   </View>
-                  <ChevronRight size={18} color="#94a3b8" />
+
+                  <View className="flex-row items-center gap-1.5">
+                    <Text className="text-[14px] font-medium text-slate-500">
+                      {currentLang === "vi" ? (t("language.vi") || "Tiếng Việt") : (t("language.en") || "English")}
+                    </Text>
+                    <ChevronRight size={16} color="#94a3b8" />
+                  </View>
                 </TouchableOpacity>
 
-                <View className="h-[1px] bg-slate-100 mx-4" />
-
-                {/* Restore Purchases Item */}
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  className="flex-row items-center justify-between p-3.5"
-                  onPress={handleRestorePurchases}
-                  disabled={restoringIap}
-                >
+                {/* Row 3: Giọng mẫu */}
+                <View className="flex-row items-center justify-between p-3.5">
                   <View className="flex-row items-center gap-3">
-                    <View className="w-10 h-10 rounded-2xl bg-blue-100 items-center justify-center">
-                      {restoringIap ? (
-                        <ActivityIndicator size="small" color="#2563eb" />
-                      ) : (
-                        <RefreshCw size={19} color="#2563eb" />
-                      )}
+                    <View
+                      style={{ backgroundColor: "#eff6ff" }}
+                      className="w-9 h-9 rounded-xl items-center justify-center"
+                    >
+                      <Mic size={18} color="#0066ff" />
                     </View>
-                    <View>
-                      <Text className="text-sm font-bold text-slate-900">
-                        {t("profileExtra.restoreTitle")}
-                      </Text>
-                      <Text className="text-xs text-slate-400">
-                        {t("profileExtra.restoreDesc")}
-                      </Text>
-                    </View>
-                  </View>
-                  <ChevronRight size={18} color="#94a3b8" />
-                </TouchableOpacity>
-
-                <View className="h-[1px] bg-slate-100 mx-4" />
-
-                {/* Manage Subscriptions Item */}
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  className="flex-row items-center justify-between p-3.5"
-                  onPress={openManageSubscriptions}
-                >
-                  <View className="flex-row items-center gap-3">
-                    <View className="w-10 h-10 rounded-2xl bg-slate-100 items-center justify-center">
-                      <ExternalLink size={19} color="#475569" />
-                    </View>
-                    <View>
-                      <Text className="text-sm font-bold text-slate-900">
-                        {t("profileExtra.manageStoreTitle")}
-                      </Text>
-                      <Text className="text-xs text-slate-400">
-                        {t("profileExtra.manageStoreDesc")}
-                      </Text>
-                    </View>
-                  </View>
-                  <ChevronRight size={18} color="#94a3b8" />
-                </TouchableOpacity>
-              </View>
-
-              {/* MASTER CARD 2: DAILY REMINDER & NOTIFICATION SETTINGS */}
-              <View className="bg-white rounded-2xl border border-slate-100 p-4 gap-3.5">
-                <View className="flex-row items-center gap-3">
-                  <View className="w-10 h-10 rounded-2xl bg-indigo-50 items-center justify-center">
-                    <Bell size={20} color="#4f46e5" />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="text-sm font-bold text-slate-900">
-                      {t("profileExtra.notifGroup")}
-                    </Text>
-                    <Text className="text-xs text-slate-400">
-                      {t("profileExtra.notifGroupDesc")}
+                    <Text className="text-[15px] font-semibold text-[#0f172a]">
+                      {t("profile.standardVoiceLabel") || "Giọng mẫu"}
                     </Text>
                   </View>
-                </View>
-
-                {/* Toggle Daily Reminder */}
-                <View className="flex-row items-center justify-between pt-1">
-                  <View className="flex-1 pr-3">
-                    <Text className="text-sm font-semibold text-slate-800">
-                      {t("profileExtra.dailyReminder")}
-                    </Text>
-                    <Text className="text-xs text-slate-400">
-                      {t("profileExtra.dailyReminderDesc")}
-                    </Text>
-                  </View>
-                  <Switch
-                    value={notifSettings.dailyReminderEnabled}
-                    onValueChange={handleToggleDailyReminder}
-                    trackColor={{ false: "#e2e8f0", true: "#4f46e5" }}
-                  />
-                </View>
-
-                {notifSettings.dailyReminderEnabled && !notifPermissionGranted ? (
-                  <View className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
-                    <Text className="text-2xs text-amber-700 leading-relaxed">
-                      {t("profileExtra.notifPermissionWarning")}
-                    </Text>
-                  </View>
-                ) : null}
-
-                {/* Time Selector Chips */}
-                {notifSettings.dailyReminderEnabled ? (
-                  <View className="gap-2 pt-2 border-t border-slate-100">
-                    <View className="flex-row items-center gap-1.5">
-                      <Clock size={13} color="#4f46e5" />
-                      <Text className="text-xs font-semibold text-slate-600">
-                        {t("profileExtra.chooseReminderTime")}
-                      </Text>
-                    </View>
-                    <View className="flex-row flex-wrap gap-2">
-                      {PRESET_REMINDER_TIMES.map((preset) => {
-                        const isSelected =
-                          notifSettings.dailyReminderHour === preset.hour &&
-                          notifSettings.dailyReminderMinute === preset.minute;
-                        return (
-                          <TouchableOpacity
-                            key={preset.label}
-                            className={`px-3 py-1.5 rounded-full border ${isSelected
-                              ? "bg-indigo-600 border-indigo-600"
-                              : "bg-slate-100 border-slate-200"
-                              }`}
-                            onPress={() =>
-                              handleSelectReminderTime(preset.hour, preset.minute)
-                            }
-                          >
-                            <Text
-                              className={`text-xs font-bold ${isSelected ? "text-white" : "text-slate-700"
-                                }`}
-                            >
-                              {preset.label}
-                            </Text>
-                          </TouchableOpacity>
-                        );
-                      })}
-                    </View>
-                  </View>
-                ) : null}
-
-                {/* Additional toggles */}
-                <View className="gap-2.5 pt-2 border-t border-slate-100">
-                  <View className="flex-row items-center justify-between">
-                    <View className="flex-1 pr-3">
-                      <Text className="text-xs font-medium text-slate-700">
-                        {t("profileExtra.contentUpdates")}
-                      </Text>
-                    </View>
-                    <Switch
-                      value={notifSettings.contentUpdatesEnabled}
-                      onValueChange={handleToggleContentUpdates}
-                      trackColor={{ false: "#e2e8f0", true: "#4f46e5" }}
-                    />
-                  </View>
-
-                  <View className="flex-row items-center justify-between">
-                    <View className="flex-1 pr-3">
-                      <Text className="text-xs font-medium text-slate-700">
-                        {t("profileExtra.promotions")}
-                      </Text>
-                    </View>
-                    <Switch
-                      value={notifSettings.promotionsEnabled}
-                      onValueChange={handleTogglePromotions}
-                      trackColor={{ false: "#e2e8f0", true: "#4f46e5" }}
-                    />
-                  </View>
-                </View>
-
-                {/* Device settings link */}
-                <TouchableOpacity
-                  className="flex-row items-center justify-between pt-2 border-t border-slate-100"
-                  onPress={openNotificationSettings}
-                >
-                  <Text className="text-xs text-indigo-600 font-semibold">
-                    {t("profileExtra.openDeviceSettings")}
-                  </Text>
-                  <ExternalLink size={13} color="#4f46e5" />
-                </TouchableOpacity>
-              </View>
-
-              {/* MASTER CARD 3: DIALECT & LANGUAGE */}
-              <View className="bg-white rounded-2xl border border-slate-100 p-4 gap-3">
-                <View className="flex-row items-center gap-3">
-                  <View className="w-10 h-10 rounded-2xl bg-violet-100 items-center justify-center">
-                    <Volume2 size={20} color="#7c3aed" />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="text-sm font-bold text-slate-900">
-                      {t("profileExtra.voiceLangGroup")}
-                    </Text>
-                    <Text className="text-xs text-slate-400">
-                      {t("profileExtra.voiceLangDesc")}
-                    </Text>
-                  </View>
-                </View>
-
-                <View className="pt-2 border-t border-slate-100 gap-3">
-                  <DialectToggle
-                    value={userDialect}
-                    saving={dialectSaving}
-                    onChange={async (next) => {
-                      setDialectSaving(true);
-                      try {
-                        await updateUserDialect(next);
-                      } finally {
-                        setDialectSaving(false);
-                      }
-                    }}
-                  />
-                  <LanguageSwitcher />
-                </View>
-              </View>
-
-              {/* MASTER CARD 4: LEGAL, REFERRAL & SUPPORT */}
-              <View className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
-                <View className="px-4 pt-3.5 pb-2">
-                  <Text className="text-2xs font-bold text-slate-400 uppercase tracking-wider">
-                    {t("profileExtra.supportLegalGroup")}
+                  <Text className="text-[14px] font-medium text-slate-500">
+                    {t("profile.standardVoiceUK") || "Anh – Anh (UK)"}
                   </Text>
                 </View>
+              </View>
+            </View>
 
-                {/* Referral */}
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  className="flex-row items-center justify-between p-3.5"
-                  onPress={() => navigation.navigate("Referral")}
-                >
-                  <View className="flex-row items-center gap-3">
-                    <View className="w-9 h-9 rounded-xl bg-emerald-100 items-center justify-center">
-                      <Gift size={18} color="#059669" />
-                    </View>
-                    <Text className="text-sm font-semibold text-slate-800">
-                      {t("profileExtra.referralFriends")}
-                    </Text>
-                  </View>
-                  <ChevronRight size={18} color="#94a3b8" />
-                </TouchableOpacity>
-
-                <View className="h-[1px] bg-slate-100 mx-4" />
-
-                {/* Support */}
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  className="flex-row items-center justify-between p-3.5"
-                  onPress={handleOpenSupport}
-                >
-                  <View className="flex-row items-center gap-3">
-                    <View className="w-9 h-9 rounded-xl bg-sky-100 items-center justify-center">
-                      <HelpCircle size={18} color="#0284c7" />
-                    </View>
-                    <Text className="text-sm font-semibold text-slate-800">
-                      {t("profileExtra.contactSupport")}
-                    </Text>
-                  </View>
-                  <ChevronRight size={18} color="#94a3b8" />
-                </TouchableOpacity>
-
-                <View className="h-[1px] bg-slate-100 mx-4" />
-
-                {/* About */}
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  className="flex-row items-center justify-between p-3.5"
-                  onPress={() => navigation.navigate("About")}
-                >
-                  <View className="flex-row items-center gap-3">
-                    <View className="w-9 h-9 rounded-xl bg-purple-100 items-center justify-center">
-                      <Sparkles size={18} color="#9333ea" />
-                    </View>
-                    <Text className="text-sm font-semibold text-slate-800">
-                      {t("profileExtra.aboutApp")}
-                    </Text>
-                  </View>
-                  <ChevronRight size={18} color="#94a3b8" />
-                </TouchableOpacity>
-
-                <View className="h-[1px] bg-slate-100 mx-4" />
-
-                {/* Terms & Privacy */}
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  className="flex-row items-center justify-between p-3.5"
-                  onPress={() => navigation.navigate("Terms")}
-                >
-                  <View className="flex-row items-center gap-3">
-                    <View className="w-9 h-9 rounded-xl bg-slate-100 items-center justify-center">
-                      <ShieldCheck size={18} color="#475569" />
-                    </View>
-                    <Text className="text-sm font-semibold text-slate-800">
-                      {t("profileExtra.termsPrivacy")}
-                    </Text>
-                  </View>
-                  <ChevronRight size={18} color="#94a3b8" />
-                </TouchableOpacity>
+            {/* GROUP 2: GÓI CƯỚC & HẠN MỨC */}
+            <View style={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0" }} className="rounded-2xl border overflow-hidden">
+              <View className="px-4 py-3 bg-slate-50 border-b border-slate-100">
+                <Text className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  {t("profile.planGroup") || "Gói dịch vụ & Hạn mức"}
+                </Text>
               </View>
 
-              {/* AUTH ACTIONS */}
-              {authToken ? (
-                <View className="gap-2.5 pt-1">
-                  <TouchableOpacity
-                    activeOpacity={0.8}
-                    onPress={handleLogout}
-                    className="bg-white border border-rose-200 py-3.5 rounded-2xl items-center flex-row justify-center gap-2 active:bg-rose-50"
-                  >
-                    <LogOut size={16} color="#e11d48" />
-                    <Text className="text-sm font-bold text-rose-600">
-                      {t("auth.logout")}
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    onPress={handleDeleteAccount}
-                    className="py-2 items-center flex-row justify-center gap-1.5 opacity-80"
-                  >
-                    <Trash2 size={13} color="#e11d48" />
-                    <Text className="text-2xs text-rose-600 font-medium underline">
-                      {t("profileExtra.deleteAccountBtn")}
-                    </Text>
-                  </TouchableOpacity>
+              {/* Row: Plan Status */}
+              <TouchableOpacity
+                activeOpacity={0.75}
+                onPress={() => handleNavigate("Payment")}
+                className="flex-row items-center justify-between px-4 py-3.5 border-b border-slate-100"
+              >
+                <View className="flex-row items-center gap-2.5">
+                  {isPro ? <Crown size={18} color="#f59e0b" /> : <ShieldCheck size={18} color="#0c2340" />}
+                  <Text className="text-[15px] font-bold text-[#0f172a]">
+                    {isPro ? t("profile.proPlan") || "EarlySigns Pro" : t("profile.freePlan") || "Gói miễn phí"}
+                  </Text>
                 </View>
-              ) : (
-                <PrimaryButton
-                  title={t("login.title")}
-                  variant="primary"
-                  onPress={() => navigation.navigate("Login", { next: "Profile" })}
-                />
-              )}
-            </>
-          )}
-        </View>
+                <View className="flex-row items-center gap-1">
+                  <Text style={{ color: isPro ? "#d97706" : "#0c2340" }} className="text-sm font-bold">
+                    {isPro ? t("profile.managePlan") || "Quản lý gói" : t("profile.upgradePro") || "Nâng cấp Pro"}
+                  </Text>
+                  <ChevronRight size={14} color="#94a3b8" />
+                </View>
+              </TouchableOpacity>
+
+              {/* Row: Remaining checks info */}
+              {!isPro ? (
+                <View className="px-4 py-3.5 flex-row items-center justify-between">
+                  <Text className="text-[14px] font-medium text-slate-600">{t("profile.remainingChecks") || "Lượt kiểm tra còn lại"}</Text>
+                  <Text className="text-[14px] font-bold text-[#0f172a]">
+                    {usage?.daily_remaining != null ? t("profile.remainingChecksRatio", { remaining: usage.daily_remaining }) || `${usage.daily_remaining}/20 câu/ngày` : t("profile.freeMonthlyChecks") || "20 câu/ngày"}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+
+            {/* GROUP 3: THÔNG BÁO & LỜI NHẮC */}
+            <View style={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0" }} className="rounded-2xl border overflow-hidden">
+              <View className="px-4 py-3 bg-slate-50 border-b border-slate-100">
+                <Text className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  {t("profile.notifGroup") || "Thông báo"}
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                activeOpacity={0.75}
+                onPress={() => handleNavigate("NotificationSettings")}
+                className="flex-row items-center justify-between px-4 py-3.5"
+              >
+                <View className="flex-row items-center gap-2.5">
+                  <Bell size={18} color="#0c2340" />
+                  <Text className="text-[15px] font-bold text-[#0f172a]">
+                    {t("profile.notifSettingsTitle") || "Cài đặt thông báo & giờ nhắc học"}
+                  </Text>
+                </View>
+                <ChevronRight size={14} color="#94a3b8" />
+              </TouchableOpacity>
+            </View>
+
+            {/* GROUP 4: HỖ TRỢ & PHÁP LÝ (Tách riêng Terms và Privacy) */}
+            <View style={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0" }} className="rounded-2xl border overflow-hidden">
+              <View className="px-4 py-3 bg-slate-50 border-b border-slate-100">
+                <Text className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  {t("profile.supportLegalGroup") || "Hỗ trợ & Pháp lý"}
+                </Text>
+              </View>
+
+              {/* Referral */}
+              <TouchableOpacity
+                activeOpacity={0.75}
+                onPress={() => handleNavigate("Referral")}
+                className="flex-row items-center justify-between px-4 py-3.5 border-b border-slate-100"
+              >
+                <View className="flex-row items-center gap-2.5">
+                  <Gift size={18} color="#4f46e5" />
+                  <Text className="text-[15px] font-medium text-slate-700">{t("profile.referralTitle") || "Chương trình giới thiệu"}</Text>
+                </View>
+                <ChevronRight size={14} color="#94a3b8" />
+              </TouchableOpacity>
+
+              {/* Contact Support */}
+              <TouchableOpacity
+                activeOpacity={0.75}
+                onPress={() => Linking.openURL("mailto:support@earlysigns.app?subject=Support%20Request")}
+                className="flex-row items-center justify-between px-4 py-3.5 border-b border-slate-100"
+              >
+                <View className="flex-row items-center gap-2.5">
+                  <HelpCircle size={18} color="#0c2340" />
+                  <Text className="text-[15px] font-medium text-slate-700">{t("profile.contactSupport") || "Liên hệ hỗ trợ"}</Text>
+                </View>
+                <ExternalLink size={14} color="#94a3b8" />
+              </TouchableOpacity>
+
+              {/* About */}
+              <TouchableOpacity
+                activeOpacity={0.75}
+                onPress={() => handleNavigate("About")}
+                className="flex-row items-center justify-between px-4 py-3.5 border-b border-slate-100"
+              >
+                <View className="flex-row items-center gap-2.5">
+                  <Info size={18} color="#0284c7" />
+                  <Text className="text-[15px] font-medium text-slate-700">{t("profile.aboutApp") || "Về EarlySigns"}</Text>
+                </View>
+                <ChevronRight size={14} color="#94a3b8" />
+              </TouchableOpacity>
+
+              {/* Terms Screen */}
+              <TouchableOpacity
+                activeOpacity={0.75}
+                onPress={() => handleNavigate("Terms")}
+                className="flex-row items-center justify-between px-4 py-3.5 border-b border-slate-100"
+              >
+                <View className="flex-row items-center gap-2.5">
+                  <FileText size={18} color="#6366f1" />
+                  <Text className="text-[15px] font-medium text-slate-700">{t("profile.termsOfUse") || "Điều khoản sử dụng"}</Text>
+                </View>
+                <ChevronRight size={14} color="#94a3b8" />
+              </TouchableOpacity>
+
+              {/* Privacy Screen (Tách biệt độc lập) */}
+              <TouchableOpacity
+                activeOpacity={0.75}
+                onPress={() => handleNavigate("Privacy")}
+                className="flex-row items-center justify-between px-4 py-3.5"
+              >
+                <View className="flex-row items-center gap-2.5">
+                  <ShieldCheck size={18} color="#10b981" />
+                  <Text className="text-[15px] font-medium text-slate-700">{t("profile.privacyPolicy") || "Chính sách bảo mật"}</Text>
+                </View>
+                <ChevronRight size={14} color="#94a3b8" />
+              </TouchableOpacity>
+            </View>
+
+            {/* GROUP 5: VÙNG NGUY HIỂM (LOGOUT & DELETE ACCOUNT) */}
+            {authToken ? (
+              <View style={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0" }} className="rounded-2xl border overflow-hidden">
+                {/* Logout Button */}
+                <TouchableOpacity
+                  activeOpacity={0.75}
+                  onPress={confirmLogout}
+                  className="flex-row items-center justify-between px-4 py-3.5 border-b border-slate-100"
+                >
+                  <View className="flex-row items-center gap-2.5">
+                    <LogOut size={18} color="#e11d48" />
+                    <Text className="text-[15px] font-bold text-rose-600">{t("auth.logout") || "Đăng xuất"}</Text>
+                  </View>
+                  <ChevronRight size={14} color="#94a3b8" />
+                </TouchableOpacity>
+
+                {/* Delete Account Button */}
+                <TouchableOpacity
+                  activeOpacity={0.75}
+                  onPress={confirmDeleteAccount}
+                  className="flex-row items-center justify-between px-4 py-3.5"
+                >
+                  <View className="flex-row items-center gap-2.5">
+                    <Trash2 size={18} color="#94a3b8" />
+                    <Text className="text-[15px] font-medium text-slate-400">{t("profile.deleteAccount") || "Xóa tài khoản"}</Text>
+                  </View>
+                  <ChevronRight size={14} color="#94a3b8" />
+                </TouchableOpacity>
+              </View>
+            ) : null}
+          </View>
+        )}
       </ScrollView>
+
+      {/* MODAL: CHỌN NGÔN NGỮ */}
+      <Modal
+        visible={languageModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setLanguageModalVisible(false)}
+      >
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={() => setLanguageModalVisible(false)}
+          style={{ backgroundColor: "rgba(15, 23, 42, 0.45)" }}
+          className="flex-1 justify-end"
+        >
+          <TouchableOpacity
+            activeOpacity={1}
+            style={{ backgroundColor: "#ffffff" }}
+            className="rounded-t-3xl p-5 pb-8 gap-4"
+          >
+            <View className="flex-row items-center justify-between pb-2 border-b border-slate-100">
+              <Text className="text-base font-extrabold text-[#0f172a]">
+                {t("profile.chooseLanguage") || "Chọn ngôn ngữ hiển thị"}
+              </Text>
+              <TouchableOpacity
+                onPress={() => setLanguageModalVisible(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 items-center justify-center"
+              >
+                <X size={16} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Option 1: Tiếng Việt */}
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => handleSelectLanguage("vi")}
+              style={{
+                backgroundColor: currentLang === "vi" ? "#eff6ff" : "#f8fafc",
+                borderColor: currentLang === "vi" ? "#0066ff" : "#e2e8f0",
+              }}
+              className="flex-row items-center justify-between p-4 rounded-2xl border"
+            >
+              <View className="flex-row items-center gap-3">
+                <Text className="text-xl">🇻🇳</Text>
+                <Text
+                  style={{ color: currentLang === "vi" ? "#0066ff" : "#0f172a" }}
+                  className="text-sm font-bold"
+                >
+                  {t("language.vi") || "Tiếng Việt"}
+                </Text>
+              </View>
+              {currentLang === "vi" ? <Check size={18} color="#0066ff" strokeWidth={2.5} /> : null}
+            </TouchableOpacity>
+
+            {/* Option 2: English */}
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => handleSelectLanguage("en")}
+              style={{
+                backgroundColor: currentLang === "en" ? "#eff6ff" : "#f8fafc",
+                borderColor: currentLang === "en" ? "#0066ff" : "#e2e8f0",
+              }}
+              className="flex-row items-center justify-between p-4 rounded-2xl border"
+            >
+              <View className="flex-row items-center gap-3">
+                <Text className="text-xl">🇬🇧</Text>
+                <Text
+                  style={{ color: currentLang === "en" ? "#0066ff" : "#0f172a" }}
+                  className="text-sm font-bold"
+                >
+                  {t("language.en") || "English"}
+                </Text>
+              </View>
+              {currentLang === "en" ? <Check size={18} color="#0066ff" strokeWidth={2.5} /> : null}
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }

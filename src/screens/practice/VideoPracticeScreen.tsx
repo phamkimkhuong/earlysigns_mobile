@@ -30,6 +30,10 @@ import VideoRecordingHub from "@/components/practice/VideoRecordingHub";
 import { VideoPracticeSkeleton } from "@/components/ui/Skeleton";
 import { videoApi, lessonApi, billingApi } from "@/api";
 import { useVideoDetailQuery } from "@/hooks/queries/useVideoQueries";
+import {
+  scheduleIncompleteLessonReminder,
+  cancelIncompleteLessonReminder,
+} from "@/services/notifications";
 import type { Dialect, VideoSegment } from "@/types/domain";
 
 const SENTENCE_PRE_ROLL_MS = 250;
@@ -95,6 +99,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
   const practiceDialectRef = useRef<Dialect>(userDialect || "uk");
   const playingRef = useRef(playing);
   const isCheckingTimeRef = useRef(false);
+  const hasPracticedRef = useRef(false);
 
   useEffect(() => {
     practiceDialectRef.current = practiceDialect;
@@ -103,6 +108,23 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
   useEffect(() => {
     playingRef.current = playing;
   }, [playing]);
+
+  useEffect(() => {
+    return () => {
+      const hasSegments = segmentsRef.current.length > 0;
+      const isFinished = hasSegments && activeIndexRef.current >= segmentsRef.current.length - 1;
+
+      if (isFinished) {
+        cancelIncompleteLessonReminder().catch(() => {});
+      } else if (hasPracticedRef.current && hasSegments) {
+        scheduleIncompleteLessonReminder({
+          youtubeId,
+          title: detailData?.title,
+          delayHours: 3,
+        }).catch(() => {});
+      }
+    };
+  }, [youtubeId, detailData?.title]);
 
   const userTier = useMemo(
     () =>
@@ -265,6 +287,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
     if (segs.length > 0) {
       activeIndexRef.current = 0;
       setActiveIndex(0);
+      hasPracticedRef.current = false;
       armSentence(0, { play: false, seek: "preroll" });
     }
   }, [detailData, armSentence]);
@@ -313,6 +336,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
   // Ghi nhận câu khi người dùng thực hiện luyện nói và nhận được kết quả chấm điểm AI
   useEffect(() => {
     if (result) {
+      hasPracticedRef.current = true;
       notifySegmentPlayed(activeIndexRef.current);
     }
   }, [result, notifySegmentPlayed]);
@@ -359,6 +383,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
     }
     if (!current?.text) return;
     setPlaying(false);
+    hasPracticedRef.current = true;
     await startRecording({ text: current.text, dialect: practiceDialect });
   }, [
     isRecording,
@@ -397,6 +422,9 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
           <View className="flex-row items-center justify-between">
             {/* Back Button */}
             <TouchableOpacity
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel={t("common.back", "Quay lại danh sách video")}
               activeOpacity={0.8}
               onPress={() => {
                 if (navigation?.canGoBack?.()) {
@@ -405,7 +433,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                   navigation?.navigate?.("Videos");
                 }
               }}
-              className="w-10 h-10 rounded-2xl bg-slate-800/90 items-center justify-center border border-slate-700/80"
+              className="w-10 h-10 rounded-2xl bg-slate-800 items-center justify-center border border-slate-700"
             >
               <ChevronLeft size={22} color="#ffffff" />
             </TouchableOpacity>
@@ -606,7 +634,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
 
                     {/* Collapsible Vietnamese Translation */}
                     {showTranslation && current.translation_vi ? (
-                      <View className="bg-indigo-50/50 border border-indigo-100/70 rounded-2xl p-3.5 mt-1">
+                      <View className="bg-indigo-50 border border-indigo-100 rounded-2xl p-3.5 mt-1">
                         <Text className="text-xs text-indigo-950 font-medium leading-relaxed italic">
                           💡 {current.translation_vi}
                         </Text>
@@ -623,6 +651,10 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
               <View className="flex-row items-center justify-between gap-2.5 px-0.5">
                 {/* Previous Sentence */}
                 <TouchableOpacity
+                  accessible={true}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("videos.practice.prevSentence", "Câu trước")}
+                  accessibilityState={{ disabled: !playerReady || activeIndex === 0 }}
                   activeOpacity={0.8}
                   disabled={!playerReady || activeIndex === 0}
                   onPress={() =>
@@ -653,6 +685,10 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
 
                 {/* Replay Video Sentence (Hero Action) */}
                 <TouchableOpacity
+                  accessible={true}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("videos.practice.replaySentence", "Phát lại câu")}
+                  accessibilityState={{ disabled: !playerReady || !current }}
                   activeOpacity={0.85}
                   disabled={!playerReady || !current}
                   onPress={() =>
@@ -679,6 +715,10 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
 
                 {/* Next Sentence */}
                 <TouchableOpacity
+                  accessible={true}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("videos.practice.nextSentence", "Câu tiếp theo")}
+                  accessibilityState={{ disabled: !playerReady || activeIndex >= segments.length - 1 }}
                   activeOpacity={0.8}
                   disabled={!playerReady || activeIndex >= segments.length - 1}
                   onPress={() =>

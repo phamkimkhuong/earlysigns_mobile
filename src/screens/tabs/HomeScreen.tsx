@@ -155,7 +155,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
             {authToken ? (
               <View className="flex-row flex-wrap items-center gap-2 mt-1.5">
                 {streakDays != null && streakDays > 0 ? (
-                  <View className="flex-row items-center gap-1 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200/70">
+                  <View className="flex-row items-center gap-1 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
                     <Flame size={13} color="#b45309" />
                     <Text className="text-2xs font-bold text-amber-800">
                       {t("homeDesign.streak", { count: streakDays })}
@@ -192,7 +192,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
                 {clarityPct != null ? (
                   <Text
                     testID="home-clarity"
-                    className="text-2xs font-bold text-teal-800 bg-teal-50 border border-teal-200/70 px-2.5 py-1 rounded-full"
+                    className="text-2xs font-bold text-teal-800 bg-teal-50 border border-teal-200 px-2.5 py-1 rounded-full"
                   >
                     {t("homeDesign.clarity", { percent: clarityPct })}
                   </Text>
@@ -269,7 +269,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
                 </Text>
                 <Text
                   numberOfLines={1}
-                  className="text-xs text-sky-100/90 mt-1"
+                  className="text-xs text-sky-100 mt-1"
                 >
                   {videoProgress?.title || t("homeDesign.videoSubtitle")}
                 </Text>
@@ -281,7 +281,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
                     <Text className="text-xs font-medium text-sky-200">
                       Câu <Text className="font-bold text-white">{videoProgress.played}/{videoProgress.total}</Text>
                     </Text>
-                    <View className="w-[130px] h-[5px] bg-sky-950/60 rounded-full overflow-hidden mt-1.5">
+                    <View className="w-[130px] h-[5px] bg-sky-950 rounded-full overflow-hidden mt-1.5">
                       <View
                         className="h-full bg-[#2dd4bf] rounded-full"
                         style={{ width: `${Math.max(8, videoProgress.pct)}%` }}
@@ -405,7 +405,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
                   {displayPhonemes.map((sound, index) => (
                     <View
                       key={`${sound}-${index}`}
-                      className="bg-[#e0effe] min-w-[38px] h-[26px] px-2.5 rounded-full border border-sky-200/70 items-center justify-center"
+                      className="bg-[#e0effe] min-w-[38px] h-[26px] px-2.5 rounded-full border border-sky-200 items-center justify-center"
                     >
                       <Text
                         numberOfLines={1}

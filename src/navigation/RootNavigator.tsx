@@ -24,6 +24,8 @@ import {
   PaymentScreen,
   PaymentWebViewScreen,
   PaymentResultScreen,
+  PronunciationProfileScreen,
+  NotificationSettingsScreen,
 } from "@/screens";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -45,7 +47,7 @@ function MainTabs() {
   const { t } = useTranslation();
   return (
     <Tab.Navigator
-      id="main-tabs"
+      id="MainTabs"
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarActiveTintColor: colors.accent,
@@ -89,7 +91,7 @@ export default function RootNavigator() {
 
   return (
     <Stack.Navigator
-      id="root-stack"
+      id="RootStack"
       initialRouteName={hasOnboarded ? "Main" : "Onboarding"}
       screenOptions={{
         headerStyle: { backgroundColor: colors.bg },
@@ -111,12 +113,14 @@ export default function RootNavigator() {
       />
       <Stack.Screen name="Terms" component={TermsScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Privacy" component={PrivacyScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="Referral" component={ReferralScreen} options={{ title: t("referral.pageTitle") }} />
-      <Stack.Screen name="About" component={AboutScreen} options={{ title: t("nav.intro") }} />
+      <Stack.Screen name="Referral" component={ReferralScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="About" component={AboutScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Login" component={LoginScreen} options={{ title: t("login.title") }} />
       <Stack.Screen name="Payment" component={PaymentScreen} options={{ headerShown: false }} />
       <Stack.Screen name="PaymentWebView" component={PaymentWebViewScreen} options={{ title: t("package.planName") }} />
       <Stack.Screen name="PaymentResult" component={PaymentResultScreen} options={{ title: t("package.planName") }} />
+      <Stack.Screen name="PronunciationProfile" component={PronunciationProfileScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 }

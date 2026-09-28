@@ -4,8 +4,9 @@ import type { UserTier } from "@/types/domain";
 
 const STORAGE_KEY_MONTHLY = "earlysigns_monthly_quota_v2";
 
-// Monthly Quotas per Spec Section 14
-export const MONTHLY_LIMIT_PRONUNCIATION = 100;
+// Quotas aligned with current Backend (20 pronunciation checks per day, reset daily)
+export const DAILY_LIMIT_PRONUNCIATION = 20;
+export const MONTHLY_LIMIT_PRONUNCIATION = 20;
 export const MONTHLY_LIMIT_OCR = 20;
 export const MONTHLY_LIMIT_AUDIO = 20;
 
@@ -16,7 +17,7 @@ export const ANONYMOUS_AUDIO_LIMIT = 2;
 
 // Legacy aliases for backward compatibility
 export const ANONYMOUS_DAILY_LIMIT = ANONYMOUS_PRONUNCIATION_LIMIT;
-export const FREE_DAILY_LIMIT = MONTHLY_LIMIT_PRONUNCIATION;
+export const FREE_DAILY_LIMIT = DAILY_LIMIT_PRONUNCIATION;
 
 export type QuotaType = "pronunciation" | "ocr" | "audio";
 

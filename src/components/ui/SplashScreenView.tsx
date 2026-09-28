@@ -49,7 +49,16 @@ export default function SplashScreenView({ statusText }: SplashScreenViewProps) 
           transform: [{ scale: scaleAnim }],
         }}
       >
-        <View className="w-24 h-24 rounded-3xl bg-appElevated items-center justify-center border border-appBorder shadow-lg shadow-black/20 mb-5">
+        <View
+          style={{
+            shadowColor: "#000000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.2,
+            shadowRadius: 8,
+            elevation: 4,
+          }}
+          className="w-24 h-24 rounded-3xl bg-appElevated items-center justify-center border border-appBorder mb-5"
+        >
           <Image
             source={require("@assets/logo.png")}
             className="w-16 h-16 rounded-2xl"
@@ -68,7 +77,10 @@ export default function SplashScreenView({ statusText }: SplashScreenViewProps) 
 
       {/* Bottom Loading Progress Bar */}
       <View className="w-full max-w-[200px] items-center gap-2">
-        <View className="w-full h-1.5 bg-appElevated rounded-full overflow-hidden border border-appBorder/50">
+        <View
+          style={{ borderColor: "#cbd5e1" }}
+          className="w-full h-1.5 bg-appElevated rounded-full overflow-hidden border"
+        >
           <Animated.View
             className="h-full bg-accent rounded-full"
             style={{ width: progressWidth }}

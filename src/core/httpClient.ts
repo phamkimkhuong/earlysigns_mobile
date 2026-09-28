@@ -179,6 +179,10 @@ export const httpClient = {
     return httpRequest<T>(path, { ...options, method: "DELETE", body });
   },
 
+  patch<T = any>(path: string, body?: any, options?: Omit<RequestOptions, "method" | "body">): Promise<T> {
+    return httpRequest<T>(path, { ...options, method: "PATCH", body });
+  },
+
   upload<T = any>(path: string, formData: FormData, options?: Omit<RequestOptions, "method" | "body">): Promise<T> {
     return httpRequest<T>(path, { ...options, method: "POST", body: formData });
   },

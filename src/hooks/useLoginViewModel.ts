@@ -9,6 +9,7 @@ import { useAppleAuth } from "./useAppleAuth";
 import { showToast } from "@/utils/toast";
 import { hapticFeedback } from "@/utils/haptics";
 import { navigateAfterLogin } from "@/navigation/nav";
+import { getFriendlyErrorMessage } from "@/core/errorManager";
 
 export interface UseLoginViewModelProps {
   navigation: any;
@@ -98,10 +99,11 @@ export function useLoginViewModel({
           email: data.email,
           userId: data.user_id,
         });
-        showToast.success(t("login.title"), "Đăng nhập Google thành công!");
+        showToast.success("login.loginSuccess");
       } catch (err: any) {
-        setAuthError(String(err.message || err));
-        showToast.error(t("login.googleSignInFailed"), String(err.message || err));
+        const msg = getFriendlyErrorMessage(err, t("login.googleSignInFailed"));
+        setAuthError(msg);
+        showToast.error("login.googleSignInFailed", msg);
       }
     },
     [deviceId, finishLogin, t]
@@ -110,8 +112,9 @@ export function useLoginViewModel({
   const { signIn: signInGoogle, loading: googleLoading } = useGoogleAuth({
     onSuccess: handleGoogleSuccess,
     onError: (err) => {
-      setAuthError(err);
-      showToast.error(t("login.googleSignInFailed"), err);
+      const msg = getFriendlyErrorMessage(err, t("login.googleSignInFailed"));
+      setAuthError(msg);
+      showToast.error("login.googleSignInFailed", msg);
     },
   });
 
@@ -140,10 +143,11 @@ export function useLoginViewModel({
           email: data.email || credential.email,
           userId: data.user_id || credential.user,
         });
-        showToast.success(t("login.title"), "Đăng nhập Apple thành công!");
+        showToast.success("login.loginSuccess");
       } catch (err: any) {
-        setAuthError(String(err.message || err));
-        showToast.error(t("login.appleSignInFailed"), String(err.message || err));
+        const msg = getFriendlyErrorMessage(err, t("login.appleSignInFailed"));
+        setAuthError(msg);
+        showToast.error("login.appleSignInFailed", msg);
       }
     },
     [deviceId, finishLogin, t]
@@ -152,8 +156,9 @@ export function useLoginViewModel({
   const { signIn: signInApple, isAvailable: isAppleAvailable, loading: appleLoading } = useAppleAuth({
     onSuccess: handleAppleSuccess,
     onError: (err) => {
-      setAuthError(err);
-      showToast.error(t("login.appleSignInFailed"), err);
+      const msg = getFriendlyErrorMessage(err, t("login.appleSignInFailed"));
+      setAuthError(msg);
+      showToast.error("login.appleSignInFailed", msg);
     },
   });
 
@@ -173,14 +178,15 @@ export function useLoginViewModel({
         startCountdown(60);
         if (isResend) {
           setOtpResentMessage(t("login.otpResent"));
-          showToast.success(t("login.otpResent"));
+          showToast.success("login.otpResent");
         } else {
           setOtpInput("");
           setEmailStep("otp");
         }
       } catch (e: any) {
-        setAuthError(String(e.message || e));
-        showToast.error("Lỗi gửi OTP", String(e.message || e));
+        const msg = getFriendlyErrorMessage(e, t("login.otpSendFailed") || "Lỗi gửi mã OTP");
+        setAuthError(msg);
+        showToast.error("login.otpSendFailed", msg);
       } finally {
         setSendingOtp(false);
       }
@@ -202,10 +208,11 @@ export function useLoginViewModel({
         email: data.email || email,
         userId: data.user_id || "",
       });
-      showToast.success("Thành công", "Đăng nhập thành công!");
+      showToast.success("login.loginSuccess");
     } catch (e: any) {
-      setAuthError(String(e.message || t("login.otpCodeInvalid")));
-      showToast.error("Xác minh thất bại", String(e.message || t("login.otpCodeInvalid")));
+      const msg = getFriendlyErrorMessage(e, t("login.otpCodeInvalid") || "Mã xác thực không hợp lệ hoặc đã hết hạn.");
+      setAuthError(msg);
+      showToast.error("login.otpVerifyFailed", msg);
     } finally {
       setVerifyingOtp(false);
     }

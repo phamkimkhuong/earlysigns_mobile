@@ -2,7 +2,7 @@ import React from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
-import { ChevronLeft, ShieldCheck } from "lucide-react-native";
+import { ChevronLeft } from "lucide-react-native";
 
 export default function PrivacyScreen({ navigation }: { navigation?: any }) {
   const { t } = useTranslation();
@@ -18,71 +18,71 @@ export default function PrivacyScreen({ navigation }: { navigation?: any }) {
   ];
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-[#1e2538]">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-white">
+      {/* 1. TOP APP BAR with Title */}
+      <View className="flex-row items-center justify-between px-4 py-3 bg-white border-b border-slate-100">
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => {
+            if (navigation?.canGoBack?.()) {
+              navigation.goBack();
+            } else {
+              navigation?.navigate?.("Main");
+            }
+          }}
+          style={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0" }}
+          className="w-10 h-10 rounded-2xl items-center justify-center border shadow-xs"
+          accessibilityRole="button"
+          accessibilityLabel={t("common.back", "Quay lại")}
+        >
+          <ChevronLeft size={22} color="#0f172a" />
+        </TouchableOpacity>
+
+        <Text className="text-base font-extrabold text-[#0f172a]">
+          {t("legal.privacyTitle", "Chính sách bảo mật")}
+        </Text>
+
+        <View className="w-10 h-10" />
+      </View>
+
+      {/* 2. CONTINUOUS DOCUMENT (Văn bản từ trên xuống, các mục liền kề) */}
       <ScrollView
-        className="flex-1 bg-appBg"
-        contentContainerStyle={{ flexGrow: 1 }}
+        className="flex-1 bg-white"
+        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 48 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Top elastic overscroll filler */}
-        <View
-          style={{
-            position: "absolute",
-            top: -1000,
-            left: 0,
-            right: 0,
-            height: 1000,
-            backgroundColor: "#1e2538",
-          }}
-        />
+        <Text className="text-[13px] text-slate-400 font-medium mb-5">
+          {t("legal.lastUpdated", "Cập nhật lần cuối: 24/09/2026 • Phiên bản 1.0")}
+        </Text>
 
-        {/* 1. LUXURY NAVY HERO HEADER */}
-        <View className="bg-[#1e2538] pt-3 pb-8 px-5">
-          <View className="flex-row items-center justify-between mb-4">
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => {
-                if (navigation?.canGoBack?.()) {
-                  navigation.goBack();
-                } else {
-                  navigation?.navigate?.("Main");
-                }
-              }}
-              className="w-10 h-10 rounded-2xl bg-slate-800 items-center justify-center border border-slate-700"
-            >
-              <ChevronLeft size={22} color="#ffffff" />
-            </TouchableOpacity>
-
-            <Text className="text-base font-extrabold text-white">
-              {t("legal.privacyTitle")}
-            </Text>
-
-            <View className="w-10 h-10" />
-          </View>
-
-          <View className="flex-row items-center gap-3.5">
-            <View className="w-12 h-12 rounded-2xl bg-emerald-600 items-center justify-center">
-              <ShieldCheck size={24} color="#ffffff" />
-            </View>
-            <View className="flex-1">
-              <Text className="text-xl font-black text-white tracking-tight">
-                {t("legal.privacyTitle")}
-              </Text>
-              <Text className="text-xs text-slate-300 mt-0.5">
-                {t("legal.lastUpdated")}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* 2. LAYERED OVERLAPPING CANVAS SHEET */}
-        <View className="flex-1 bg-appBg -mt-5 rounded-t-[32px] px-4 pt-5 pb-20 gap-3.5">
+        {/* Các mục liền kề từ trên xuống */}
+        <View className="gap-6">
           {sections.map((sec, idx) => (
-            <View key={idx} className="bg-white rounded-3xl p-5 border border-slate-200 gap-2">
-              <Text className="text-sm font-extrabold text-slate-900">{sec.title}</Text>
-              <Text className="text-xs text-slate-600 leading-relaxed">{sec.body}</Text>
+            <View key={idx}>
+              <Text className="text-base font-extrabold text-slate-900 mb-2">
+                {sec.title}
+              </Text>
+              <Text className="text-[15px] text-slate-700 leading-6">
+                {sec.body}
+              </Text>
+              {idx < sections.length - 1 && (
+                <View className="h-px bg-slate-100 mt-5" />
+              )}
             </View>
           ))}
+        </View>
+
+        {/* Sign-off Footer */}
+        <View className="mt-10 pt-6 border-t border-slate-200 gap-1 items-center">
+          <Text className="text-xs font-bold text-slate-500 text-center uppercase tracking-wider">
+            {t("legal.dataProtectionTeam", "EarlySigns Data Protection")}
+          </Text>
+          <Text className="text-xs text-slate-400 text-center">
+            {t("legal.companyName", "CÔNG TY TNHH EARLYSIGNS VIỆT NAM")}
+          </Text>
+          <Text className="text-xs text-slate-400 text-center">
+            {t("legal.gdprCommitment", "Cam kết bảo mật dữ liệu âm thanh và tài khoản theo chuẩn GDPR")}
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
