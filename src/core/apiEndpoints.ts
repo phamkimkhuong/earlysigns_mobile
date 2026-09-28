@@ -80,6 +80,12 @@ export const API_ENDPOINTS = {
   // 5. YouTube Video Practice Catalog (Luyện phát âm qua video YouTube)
   // ===========================================================================
   VIDEOS: {
+    /** [GET] Feed toàn bộ chủ đề video (1 request lấy toàn bộ danh mục, 4 card đầu + danh sách video_ids) */
+    FEED: (level?: string) =>
+      level ? `/api/videos/feed?level=${encodeURIComponent(level)}` : "/api/videos/feed",
+    /** [GET] Tải tiếp 1 nhóm tối đa 4 video cards theo danh sách ID (dùng khi cuộn ngang) */
+    CARDS: (ids: string[]) =>
+      `/api/videos/cards?ids=${encodeURIComponent(ids.join(","))}`,
     /** [GET] Danh sách video YouTube phân trang theo chủ đề và trình độ CEFR (A1-C2) */
     LIST: "/api/videos/",
     /** [GET] Danh sách các chủ đề video (Daily Conversation, Business, Travel, Movies...) */

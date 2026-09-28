@@ -20,40 +20,48 @@ export interface StoreProduct {
   savingsBadge?: string;
 }
 
-export const STORE_PRODUCTS: StoreProduct[] = [
-  {
-    id: "earlysigns.pro.1month",
-    months: 1,
-    name: "EarlySigns Pro 1 Tháng",
-    priceVnd: 248000,
-    originalPriceVnd: 462000,
-    priceDisplay: "248.000 đ",
-    periodLabel: "1 tháng",
-    monthlyEquivalent: "248.000 đ/tháng",
-  },
-  {
-    id: "earlysigns.pro.3months",
-    months: 3,
-    name: "EarlySigns Pro 3 Tháng",
-    priceVnd: 856000,
-    originalPriceVnd: 1284000,
-    priceDisplay: "856.000 đ",
-    periodLabel: "3 tháng",
-    monthlyEquivalent: "285.333 đ/tháng",
-  },
-  {
-    id: "earlysigns.pro.1year",
-    months: 12,
-    name: "EarlySigns Pro 12 Tháng (1 Năm)",
-    priceVnd: 999000,
-    originalPriceVnd: 1866000,
-    priceDisplay: "999.000 đ",
-    periodLabel: "12 tháng",
-    monthlyEquivalent: "83.250 đ/tháng",
-    popular: true,
-    savingsBadge: "Tiết kiệm 65%",
-  },
-];
+/**
+ * Normalizes dynamic package object from GET /api/billing/packages into StoreProduct
+ */
+export function normalizeStoreProduct(apiPkg: any): StoreProduct {
+  const months = Number(apiPkg.months) || 1;
+  const priceVnd = Number(apiPkg.price_vnd ?? apiPkg.priceVnd ?? 0);
+  const originalPriceVnd = Number(apiPkg.original_price_vnd ?? apiPkg.originalPriceVnd ?? priceVnd);
+  const monthlyEquivalentNumber = Math.round(priceVnd / months);
+
+  const discountPercent =
+    originalPriceVnd > priceVnd
+      ? Math.round((1 - priceVnd / originalPriceVnd) * 100)
+      : 0;
+
+  const defaultName =
+    months === 12
+      ? "EarlySigns Pro 12 Tháng (1 Năm)"
+      : `EarlySigns Pro ${months} Tháng`;
+
+  const rawName = String(apiPkg.name || "").trim();
+  const name =
+    rawName &&
+    rawName.toLowerCase() !== `${months} month` &&
+    rawName.toLowerCase() !== `${months} months`
+      ? rawName.startsWith("EarlySigns")
+        ? rawName
+        : `EarlySigns Pro - ${rawName}`
+      : defaultName;
+
+  return {
+    id: String(apiPkg.id),
+    months,
+    name,
+    priceVnd,
+    originalPriceVnd,
+    priceDisplay: `${priceVnd.toLocaleString("vi-VN")} đ`,
+    periodLabel: months === 12 ? "12 tháng" : `${months} tháng`,
+    monthlyEquivalent: `${monthlyEquivalentNumber.toLocaleString("vi-VN")} đ/tháng`,
+    popular: months === 12,
+    savingsBadge: discountPercent > 0 ? `Tiết kiệm ${discountPercent}%` : undefined,
+  };
+}
 
 export interface StoredSubscriptionData {
   productId: string;
@@ -107,11 +115,18 @@ export async function purchaseStoreProduct(
   options?: {
     authToken?: string;
     authFetch?: (path: string, opts?: any) => Promise<Response>;
+    product?: StoreProduct;
   }
 ): Promise<{ success: boolean; error?: string; expiresAt?: string }> {
-  const product = STORE_PRODUCTS.find((p) => p.id === productId);
+  const product =
+    options?.product ||
+    normalizeStoreProduct({
+      id: productId,
+      months: productId.includes("12") ? 12 : productId.includes("3") ? 3 : 1,
+    });
+
   if (!product) {
-    return { success: false, error: "Gói dịch vụ không tồn tại trên Store." };
+    return { success: false, error: "Gói dịch vụ không tồn tại trên hệ thống." };
   }
 
   try {

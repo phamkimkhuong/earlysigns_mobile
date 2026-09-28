@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import AppModal from "@/components/ui/AppModal";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import { formatVnd } from "@/utils/errors";
-import { STORE_PRODUCTS } from "@/services/iap";
+import { normalizeStoreProduct, type StoreProduct } from "@/services/iap";
 import { usePackagesQuery } from "@/hooks/queries/useBillingQueries";
 
 export interface PackagesProps {
@@ -28,38 +28,44 @@ export default function Packages({
 
   if (!open) return null;
 
+  const products: StoreProduct[] =
+    Array.isArray(packageList) && packageList.length > 0
+      ? packageList.map(normalizeStoreProduct)
+      : [];
+
   const storeActionText =
-    Platform.OS === "ios" ? "Đăng ký qua App Store" : "Đăng ký qua Google Play";
+    Platform.OS === "ios"
+      ? (t("payment.ctaApple") || "Đăng ký qua App Store")
+      : (t("payment.ctaGoogle") || "Đăng ký qua Google Play");
 
   return (
     <AppModal
       open={open}
       onClose={onClose}
-      title="Gói EarlySigns Pro"
+      title={t("payment.heroTitlePro") || "Gói EarlySigns Pro"}
       footer={<PrimaryButton title={t("package.close") || "Đóng"} variant="ghost" onPress={onClose} />}
     >
       <Text className="text-appTextSecondary mb-3">
-        Mở khóa toàn bộ tính năng và bài học không giới hạn:
+        {t("package.subtitle") || "Mở khóa toàn bộ tính năng và bài học không giới hạn:"}
       </Text>
-      {STORE_PRODUCTS.map((prod) => {
-        const apiPkg = packageList.find((p) => p.id === prod.id);
-        const price = apiPkg?.price_vnd ?? prod.priceVnd;
-        const original = apiPkg?.original_price_vnd ?? prod.originalPriceVnd;
+      {products.map((prod) => {
         return (
           <View key={prod.id} className="border border-appBorder rounded-2xl p-3 mb-2.5 gap-1 bg-appElevated">
             <View className="flex-row justify-between items-center">
               <Text className="font-extrabold text-appText">{prod.name}</Text>
               {prod.savingsBadge ? (
                 <View className="bg-amber-500 px-2 py-0.5 rounded-full">
-                  <Text className="text-2xs font-bold text-white">{prod.savingsBadge}</Text>
+                  <Text className="text-xs font-bold text-white">{prod.savingsBadge}</Text>
                 </View>
               ) : null}
             </View>
             <View className="flex-row items-baseline gap-2">
-              <Text className="text-accent font-black text-base">{formatVnd(price)}</Text>
-              <Text className="text-appTextMuted line-through text-xs">{formatVnd(original)}</Text>
+              <Text className="text-accent font-black text-base">{formatVnd(prod.priceVnd)}</Text>
+              {prod.originalPriceVnd > prod.priceVnd ? (
+                <Text className="text-appTextMuted line-through text-xs">{formatVnd(prod.originalPriceVnd)}</Text>
+              ) : null}
             </View>
-            <Text className="text-2xs text-appTextMuted mb-1">{prod.monthlyEquivalent}</Text>
+            <Text className="text-xs text-appTextMuted mb-1">{prod.monthlyEquivalent}</Text>
             <PrimaryButton
               title={storeActionText}
               variant={prod.popular ? "primary" : "ghost"}

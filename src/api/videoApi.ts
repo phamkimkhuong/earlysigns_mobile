@@ -1,9 +1,33 @@
 import { httpClient } from "./client";
 import { API_ENDPOINTS } from "@/core/config";
 import { useAuthStore } from "@/store/useAuthStore";
-import type { VideoItem } from "@/types/domain";
+import type { VideoItem, VideoFeedTopic, VideoFeedResponse } from "@/types/domain";
 
 export const videoApi = {
+  /**
+   * Fetch full video catalog feed (1 request for all topics, 4 initial cards + video_ids)
+   */
+  async getVideoFeed(level?: string): Promise<VideoFeedTopic[]> {
+    const endpoint = API_ENDPOINTS.VIDEOS.FEED(level);
+    const data = await httpClient.get<VideoFeedResponse>(endpoint);
+    return Array.isArray(data?.topics) ? data.topics : [];
+  },
+
+  /**
+   * Fetch a batch of video cards by IDs (max 4 IDs per request)
+   */
+  async getVideoCards(ids: string[]): Promise<VideoItem[]> {
+    if (!ids || ids.length === 0) return [];
+    // Strict safeguard: BE returns 400 if more than 4 IDs are requested
+    const batch = ids.slice(0, 4);
+    const endpoint = API_ENDPOINTS.VIDEOS.CARDS(batch);
+    const data = await httpClient.get<any>(endpoint);
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.videos)) return data.videos;
+    if (Array.isArray(data?.cards)) return data.cards;
+    return [];
+  },
+
   /**
    * Fetch paginated videos by topic
    */

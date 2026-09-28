@@ -142,3 +142,14 @@ export interface VideoItem {
   thumbnail_url?: string;
 }
 
+export interface VideoFeedTopic {
+  topic: string;
+  video_ids: string[];
+  videos: VideoItem[];
+}
+
+export interface VideoFeedResponse {
+  topics: VideoFeedTopic[];
+}
+
+

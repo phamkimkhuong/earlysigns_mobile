@@ -191,6 +191,23 @@ Nhằm tối ưu hóa hiệu năng, giảm dung lượng bundle và giúp mã ng
    * Không còn bất kỳ runtime styling overhead nào từ `StyleSheet.create`.
    * Giao diện chuẩn NativeWind v4 biên dịch tĩnh thành native style objects cực kỳ nhẹ và tương thích 100% Hermes engine.
 
+### 2.13. Chuẩn Hóa Hệ Thống Typography Di Động (Mobile Typography Scale & Tối Ưu ProfileScreen)
+
+1. **Khai báo bộ font đồng bộ vào `tailwind.config.js`:**
+   * Bổ sung bảng kích thước chữ chuẩn Mobile (`theme.extend.fontSize`) với tỷ lệ vàng thị giác cho khoảng cách mắt nhìn điện thoại (25-35cm):
+     * `display` (32px): Dành cho tiêu đề trang lớn (Hero Headline).
+     * `heading` (26px) / `heading-sm` (22px): Tiêu đề màn hình và thẻ điểm chính.
+     * `title` (19px) / `title-sm` (17px): Tiêu đề thẻ chức năng và nhóm luyện tập.
+     * `body-lg` (16px) / `body` (15px): **Kích thước tiêu chuẩn cho các dòng cài đặt (List Items)** theo chuẩn Apple iOS Settings & Google Material 3.
+     * `body-sm` (14px): Dành cho tab switcher và nhãn phụ.
+     * `caption` (13px): Dành cho mô tả thẻ và chú thích.
+     * `badge` (11px) / `2xs` (10px): Dành cho tag siêu nhỏ (tối thiểu).
+2. **Cân chỉnh toàn diện Màn hình Trang cá nhân (`ProfileScreen.tsx`):**
+   * **Dòng menu cài đặt (Gói cước, Thông báo, Điều khoản, Bảo mật):** Nâng từ `text-xs` (12px) $\rightarrow$ `text-[15px]` (chuẩn Apple HIG). Tăng kích thước icon lên 18px để giao diện thanh thoát, sang trọng.
+   * **Tab chuyển đổi (Tiến độ / Tài khoản):** Nâng từ `text-xs` (12px) $\rightarrow$ `text-sm` (14px) kèm icon 16px.
+   * **Nhãn nhỏ (PRO, FREE, Độ chính xác):** Nâng từ `text-[10px]` / `text-2xs` $\rightarrow$ `text-xs` (12px), loại bỏ hiện tượng chữ bị lí nhí khó đọc.
+   * **Mô tả dưới các thẻ:** Nâng từ `text-xs` (12px) $\rightarrow$ `text-[13px]`, tạo sự tương phản dễ chịu với tiêu đề.
+
 ---
 
 ### 3.2. Màn hình Onboarding khởi động chọn ngôn ngữ lần đầu (`OnboardingScreen.tsx`)
@@ -396,21 +413,136 @@ Theo sát các yêu cầu trong tài liệu đặc tả sản phẩm (Mục 13.1
 
 ---
 
-## 6. Kết Quả Kiểm Tra Kỹ Thuật (Testing & Verification)
+## 6. Kiến Trúc & Nguyên Tắc Hoạt Động Của Hệ Thống Thông Báo Đẩy (Push Notifications - Mục 16 Đặc Tả)
 
-Dự án đã trải qua 3 vòng kiểm tra tĩnh nghiêm ngặt trước khi bàn giao:
+Hệ thống thông báo đẩy của EarlySigns được thiết kế tuân thủ 100% theo **Mục 16. Thông báo đẩy** trong Tài liệu đặc tả phần mềm và các nguyên tắc bảo vệ quyền riêng tư người dùng khắt khe của **Apple App Store Review Guidelines (Guideline 5.1.1)** & **Google Play Policy**.
+
+### 6.1. Phân loại 6 nhóm thông báo & Nguyên tắc hoạt động chi tiết (Mục 16.1)
+
+| STT | Loại thông báo | Ký hiệu hệ thống | Nguyên tắc hoạt động & Trải nghiệm thông minh | Khả năng tùy chỉnh trong Hồ sơ |
+| :---: | :--- | :--- | :--- | :---: |
+| **1** | **Nhắc luyện tập hằng ngày** | `DAILY_PRACTICE` | • Lên lịch tự động nổ theo khung giờ người dùng chọn.<br>• Hỗ trợ các mốc giờ mẫu tiện lợi: `08:00`, `12:00`, `19:00`, `20:00`, `21:30`.<br>• Lặp lại hàng ngày (DAILY / CALENDAR trigger). | Có (Bật/Tắt & Chọn giờ) |
+| **2** | **Nhắc bài học đang dang dở** | `INCOMPLETE_LESSON` | • **Ngưỡng cam kết tối thiểu (Minimum Commitment Threshold):** Chỉ kích hoạt khi học viên **đã thực sự thu âm luyện nói ít nhất 1 câu** (`hasPracticedRef = true`). Người dùng chỉ mở lướt xem video mà chưa luyện tập sẽ KHÔNG BAO GIỜ bị lên lịch nhắc.<br>• **Khung giờ giới nghiêm ban đêm (Night Curfew: 22:00 – 08:00):** Thông báo được tính toán sau 3 tiếng kể từ khi thoát bài. Nếu giờ nổ rơi vào khung giờ đêm 22:00 - 08:00 sáng hôm sau, hệ thống **tự động hoãn sang 09:00 sáng hôm sau** để không làm phiền giấc ngủ của học viên.<br>• **Tự động hủy khi hoàn thành:** Nếu học viên luyện xong câu cuối cùng của video, hệ thống tự động hủy ngay thông báo chờ nổ. | Có (Bật/Tắt độc lập) |
+| **3** | **Nhắc duy trì chuỗi Streak** | `STREAK_REMINDER` | • Tự động cảnh báo vào **21:00 tối** mỗi ngày nếu học viên chưa hoàn thành bài luyện tập trong ngày để bảo vệ chuỗi ngày streak liên tục.<br>• Giúp tăng tỷ lệ giữ chân người học (Retention Rate) mà không làm phiền ban ngày. | Có (Bật/Tắt độc lập) |
+| **4** | **Bài học hoặc nội dung mới** | `NEW_CONTENT` | • Thông báo khi máy chủ cập nhật video YouTube luyện phát âm mới hoặc bộ câu luyện tập mới theo các chủ đề thời sự. | Có (Bật/Tắt độc lập) |
+| **5** | **Thông báo tài khoản & gói dịch vụ** | `ACCOUNT` / `SUBSCRIPTION` | • **Thông báo giao dịch thiết yếu (Transactional Notifications):** Biên lai thanh toán PayOS / Store, kích hoạt mã Pro, cảnh báo bảo mật tài khoản.<br>• **Quy chuẩn bắt buộc:** Luôn ở trạng thái **"Luôn bật"**, không bị tắt khi tắt marketing (tuân thủ Điều 16.3). | Cố định: Luôn bật |
+| **6** | **Khuyến mại & Marketing** | `PROMOTION` | • Thông báo các chương trình ưu đãi gói Pro, chiến dịch giới thiệu bạn bè nhận tháng học miễn phí.<br>• Tôn trọng quyền riêng tư: Người dùng có toàn quyền tắt mà không ảnh hưởng bất kỳ tính năng nào. | Có (Bật/Tắt độc lập) |
+
+---
+
+### 6.2. Quy trình cấp quyền thông báo chuẩn quốc tế (Mục 16.2)
+
+Khắc phục triệt để lỗi người dùng từ chối quyền do bị "hỏi dồn dập", hệ thống áp dụng quy trình 4 bước:
+
+1. **Nguyên tắc "Không hỏi lạnh" (Zero Cold-Ask):** Tuyệt đối KHÔNG hiển thị popup xin quyền ngay khi người dùng vừa tải và mở ứng dụng lần đầu.
+2. **Quy trình giải thích lợi ích trước (Soft-Ask Pre-permission):**
+   * Khi người dùng lần đầu gạt bật một công tắc thông báo trong ứng dụng, một hộp thoại nhận diện thương hiệu EarlySigns (`CustomAlertModal`) sẽ xuất hiện.
+   * Hộp thoại giải thích rõ ràng 3 lợi ích thiết thực: Nhắc luyện phát âm đúng giờ, duy trì chuỗi ngày streak và nhận bài học mới.
+3. **Nút "Để sau" (Dismissible Gracefully):** Người dùng có quyền chọn *"Để sau"* để bỏ qua mà không bị hệ thống ép buộc hoặc chặn màn hình.
+4. **Xử lý từ chối bền vững (Permission Denied Handshake):**
+   * Nếu người dùng đã từ chối ở cấp hệ điều hành (OS), ứng dụng KHÔNG hỏi lại liên tục.
+   * Thay vào đó, ứng dụng hiển thị thông báo hướng dẫn người dùng tự mở **Cài đặt thiết bị** thông qua liên kết sâu `openNotificationSettings()`.
+   * Khi quyền hệ thống bị tắt, toàn bộ các toggle trong app sẽ tự động đồng bộ về trạng thái Tắt và hiển thị thẻ trạng thái cảnh báo màu đỏ trực quan.
+
+---
+
+### 6.3. Giao diện màn hình Cài đặt thông báo (Mục 16.3)
+
+Màn hình [`NotificationSettingsScreen.tsx`](file:///c:/Users/phamk/Downloads/mobile_app/src/screens/tabs/NotificationSettingsScreen.tsx) được tái cấu trúc thành 3 khối Master Card cao cấp:
+
+* **Thẻ Trạng Thái Quyền Hệ Thống:**
+  * Biểu tượng khiên xanh `CheckCircle2` khi đã bật quyền trong OS.
+  * Biểu tượng khiên đỏ `ShieldAlert` kèm nút *"Mở Cài đặt"* khi quyền đang bị tắt ở cài đặt máy.
+* **Nhóm 1: Nhắc nhở luyện tập (Học tập cá nhân):**
+  * Tách riêng 3 công tắc độc lập: (1) Nhắc luyện tập hằng ngày kèm khay chọn giờ kiểu chip capsule, (2) Nhắc bài học đang dang dở (`PlayCircle`), (3) Nhắc duy trì chuỗi Streak (`Flame`).
+  * Người dùng có toàn quyền bật/tắt từng loại tùy theo nhu cầu cá nhân.
+* **Nhóm 2: Nội dung & Khuyến mại:**
+  * Công tắc độc lập cho Bài học mới (`BookOpen`) và Ưu đãi đặc biệt (`Tag`).
+* **Nhóm 3: Bảo mật & Giao dịch:**
+  * Huy hiệu màu ngọc lam *"Luôn bật"* (`ShieldCheck`), bảo đảm người học không bao giờ bỏ lỡ các biên lai giao dịch quan trọng.
+* **Ghi chú chân trang pháp lý:** Khẳng định minh bạch việc tắt marketing không ảnh hưởng tới thông báo dịch vụ.
+
+---
+
+### 6.4. Cơ chế điều hướng thông minh khi chạm thông báo (Mục 16.4 & Deep-link Routing)
+
+Khi người dùng nhấn vào banner thông báo từ thanh trạng thái điện thoại, bộ điều hướng trung tâm `handleNotificationResponse` tự động phân tích gói tin (`payload.data`) và thực thi:
+
+1. **Nhắc bài học dang dở:** Điều hướng thẳng vào `VideoPracticeScreen` với đúng `youtubeId` của video đang học dở.
+2. **Nhắc học hằng ngày / Streak:** Điều hướng về Màn hình chính (`Main`) để bắt đầu buổi luyện tập.
+3. **Nội dung mới:** Điều hướng đến Danh mục video (`Videos`).
+4. **Ưu đãi & Khuyến mại:** Điều hướng đến màn hình Gói cước (`Payment`).
+5. **Hỏi xác nhận trên tất cả mọi màn hình khi ứng dụng đang mở (Mục 16.4 - Gạch đầu dòng 7 - Phương án B):**
+   * Khi ứng dụng đang mở trên màn hình (`AppState.currentState === "active"`) và nhận được thao tác chọn thông báo dẫn tới màn hình khác:
+     * **Nếu đang trong bài luyện tập (`VideoPractice`, `Text`, `Phonemes`):** Hiện cảnh báo bảo vệ tiến trình học tập: *"Bạn đang trong bài học. Rời đi lúc này có thể làm mất kết quả chưa lưu. Bạn có muốn mở thông báo không?"* với hai lựa chọn *"Ở lại học tiếp"* và *"Mở thông báo"*.
+     * **Nếu đang ở bất kỳ màn hình nào khác:** Hiện hộp thoại xác nhận thân thiện: *"Bạn có muốn chuyển sang nội dung thông báo không?"* với hai lựa chọn *"Ở lại"* và *"Mở ngay"*, hoàn toàn ngăn chặn việc bất ngờ bị chuyển màn hình khi người dùng đang thao tác.
+     * **Nếu học viên đã ở đúng màn hình đích:** Không hiển thị cảnh báo thừa.
+6. **Xử lý yêu cầu đăng nhập (`requiresAuth`):** Nếu nội dung yêu cầu đăng nhập mà học viên chưa có phiên, hệ thống chuyển sang `LoginScreen` và lưu trữ đường dẫn đích (`nextRoute`), sau khi đăng nhập thành công sẽ tự động đưa học viên tới đúng bài học.
+7. **Xử lý thông báo hết hạn (`expiresAt`):** Nếu một thông báo khuyến mại gửi tới đã quá hạn, hệ thống hiển thị thông báo nhẹ nhàng và đưa về trang chủ, tuyệt đối không bị đơ giao diện hay gặp màn hình trống.
+
+---
+
+### 6.5. Hộp thoại thông báo thương hiệu tùy biến (Custom Alert Modal)
+
+Thay thế hoàn toàn hộp thoại `Alert.alert` thô ráp mặc định của hệ điều hành bằng bộ đôi [`CustomAlertModal.tsx`](file:///c:/Users/phamk/Downloads/mobile_app/src/components/ui/CustomAlertModal.tsx) & [`customAlert.ts`](file:///c:/Users/phamk/Downloads/mobile_app/src/utils/customAlert.ts):
+* Thiết kế đồng bộ hoàn hảo với ngôn ngữ The Coach: nền mờ backdrop dịu mắt, thẻ bo góc lớn `rounded-3xl`, bóng đổ nổi khối tinh tế.
+* Hỗ trợ 4 phong cách biểu tượng theo ngữ cảnh: Thông tin (`info` - Xanh dương), Thành công (`success` - Xanh lục), Cảnh báo (`warning` - Vàng cam), Nguy hiểm (`danger` - Đỏ).
+* Cung cấp phương thức `customAlert.promptConfirm()` trả về Promise boolean (`true`/`false`), giúp viết code xác nhận bất đồng bộ cực kỳ ngắn gọn và an toàn.
+
+---
+
+### 6.6. Hỗ trợ toàn diện Trình đọc màn hình (Screen Reader / VoiceOver & TalkBack - Mục 19)
+
+Nhằm đáp ứng yêu cầu khả năng tiếp cận (Accessibility) trong Mục 19 của tài liệu đặc tả (*"Toàn bộ tính năng chính phải dùng được với trình đọc màn hình"*):
+* **Nút ghi âm trung tâm ([`VideoRecordingHub.tsx`](file:///c:/Users/phamk/Downloads/mobile_app/src/components/practice/VideoRecordingHub.tsx)):**
+  * Tích hợp `accessible={true}`, `accessibilityRole="button"`, `accessibilityHint`.
+  * Nhãn đọc động (`accessibilityLabel`) thay đổi theo ngữ cảnh thời gian thực:
+    * Khi đang ghi âm: *"Dừng ghi âm và phân tích"* (`accessibilityStopRecording`).
+    * Khi đang khởi động micro: *"Đang khởi động micro"* (`accessibilityStarting`).
+    * Khi đang chấm điểm: *"Đang phân tích phát âm"* (`accessibilityAnalyzing`).
+    * Khi ở trạng thái chờ: *"Bắt đầu ghi âm phát âm"* (`accessibilityStartRecording`).
+  * Khai báo `accessibilityState={{ disabled, busy: checking || isStarting }}` giúp VoiceOver / TalkBack thông báo chính xác trạng thái đang bận của hệ thống.
+* **Cụm điều khiển bài học & Nghe lại giọng nói:**
+  * Nút "Nghe lại giọng tôi": `accessibilityLabel="Nghe lại giọng vừa ghi âm"`.
+  * Nút "Xem chi tiết âm vị": `accessibilityLabel="Xem chi tiết phân tích từng âm vị"`.
+  * Nút "Ghi âm lại nhanh": `accessibilityLabel="Ghi âm lại"`.
+  * Nút đóng bài học IPA: `accessibilityLabel="Đóng bài học"`.
+* **Nút bấm dùng chung ([`PrimaryButton.tsx`](file:///c:/Users/phamk/Downloads/mobile_app/src/components/ui/PrimaryButton.tsx)):**
+  * Tự động truyền nhãn `accessibilityLabel={title}`, vai trò `accessibilityRole="button"`.
+  * `PrimaryButton` tự động khai báo `accessibilityState={{ disabled, busy: !!loading }}`.
+  * `ChipButton` tự động khai báo `accessibilityRole="button"`, `accessibilityState={{ selected: !!active, disabled: !!disabled }}`.
+* **Điều hướng bài học Video ([`VideoPracticeScreen.tsx`](file:///c:/Users/phamk/Downloads/mobile_app/src/screens/practice/VideoPracticeScreen.tsx)):**
+  * Nút "Quay lại danh sách video" (`accessibilityLabel`).
+  * Cụm nút chuyển câu: "Câu trước", "Phát lại câu hiện tại", "Câu tiếp theo" kèm trạng thái `accessibilityState={{ disabled }}`.
+* **Thẻ chuyển tab ([`ProfileScreen.tsx`](file:///c:/Users/phamk/Downloads/mobile_app/src/screens/tabs/ProfileScreen.tsx)):**
+  * Khai báo `accessibilityRole="tab"`, `accessibilityState={{ selected }}` cho hai tab "Tiến độ học tập" và "Thông tin tài khoản".
+* **Đa ngôn ngữ i18n:** Toàn bộ nhãn trợ năng được định nghĩa song ngữ trong `src/locales/vi.json` và `src/locales/en.json`.
+
+---
+
+## 7. Kết Quả Kiểm Tra Kỹ Thuật (Testing & Verification)
+
+Dự án đã trải qua 4 vòng kiểm tra tĩnh và kiểm thử đơn vị tự động nghiêm ngặt trước khi bàn giao:
 
 1. **Kiểm tra kiểu dữ liệu tĩnh (TypeScript Type-check):**
    ```bash
-   npm run typecheck
+   npx tsc --noEmit
    ```
-   * **Kết quả:** Trả về mã thoát **0 (Hoàn hảo)**. 100% không phát sinh lỗi kiểu dữ liệu.
+   * **Kết quả:** Trả về mã thoát **0 (Hoàn hảo)**. 100% không phát sinh bất kỳ lỗi kiểu dữ liệu nào trên toàn bộ dự án.
 2. **Kiểm tra quy chuẩn code (ESLint Linter):**
    ```bash
-   npx eslint src/services/notifications.ts src/services/iap.ts src/screens/tabs/ProfileScreen.tsx src/screens/payment/PaymentScreen.tsx src/components/payment/Packages.tsx App.tsx
+   npx eslint src/services/notifications.ts src/services/iap.ts src/screens/tabs/ProfileScreen.tsx src/screens/tabs/NotificationSettingsScreen.tsx src/screens/payment/PaymentScreen.tsx App.tsx
    ```
    * **Kết quả:** Trả về mã thoát **0 (0 errors, 0 warnings)**. Toàn bộ code tuân thủ chặt chẽ tiêu chuẩn của React Native & Expo.
-3. **Kiểm tra đóng gói mã nguồn Native Mobile (Android & iOS Production Bundler):**
+3. **Kiểm thử đơn vị tự động cho Thông báo, Cỡ chữ lớn, Screen Reader & Alert (Unit Tests):**
+   ```bash
+   node --test tests/textScaling.test.cjs tests/notifications.test.cjs tests/customAlert.test.cjs tests/errorManager.test.cjs
+   ```
+   * **Kết quả:** **43/43 tests pass (100% Thành công)**:
+     * **Cỡ chữ lớn & Trình đọc màn hình (§19 - 10 tests):** Quét toàn bộ `src/` đảm bảo không bị chặn `allowFontScaling`, kiểm tra container nút bấm dùng `min-height` đàn hồi (không bị cắt chữ từ 1.0x đến 2.0x), đảm bảo 100% màn hình chính đều bọc `ScrollView`/`FlatList`, kiểm tra câu luyện tập ngữ âm hỗ trợ multiline, kiểm tra nhãn động & vai trò Screen Reader (VoiceOver/TalkBack) cho Nút ghi âm chính, nút Primary/Chip, cụm tua chuyển câu và tab phân đoạn.
+     * **Xử lý Thông báo (§16 - 18 tests):** Kiểm thử xác nhận khi app active trên mọi màn hình (Phương án B), kiểm thử Night Curfew, kiểm thử độ nhạy ngưỡng thực hành, kiểm thử độc lập từng switch thông báo và định tuyến deep-link.
+     * **Hộp thoại Custom Alert & Lỗi API (15 tests):** Kiểm thử Promise confirm/cancel, phân giải mã lỗi và hiển thị chuẩn i18n.
+4. **Kiểm tra đóng gói mã nguồn Native Mobile (Android & iOS Production Bundler):**
    ```bash
    npx expo export --platform android --output-dir dist-android
    ```
@@ -418,15 +550,15 @@ Dự án đã trải qua 3 vòng kiểm tra tĩnh nghiêm ngặt trước khi b�
 
 ---
 
-## 7. Hướng Dẫn Khởi Chạy Dự Án Cho Đội Ngũ Tiếp Nhận
+## 8. Hướng Dẫn Khởi Chạy Dự Án Cho Đội Ngũ Tiếp Nhận
 
 Để khởi động ứng dụng trên máy tính của bạn:
 
 1. Mở cửa sổ dòng lệnh tại thư mục `mobile_app`.
 2. Kiểm tra chất lượng code tự động (tùy chọn):
    ```bash
-   npm run typecheck   # Kiểm tra kiểu dữ liệu
-   npm run lint        # Rà soát quy chuẩn mã nguồn
+   npx tsc --noEmit    # Kiểm tra kiểu dữ liệu
+   node --test tests/notifications.test.cjs # Chạy bộ test thông báo tự động
    ```
 3. Khởi chạy máy chủ phát triển Expo:
    ```bash
@@ -434,4 +566,5 @@ Dự án đã trải qua 3 vòng kiểm tra tĩnh nghiêm ngặt trước khi b�
    ```
    *(Cờ `-c` giúp làm sạch bộ nhớ đệm cache để ứng dụng luôn tải mã nguồn mới nhất).*
 4. Mở ứng dụng **Expo Go** trên điện thoại (iOS hoặc Android) và quét mã QR trên màn hình để trải nghiệm.
+
 

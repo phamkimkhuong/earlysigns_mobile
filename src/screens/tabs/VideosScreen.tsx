@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -25,26 +25,29 @@ import { useQueryClient } from "@tanstack/react-query";
 import { VideoCardSkeleton, VideoCatalogSkeleton } from "@/components/ui/Skeleton";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import {
-  useTopicsQuery,
+  fetchVideoCards,
+  useVideoFeedQuery,
   useViewedVideosQuery,
-  useTopicVideosInfiniteQuery,
   videoKeys,
 } from "@/hooks/queries/useVideoQueries";
+import { videoApi } from "@/api";
 import type { VideoItem } from "@/types/domain";
 
 const VIEWED_PREVIEW_SIZE = 4;
-const INITIAL_TOPIC_COUNT = 2;
-const BATCH_TOPIC_COUNT = 1;
+const INITIAL_TOPIC_COUNT = 4;
+const BATCH_TOPIC_COUNT = 2;
 
 function VideoCard({
   video,
   t,
   showProgress,
+  isGrid,
   onPress,
 }: {
   video: VideoItem;
   t: (key: string, opts?: any) => string;
   showProgress?: boolean;
+  isGrid?: boolean;
   onPress: () => void;
 }) {
   const playedPct = Math.max(0, Math.min(100, Number(video.played_pct || 0)));
@@ -54,57 +57,65 @@ function VideoCard({
   return (
     <TouchableOpacity
       activeOpacity={0.88}
-      className="w-[230px] mr-3.5 mb-2 bg-white rounded-3xl overflow-hidden border border-slate-200"
+      style={{ maxWidth: isGrid ? "48.5%" : undefined }}
+      className={`${isGrid ? "flex-1 mb-3.5" : "w-[176px] mr-3 mb-1.5"
+        } bg-white rounded-2xl overflow-hidden border border-slate-200`}
       onPress={onPress}
     >
-      <View className="relative w-full h-[126px] bg-slate-900">
+      <View className={`relative w-full ${isGrid ? "h-[105px]" : "h-[98px]"} bg-slate-900`}>
         {thumbSrc ? (
           <Image source={{ uri: thumbSrc }} className="w-full h-full" resizeMode="cover" />
         ) : (
           <View className="w-full h-full bg-slate-800 items-center justify-center">
-            <Video size={30} color="#94a3b8" />
+            <Video size={isGrid ? 24 : 22} color="#94a3b8" />
           </View>
         )}
 
         {/* Level Tag floating on top-left */}
-        <View className="absolute top-2.5 left-2.5 bg-slate-900 px-2 py-0.5 rounded-full border border-slate-700">
-          <Text className="text-[10px] font-black text-white">{video.level || "A1"}</Text>
+        <View className="absolute top-1.5 left-1.5 bg-slate-900 px-1.5 py-0.5 rounded-full border border-slate-700">
+          <Text className="text-xs font-black text-white">{video.level || "A1"}</Text>
         </View>
 
         {/* Duration Tag floating on bottom-right */}
-        <View className="absolute bottom-2.5 right-2.5 bg-black px-2 py-0.5 rounded-md">
-          <Text className="text-[10px] font-bold text-white tracking-wide">
+        <View className="absolute bottom-1.5 right-1.5 bg-black px-1.5 py-0.5 rounded-md">
+          <Text className="text-xs font-bold text-white tracking-wide">
             {formatDuration(video.duration_ms)}
           </Text>
         </View>
 
         {/* Play Icon Badge */}
         <View className="absolute inset-0 items-center justify-center pointer-events-none">
-          <View className="w-9 h-9 rounded-full bg-slate-900 items-center justify-center border border-white">
-            <Play size={15} color="#ffffff" fill="#ffffff" style={{ marginLeft: 2 }} />
+          <View
+            className={`${isGrid ? "w-8 h-8" : "w-7 h-7"
+              } rounded-full bg-slate-900 items-center justify-center border border-white`}
+          >
+            <Play size={isGrid ? 13 : 11} color="#ffffff" fill="#ffffff" style={{ marginLeft: 2 }} />
           </View>
         </View>
       </View>
 
-      <View className="p-3.5 gap-1.5">
+      <View className="p-2.5 gap-1">
         <View className="flex-row items-center gap-1.5">
           <View className="bg-indigo-50 px-2 py-0.5 rounded-md self-start">
-            <Text className="text-[10px] font-bold text-indigo-700">
+            <Text className="text-xs font-bold text-indigo-700" numberOfLines={1}>
               {topicLabel(video.topic || video.topics?.[0], t)}
             </Text>
           </View>
         </View>
 
-        <Text className="text-sm font-bold text-slate-900 leading-snug" numberOfLines={2}>
+        <Text
+          className="text-sm font-bold text-slate-900 leading-snug"
+          numberOfLines={2}
+        >
           {video.title}
         </Text>
 
         {showProgress ? (
-          <View className="mt-1 gap-1">
+          <View className="mt-0.5 gap-1">
             <View className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
               <View className="h-full bg-emerald-500 rounded-full" style={{ width: `${playedPct}%` }} />
             </View>
-            <Text className="text-2xs font-semibold text-emerald-600">
+            <Text className="text-xs font-semibold text-emerald-600" numberOfLines={1}>
               {t("videos.viewed.progress", {
                 played: video.played_count ?? 0,
                 total: totalSegments,
@@ -113,9 +124,9 @@ function VideoCard({
             </Text>
           </View>
         ) : (
-          <View className="flex-row items-center gap-1.5 mt-0.5">
+          <View className="flex-row items-center gap-1 mt-0.5">
             <PlayCircle size={12} color="#64748b" />
-            <Text className="text-2xs text-slate-500 font-medium">
+            <Text className="text-xs text-slate-500 font-medium" numberOfLines={1}>
               {t("videos.catalog.segments", { count: video.segment_count })}
             </Text>
           </View>
@@ -128,56 +139,117 @@ function VideoCard({
 function TopicSectionRow({
   topic,
   level,
+  initialVideos,
+  videoIds,
   topicFilter,
+  loadMoreTrigger,
   t,
   onSelectTopic,
   onOpenVideo,
 }: {
   topic: string;
-  level: string;
+  level?: string;
+  initialVideos: VideoItem[];
+  videoIds: string[];
   topicFilter: string;
+  loadMoreTrigger?: number;
   t: (key: string, opts?: any) => string;
   onSelectTopic: (topic: string) => void;
   onOpenVideo: (youtubeId: string) => void;
 }) {
-  const {
-    data,
-    isLoading,
-    isError,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useTopicVideosInfiniteQuery(topic, level);
-
-  const videos = useMemo(
-    () => (data?.pages ? data.pages.flatMap((page) => page.videos) : []),
-    [data]
+  const queryClient = useQueryClient();
+  const topicVideosKey = useMemo(
+    () => videoKeys.topicVideos(topic, level),
+    [topic, level]
   );
 
-  // 1. Khi API trả về lỗi hoặc timeout: Ẩn hoàn toàn topic đó đi thay vì hiện title mồ côi kèm box lỗi
-  if (isError && videos.length === 0) {
-    if (topicFilter) {
-      return (
-        <View className="py-12 items-center justify-center">
-          <Text className="text-xs text-slate-400 font-medium">
-            {t("videos.catalog.empty")}
-          </Text>
-        </View>
-      );
+  // Initialize from TanStack Query cache if previously loaded, else fallback to initialVideos
+  const getInitialVideos = useCallback(() => {
+    const cached = queryClient.getQueryData<VideoItem[]>(topicVideosKey);
+    return cached && cached.length > 0 ? cached : initialVideos;
+  }, [initialVideos, queryClient, topicVideosKey]);
+
+  const [videos, setVideos] = useState<VideoItem[]>(getInitialVideos);
+  const [cursor, setCursor] = useState<number>(() => getInitialVideos().length);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const fetchingRef = useRef(false);
+  const cursorRef = useRef(cursor);
+  const videoIdsRef = useRef(videoIds);
+  const lastProcessedTriggerRef = useRef(loadMoreTrigger || 0);
+
+  // Sync state when initialVideos, videoIds, or topicVideosKey change
+  useEffect(() => {
+    const cached = queryClient.getQueryData<VideoItem[]>(topicVideosKey);
+    const currentList = cached && cached.length > 0 ? cached : initialVideos;
+    setVideos(currentList);
+    setCursor(currentList.length);
+    cursorRef.current = currentList.length;
+    videoIdsRef.current = videoIds;
+    setIsLoadingMore(false);
+    fetchingRef.current = false;
+    lastProcessedTriggerRef.current = loadMoreTrigger || 0;
+  }, [initialVideos, videoIds, topicVideosKey, queryClient]);
+
+  const hasMore = cursor < videoIds.length;
+
+  // Stable callback that fetches cards via TanStack Query cache
+  const handleLoadMore = useCallback(async () => {
+    if (fetchingRef.current) return;
+    const currentCursor = cursorRef.current;
+    const ids = videoIdsRef.current;
+    if (currentCursor >= ids.length) return;
+
+    // Strict constraint from BE: Only fetch next 4 IDs max
+    const nextBatchIds = ids.slice(currentCursor, currentCursor + 4);
+    if (nextBatchIds.length === 0) return;
+
+    fetchingRef.current = true;
+    setIsLoadingMore(true);
+
+    try {
+      const newCards = await fetchVideoCards(queryClient, nextBatchIds);
+      if (Array.isArray(newCards) && newCards.length > 0) {
+        setVideos((prev) => {
+          const existingIds = new Set(prev.map((v) => v.youtube_id));
+          const filtered = newCards.filter((v) => !existingIds.has(v.youtube_id));
+          const updated = [...prev, ...filtered];
+          queryClient.setQueryData(topicVideosKey, updated);
+          return updated;
+        });
+      }
+    } catch {
+      // Quietly handle network hiccup on scroll
+    } finally {
+      // Rule: Luôn tăng con trỏ thêm 4, kể cả khi thiếu một thẻ
+      cursorRef.current = currentCursor + 4;
+      setCursor(currentCursor + 4);
+      setIsLoadingMore(false);
+      fetchingRef.current = false;
     }
+  }, [queryClient, topicVideosKey]);
+
+  // Auto-trigger load more ONLY when loadMoreTrigger strictly increments from parent scroll
+  useEffect(() => {
+    if (
+      topicFilter &&
+      typeof loadMoreTrigger === "number" &&
+      loadMoreTrigger > lastProcessedTriggerRef.current
+    ) {
+      lastProcessedTriggerRef.current = loadMoreTrigger;
+      handleLoadMore();
+    }
+  }, [loadMoreTrigger, topicFilter, handleLoadMore]);
+
+  // If topic has 0 videos and not in specific topic filter mode, omit this row
+  if (videos.length === 0 && !topicFilter) {
     return null;
   }
 
-  // 2. Khi tải xong mà chủ đề không có video nào trong danh mục chung: Ẩn luôn hàng này
-  if (!isLoading && videos.length === 0 && !topicFilter) {
-    return null;
-  }
-
-  // 3. Nếu người dùng chọn lọc riêng một chủ đề cụ thể và không có video nào
-  if (!isLoading && videos.length === 0 && topicFilter) {
+  // If in specific topic filter mode and 0 videos
+  if (videos.length === 0 && topicFilter) {
     return (
       <View className="py-12 items-center justify-center">
-        <Text className="text-xs text-slate-400 font-medium">
+        <Text className="text-[13px] text-slate-400 font-medium">
           {t("videos.catalog.empty")}
         </Text>
       </View>
@@ -190,39 +262,45 @@ function TopicSectionRow({
         <Text className="text-base font-extrabold text-slate-900">
           {topicLabel(topic, t)}
         </Text>
-        {!topicFilter ? (
-          <TouchableOpacity onPress={() => onSelectTopic(topic)}>
-            <Text className="text-xs text-indigo-600 font-bold">
+        {topicFilter ? (
+          <TouchableOpacity onPress={() => onSelectTopic("")} className="py-1">
+            <Text className="text-sm text-indigo-600 font-bold">
+              {t("videos.catalog.allTopics") || "Tất cả"}
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity onPress={() => onSelectTopic(topic)} className="py-1">
+            <Text className="text-sm text-indigo-600 font-bold">
               {t("videos.catalog.viewAll")}
             </Text>
           </TouchableOpacity>
-        ) : null}
+        )}
       </View>
 
-      {isLoading && videos.length === 0 ? (
-        <View className="flex-row py-1">
-          <VideoCardSkeleton horizontal={!topicFilter} />
-          <VideoCardSkeleton horizontal={!topicFilter} />
-        </View>
-      ) : null}
-
       <FlatList
+        key={topicFilter ? "grid-2" : "horizontal-1"}
         horizontal={!topicFilter}
+        numColumns={topicFilter ? 2 : 1}
+        columnWrapperStyle={topicFilter ? { gap: 12 } : undefined}
         showsHorizontalScrollIndicator={false}
         data={videos}
         keyExtractor={(item) => `${topic}-${item.youtube_id}`}
         renderItem={({ item }) => (
-          <VideoCard video={item} t={t} onPress={() => onOpenVideo(item.youtube_id)} />
+          <VideoCard
+            video={item}
+            isGrid={Boolean(topicFilter)}
+            t={t}
+            onPress={() => onOpenVideo(item.youtube_id)}
+          />
         )}
-        onEndReached={() => {
-          if (hasNextPage && !isFetchingNextPage) {
-            fetchNextPage();
-          }
-        }}
-        onEndReachedThreshold={0.4}
         scrollEnabled={!topicFilter}
       />
-      {isFetchingNextPage ? <ActivityIndicator color="#4f46e5" size="small" /> : null}
+
+      {topicFilter && isLoadingMore ? (
+        <View className="py-5 items-center justify-center">
+          <ActivityIndicator color="#4f46e5" size="small" />
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -231,15 +309,21 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
   const { t } = useTranslation();
   const { authToken } = useAuth();
   const queryClient = useQueryClient();
+  const scrollViewRef = useRef<ScrollView>(null);
+  const lastTriggerTimeRef = useRef(0);
 
   const [topicFilter, setTopicFilter] = useState("");
   const [level, setLevel] = useState("");
   const [visibleTopicLimit, setVisibleTopicLimit] = useState(INITIAL_TOPIC_COUNT);
+  const [loadMoreTrigger, setLoadMoreTrigger] = useState(0);
 
-  // TanStack Query: Topics catalog
-  const { data: topics = [], isLoading: topicsLoading } = useTopicsQuery();
+  // TanStack Query: Unified Feed from BE
+  const {
+    data: feedTopics = [],
+    isLoading: feedLoading,
+  } = useVideoFeedQuery(level);
 
-  // TanStack Query: Recently viewed videos
+  // TanStack Query: Recently viewed videos (Unchanged)
   const { data: viewedVideos = [] } = useViewedVideosQuery(
     VIEWED_PREVIEW_SIZE,
     Boolean(authToken)
@@ -262,45 +346,85 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
   const handleSelectLevel = useCallback((lv: string) => {
     setLevel(lv);
     setVisibleTopicLimit(INITIAL_TOPIC_COUNT);
+    setLoadMoreTrigger(0);
+    lastTriggerTimeRef.current = Date.now();
+    scrollViewRef.current?.scrollTo({ y: 0, animated: false });
   }, []);
 
   const handleSelectTopic = useCallback((tp: string) => {
     setTopicFilter(tp);
     setVisibleTopicLimit(INITIAL_TOPIC_COUNT);
+    setLoadMoreTrigger(0);
+    lastTriggerTimeRef.current = Date.now();
+    scrollViewRef.current?.scrollTo({ y: 0, animated: false });
   }, []);
 
-  const allSectionTopics = useMemo(
-    () => (topicFilter ? [topicFilter] : topics),
-    [topicFilter, topics]
+  // Extract distinct topic names from feed
+  const topics = useMemo(
+    () => feedTopics.map((item) => item.topic).filter(Boolean),
+    [feedTopics]
   );
 
-  const sectionTopics = useMemo(
-    () => (topicFilter ? allSectionTopics : allSectionTopics.slice(0, visibleTopicLimit)),
-    [allSectionTopics, topicFilter, visibleTopicLimit]
+  // Split topics into 2 balanced rows for the filter bar
+  const topicChipRows = useMemo(() => {
+    const all = ["", ...topics];
+    const r1: string[] = [];
+    const r2: string[] = [];
+    all.forEach((tp, idx) => {
+      if (idx % 2 === 0) {
+        r1.push(tp);
+      } else {
+        r2.push(tp);
+      }
+    });
+    return [r1, r2];
+  }, [topics]);
+
+  const filteredFeedTopics = useMemo(() => {
+    if (!topicFilter) return feedTopics;
+    return feedTopics.filter(
+      (item) => item.topic.toLowerCase() === topicFilter.toLowerCase()
+    );
+  }, [feedTopics, topicFilter]);
+
+  const displayedTopics = useMemo(
+    () => (topicFilter ? filteredFeedTopics : filteredFeedTopics.slice(0, visibleTopicLimit)),
+    [filteredFeedTopics, topicFilter, visibleTopicLimit]
   );
 
-  // Infinite vertical scrolling: load next batch of topics when near bottom
+  // Infinite vertical scrolling: load next batch of topics or more videos when near bottom
   const handleScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-      if (topicFilter || visibleTopicLimit >= allSectionTopics.length) return;
-
       const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
-      if (contentOffset.y < 80 || contentSize.height <= layoutMeasurement.height + 50) {
+      // 1. Never trigger if user hasn't scrolled down at least 100px
+      // or if content height doesn't exceed screen height by at least 100px
+      if (contentOffset.y < 100 || contentSize.height <= layoutMeasurement.height + 100) {
         return;
       }
 
-      const paddingToBottom = 250;
+      // 2. Check if user is close to bottom (within 160px)
+      const paddingToBottom = 160;
       const isCloseToBottom =
         layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom;
 
-      if (isCloseToBottom) {
-        setVisibleTopicLimit((prev) => {
-          if (prev >= allSectionTopics.length) return prev;
-          return Math.min(prev + BATCH_TOPIC_COUNT, allSectionTopics.length);
-        });
+      if (!isCloseToBottom) return;
+
+      // 3. Khi đang xem một chủ đề (lưới 2 cột): kích hoạt nạp thêm 4 video, kèm throttle 1200ms
+      if (topicFilter) {
+        const now = Date.now();
+        if (now - lastTriggerTimeRef.current > 1200) {
+          lastTriggerTimeRef.current = now;
+          setLoadMoreTrigger((prev) => prev + 1);
+        }
+        return;
+      }
+
+      // 4. Khi đang xem danh mục chung: nạp thêm các hàng chủ đề tiếp theo
+      if (visibleTopicLimit < filteredFeedTopics.length) {
+        setVisibleTopicLimit((prev) => Math.min(prev + BATCH_TOPIC_COUNT, filteredFeedTopics.length));
       }
     },
-    [allSectionTopics.length, topicFilter, visibleTopicLimit]
+    [filteredFeedTopics.length, topicFilter, visibleTopicLimit]
   );
 
   // Pull-to-refresh: invalidate all video queries via TanStack Query
@@ -320,10 +444,11 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-[#1e2538]">
       <ScrollView
+        ref={scrollViewRef}
         className="flex-1 bg-appBg"
         contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}
-        scrollEventThrottle={32}
+        scrollEventThrottle={64}
         onScroll={handleScroll}
         refreshControl={
           <RefreshControl
@@ -346,9 +471,9 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
         />
 
         {/* 1. LUXURY NAVY HERO HEADER */}
-        <View className="bg-[#1e2538] pt-3 pb-8 px-5">
+        <View className="bg-[#1e2538] pt-3 pb-6 px-5">
           {/* Top Nav Bar */}
-          <View className="flex-row items-center justify-between mb-4">
+          <View className="flex-row items-center justify-between mb-1">
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={() => {
@@ -364,27 +489,10 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
             </TouchableOpacity>
 
             <Text className="text-base font-extrabold text-white">
-              {t("videos.screenTitle")}
+              {t("videos.catalog.title") || "Luyện nói với YouTube"}
             </Text>
 
-            <View className="bg-slate-800 border border-slate-700 rounded-full px-3 py-1 flex-row items-center gap-1">
-              <Text className="text-xs font-black text-indigo-300">🇬🇧 UK RP</Text>
-            </View>
-          </View>
-
-          {/* Hero Content */}
-          <View className="flex-row items-center gap-3.5">
-            <View className="w-12 h-12 rounded-2xl bg-emerald-500 items-center justify-center">
-              <Video size={24} color="#ffffff" />
-            </View>
-            <View className="flex-1">
-              <Text className="text-xl font-black text-white tracking-tight">
-                {t("videos.catalog.title")}
-              </Text>
-              <Text className="text-xs text-slate-300 mt-0.5 leading-relaxed">
-                {t("videos.catalog.subtitle")}
-              </Text>
-            </View>
+            <View className="w-10 h-10" />
           </View>
         </View>
 
@@ -392,23 +500,21 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
         <View className="flex-1 bg-appBg -mt-5 rounded-t-[32px] px-4 pt-5 pb-20 gap-4">
           {/* Filter Bar: Level Chips */}
           <View className="gap-2">
-            <Text className="text-2xs font-extrabold uppercase tracking-wider text-slate-400 px-1">
+            <Text className="text-xs font-extrabold uppercase tracking-wider text-slate-400 px-1">
               {t("videos.speakingLevel")}
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-grow-0">
               <TouchableOpacity
                 activeOpacity={0.8}
                 onPress={() => handleSelectLevel("")}
-                className={`px-3.5 py-1.5 rounded-full mr-2 border ${
-                  !level
-                    ? "bg-indigo-600 border-indigo-600"
-                    : "bg-white border-slate-200"
-                }`}
+                className={`px-3.5 py-1.5 rounded-full mr-2 border ${!level
+                  ? "bg-indigo-600 border-indigo-600"
+                  : "bg-white border-slate-200"
+                  }`}
               >
                 <Text
-                  className={`text-xs font-bold ${
-                    !level ? "text-white" : "text-slate-700"
-                  }`}
+                  className={`text-sm font-bold ${!level ? "text-white" : "text-slate-700"
+                    }`}
                 >
                   {t("videos.catalog.allLevels")}
                 </Text>
@@ -420,16 +526,14 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
                     key={lv}
                     activeOpacity={0.8}
                     onPress={() => handleSelectLevel(lv)}
-                    className={`px-3.5 py-1.5 rounded-full mr-2 border ${
-                      isSelected
-                        ? "bg-indigo-600 border-indigo-600"
-                        : "bg-white border-slate-200"
-                    }`}
+                    className={`px-3.5 py-1.5 rounded-full mr-2 border ${isSelected
+                      ? "bg-indigo-600 border-indigo-600"
+                      : "bg-white border-slate-200"
+                      }`}
                   >
                     <Text
-                      className={`text-xs font-bold ${
-                        isSelected ? "text-white" : "text-slate-700"
-                      }`}
+                      className={`text-sm font-bold ${isSelected ? "text-white" : "text-slate-700"
+                        }`}
                     >
                       {lv}
                     </Text>
@@ -441,50 +545,38 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
 
           {/* Filter Bar: Topic Chips */}
           <View className="gap-2">
-            <Text className="text-2xs font-extrabold uppercase tracking-wider text-slate-400 px-1">
+            <Text className="text-xs font-extrabold uppercase tracking-wider text-slate-400 px-1">
               {t("videos.conversationTopic")}
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-grow-0">
-              <TouchableOpacity
-                activeOpacity={0.8}
-                onPress={() => handleSelectTopic("")}
-                className={`px-3.5 py-1.5 rounded-full mr-2 border ${
-                  !topicFilter
-                    ? "bg-slate-900 border-slate-900"
-                    : "bg-white border-slate-200"
-                }`}
-              >
-                <Text
-                  className={`text-xs font-bold ${
-                    !topicFilter ? "text-white" : "text-slate-700"
-                  }`}
-                >
-                  {t("videos.catalog.allTopics")}
-                </Text>
-              </TouchableOpacity>
-              {topics.map((tp) => {
-                const isSelected = topicFilter === tp;
-                return (
-                  <TouchableOpacity
-                    key={tp}
-                    activeOpacity={0.8}
-                    onPress={() => handleSelectTopic(tp)}
-                    className={`px-3.5 py-1.5 rounded-full mr-2 border ${
-                      isSelected
-                        ? "bg-slate-900 border-slate-900"
-                        : "bg-white border-slate-200"
-                    }`}
-                  >
-                    <Text
-                      className={`text-xs font-bold ${
-                        isSelected ? "text-white" : "text-slate-700"
-                      }`}
-                    >
-                      {topicLabel(tp, t)}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
+              <View className="gap-2 pr-4">
+                {topicChipRows.map((row, rowIdx) => (
+                  <View key={`topic-chip-row-${rowIdx}`} className="flex-row gap-2">
+                    {row.map((tp) => {
+                      const isSelected = tp ? topicFilter === tp : !topicFilter;
+                      return (
+                        <TouchableOpacity
+                          key={tp || "all-topics"}
+                          activeOpacity={0.8}
+                          onPress={() => handleSelectTopic(tp)}
+                          className="px-3.5 py-1.5 rounded-full border"
+                          style={{
+                            backgroundColor: isSelected ? "#0f172a" : "#ffffff",
+                            borderColor: isSelected ? "#0f172a" : "#e2e8f0",
+                          }}
+                        >
+                          <Text
+                            className="text-sm font-bold"
+                            style={{ color: isSelected ? "#ffffff" : "#334155" }}
+                          >
+                            {tp ? topicLabel(tp, t) : t("videos.catalog.allTopics")}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                ))}
+              </View>
             </ScrollView>
           </View>
 
@@ -492,7 +584,7 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
           {authToken && viewedVideos.length > 0 ? (
             <View className="gap-2.5 pt-1">
               <View className="flex-row items-center justify-between px-1">
-                <Text className="text-sm font-bold text-slate-900">
+                <Text className="text-base font-extrabold text-slate-900">
                   {t("videos.viewed.title")}
                 </Text>
               </View>
@@ -513,15 +605,26 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
             </View>
           ) : null}
 
-          {topicsLoading ? <VideoCatalogSkeleton /> : null}
+          {feedLoading ? <VideoCatalogSkeleton /> : null}
 
-          {/* Catalog Sections by Topic via TanStack Query */}
-          {sectionTopics.map((sectionTopic) => (
+          {!feedLoading && displayedTopics.length === 0 ? (
+            <View className="py-12 items-center justify-center">
+              <Text className="text-[13px] text-slate-400 font-medium">
+                {t("videos.catalog.empty")}
+              </Text>
+            </View>
+          ) : null}
+
+          {/* Catalog Sections by Topic via Feed */}
+          {displayedTopics.map((feedItem) => (
             <TopicSectionRow
-              key={`${sectionTopic}-${level}`}
-              topic={sectionTopic}
+              key={`${feedItem.topic}-${level}`}
+              topic={feedItem.topic}
               level={level}
+              initialVideos={feedItem.videos || []}
+              videoIds={feedItem.video_ids || []}
               topicFilter={topicFilter}
+              loadMoreTrigger={loadMoreTrigger}
               t={t}
               onSelectTopic={handleSelectTopic}
               onOpenVideo={openVideo}

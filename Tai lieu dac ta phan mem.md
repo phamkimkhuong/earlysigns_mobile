@@ -401,13 +401,13 @@ Người dùng có thể:
 - mở Điều khoản và Chính sách bảo mật;
 - đăng xuất.
 
-## 14. Hạn mức người dùng miễn phí
+<!-- ## 14. Hạn mức người dùng miễn phí
 
 Người dùng miễn phí đã đăng nhập được cấp hạn mức theo tháng:
 
 - **100 lượt kiểm tra phát âm**;
 - **20 lượt chuyển ảnh sang văn bản**;
-- **20 lượt sinh audio luyện tập**.
+- **20 lượt sinh audio luyện tập**. -->
 
 ### 14.1. Quy tắc hạn mức
 
@@ -497,7 +497,7 @@ Hồ sơ phải phản ánh đúng các trạng thái:
 
 Người dùng có thể mở trang quản lý gói của Apple hoặc Google để thay đổi hoặc hủy đăng ký.
 
-## 16. Thông báo đẩy
+<!-- ## 16. Thông báo đẩy
 
 ### 16.1. Loại thông báo
 
@@ -539,9 +539,9 @@ Việc tắt marketing không được tắt các thông báo cần thiết về
 - Thông báo Pro mở paywall hoặc thông tin gói.
 - Thông báo không còn hiệu lực phải mở màn hình an toàn, không dẫn tới nội dung sai.
 - Nếu nội dung yêu cầu đăng nhập, yêu cầu đăng nhập trước rồi tiếp tục tới nội dung đó.
-- Nếu người dùng chọn thông báo khi ứng dụng đang mở, không được tự ý chuyển màn hình nếu chưa có thao tác xác nhận phù hợp.
+- Nếu người dùng chọn thông báo khi ứng dụng đang mở, không được tự ý chuyển màn hình nếu chưa có thao tác xác nhận phù hợp. -->
 
-## 17. Chương trình giới thiệu
+<!-- ## 17. Chương trình giới thiệu
 
 Người dùng có thể:
 
@@ -557,9 +557,9 @@ Người dùng có thể:
 - thời hạn sử dụng;
 - số lần được sử dụng;
 - phần thưởng;
-- lý do nếu mã không hợp lệ hoặc đã hết hạn.
+- lý do nếu mã không hợp lệ hoặc đã hết hạn. -->
 
-## 18. Nội dung pháp lý và hỗ trợ
+<!-- ## 18. Nội dung pháp lý và hỗ trợ
 
 Ứng dụng phải có thể truy cập:
 
@@ -569,7 +569,7 @@ Người dùng có thể:
 - Thông tin liên hệ hỗ trợ;
 - Chương trình giới thiệu.
 
-Các nội dung này phải có bản dịch phù hợp với ngôn ngữ người dùng. Liên kết và thông tin liên hệ phải mở được từ thiết bị mobile.
+Các nội dung này phải có bản dịch phù hợp với ngôn ngữ người dùng. Liên kết và thông tin liên hệ phải mở được từ thiết bị mobile. -->
 
 ## 19. Yêu cầu trải nghiệm và chất lượng chức năng
 

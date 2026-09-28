@@ -33,3 +33,15 @@ Khi viết giao diện trong dự án (NativeWind v4 + React Native 0.86):
 5. **Tiêu đề phân đoạn (Section Headers):**
    - Dùng `text-xs font-bold uppercase tracking-wider` hoặc `text-[13px] font-bold`.
 
+## 🚫 4. Quy Chuẩn Sử Dụng Icon & Nghiêm Cấm Lạm Dụng Icon AI (Sparkles)
+1. **Nghiêm cấm lạm dụng icon AI (`Sparkles` / ✨):**
+   - Tuyệt đối KHÔNG tùy tiện gắn icon `Sparkles` vào các nhãn thông thường, nhãn trạng thái gói (như "Hạn mức Miễn phí", "Trạng thái tài khoản", "Hạn mức dùng chung",...).
+   - Tránh việc gắn icon AI vô tội vạ làm giao diện bị rối mắt, mất tính chuyên nghiệp.
+2. **Quy tắc thay thế & Tối giản (Clutter-Free UI):**
+   - Nhãn trạng thái tài khoản / Gói cước: Dùng `Crown` (cho Pro) hoặc **clear (bỏ hẳn icon)** đối với Free tier để giao diện thoáng, tinh tế chuẩn Apple / Material Design.
+   - Hạn mức lượt dùng / Tiến trình: Dùng `Zap` (biểu thị lượt dùng / năng lượng) hoặc text thuần, không dùng `Sparkles`.
+3. **Quy chuẩn hiển thị Badge & Chống vỡ chữ (Badge Layout & Anti-Truncation):**
+   - Các badge ngắn (như "Miễn phí", "Pro", "Không giới hạn") khi nằm trong hàng tiêu đề phải luôn phân bổ ở phía đối diện (`justify-between`) hoặc có `shrink-0` và `numberOfLines={1}`.
+   - Tuyệt đối không gom badge và tiêu đề dài chung một container chật hẹp khiến React Native tự ngắt dòng ở khoảng trắng (làm rớt chữ như "Miễn phí" thành "Miễn").
+
+

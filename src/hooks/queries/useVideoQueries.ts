@@ -1,19 +1,72 @@
-import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, type QueryClient } from "@tanstack/react-query";
 import { videoApi } from "@/api";
+import type { VideoItem } from "@/types/domain";
 
 export const videoKeys = {
   all: ["videos"] as const,
+  feed: (level?: string) =>
+    [...videoKeys.all, "feed", level && level.trim() ? level.trim().toUpperCase() : "ALL"] as const,
   topics: () => [...videoKeys.all, "topics"] as const,
   viewed: (limit: number) => [...videoKeys.all, "viewed", limit] as const,
   topicSection: (topic: string, level?: string) =>
     [
       ...videoKeys.all,
       "section",
-      topic.trim(),
+      topic.trim().toLowerCase(),
+      level && level.trim() ? level.trim().toUpperCase() : "ALL",
+    ] as const,
+  cards: (ids: string[]) =>
+    [...videoKeys.all, "cards", ids.slice().sort().join(",")] as const,
+  topicVideos: (topic: string, level?: string) =>
+    [
+      ...videoKeys.all,
+      "topic-videos",
+      topic.trim().toLowerCase(),
       level && level.trim() ? level.trim().toUpperCase() : "ALL",
     ] as const,
   detail: (youtubeId: string) => [...videoKeys.all, "detail", youtubeId] as const,
 };
+
+/**
+ * Fetch video cards via TanStack Query cache directly with 30-min staleTime
+ */
+export async function fetchVideoCards(
+  queryClient: QueryClient,
+  ids: string[]
+): Promise<VideoItem[]> {
+  if (!ids || ids.length === 0) return [];
+  return queryClient.fetchQuery({
+    queryKey: videoKeys.cards(ids),
+    queryFn: () => videoApi.getVideoCards(ids),
+    staleTime: 1000 * 60 * 30, // 30 minutes fresh
+    gcTime: 1000 * 60 * 60, // 1 hour memory persistence
+  });
+}
+
+/**
+ * Hook to fetch video cards by IDs with 30-minute staleTime via TanStack Query
+ */
+export function useVideoCardsQuery(ids: string[], enabled: boolean = true) {
+  return useQuery({
+    queryKey: videoKeys.cards(ids),
+    queryFn: () => videoApi.getVideoCards(ids),
+    enabled: enabled && ids.length > 0,
+    staleTime: 1000 * 60 * 30, // 30 minutes fresh
+    gcTime: 1000 * 60 * 60, // 1 hour memory persistence
+  });
+}
+
+/**
+ * Fetch unified video catalog feed (1 request for all topics, 4 initial cards + video_ids)
+ */
+export function useVideoFeedQuery(level?: string) {
+  return useQuery({
+    queryKey: videoKeys.feed(level),
+    queryFn: () => videoApi.getVideoFeed(level || undefined),
+    staleTime: 1000 * 60 * 15, // 15 minutes
+    gcTime: 1000 * 60 * 60, // 1 hour memory persistence
+  });
+}
 
 /**
  * Fetch video topic categories with 30-minute staleTime

@@ -475,13 +475,13 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
           {video && segments.length > 0 ? (
             <View className="gap-1.5 pt-1">
               <View className="flex-row items-center justify-between px-1">
-                <Text className="text-2xs font-bold text-slate-300">
+                <Text className="text-xs font-bold text-slate-300">
                   {t("videos.practice.sentenceProgress", {
                     current: activeIndex + 1,
                     total: segments.length || 1,
                   })}
                 </Text>
-                <Text className="text-2xs font-extrabold text-indigo-300">
+                <Text className="text-xs font-extrabold text-indigo-300">
                   {progressPercent}%
                 </Text>
               </View>
@@ -562,7 +562,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                 <View className="flex-row items-center justify-between border-b border-slate-100 pb-2.5">
                   <View className="flex-row items-center gap-1.5">
                     <View className="w-2 h-2 rounded-full bg-indigo-500" />
-                    <Text className="text-2xs font-extrabold uppercase tracking-wider text-slate-500">
+                    <Text className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
                       {t("videos.practice.practiceSentence")}
                     </Text>
                   </View>
@@ -584,7 +584,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                           <Eye size={13} color="#64748b" />
                         )}
                         <Text
-                          className={`text-2xs font-bold ${showTranslation ? "text-indigo-700" : "text-slate-600"
+                          className={`text-xs font-bold ${showTranslation ? "text-indigo-700" : "text-slate-600"
                             }`}
                         >
                           {t("videos.practice.toggleTranslation")}
@@ -617,7 +617,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                       onPress={() => setHideTranscript(false)}
                       className="px-3 py-1 bg-slate-100 rounded-full"
                     >
-                      <Text className="text-2xs font-bold text-slate-700">
+                      <Text className="text-xs font-bold text-slate-700">
                         {t("videos.practice.showSubtitles")}
                       </Text>
                     </TouchableOpacity>
