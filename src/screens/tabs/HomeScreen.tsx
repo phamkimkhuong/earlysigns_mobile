@@ -365,7 +365,13 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
             <Text accessibilityRole="header" className="text-[19px] font-extrabold text-[#0c2340] tracking-tight">
               {t("homeDesign.phonemesTitle")}
             </Text>
-            <View className="bg-white border border-[#e8f1f8] rounded-[26px] p-5 shadow-sm relative overflow-hidden min-h-[155px] justify-center">
+            <Pressable
+              testID="home-phonemes"
+              accessibilityRole="button"
+              accessibilityLabel={t("homeDesign.phonemesAccessibility")}
+              onPress={() => navigateWithGate("Phonemes")}
+              className="bg-white border border-[#e8f1f8] rounded-[26px] p-5 shadow-sm relative overflow-hidden min-h-[155px] justify-center active:opacity-80"
+            >
               {/* Right Graphic: Large Circular Aura Backdrop + Pronunciation Mouth + Emitting Waveform */}
               <View
                 style={{ pointerEvents: "none" }}
@@ -395,13 +401,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
               {/* Left Content */}
               <View className="w-[58%] gap-2.5">
                 {/* 3 Core Phoneme Chips */}
-                <Pressable
-                  testID="home-phonemes"
-                  accessibilityRole="button"
-                  accessibilityLabel={t("homeDesign.phonemesAccessibility")}
-                  onPress={() => navigateWithGate("Phonemes")}
-                  className="flex-row items-center gap-1.5 active:opacity-75"
-                >
+                <View className="flex-row items-center gap-1.5">
                   {displayPhonemes.map((sound, index) => (
                     <View
                       key={`${sound}-${index}`}
@@ -416,32 +416,20 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
                       </Text>
                     </View>
                   ))}
-                </Pressable>
+                </View>
 
                 {/* Phoneme Headline & Subtitle */}
-                <Pressable
-                  testID="home-start-lesson"
-                  accessibilityRole="button"
-                  accessibilityLabel={`${t("homeDesign.phonemeHeadline")}. ${t("homeDesign.startLessonAction")}`}
-                  onPress={() => navigateWithGate("Phonemes", { startLesson: true })}
-                  className="active:opacity-80"
-                >
+                <View>
                   <Text className="text-[17px] font-black text-[#0c2340] leading-6">
                     {t("homeDesign.phonemeHeadline")}
                   </Text>
                   <Text className="text-xs text-[#64748b] leading-4 mt-0.5">
                     {t("homeDesign.phonemeDescription")}
                   </Text>
-                </Pressable>
+                </View>
 
                 {/* Journey Progress Bar with Ocean-to-Mint Gradient */}
-                <Pressable
-                  testID="home-journey"
-                  accessibilityRole="button"
-                  accessibilityLabel={t("homeDesign.journeyTitle")}
-                  onPress={() => navigateWithGate("Journey")}
-                  className="flex-row items-center gap-2.5 pt-1 active:opacity-75"
-                >
+                <View className="flex-row items-center gap-2.5 pt-1">
                   <View className="flex-1 h-[7px] bg-[#edf2f7] rounded-full overflow-hidden">
                     {displayJourneyPct > 0 ? (
                       <View
@@ -463,9 +451,9 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
                   <Text className="text-xs font-bold text-[#475569]">
                     {displayJourneyPct}%
                   </Text>
-                </Pressable>
+                </View>
               </View>
-            </View>
+            </Pressable>
           </View>
           {/* 7. FOOTNOTE */}
           <View className="flex-row items-center justify-center gap-1.5 -mt-1">

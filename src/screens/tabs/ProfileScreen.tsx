@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
   Image,
   Linking,
   Modal,
@@ -21,6 +22,7 @@ import {
   Bell,
   Check,
   ChevronRight,
+  Clock,
   Crown,
   ExternalLink,
   Flame,
@@ -32,6 +34,7 @@ import {
   LogOut,
   Mail,
   Mic,
+  RefreshCw,
   ShieldCheck,
   Sparkles,
   Target,
@@ -59,6 +62,7 @@ import { getIpaSoundMeta } from "@/utils/ipaData";
 import { resolveUserTier } from "@/services/usageLimits";
 import { getItem } from "@/services/storage";
 import { setStoredLanguage } from "@/core/i18n";
+import { restoreStorePurchases, openManageSubscriptions } from "@/services/iap";
 
 const TAB_PROGRESS = "progress";
 const TAB_ACCOUNT = "account";
@@ -112,6 +116,7 @@ function fillDailyAccuracy(
 
 
 export default function ProfileScreen({ route, navigation }: { route: any; navigation: any }) {
+  const queryClient = useQueryClient();
   const { t, i18n } = useTranslation();
   const { width } = useWindowDimensions();
   const {
@@ -123,6 +128,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
     updateUserLanguage,
   } = useAuth();
 
+  const [isRestoring, setIsRestoring] = useState(false);
   const [languageModalVisible, setLanguageModalVisible] = useState(false);
   const currentLang = String(i18n.resolvedLanguage || i18n.language || "vi").startsWith("vi") ? "vi" : "en";
 
@@ -141,6 +147,32 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
     },
     [currentLang, i18n, updateUserLanguage]
   );
+
+  const handleRestorePurchases = useCallback(async () => {
+    setIsRestoring(true);
+    try {
+      const res = await restoreStorePurchases({ authToken });
+      if (res.restored) {
+        showToast.success(
+          t("profile.restoreSuccessTitle") || "Khôi phục thành công",
+          res.message || t("profile.restoreSuccessMessage") || "Đã khôi phục thành công gói EarlySigns Pro của bạn."
+        );
+        queryClient.invalidateQueries({ queryKey: billingKeys.all });
+      } else {
+        customAlert.alert(
+          t("profile.restorePurchasesTitle") || "Khôi phục giao dịch",
+          res.message || t("profile.restoreNotFoundMessage") || "Không tìm thấy giao dịch nào cần khôi phục cho tài khoản này."
+        );
+      }
+    } catch (err: any) {
+      showToast.error(
+        "Lỗi",
+        err?.message || t("profile.restoreErrorMessage") || "Không thể khôi phục giao dịch lúc này. Vui lòng thử lại sau."
+      );
+    } finally {
+      setIsRestoring(false);
+    }
+  }, [authToken, queryClient, t]);
 
   const displayEmail = useMemo(() => {
     return authEmail || t("profile.noEmailLinked") || "Chưa liên kết email";
@@ -187,7 +219,6 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
 
   const loading = soundsLoading || historyLoading;
 
-  const queryClient = useQueryClient();
   const { refreshing, onRefresh } = usePullToRefresh(
     useCallback(async () => {
       await Promise.all([
@@ -1046,35 +1077,113 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                 </Text>
               </View>
 
-              {/* Row: Plan Status */}
-              <TouchableOpacity
-                activeOpacity={0.75}
-                onPress={() => handleNavigate("Payment")}
-                className="flex-row items-center justify-between px-4 py-3.5 border-b border-slate-100"
-              >
-                <View className="flex-row items-center gap-2.5">
-                  {isPro ? <Crown size={18} color="#f59e0b" /> : <ShieldCheck size={18} color="#0c2340" />}
-                  <Text className="text-[15px] font-bold text-[#0f172a]">
-                    {isPro ? t("profile.proPlan") || "EarlySigns Pro" : t("profile.freePlan") || "Gói miễn phí"}
-                  </Text>
-                </View>
-                <View className="flex-row items-center gap-1">
-                  <Text style={{ color: isPro ? "#d97706" : "#0c2340" }} className="text-sm font-bold">
-                    {isPro ? t("profile.managePlan") || "Quản lý gói" : t("profile.upgradePro") || "Nâng cấp Pro"}
-                  </Text>
-                  <ChevronRight size={14} color="#94a3b8" />
-                </View>
-              </TouchableOpacity>
+              {isPro ? (
+                /* PRO TIER ROWS */
+                <View>
+                  {/* Row 1: Plan Status with Renewal/Expiry Date & Active Badge */}
+                  <View className="flex-row items-center justify-between px-4 py-3.5 border-b border-slate-100">
+                    <View className="flex-row items-center gap-2.5 flex-1 pr-2">
+                      <Crown size={18} color="#f59e0b" />
+                      <View className="flex-1">
+                        <Text className="text-[15px] font-bold text-[#0f172a]">
+                          {t("profile.proPlan") || "EarlySigns Pro"}
+                        </Text>
+                        <Text className="text-[13px] text-slate-500 mt-0.5">
+                          {t("profile.planExpiryDate") || "Hạn dùng"}: {usage?.subscription_expires_at
+                            ? String(usage.subscription_expires_at).slice(0, 10)
+                            : t("profile.autoRenew") || "Tự động gia hạn"}
+                        </Text>
+                      </View>
+                    </View>
+                    <View
+                      style={{
+                        backgroundColor: "#ecfdf5",
+                        borderColor: "#a7f3d0",
+                      }}
+                      className="px-2.5 py-0.5 rounded-full border"
+                    >
+                      <Text style={{ color: "#059669" }} className="text-xs font-bold">
+                        {t("profile.activeBadge") || "Đang hoạt động"}
+                      </Text>
+                    </View>
+                  </View>
 
-              {/* Row: Remaining checks info */}
-              {!isPro ? (
-                <View className="px-4 py-3.5 flex-row items-center justify-between">
-                  <Text className="text-[14px] font-medium text-slate-600">{t("profile.remainingChecks") || "Lượt kiểm tra còn lại"}</Text>
-                  <Text className="text-[14px] font-bold text-[#0f172a]">
-                    {usage?.daily_remaining != null ? t("profile.remainingChecksRatio", { remaining: usage.daily_remaining }) || `${usage.daily_remaining}/20 câu/ngày` : t("profile.freeMonthlyChecks") || "20 câu/ngày"}
-                  </Text>
+                  {/* Row 2: Manage Subscription on Store */}
+                  <TouchableOpacity
+                    activeOpacity={0.75}
+                    onPress={openManageSubscriptions}
+                    className="px-4 py-3.5 flex-row items-center justify-between active:bg-slate-50"
+                  >
+                    <View className="flex-row items-center gap-2.5 flex-1 pr-2">
+                      <ExternalLink size={18} color="#0284c7" />
+                      <View className="flex-1">
+                        <Text className="text-[15px] font-bold text-[#0f172a]">
+                          {t("profile.manageStoreTitle") || "Quản lý gói cước"}
+                        </Text>
+                        <Text className="text-[13px] text-slate-500 mt-0.5">
+                          {t("profile.manageStoreDesc") || "Hủy hoặc đổi gói trên Apple ID / Google Play"}
+                        </Text>
+                      </View>
+                    </View>
+                    <ChevronRight size={14} color="#94a3b8" />
+                  </TouchableOpacity>
                 </View>
-              ) : null}
+              ) : (
+                /* FREE TIER ROWS */
+                <View>
+                  {/* Row 1: Plan Status with AI Quota -> Upgrade Pro */}
+                  <TouchableOpacity
+                    activeOpacity={0.75}
+                    onPress={() => handleNavigate("Payment")}
+                    className="flex-row items-center justify-between px-4 py-3.5 border-b border-slate-100"
+                  >
+                    <View className="flex-row items-center gap-2.5 flex-1 pr-2">
+                      <ShieldCheck size={18} color="#0284c7" />
+                      <View className="flex-1">
+                        <Text className="text-[15px] font-bold text-[#0f172a]">
+                          {t("profile.freePlan") || "Gói miễn phí"}
+                        </Text>
+                        <Text className="text-[13px] text-slate-500 mt-0.5">
+                          {t("profile.dailyAiQuota") || "Lượt dùng AI hôm nay"}: {usage?.daily_remaining != null
+                            ? t("profile.dailyAiQuotaRatio", { remaining: usage.daily_remaining }) || `${usage.daily_remaining}/20 lượt`
+                            : t("profile.dailyAiQuotaDefault") || "20 lượt/ngày"}
+                        </Text>
+                      </View>
+                    </View>
+                    <View className="flex-row items-center gap-1">
+                      <Text style={{ color: "#0c2340" }} className="text-sm font-bold">
+                        {t("profile.upgradePro") || "Nâng cấp Pro"}
+                      </Text>
+                      <ChevronRight size={14} color="#94a3b8" />
+                    </View>
+                  </TouchableOpacity>
+
+                  {/* Row 2: Restore Purchases */}
+                  <TouchableOpacity
+                    activeOpacity={0.75}
+                    onPress={handleRestorePurchases}
+                    disabled={isRestoring}
+                    className="px-4 py-3.5 flex-row items-center justify-between active:bg-slate-50"
+                  >
+                    <View className="flex-row items-center gap-2.5 flex-1 pr-2">
+                      <RefreshCw size={18} color="#6366f1" />
+                      <View className="flex-1">
+                        <Text className="text-[15px] font-bold text-[#0f172a]">
+                          {t("profile.restorePurchasesTitle") || "Khôi phục giao dịch"}
+                        </Text>
+                        <Text className="text-[13px] text-slate-500 mt-0.5">
+                          {t("profile.restorePurchasesDesc") || "Lấy lại quyền Pro đã mua trên Apple ID / Google Play"}
+                        </Text>
+                      </View>
+                    </View>
+                    {isRestoring ? (
+                      <ActivityIndicator size="small" color="#0c2340" />
+                    ) : (
+                      <ChevronRight size={14} color="#94a3b8" />
+                    )}
+                  </TouchableOpacity>
+                </View>
+              )}
             </View>
 
             {/* GROUP 3: THÔNG BÁO & LỜI NHẮC */}
@@ -1091,7 +1200,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                 className="flex-row items-center justify-between px-4 py-3.5"
               >
                 <View className="flex-row items-center gap-2.5">
-                  <Bell size={18} color="#0c2340" />
+                  <Bell size={18} color="#f97316" />
                   <Text className="text-[15px] font-bold text-[#0f172a]">
                     {t("profile.notifSettingsTitle") || "Cài đặt thông báo & giờ nhắc học"}
                   </Text>
@@ -1128,7 +1237,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                 className="flex-row items-center justify-between px-4 py-3.5 border-b border-slate-100"
               >
                 <View className="flex-row items-center gap-2.5">
-                  <HelpCircle size={18} color="#0c2340" />
+                  <HelpCircle size={18} color="#0284c7" />
                   <Text className="text-[15px] font-medium text-slate-700">{t("profile.contactSupport") || "Liên hệ hỗ trợ"}</Text>
                 </View>
                 <ExternalLink size={14} color="#94a3b8" />

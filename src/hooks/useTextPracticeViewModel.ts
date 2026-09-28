@@ -124,7 +124,7 @@ export function useTextPracticeViewModel(navigation?: any) {
         navigation?.navigate("Login", { next: "Text" });
         return;
       }
-      if (isOcrQuotaExhausted({ userTier, userKey })) {
+      if (isOcrQuotaExhausted({ userTier, userKey, usageStatus })) {
         setError(t("textPractice.ocrExhausted"));
         return;
       }
@@ -139,13 +139,14 @@ export function useTextPracticeViewModel(navigation?: any) {
         if (!text) throw new Error(t("textPractice.ocr.empty"));
         setInputText(text);
         incrementQuotaUsage(userKey, "ocr");
+        useBillingStore.getState().decrementDailyRemaining();
       } catch (e: any) {
         setError(String(e?.message || e));
       } finally {
         setOcrLoading(false);
       }
     },
-    [authToken, navigation, t, userKey, userTier]
+    [authToken, navigation, t, usageStatus, userKey, userTier]
   );
 
   const requestSentenceWords = useCallback(
@@ -157,20 +158,21 @@ export function useTextPracticeViewModel(navigation?: any) {
 
   const requestSampleAudio = useCallback(
     async (sentence: any) => {
-      if (isAudioQuotaExhausted({ userTier, userKey })) {
+      if (isAudioQuotaExhausted({ userTier, userKey, usageStatus })) {
         return null;
       }
       try {
         const audioUrl = await textPracticeApi.generateAudio(sentence.text, lessonSession?.dialect || dialect);
         if (audioUrl) {
           incrementQuotaUsage(userKey, "audio");
+          useBillingStore.getState().decrementDailyRemaining();
         }
         return audioUrl;
       } catch {
         return null;
       }
     },
-    [dialect, lessonSession, userKey, userTier]
+    [dialect, lessonSession, usageStatus, userKey, userTier]
   );
 
   const closeLessonSession = useCallback(() => {

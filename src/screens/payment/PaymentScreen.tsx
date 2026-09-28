@@ -65,7 +65,6 @@ export default function PaymentScreen({ navigation, route }: Props) {
   );
 
   const [purchasing, setPurchasing] = useState(false);
-  const [restoring, setRestoring] = useState(false);
   const [purchaseError, setPurchaseError] = useState("");
 
   // Activation Code section state
@@ -125,30 +124,6 @@ export default function PaymentScreen({ navigation, route }: Props) {
     }
   }
 
-  // Restore Purchases
-  async function handleRestore() {
-    setPurchaseError("");
-    setRestoring(true);
-    try {
-      const res = await restoreStorePurchases({ authToken });
-      if (res.restored) {
-        showToast.success(
-          t("payment.restoreSuccess") || "Khôi phục thành công",
-          res.message || "Đã khôi phục gói EarlySigns Pro của bạn."
-        );
-        navigation.navigate("PaymentResult", {
-          variant: "success",
-          status: "confirmed",
-        });
-      } else {
-        customAlert.alert(t("payment.restoreTitle") || "Khôi phục giao dịch", res.message || "Không tìm thấy giao dịch trước đó.");
-      }
-    } catch (err: any) {
-      setPurchaseError(getFriendlyErrorMessage(err, "Không thể khôi phục giao dịch lúc này."));
-    } finally {
-      setRestoring(false);
-    }
-  }
 
   // Redeem Gift / Activation code
   async function handleActivateCode() {
@@ -201,19 +176,7 @@ export default function PaymentScreen({ navigation, route }: Props) {
           Gói dịch vụ & Hạn mức
         </Text>
 
-        <TouchableOpacity
-          onPress={handleRestore}
-          disabled={restoring}
-          style={{ backgroundColor: "rgba(255, 255, 255, 0.12)" }}
-          className="px-3 py-1.5 rounded-full flex-row items-center gap-1.5 active:opacity-75"
-        >
-          {restoring ? (
-            <ActivityIndicator size="small" color="#ffffff" />
-          ) : (
-            <RefreshCw size={12} color="#ffffff" />
-          )}
-          <Text className="text-xs text-white font-bold">Khôi phục</Text>
-        </TouchableOpacity>
+        <View className="w-10 h-10" />
       </View>
 
       <ScrollView
@@ -273,28 +236,24 @@ export default function PaymentScreen({ navigation, route }: Props) {
             className="rounded-3xl p-5 border shadow-sm gap-3.5"
           >
             <View className="flex-row items-center justify-between">
-              <View className="gap-0.5">
-                <Text className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              <View className="flex-row items-center gap-2">
+                <Text className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Trạng thái tài khoản
                 </Text>
-                <Text className="text-base font-extrabold text-[#0f172a]">
-                  {isPro ? "Gói đăng ký hiện tại" : "Hạn mức luyện tập trong tháng"}
-                </Text>
-              </View>
-
-              <View
-                style={{
-                  backgroundColor: isPro ? "#ecfdf5" : "#f1f5f9",
-                  borderColor: isPro ? "#a7f3d0" : "#cbd5e1",
-                }}
-                className="px-3 py-1 rounded-full border"
-              >
-                <Text
-                  style={{ color: isPro ? "#059669" : "#475569" }}
-                  className="text-2xs font-extrabold"
+                <View
+                  style={{
+                    backgroundColor: isPro ? "#ecfdf5" : "#f1f5f9",
+                    borderColor: isPro ? "#a7f3d0" : "#cbd5e1",
+                  }}
+                  className="px-2.5 py-0.5 rounded-full border"
                 >
-                  {isPro ? "Không giới hạn" : "Miễn phí"}
-                </Text>
+                  <Text
+                    style={{ color: isPro ? "#059669" : "#475569" }}
+                    className="text-xs font-bold"
+                  >
+                    {isPro ? "Không giới hạn" : "Miễn phí"}
+                  </Text>
+                </View>
               </View>
             </View>
 
@@ -325,72 +284,37 @@ export default function PaymentScreen({ navigation, route }: Props) {
                 </TouchableOpacity>
               </View>
             ) : (
-              /* FREE TIER 100/20/20 QUOTAS */
+              /* FREE TIER SHARED AI QUOTA */
               <View className="gap-3 pt-1">
-                {/* Metric 1: Kiểm tra phát âm (100) */}
-                <View className="gap-1.5">
+                {/* Metric: Hạn mức AI dùng chung */}
+                <View className="gap-2">
                   <View className="flex-row items-center justify-between">
                     <View className="flex-row items-center gap-2">
-                      <Mic size={14} color="#0284c7" />
-                      <Text className="text-xs font-semibold text-slate-700">
-                        Lượt kiểm tra phát âm (Audio check)
+                      <Sparkles size={16} color="#0284c7" />
+                      <Text className="text-sm font-bold text-slate-800">
+                        {t("payment.freeQuotaSharedTitle") || "Hạn mức AI dùng chung hôm nay"}
                       </Text>
                     </View>
-                    <Text className="text-xs font-bold text-[#0f172a]">
-                      {usage?.daily_remaining != null ? `${usage.daily_remaining}/20 câu/ngày` : "20 câu/ngày"}
+                    <Text className="text-sm font-bold text-[#0f172a]">
+                      {usage?.daily_remaining != null ? `${usage.daily_remaining}/20 lượt` : "20 lượt/ngày"}
                     </Text>
                   </View>
-                  <View className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+
+                  {/* Progress bar */}
+                  <View className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
                     <View
                       style={{
-                        width: `${Math.min(100, Math.max(10, ((usage?.daily_remaining ?? 20) / 20) * 100))}%`,
-                        backgroundColor: "#0284c7",
+                        width: `${Math.min(100, Math.max(8, ((usage?.daily_remaining ?? 20) / 20) * 100))}%`,
+                        backgroundColor: (usage?.daily_remaining ?? 20) <= 3 ? "#f59e0b" : "#0284c7",
                       }}
                       className="h-full rounded-full"
                     />
                   </View>
                 </View>
-
-                {/* Metric 2: Quét ảnh OCR (20) */}
-                <View className="gap-1.5">
-                  <View className="flex-row items-center justify-between">
-                    <View className="flex-row items-center gap-2">
-                      <Camera size={14} color="#4f46e5" />
-                      <Text className="text-xs font-semibold text-slate-700">
-                        Chuyển văn bản từ ảnh (OCR)
-                      </Text>
-                    </View>
-                    <Text className="text-xs font-bold text-[#0f172a]">
-                      20 / 20 lượt
-                    </Text>
-                  </View>
-                  <View className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <View style={{ width: "100%", backgroundColor: "#4f46e5" }} className="h-full rounded-full" />
-                  </View>
-                </View>
-
-                {/* Metric 3: Sinh audio mẫu (20) */}
-                <View className="gap-1.5">
-                  <View className="flex-row items-center justify-between">
-                    <View className="flex-row items-center gap-2">
-                      <AudioLines size={14} color="#10b981" />
-                      <Text className="text-xs font-semibold text-slate-700">
-                        Sinh âm thanh giọng mẫu
-                      </Text>
-                    </View>
-                    <Text className="text-xs font-bold text-[#0f172a]">
-                      20 / 20 lượt
-                    </Text>
-                  </View>
-                  <View className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <View style={{ width: "100%", backgroundColor: "#10b981" }} className="h-full rounded-full" />
-                  </View>
-                </View>
-
-                <View className="pt-2 border-t border-slate-100 flex-row items-center gap-1.5">
-                  <Clock size={12} color="#94a3b8" />
-                  <Text className="text-2xs text-slate-400">
-                    Hạn mức miễn phí tự động làm mới vào ngày 01 hàng tháng.
+                <View className="pt-1 flex-row items-center gap-1.5">
+                  <Clock size={13} color="#64748b" />
+                  <Text className="text-xs font-medium text-slate-500">
+                    {t("payment.freeQuotaSharedNote") || "Tự động làm mới 20 lượt vào lúc 00:00 mỗi ngày."}
                   </Text>
                 </View>
               </View>
@@ -403,11 +327,11 @@ export default function PaymentScreen({ navigation, route }: Props) {
             className="rounded-3xl p-5 border shadow-sm gap-3"
           >
             <View className="flex-row items-center justify-between">
-              <Text style={{ color: "#0284c7" }} className="text-2xs font-extrabold uppercase tracking-wider">
+              <Text style={{ color: "#0284c7" }} className="text-xs font-extrabold uppercase tracking-wider">
                 Quyền lợi vượt trội của gói Pro
               </Text>
               <View style={{ backgroundColor: "#e0f2fe" }} className="px-2.5 py-0.5 rounded-full">
-                <Text style={{ color: "#0284c7" }} className="text-[10px] font-bold">
+                <Text style={{ color: "#0284c7" }} className="text-xs font-bold">
                   Không giới hạn
                 </Text>
               </View>
@@ -542,34 +466,19 @@ export default function PaymentScreen({ navigation, route }: Props) {
               onPress={handleStorePurchase}
             />
 
-            <Text className="text-2xs text-slate-400 text-center font-medium">
+            <Text className="text-xs text-slate-500 text-center font-medium">
               Thanh toán an toàn bảo mật qua Store. Hủy bất kỳ lúc nào trong Cài đặt thiết bị.
             </Text>
 
             {/* Store Compliance Utilities */}
-            <View className="flex-row justify-between items-center px-1 pt-1">
-              <TouchableOpacity
-                onPress={handleRestore}
-                disabled={restoring}
-                className="flex-row items-center gap-1.5 py-1"
-              >
-                {restoring ? (
-                  <ActivityIndicator size="small" color="#0284c7" />
-                ) : (
-                  <RefreshCw size={13} color="#0284c7" />
-                )}
-                <Text style={{ color: "#0284c7" }} className="text-xs font-semibold">
-                  Khôi phục giao dịch
-                </Text>
-              </TouchableOpacity>
-
+            <View className="flex-row justify-center items-center px-1 pt-1">
               <TouchableOpacity
                 onPress={openManageSubscriptions}
                 className="flex-row items-center gap-1.5 py-1"
               >
                 <ExternalLink size={13} color="#64748b" />
                 <Text className="text-xs text-slate-500 font-medium">
-                  Quản lý gói cước
+                  Quản lý gói cước trên Cửa hàng ứng dụng
                 </Text>
               </TouchableOpacity>
             </View>

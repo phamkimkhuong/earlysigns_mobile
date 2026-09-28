@@ -5,6 +5,20 @@ const path = require("node:path");
 const vm = require("node:vm");
 const ts = require("typescript");
 
+const icons = new Proxy({}, { get: (_, key) => String(key) });
+const svgMock = {
+  __esModule: true,
+  default: "Svg",
+  Defs: "Defs",
+  LinearGradient: "LinearGradient",
+  Rect: "Rect",
+  Stop: "Stop",
+  Path: "Path",
+  Text: "Text",
+  Circle: "Circle",
+  G: "G",
+};
+
 // Exercise the actual screen/controller without a native device or live account.
 function loadSource(relativePath, mocks = {}) {
   const file = path.resolve(__dirname, "..", relativePath);
@@ -16,6 +30,8 @@ function loadSource(relativePath, mocks = {}) {
   vm.runInThisContext(`(function(require,module,exports){${source}\n})`, { filename: file })(
     (name) => {
       if (Object.hasOwn(mocks, name)) return mocks[name];
+      if (name === "lucide-react-native") return icons;
+      if (name === "react-native-svg") return svgMock;
       if (name.startsWith("@assets/") || name.endsWith(".jpg") || name.endsWith(".png")) return 1;
       if (name.startsWith("@/")) {
         const candidate = path.resolve(__dirname, "..", "src", name.slice(2));
@@ -34,7 +50,9 @@ function loadSource(relativePath, mocks = {}) {
 }
 
 const { getHomeClarityPercent } = loadSource("src/utils/homeProgress.ts");
-const { navigateAfterLogin } = loadSource("src/navigation/nav.ts");
+const { navigateAfterLogin } = loadSource("src/navigation/nav.ts", {
+  "@react-navigation/native": { createNavigationContainerRef: () => ({}) },
+});
 const sounds = (count, checks = 5) => Array.from({ length: count }, (_, index) => ({ sound: `sound-${index}`, checks_count: checks }));
 
 test("score requires 36 distinct qualified sounds, including at the 35/36 boundary", () => {
@@ -76,7 +94,7 @@ function createHome({ signedIn = false, summary = null, soundData = [], unlocked
   return { model: useHomeViewModel({ navigate: (...args) => calls.push(args) }), calls };
 }
 
-const destinations = [["Videos", undefined], ["Text", { entry: "input" }], ["Text", { entry: "ocr" }], ["Phonemes", undefined], ["Journey", undefined], ["Phonemes", { startLesson: true }]];
+const destinations = [["Videos", undefined], ["Text", { entry: "input" }], ["Text", { entry: "ocr" }], ["Phonemes", undefined]];
 
 test("guests resume every selected feature after login, with Home below it for Back", () => {
   for (const [route, params] of destinations) {
@@ -123,8 +141,6 @@ function flatten(element) {
   if (typeof element.type === "function") return flatten(element.type(element.props));
   return [element, ...flatten(element.props?.children)];
 }
-const icons = new Proxy({}, { get: (_, key) => String(key) });
-
 test("Home renders video, text, phonemes in order and wires all feature actions", () => {
   const { model, calls } = createHome({ signedIn: true });
   const { default: HomeScreen } = loadSource("src/screens/tabs/HomeScreen.tsx", {
@@ -139,7 +155,11 @@ test("Home renders video, text, phonemes in order and wires all feature actions"
   const node = (id) => nodes.find((item) => item.props.testID === id);
   assert.ok(nodes.indexOf(node("home-video")) < nodes.indexOf(node("home-text-section")));
   assert.ok(nodes.indexOf(node("home-text-section")) < nodes.indexOf(node("home-phonemes-section")));
-  for (const id of ["home-video", "home-text-input", "home-text-ocr", "home-phonemes", "home-journey", "home-start-lesson"]) node(id).props.onPress();
+  const phonemesCard = node("home-phonemes");
+  assert.equal(phonemesCard.type, "Pressable");
+  assert.equal(flatten(phonemesCard).filter((item) => typeof item.props.onPress === "function").length, 1);
+  assert.ok(flatten(phonemesCard).some((item) => item.type === "Image"));
+  for (const id of ["home-video", "home-text-input", "home-text-ocr", "home-phonemes"]) node(id).props.onPress();
   assert.deepEqual(calls, destinations);
 });
 
@@ -169,7 +189,12 @@ test("personalized lesson intent is consumed once, including a replayed mount ef
   let starts = 0;
   const params = [];
   const { default: PhonemesScreen } = loadSource("src/screens/tabs/PhonemesScreen.tsx", {
-    react: { useRef: () => ref, useEffect: (effect) => effects.push(effect) },
+    react: {
+      useRef: () => ref,
+      useEffect: (effect) => effects.push(effect),
+      useState: (initial) => [typeof initial === "function" ? initial() : initial, () => {}],
+      useMemo: (fn) => fn(),
+    },
     "react-native": nativeMocks,
     "@/components/practice/HomeJourney": { default: () => null },
     "@/components/practice/IPAChecking": { default: () => null },

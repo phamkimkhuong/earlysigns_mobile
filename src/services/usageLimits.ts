@@ -4,11 +4,12 @@ import type { UserTier } from "@/types/domain";
 
 const STORAGE_KEY_MONTHLY = "earlysigns_monthly_quota_v2";
 
-// Quotas aligned with current Backend (20 pronunciation checks per day, reset daily)
-export const DAILY_LIMIT_PRONUNCIATION = 20;
-export const MONTHLY_LIMIT_PRONUNCIATION = 20;
-export const MONTHLY_LIMIT_OCR = 20;
-export const MONTHLY_LIMIT_AUDIO = 20;
+// Shared daily quota: 20 daily uses across all AI features (Pronunciation, OCR, Audio)
+export const DAILY_SHARED_LIMIT = 20;
+export const DAILY_LIMIT_PRONUNCIATION = DAILY_SHARED_LIMIT;
+export const MONTHLY_LIMIT_PRONUNCIATION = DAILY_SHARED_LIMIT;
+export const MONTHLY_LIMIT_OCR = DAILY_SHARED_LIMIT;
+export const MONTHLY_LIMIT_AUDIO = DAILY_SHARED_LIMIT;
 
 // Anonymous limits
 export const ANONYMOUS_PRONUNCIATION_LIMIT = 5;
@@ -119,6 +120,23 @@ export function incrementQuotaUsage(userKey: string, type: QuotaType): number {
 }
 
 /**
+ * Get total shared AI usage across pronunciation, OCR, and audio
+ */
+export function getLocalSharedUsage(userKey: string): number {
+  if (!userKey) return 0;
+  const store = readMonthlyStore();
+  const record = store.users[userKey] || {};
+  const pron = Number(record.pronunciation) || 0;
+  const ocr = Number(record.ocr) || 0;
+  const audio = Number(record.audio) || 0;
+  return (
+    (Number.isFinite(pron) && pron > 0 ? pron : 0) +
+    (Number.isFinite(ocr) && ocr > 0 ? ocr : 0) +
+    (Number.isFinite(audio) && audio > 0 ? audio : 0)
+  );
+}
+
+/**
  * Get limits according to tier
  */
 export function getQuotaLimitsForTier(tier: UserTier | string): {
@@ -149,6 +167,7 @@ export function getQuotaLimitsForTier(tier: UserTier | string): {
 
 /**
  * Get comprehensive quota snapshot for UI display
+ * The 20 daily uses are shared across all AI features (Pronunciation, OCR, Audio)
  */
 export function getMonthlyQuotaSnapshot({
   userKey,
@@ -159,52 +178,60 @@ export function getMonthlyQuotaSnapshot({
   userTier: UserTier | string;
   usageStatus?: any;
 }) {
-  const limits = getQuotaLimitsForTier(userTier);
   const isUnlimited = userTier === "pro" || userTier === "trial" || MOBILE_FREE_ACCESS;
 
-  // Pronunciation checks: use server usageStatus if available, else local store
-  let pronUsed = getQuotaUsage(userKey, "pronunciation");
-  let pronRemaining = isUnlimited ? Infinity : Math.max(0, limits.pronunciation - pronUsed);
+  let sharedRemaining = isUnlimited ? Infinity : DAILY_SHARED_LIMIT;
+  let sharedUsed = 0;
 
-  if (
-    !isUnlimited &&
-    usageStatus &&
-    typeof usageStatus.daily_remaining === "number" &&
-    Number.isFinite(usageStatus.daily_remaining)
-  ) {
-    pronRemaining = usageStatus.daily_remaining;
-    pronUsed = Math.max(0, limits.pronunciation - pronRemaining);
+  if (!isUnlimited) {
+    if (
+      usageStatus &&
+      typeof usageStatus.daily_remaining === "number" &&
+      Number.isFinite(usageStatus.daily_remaining)
+    ) {
+      sharedRemaining = Math.max(0, usageStatus.daily_remaining);
+      sharedUsed = Math.max(0, DAILY_SHARED_LIMIT - sharedRemaining);
+    } else {
+      const pronUsed = getQuotaUsage(userKey, "pronunciation");
+      const ocrUsed = getQuotaUsage(userKey, "ocr");
+      const audioUsed = getQuotaUsage(userKey, "audio");
+      sharedUsed = pronUsed + ocrUsed + audioUsed;
+      sharedRemaining = Math.max(0, DAILY_SHARED_LIMIT - sharedUsed);
+    }
   }
 
-  // OCR and Audio
-  const ocrUsed = getQuotaUsage(userKey, "ocr");
-  const ocrRemaining = isUnlimited ? Infinity : Math.max(0, limits.ocr - ocrUsed);
-
-  const audioUsed = getQuotaUsage(userKey, "audio");
-  const audioRemaining = isUnlimited ? Infinity : Math.max(0, limits.audio - audioUsed);
+  const isExhausted = !isUnlimited && sharedRemaining <= 0;
+  const isLow = !isUnlimited && sharedRemaining > 0 && sharedRemaining <= 3;
 
   return {
     isUnlimited,
+    shared: {
+      used: sharedUsed,
+      limit: DAILY_SHARED_LIMIT,
+      remaining: sharedRemaining,
+      isExhausted,
+      isLow,
+    },
     pronunciation: {
-      used: pronUsed,
-      limit: limits.pronunciation,
-      remaining: pronRemaining,
-      isExhausted: !isUnlimited && pronRemaining <= 0,
-      isLow: !isUnlimited && pronRemaining > 0 && pronRemaining <= 10,
+      used: sharedUsed,
+      limit: DAILY_SHARED_LIMIT,
+      remaining: sharedRemaining,
+      isExhausted,
+      isLow,
     },
     ocr: {
-      used: ocrUsed,
-      limit: limits.ocr,
-      remaining: ocrRemaining,
-      isExhausted: !isUnlimited && ocrRemaining <= 0,
-      isLow: !isUnlimited && ocrRemaining > 0 && ocrRemaining <= 3,
+      used: sharedUsed,
+      limit: DAILY_SHARED_LIMIT,
+      remaining: sharedRemaining,
+      isExhausted,
+      isLow,
     },
     audio: {
-      used: audioUsed,
-      limit: limits.audio,
-      remaining: audioRemaining,
-      isExhausted: !isUnlimited && audioRemaining <= 0,
-      isLow: !isUnlimited && audioRemaining > 0 && audioRemaining <= 3,
+      used: sharedUsed,
+      limit: DAILY_SHARED_LIMIT,
+      remaining: sharedRemaining,
+      isExhausted,
+      isLow,
     },
   };
 }
@@ -228,36 +255,51 @@ export function isPronunciationQuotaExhausted({
     return usageStatus.daily_remaining <= 0;
   }
   const key = userKey || "__anonymous__";
-  const limit = getQuotaLimitsForTier(userTier || "anonymous").pronunciation;
-  return getQuotaUsage(key, "pronunciation") >= limit;
+  return getLocalSharedUsage(key) >= DAILY_SHARED_LIMIT;
 }
 
 export function isOcrQuotaExhausted({
   userTier,
   userKey,
+  usageStatus,
 }: {
   userTier?: UserTier | string;
   userKey?: string;
+  usageStatus?: { daily_remaining?: number; [key: string]: any } | null;
 } = {}): boolean {
   if (MOBILE_FREE_ACCESS) return false;
   if (userTier === "pro" || userTier === "trial") return false;
+  if (
+    usageStatus &&
+    typeof usageStatus.daily_remaining === "number" &&
+    Number.isFinite(usageStatus.daily_remaining)
+  ) {
+    return usageStatus.daily_remaining <= 0;
+  }
   const key = userKey || "__anonymous__";
-  const limit = getQuotaLimitsForTier(userTier || "anonymous").ocr;
-  return getQuotaUsage(key, "ocr") >= limit;
+  return getLocalSharedUsage(key) >= DAILY_SHARED_LIMIT;
 }
 
 export function isAudioQuotaExhausted({
   userTier,
   userKey,
+  usageStatus,
 }: {
   userTier?: UserTier | string;
   userKey?: string;
+  usageStatus?: { daily_remaining?: number; [key: string]: any } | null;
 } = {}): boolean {
   if (MOBILE_FREE_ACCESS) return false;
   if (userTier === "pro" || userTier === "trial") return false;
+  if (
+    usageStatus &&
+    typeof usageStatus.daily_remaining === "number" &&
+    Number.isFinite(usageStatus.daily_remaining)
+  ) {
+    return usageStatus.daily_remaining <= 0;
+  }
   const key = userKey || "__anonymous__";
-  const limit = getQuotaLimitsForTier(userTier || "anonymous").audio;
-  return getQuotaUsage(key, "audio") >= limit;
+  return getLocalSharedUsage(key) >= DAILY_SHARED_LIMIT;
 }
 
 // Legacy backward-compatibility methods
