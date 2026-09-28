@@ -44,6 +44,13 @@ export default function PrimaryButton({
 
   return (
     <Pressable
+      accessible={true}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityState={{
+        disabled: !!(disabled || loading),
+        busy: !!loading,
+      }}
       onPress={onPress}
       disabled={disabled || loading}
       className={`rounded-md py-3 px-4 items-center justify-center min-h-[44px] ${variantClass} ${stateClass} ${className}`}
@@ -73,23 +80,30 @@ export function ChipButton({
   disabled,
   className = "",
 }: ChipButtonProps) {
-  const activeClass = active
-    ? "bg-accentMuted border-accent"
-    : "bg-appElevated border-appBorderStrong";
-
-  const disabledClass = disabled ? "opacity-45" : "active:opacity-85";
-
-  const textClass = active
-    ? "text-accent font-semibold text-[13px]"
-    : "text-appTextSecondary font-semibold text-[13px]";
-
   return (
     <Pressable
+      accessible={true}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityState={{
+        selected: !!active,
+        disabled: !!disabled,
+      }}
       onPress={onPress}
       disabled={disabled}
-      className={`rounded-full border px-3 py-1.5 ${activeClass} ${disabledClass} ${className}`}
+      style={({ pressed }) => ({
+        backgroundColor: active ? "#e0f2fe" : "#ffffff",
+        borderColor: active ? "#0284c7" : "#cbd5e1",
+        opacity: disabled ? 0.45 : pressed ? 0.85 : 1,
+      })}
+      className={`rounded-full border px-3 py-1.5 ${className}`}
     >
-      <Text className={textClass}>{title}</Text>
+      <Text
+        style={{ color: active ? "#0284c7" : "#475569" }}
+        className="font-semibold text-[13px]"
+      >
+        {title}
+      </Text>
     </Pressable>
   );
 }

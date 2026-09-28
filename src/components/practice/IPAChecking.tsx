@@ -15,6 +15,7 @@ import { checkResultScoreColor } from "@/utils/checkResultScoreColor";
 import { isQuotaExhausted } from "@/services/usageLimits";
 import { stripHtml } from "@/utils/errors";
 import { hapticFeedback } from "@/utils/haptics";
+import { setItem } from "@/services/storage";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import UpgradeProModal from "@/components/ui/UpgradeProModal";
 import ScoreWords from "./ScoreWords";
@@ -213,14 +214,21 @@ export default function IPAChecking({
   useEffect(() => {
     if (!open || !sentences?.length) return;
     const completed = Object.keys(resultsByIndex).length;
+    if (isScreening && completed > 0) {
+      setItem("earlysigns_screening_progress", String(completed));
+    }
     if (!halfFiredRef.current && isScreening && completed >= screeningHalfThreshold) {
       halfFiredRef.current = true;
       onScreeningHalfReached?.();
     }
     if (!allFiredRef.current && completed >= sentences.length) {
       allFiredRef.current = true;
-      if (isScreening) onScreeningFinished?.();
-      else onLessonAllCompleted?.();
+      if (isScreening) {
+        setItem("earlysigns_screening_progress", String(sentences.length));
+        onScreeningFinished?.();
+      } else {
+        onLessonAllCompleted?.();
+      }
     }
   }, [
     open,
@@ -298,7 +306,12 @@ export default function IPAChecking({
     <Modal visible={open} animationType="slide" onRequestClose={onClose}>
       <SafeAreaView className="flex-1 bg-appBg">
         <View className="flex-row items-center px-4 py-2.5 gap-3 border-b border-appBorder">
-          <Pressable onPress={onClose}>
+          <Pressable
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel={t("common.close", "Đóng bài học")}
+            onPress={onClose}
+          >
             <Text className="text-[22px] text-appText w-7">✕</Text>
           </Pressable>
           <Text className="flex-1 font-bold text-appText text-base" numberOfLines={1}>

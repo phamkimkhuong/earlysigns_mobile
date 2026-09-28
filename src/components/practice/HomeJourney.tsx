@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
+import { CheckCircle2, Lock, Play, Sparkles, Trophy, ChevronRight } from "lucide-react-native";
 import { JourneyPathSkeleton } from "@/components/ui/Skeleton";
 
 const NAMED_MILESTONE_COUNT = 5;
@@ -78,32 +79,66 @@ function NodeCircle({
 }) {
   const isCompleted = mod.status === "completed";
   const isCurrent = mod.status === "current";
-  const isLocked = mod.status === "locked";
+
   return (
-    <View className="items-center gap-1.5">
+    <View className="items-center gap-1.5 py-1">
+      {/* Floating active badge for current module */}
       {isCurrent ? (
-        <Pressable className="bg-accent rounded-full px-3 py-1.5" onPress={onStartLesson} disabled={lessonLoading}>
+        <Pressable
+          onPress={onStartLesson}
+          disabled={lessonLoading}
+          style={{ backgroundColor: "#4f46e5" }}
+          className="flex-row items-center gap-1 px-3.5 py-1.5 rounded-full shadow-sm active:opacity-85 mb-0.5"
+        >
+          <Play size={11} color="#ffffff" fill="#ffffff" />
           <Text className="text-white font-bold text-xs">
             {lessonLoading ? t("home.mission.starting") : t("home.journey.startLesson")}
           </Text>
         </Pressable>
       ) : null}
-      <View
-        className={`w-[52px] h-[52px] rounded-full items-center justify-center border-2 ${
-          isCompleted
-            ? "bg-accentMuted border-accent"
-            : isCurrent
-              ? "bg-accent border-accent"
-              : isLocked
-                ? "bg-appMuted border-appBorderStrong opacity-55"
-                : "bg-appMuted border-appBorderStrong"
-        }`}
+
+      {/* Main Node Circle with multi-layer styling */}
+      <Pressable
+        onPress={isCurrent ? onStartLesson : undefined}
+        disabled={!isCurrent || lessonLoading}
+        style={{
+          width: 58,
+          height: 58,
+          borderRadius: 29,
+          backgroundColor: isCompleted ? "#ecfdf5" : isCurrent ? "#4f46e5" : "#f1f5f9",
+          borderColor: isCompleted ? "#10b981" : isCurrent ? "#818cf8" : "#cbd5e1",
+          borderWidth: isCurrent ? 3 : 2,
+          alignItems: "center",
+          justifyContent: "center",
+          shadowColor: isCurrent ? "#4f46e5" : "transparent",
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: isCurrent ? 0.3 : 0,
+          shadowRadius: 8,
+          elevation: isCurrent ? 4 : 0,
+        }}
+        className="active:opacity-90"
       >
-        <Text className={`text-lg ${isCurrent ? "text-white" : "text-appText"}`}>
-          {isCompleted ? "✓" : isLocked ? "🔒" : "▶"}
+        {isCompleted ? (
+          <CheckCircle2 size={26} color="#059669" strokeWidth={2.5} />
+        ) : isCurrent ? (
+          <Play size={22} color="#ffffff" fill="#ffffff" />
+        ) : (
+          <Lock size={18} color="#94a3b8" />
+        )}
+      </Pressable>
+
+      {/* Module Title & Label */}
+      <View
+        style={{ backgroundColor: isCurrent ? "#e0e7ff" : "#f8fafc" }}
+        className="px-2.5 py-0.5 rounded-full border border-slate-200"
+      >
+        <Text
+          style={{ color: isCurrent ? "#4338ca" : "#64748b" }}
+          className="text-2xs font-bold"
+        >
+          {t("home.journey.module", { n: mod.index })}
         </Text>
       </View>
-      <Text className="text-appTextSecondary text-xs">{t("home.journey.module", { n: mod.index })}</Text>
     </View>
   );
 }
@@ -120,20 +155,45 @@ export function WindingPath({
   t: (key: string, opts?: any) => string;
 }) {
   return (
-    <View className="gap-2.5 py-2">
-      {items.map((item) => {
+    <View className="gap-3 py-2 relative">
+      {items.map((item, index) => {
         if (item.type === "milestone") {
           return (
-            <View key={`ms-${item.index}`} className="bg-accentMuted rounded-md p-2.5">
-              <Text className="text-accent text-xs font-bold">{t("home.journey.milestone", { n: item.index })}</Text>
-              <Text className="text-appText font-bold">{milestoneDisplayName(item.index, t)}</Text>
+            <View
+              key={`ms-${item.index}`}
+              style={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0" }}
+              className="rounded-2xl p-4 border shadow-sm my-1 flex-row items-center justify-between"
+            >
+              <View className="flex-1 pr-3">
+                <View className="flex-row items-center gap-1.5 mb-1">
+                  <Sparkles size={14} color="#4f46e5" />
+                  <Text style={{ color: "#4f46e5" }} className="text-2xs font-extrabold uppercase tracking-wider">
+                    {t("home.journey.milestone", { n: item.index })}
+                  </Text>
+                </View>
+                <Text className="text-base font-extrabold text-[#0f172a]">
+                  {milestoneDisplayName(item.index, t)}
+                </Text>
+              </View>
+              <View
+                style={{ backgroundColor: "#eef2ff" }}
+                className="w-10 h-10 rounded-xl items-center justify-center border border-indigo-100"
+              >
+                <Trophy size={18} color="#4f46e5" />
+              </View>
             </View>
           );
         }
+
+        const isLeft = item.side === "left";
         return (
           <View
-            key={`node-${item.index}`}
-            className={`w-full ${item.side === "left" ? "items-start" : "items-end"}`}
+            key={`node-${item.index}-${index}`}
+            style={{
+              width: "100%",
+              alignItems: isLeft ? "flex-start" : "flex-end",
+              paddingHorizontal: 24,
+            }}
           >
             <NodeCircle
               mod={item}
@@ -168,54 +228,88 @@ export default function HomeJourney({
   onViewAll,
 }: HomeJourneyProps) {
   const { t } = useTranslation();
+
   if (loading) {
     return <JourneyPathSkeleton />;
   }
   if (!journey) return null;
+
   const {
     current_module: currentModule,
     current_lesson_in_module: currentLessonInModule,
     lessons_per_module: lessonsPerModule,
     milestones,
   } = journey;
+
   const totalModulesShown = milestones.reduce((acc, ms) => acc + ms.modules.length, 0);
   const completedMilestones = milestones.filter((ms) => ms.status === "completed").length;
-  const items = buildItems(milestones, 3);
-  const streakCopy =
-    streakDays > 0
-      ? t("home.journey.heroStreakActive", {
-          streak: streakDays,
-          module: currentModule,
-          lesson: currentLessonInModule,
-        })
-      : t("home.journey.heroStreakZero");
+  const items = buildItems(milestones, 4);
 
   return (
-    <View className="gap-2.5 mb-4">
-      <View className="flex-row flex-wrap gap-2">
-        <Text className="text-appTextSecondary text-[13px]">
-          {t("home.journey.moduleOf", { current: currentModule, total: totalModulesShown })}
-        </Text>
-        <Text className="text-appTextSecondary text-[13px]">
-          {t("home.journey.lessonOf", { current: currentLessonInModule, total: lessonsPerModule })}
-        </Text>
-        {completedMilestones > 0 ? (
-          <Text className="text-appTextSecondary text-[13px]">
+    <View
+      style={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0" }}
+      className="rounded-3xl p-5 border shadow-sm gap-3.5 mb-2"
+    >
+      {/* Top Header Information & Stats */}
+      <View className="flex-row items-center justify-between pb-3 border-b border-slate-100">
+        <View className="gap-0.5">
+          <Text className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+            {t("home.journey.adaptive")}
+          </Text>
+          <Text className="text-base font-extrabold text-[#0f172a]">
+            {t("home.journey.moduleOf", { current: currentModule, total: totalModulesShown })}
+          </Text>
+        </View>
+
+        <View className="flex-row items-center gap-1.5 bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-full">
+          <Text style={{ color: "#4f46e5" }} className="text-xs font-bold">
+            {t("home.journey.lessonOf", { current: currentLessonInModule, total: lessonsPerModule })}
+          </Text>
+        </View>
+      </View>
+
+      {/* Completed Milestones Badge (if any) */}
+      {completedMilestones > 0 ? (
+        <View
+          style={{ backgroundColor: "#f0fdf4", borderColor: "#bbf7d0" }}
+          className="flex-row items-center gap-2 px-3 py-2 rounded-xl border"
+        >
+          <Trophy size={14} color="#16a34a" />
+          <Text className="text-xs font-semibold text-emerald-800">
             {t("home.journey.milestonesCompleted", { count: completedMilestones })}
           </Text>
-        ) : null}
-      </View>
-      <Text className="text-appText font-semibold">{streakCopy}</Text>
-      {lessonError ? <Text className="text-danger">{lessonError}</Text> : null}
+        </View>
+      ) : null}
+
+      {/* Error alert if lesson fails to load */}
+      {lessonError ? (
+        <View
+          style={{ backgroundColor: "#fef2f2", borderColor: "#fecaca" }}
+          className="p-3 rounded-xl border"
+        >
+          <Text className="text-xs text-rose-600 font-medium">{lessonError}</Text>
+        </View>
+      ) : null}
+
+      {/* Interactive Visual Quest Path */}
       <WindingPath
         items={items}
         onStartLesson={onStartLesson}
         lessonLoading={lessonLoading}
         t={t}
       />
+
+      {/* View All Journey Link */}
       {onViewAll ? (
-        <Pressable onPress={onViewAll}>
-          <Text className="text-accent font-bold mt-2">{t("home.journey.viewAll")} →</Text>
+        <Pressable
+          onPress={onViewAll}
+          style={{ backgroundColor: "#f8fafc", borderColor: "#e2e8f0" }}
+          className="flex-row items-center justify-center gap-1.5 py-3 rounded-2xl border active:opacity-75 mt-1"
+        >
+          <Text style={{ color: "#4f46e5" }} className="text-sm font-bold">
+            {t("home.journey.viewAll")}
+          </Text>
+          <ChevronRight size={16} color="#4f46e5" />
         </Pressable>
       ) : null}
     </View>

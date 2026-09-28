@@ -1,3 +1,13 @@
+export {
+  getFriendlyErrorMessage,
+  parseApiError as parseFriendlyApiError,
+  ERROR_CODE_MAP,
+  RAW_STRING_MAP,
+  HTTP_STATUS_MAP,
+  type LocalizedMessage,
+  type ParsedApiError,
+} from "@/core/errorManager";
+
 export interface ParsedErrorDetail {
   code: string;
   message: string;
@@ -9,9 +19,20 @@ export function parseErrorDetail(rawDetail: any): ParsedErrorDetail {
   if (!rawDetail) return { code: "", message: "" };
   if (typeof rawDetail === "string") return { code: "", message: rawDetail };
   if (typeof rawDetail === "object") {
+    let msg = "";
+    if (typeof rawDetail.message === "string") {
+      msg = rawDetail.message;
+    } else if (rawDetail.message && typeof rawDetail.message === "object") {
+      msg = rawDetail.message.vi || rawDetail.message.en || "";
+    } else if (typeof rawDetail.detail === "string") {
+      msg = rawDetail.detail;
+    } else {
+      msg = "Request failed.";
+    }
+
     return {
       code: String(rawDetail.code || ""),
-      message: String(rawDetail.message || rawDetail.detail || "Request failed."),
+      message: msg,
       usage: rawDetail.usage || null,
       retryable: rawDetail.retryable !== false,
     };

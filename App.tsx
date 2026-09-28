@@ -14,10 +14,12 @@ import { setupProductionConsoleGuard } from "@/core/logger";
 import { AuthProvider } from "@/services/Auth";
 import { getStoredLanguage, initI18n } from "@/core/i18n";
 import { hydrateStorage } from "@/services/storage";
-import { initNotifications } from "@/services/notifications";
+import { initNotifications, setupNotificationResponseListener } from "@/services/notifications";
 import { NavigationContainer } from "@react-navigation/native";
+import { navigationRef } from "@/navigation/nav";
 import RootNavigator, { navTheme } from "@/navigation/RootNavigator";
 import DevNetworkInspector from "@/components/dev/DevNetworkInspector";
+import CustomAlertModal from "@/components/ui/CustomAlertModal";
 
 // Neutralize noisy console outputs in production while keeping error trackers intact
 setupProductionConsoleGuard();
@@ -43,12 +45,15 @@ export default function App() {
 
   useEffect(() => {
     let cancelled = false;
+    let cleanupNotifListener = () => {};
+
     (async () => {
       try {
         await hydrateStorage();
         const stored = await getStoredLanguage();
         await initI18n(stored === "en" ? "en" : "vi");
         initNotifications();
+        cleanupNotifListener = setupNotificationResponseListener();
       } catch {
         // proceed even if error occurs
       } finally {
@@ -60,6 +65,7 @@ export default function App() {
     })();
     return () => {
       cancelled = true;
+      cleanupNotifListener();
     };
   }, []);
 
@@ -71,10 +77,11 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <SafeAreaProvider>
         <AuthProvider>
-          <NavigationContainer theme={navTheme}>
+          <NavigationContainer theme={navTheme} ref={navigationRef}>
             <StatusBar style="dark" />
             <RootNavigator />
             <DevNetworkInspector />
+            <CustomAlertModal />
             <Toast />
           </NavigationContainer>
         </AuthProvider>

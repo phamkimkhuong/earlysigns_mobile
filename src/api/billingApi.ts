@@ -83,6 +83,70 @@ export const billingApi = {
     }
     return data;
   },
+
+  /**
+   * Fetch current user referral status & usage
+   */
+  async getReferralStatus(): Promise<any> {
+    const data = await httpClient.get(API_ENDPOINTS.BILLING.REFERRAL_STATUS);
+    if (data?.usage) {
+      useBillingStore.getState().setUsage(data.usage);
+    }
+    return data;
+  },
+
+  /**
+   * Generate referral code for user
+   */
+  async generateReferralCode(): Promise<any> {
+    const data = await httpClient.post(API_ENDPOINTS.BILLING.REFERRAL_GENERATE, {});
+    if (data?.usage) {
+      useBillingStore.getState().setUsage(data.usage);
+    }
+    return data;
+  },
+
+  /**
+   * Redeem referral code from friend (grants 7 days Pro)
+   */
+  async redeemReferralCode(code: string): Promise<any> {
+    const data = await httpClient.post(API_ENDPOINTS.BILLING.REFERRAL_REDEEM, {
+      code: code.trim().toUpperCase(),
+    });
+    if (data?.usage) {
+      useBillingStore.getState().setUsage(data.usage);
+    } else {
+      await billingApi.getUsage().catch(() => {});
+    }
+    return data;
+  },
+
+  /**
+   * Fetch user billing payment history
+   */
+  async getBillingHistory(): Promise<any[]> {
+    const data = await httpClient.get<{ items: any[] }>(API_ENDPOINTS.BILLING.HISTORY);
+    return Array.isArray(data?.items) ? data.items : [];
+  },
+
+  /**
+   * Fetch saved checkout billing profile
+   */
+  async getBillingProfile(): Promise<any> {
+    return httpClient.get(API_ENDPOINTS.BILLING.PROFILE);
+  },
+
+  /**
+   * Create PayOS checkout payment order
+   */
+  async createCheckout(payload: {
+    package_id: string;
+    billing_info: Record<string, any>;
+    save_profile?: boolean;
+    agree_terms: boolean;
+  }): Promise<{ ok: boolean; order_code: number; checkout_url: string }> {
+    return httpClient.post(API_ENDPOINTS.BILLING.CHECKOUT, payload);
+  },
 };
 
 export default billingApi;

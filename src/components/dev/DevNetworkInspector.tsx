@@ -51,7 +51,7 @@ export default function DevNetworkInspector() {
       <TouchableOpacity
         activeOpacity={0.8}
         onPress={() => setOpen(true)}
-        className="absolute bottom-20 right-4 z-50 bg-slate-900/95 border border-indigo-500/80 px-3 py-2 rounded-full flex-row items-center gap-1.5 shadow-lg"
+        className="absolute bottom-20 right-4 z-50 bg-slate-900 border border-indigo-500 px-3 py-2 rounded-full flex-row items-center gap-1.5 shadow-lg"
         style={{ elevation: 10 }}
       >
         <Activity size={14} color="#818cf8" />
@@ -93,7 +93,7 @@ export default function DevNetworkInspector() {
           </View>
 
           {/* Search Filter */}
-          <View className="p-3 border-b border-slate-800/80">
+          <View className="p-3 border-b border-slate-800">
             <TextInput
               value={search}
               onChangeText={setSearch}
@@ -173,7 +173,7 @@ export default function DevNetworkInspector() {
 
                     {/* Detailed Accordion View */}
                     {isExpanded ? (
-                      <View className="p-3 border-t border-slate-800 bg-slate-950/70 gap-2.5">
+                      <View className="p-3 border-t border-slate-800 bg-slate-950 gap-2.5">
                         {/* Full URL */}
                         <View>
                           <Text className="text-slate-400 text-2xs font-bold uppercase tracking-wider mb-0.5">

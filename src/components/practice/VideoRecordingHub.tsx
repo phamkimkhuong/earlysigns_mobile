@@ -385,6 +385,26 @@ export default function VideoRecordingHub({
 
         {/* Hero Circular Action Button */}
         <TouchableOpacity
+          accessible={true}
+          accessibilityRole="button"
+          accessibilityLabel={
+            isRecording
+              ? t("videos.practice.accessibilityStopRecording") || "Dừng thu âm và gửi AI chấm điểm"
+              : isStarting
+              ? t("videos.practice.accessibilityStarting") || "Đang khởi động micro..."
+              : checking
+              ? t("videos.practice.accessibilityAnalyzing") || "Hệ thống AI đang chấm điểm, vui lòng đợi..."
+              : t("videos.practice.accessibilityStartRecording") || "Bắt đầu thu âm phát âm"
+          }
+          accessibilityHint={
+            isRecording
+              ? t("videos.practice.accessibilityRecordHint") || "Nhấn đúp để kết thúc bài nói và gửi chấm điểm"
+              : t("videos.practice.accessibilityRecordHint") || "Nhấn đúp để bắt đầu thu âm câu luyện tập"
+          }
+          accessibilityState={{
+            disabled: !!(disabled || isStarting || checking || !hasSentence),
+            busy: !!(isStarting || checking),
+          }}
           activeOpacity={0.85}
           disabled={disabled || isStarting || checking || !hasSentence}
           onPress={handlePress}
@@ -477,7 +497,7 @@ export default function VideoRecordingHub({
       {/* 7. AI EVALUATION SCORE CARD */}
       {showResultDetails && !checking && !isRecording ? (
         <View
-          className="w-full bg-slate-50/90 rounded-2xl p-4 items-center gap-3 mt-1"
+          className="w-full bg-slate-50 rounded-2xl p-4 items-center gap-3 mt-1"
           style={{ borderWidth: 1, borderColor: "#e2e8f0" }}
         >
           {/* Score Crown */}
@@ -501,6 +521,9 @@ export default function VideoRecordingHub({
           <View className="flex-row items-center gap-2 w-full pt-1">
             {/* Replay My Voice */}
             <TouchableOpacity
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel={t("videos.practice.accessibilityPlayVoice") || t("videos.practice.listenMyVoice") || "Nghe lại giọng tôi"}
               activeOpacity={0.8}
               onPress={handleReplay}
               className="flex-1 py-2.5 bg-white rounded-xl items-center justify-center flex-row gap-1.5 shadow-2xs"
@@ -514,6 +537,10 @@ export default function VideoRecordingHub({
 
             {/* Toggle Phoneme Details */}
             <TouchableOpacity
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel={t("videos.practice.accessibilityViewPhonemes") || t("videos.practice.viewPhonemeDetails") || "Phân tích âm vị"}
+              accessibilityState={{ expanded: showDetails }}
               activeOpacity={0.8}
               onPress={handleToggleDetails}
               className="flex-1 py-2.5 bg-indigo-600 rounded-xl items-center justify-center flex-row gap-1.5 shadow-sm active:bg-indigo-700"
@@ -532,6 +559,9 @@ export default function VideoRecordingHub({
 
           {/* Quick Re-record Button */}
           <TouchableOpacity
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel={t("sentence.tryAgainLowScore") || "Luyện lại câu này"}
             activeOpacity={0.8}
             onPress={handlePress}
             className="flex-row items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg"

@@ -131,7 +131,7 @@ export default function StagedAiProgress({
   // COMPACT VARIANT: Sleek inline pill
   if (variant === "compact") {
     return (
-      <View className="bg-indigo-50/90 border border-indigo-200/90 rounded-2xl p-3.5 gap-2.5 my-1">
+      <View className="bg-indigo-50 border border-indigo-200 rounded-2xl p-3.5 gap-2.5 my-1">
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center gap-2 flex-1 pr-2">
             <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
@@ -149,7 +149,7 @@ export default function StagedAiProgress({
         </View>
 
         {/* Slim Progress Bar */}
-        <View className="h-1.5 bg-indigo-200/60 rounded-full overflow-hidden">
+        <View className="h-1.5 bg-indigo-200 rounded-full overflow-hidden">
           <Animated.View
             className="h-full bg-indigo-600 rounded-full"
             style={{ width: widthInterpolation }}
@@ -161,7 +161,7 @@ export default function StagedAiProgress({
 
   // CARD VARIANT: Full AI Analysis Dashboard Card
   return (
-    <View className="bg-indigo-50/80 border border-indigo-200/90 rounded-3xl p-4 gap-3.5 my-1 shadow-sm">
+    <View className="bg-indigo-50 border border-indigo-200 rounded-3xl p-4 gap-3.5 my-1 shadow-sm">
       {/* Top Header */}
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center gap-2.5">
@@ -187,7 +187,7 @@ export default function StagedAiProgress({
       </View>
 
       {/* Progress Track */}
-      <View className="h-2 bg-indigo-200/60 rounded-full overflow-hidden">
+      <View className="h-2 bg-indigo-200 rounded-full overflow-hidden">
         <Animated.View
           className="h-full bg-indigo-600 rounded-full"
           style={{ width: widthInterpolation }}

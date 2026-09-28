@@ -8,7 +8,7 @@ export type RootStackParamList = {
   Main: undefined;
   Videos: undefined;
   Text: { entry?: "input" | "ocr" } | undefined;
-  Phonemes: { startLesson?: boolean } | undefined;
+  Phonemes: { startLesson?: boolean; startScreening?: boolean } | undefined;
   Journey: undefined;
   VideoPractice: { youtubeId: string };
   Terms: undefined;
@@ -19,4 +19,6 @@ export type RootStackParamList = {
   Payment: { packageId?: string } | undefined;
   PaymentWebView: { url: string; orderCode?: string };
   PaymentResult: { orderCode?: string; status?: string; variant?: string } | undefined;
+  PronunciationProfile: undefined;
+  NotificationSettings: undefined;
 };

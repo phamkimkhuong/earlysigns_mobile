@@ -1,6 +1,7 @@
 // UI Base Components
 export { default as PrimaryButton, ChipButton } from "./ui/PrimaryButton";
 export { default as AppModal } from "./ui/AppModal";
+export { default as CustomAlertModal } from "./ui/CustomAlertModal";
 export { default as LanguageSwitcher } from "./ui/LanguageSwitcher";
 export { default as DialectToggle } from "./ui/DialectToggle";
 export { default as UpgradeProModal } from "./ui/UpgradeProModal";
@@ -20,3 +21,6 @@ export { default as StagedAiProgress } from "./practice/StagedAiProgress";
 
 // Payment Components
 export { default as Packages } from "./payment/Packages";
+
+// Profile Components
+export { default as GuestProfileView } from "./profile/GuestProfileView";

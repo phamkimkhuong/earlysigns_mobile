@@ -5,7 +5,11 @@ import { ChipButton } from "./PrimaryButton";
 import { setStoredLanguage } from "@/core/i18n";
 import { useAuth } from "@/services/Auth";
 
-export default function LanguageSwitcher() {
+interface LanguageSwitcherProps {
+  showLabel?: boolean;
+}
+
+export default function LanguageSwitcher({ showLabel = false }: LanguageSwitcherProps = {}) {
   const { i18n, t } = useTranslation();
   const { updateUserLanguage } = useAuth();
   const current = String(i18n.resolvedLanguage || i18n.language || "vi").startsWith("vi")
@@ -26,7 +30,9 @@ export default function LanguageSwitcher() {
 
   return (
     <View className="flex-row items-center gap-2 flex-wrap">
-      <Text className="text-appTextSecondary text-[13px]">{t("language.label")}:</Text>
+      {showLabel ? (
+        <Text className="text-appTextSecondary text-[13px]">{t("language.label")}:</Text>
+      ) : null}
       <ChipButton
         title={t("language.en")}
         active={current === "en"}

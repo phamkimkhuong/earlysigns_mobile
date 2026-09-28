@@ -97,10 +97,10 @@ export const authApi = {
   },
 
   /**
-   * Update user preferences (dialect, language, etc.)
+   * Update user preferences (dialect, language, etc.) - Backend expects PATCH
    */
   async updatePreferences(preferences: Record<string, any>): Promise<any> {
-    return httpClient.post(API_ENDPOINTS.AUTH.PREFERENCES, preferences);
+    return httpClient.patch(API_ENDPOINTS.AUTH.PREFERENCES, preferences);
   },
 
   /**

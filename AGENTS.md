@@ -16,3 +16,20 @@ Khi viết giao diện trong dự án (NativeWind v4 + React Native 0.86):
 ## 🛡️ 2. Quy chuẩn Kiến trúc NavigationContainer
 - Luôn đặt `<NavigationContainer>` ở root cấp cao nhất trong `App.tsx`.
 - Tuyệt đối không đặt `<NavigationContainer>` bên trong các navigator/screen con có chứa `useTranslation()` để tránh unmount/remount làm mất context điều hướng khi đổi ngôn ngữ.
+
+## 📏 3. Quy Chuẩn Kích Cỡ Chữ Toàn Ứng Dụng (Typography & Font Hierarchy)
+Để đảm bảo trải nghiệm đọc tối ưu trên thiết bị di động (tương đương chuẩn iOS Settings & Material Design), tránh giao diện bị vụn hoặc quá nhỏ khi hiển thị trên màn hình mật độ pixel cao (Retina/OLED):
+1. **Dòng menu / Hàng cài đặt / Danh sách lựa chọn (List Items & Setting Rows):**
+   - Tiêu đề mục: Dùng `text-[15px]` (chuẩn Apple Settings) hoặc `text-base` (16px), font-semibold hoặc font-bold.
+   - Mô tả phụ / Chú thích dưới mục: Tối thiểu `text-[13px]` (hoặc `text-sm`), không dùng `text-xs` (12px) hay `text-2xs` (10px) cho nội dung đọc dài.
+2. **Nội dung văn bản chính / Điều khoản / Chính sách (Body & Legal Text):**
+   - Tiêu đề từng điều khoản: `text-base` (16px) hoặc `text-lg` (18px) font-extrabold.
+   - Nội dung điều khoản chi tiết: `text-[15px]` với `leading-6` để người dùng đọc thoải mái.
+3. **Các nhãn nhỏ, Huy hiệu, Badge trạng thái (Badges & Tags):**
+   - Tối thiểu `text-xs` (12px), tuyệt đối KHÔNG dùng `text-[10px]` hay `text-2xs` vì khó đọc trên màn hình nhỏ hoặc với người lớn tuổi.
+4. **Nút bấm chính & Nút hành động phụ (Buttons):**
+   - Nút lớn (Primary): `text-base` (16px) font-extrabold.
+   - Nút vừa / Nút phụ (Secondary/Chip): `text-sm` (14px) font-bold.
+5. **Tiêu đề phân đoạn (Section Headers):**
+   - Dùng `text-xs font-bold uppercase tracking-wider` hoặc `text-[13px] font-bold`.
+
