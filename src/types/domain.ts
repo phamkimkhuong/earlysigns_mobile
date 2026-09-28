@@ -10,6 +10,7 @@ export interface SoundAnalysisRow {
   status: string;
   pronounced: string;
   tipText: string;
+  wordIndex?: number;
 }
 
 export interface WordAlignmentItem {

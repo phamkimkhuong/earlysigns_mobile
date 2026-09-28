@@ -4,6 +4,7 @@ import {
   AudioQuality,
   IOSOutputFormat,
   createAudioPlayer,
+  getRecordingPermissionsAsync,
   requestRecordingPermissionsAsync,
   setAudioModeAsync,
   useAudioRecorder,
@@ -22,7 +23,7 @@ import { httpClient, AppHttpError } from "@/core/httpClient";
 import { float32ToWavBytes, pcm16ToWavBytes } from "@/utils/audio";
 import type { SentenceCheckResult, UserTier, MicError, Dialect } from "@/types/domain";
 
-const MAX_RECORDING_MS = 60_000;
+const DEFAULT_MAX_RECORDING_MS = 25_000;
 const SHORT_SILENCE_MS = 700;
 const VAD_CALIBRATION_MS = 350;
 const DEFAULT_NOISE_FLOOR_DB = -50;
@@ -142,6 +143,8 @@ export interface UsePronunciationCheckOptions {
   userKey?: string;
   onProgressLogged?: (payload: any) => void;
   isScreening?: boolean;
+  maxRecordingMs?: number;
+  autoStopOnSilence?: boolean;
 }
 
 export interface UsePronunciationCheckResult {
@@ -173,6 +176,8 @@ export function usePronunciationCheck({
   userKey = "",
   onProgressLogged,
   isScreening = false,
+  maxRecordingMs = DEFAULT_MAX_RECORDING_MS,
+  autoStopOnSilence = false,
 }: UsePronunciationCheckOptions): UsePronunciationCheckResult {
   const { t } = useTranslation();
   const [isRecording, setIsRecording] = useState(false);
@@ -182,6 +187,11 @@ export function usePronunciationCheck({
   const [audioUri, setAudioUri] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [micError, setMicError] = useState<MicError | null>(null);
+
+  const maxRecordingMsRef = useRef(maxRecordingMs);
+  maxRecordingMsRef.current = maxRecordingMs;
+  const autoStopOnSilenceRef = useRef(autoStopOnSilence);
+  autoStopOnSilenceRef.current = autoStopOnSilence;
 
   const recorder = useAudioRecorder(RECORDING_OPTIONS);
   const recordingRef = useRef(false);
@@ -217,6 +227,8 @@ export function usePronunciationCheck({
 
     const chunk = new Uint8Array(buffer.data);
     streamChunksRef.current.push(chunk);
+
+    if (!autoStopOnSilenceRef.current) return;
 
     const int16 = new Int16Array(buffer.data);
     if (int16.length === 0) return;
@@ -564,7 +576,10 @@ export function usePronunciationCheck({
       await stopRecorder();
 
       try {
-        const permission = await requestRecordingPermissionsAsync();
+        let permission = await getRecordingPermissionsAsync();
+        if (!permission.granted) {
+          permission = await requestRecordingPermissionsAsync();
+        }
         if (!permission.granted) {
           throw Object.assign(new Error("Microphone permission denied"), {
             name: "NotAllowedError",
@@ -598,29 +613,31 @@ export function usePronunciationCheck({
           useStreamRef.current = false;
           await recorder.prepareToRecordAsync();
           recorder.record();
-          meterTimerRef.current = setInterval(() => {
-            if (sessionRef.current !== sessionId) return;
-            const status = recorder.getStatus();
-            if (!status?.isRecording) return;
-            const metering = Number(status.metering);
-            const isSpeech = Number.isFinite(metering) && metering > -32;
-            if (isSpeech) {
-              speechSeenRef.current = true;
-              if (silenceTimerRef.current) {
-                clearTimeout(silenceTimerRef.current);
-                silenceTimerRef.current = null;
-              }
-              return;
-            }
-            if (speechSeenRef.current && !silenceTimerRef.current) {
-              silenceTimerRef.current = setTimeout(() => {
-                silenceTimerRef.current = null;
-                if (sessionRef.current === sessionId) {
-                  void stopRecordingRef.current?.({ check: true });
+          if (autoStopOnSilenceRef.current) {
+            meterTimerRef.current = setInterval(() => {
+              if (sessionRef.current !== sessionId) return;
+              const status = recorder.getStatus();
+              if (!status?.isRecording) return;
+              const metering = Number(status.metering);
+              const isSpeech = Number.isFinite(metering) && metering > -32;
+              if (isSpeech) {
+                speechSeenRef.current = true;
+                if (silenceTimerRef.current) {
+                  clearTimeout(silenceTimerRef.current);
+                  silenceTimerRef.current = null;
                 }
-              }, SHORT_SILENCE_MS);
-            }
-          }, 80);
+                return;
+              }
+              if (speechSeenRef.current && !silenceTimerRef.current) {
+                silenceTimerRef.current = setTimeout(() => {
+                  silenceTimerRef.current = null;
+                  if (sessionRef.current === sessionId) {
+                    void stopRecordingRef.current?.({ check: true });
+                  }
+                }, SHORT_SILENCE_MS);
+              }
+            }, 80);
+          }
         }
 
         if (sessionRef.current !== sessionId) {
@@ -640,20 +657,14 @@ export function usePronunciationCheck({
           if (sessionRef.current === sessionId) {
             void stopRecordingRef.current?.({ check: true });
           }
-        }, MAX_RECORDING_MS);
+        }, maxRecordingMsRef.current);
       } catch (e: any) {
         if (sessionRef.current !== sessionId) return;
         setIsRecording(false);
         setIsStarting(false);
         const classified = classifyMicError(e);
         setMicError(classified);
-        setError(
-          classified.type === "denied"
-            ? t("sentence.micError.denied.body")
-            : classified.type === "notFound"
-            ? t("sentence.micError.notFound.body")
-            : t("sentence.micError.generic.body") || "Unable to start microphone recording. Please try again."
-        );
+        setError("");
       }
     },
     [clearTimers, onDailyLimitReached, recorder, stopRecorder, stream, t, userKey, userTier]
@@ -663,6 +674,7 @@ export function usePronunciationCheck({
     setResult(null);
     setAudioUri(null);
     setError("");
+    setMicError(null);
   }, []);
 
   const replayRecording = useCallback(async () => {

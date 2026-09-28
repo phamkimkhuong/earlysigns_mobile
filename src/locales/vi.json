@@ -185,10 +185,11 @@
       "checkFailed": "Kiểm tra thất bại. Hãy ghi âm lại."
     },
     "micError": {
+      "openSettings": "Mở Cài đặt",
       "denied": {
         "title": "Quyền truy cập micro bị từ chối",
-        "body": "Trình duyệt đã chặn quyền truy cập micro. Hãy cấp quyền và thử lại.",
-        "hint": "Nhấp vào biểu tượng khóa hoặc micro trên thanh địa chỉ, chọn \"Cho phép\" cho Micro, rồi tải lại trang."
+        "body": "Ứng dụng chưa được cấp quyền micro. Vui lòng bật quyền micro trong Cài đặt của máy để tiếp tục luyện phát âm.",
+        "hint": "Vui lòng vào Cài đặt thiết bị > Ứng dụng > Bật quyền Micro."
       },
       "notFound": {
         "title": "Không tìm thấy micro",
@@ -245,6 +246,16 @@
       "videoLabel": "Xem video hướng dẫn",
       "learnPhoneme": "Học âm /{{phoneme}}/",
       "learnLoading": "Đang tải bài...",
+      "selectWordHint": "Chạm vào từ để xem phân tích âm vị:",
+      "wordPerfect": "Chuẩn xác",
+      "wordErrors": "{{count}} âm cần sửa",
+      "prevWord": "Từ trước",
+      "nextWord": "Từ tiếp",
+      "wordProgress": "Từ {{current}}/{{total}}",
+      "allWordsPerfect": "Tất cả các từ đều phát âm chuẩn xác! 🎉",
+      "noPhonemesForWord": "Không có dữ liệu âm vị cho từ này.",
+      "correctSound": "Phát âm đúng",
+      "needsImprovement": "Cần sửa",
       "marker": {
         "stress": {
           "explanation": "Lỗi dấu trọng âm: bạn chưa đặt trọng âm đúng vị trí.",
@@ -468,12 +479,17 @@
     "save": "Lưu",
     "saving": "Đang lưu...",
     "saveTitlePlaceholder": "Tiêu đề cho văn bản này",
+    "paste": "Dán",
     "dialect": "Giọng",
     "ocr": {
       "title": "Quét ảnh OCR",
       "camera": "Chụp ảnh",
       "gallery": "Chọn ảnh",
       "working": "Đang đọc ảnh...",
+      "readingTip": "Hệ thống đang trích xuất chữ tiếng Anh từ hình ảnh...",
+      "permissionRequired": "Yêu cầu cấp quyền",
+      "cameraPermissionDenied": "Ứng dụng cần quyền sử dụng máy ảnh để chụp và nhận diện văn bản. Vui lòng cấp quyền trong Cài đặt.",
+      "galleryPermissionDenied": "Ứng dụng cần quyền truy cập thư viện ảnh để chọn ảnh nhận diện. Vui lòng cấp quyền trong Cài đặt.",
       "error": "Không đọc được văn bản từ ảnh này.",
       "empty": "Không tìm thấy văn bản tiếng Anh trong ảnh.",
       "cameraTitle": "Chụp ảnh",
@@ -1110,7 +1126,9 @@
       "practiceSentence": "Luyện phát âm",
       "listeningModeActive": "Chế độ luyện nghe (phụ đề đang ẩn)",
       "showSubtitles": "Hiện phụ đề",
-      "pausesOnSilence": "Nói to rõ ràng, chạm để dừng sớm",
+      "pausesOnSilence": "Nói rõ ràng, chạm để dừng (tối đa 25s)",
+      "endingSoon": "Sắp hết giờ",
+      "tapHint": "Chạm mic để luyện nói, chạm lại để kết thúc",
       "accessibilityStopRecording": "Dừng thu âm và gửi AI chấm điểm",
       "accessibilityStartRecording": "Bắt đầu thu âm phát âm",
       "accessibilityStarting": "Đang khởi động micro...",

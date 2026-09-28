@@ -755,6 +755,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                 checking={checking}
                 onRecordToggle={handleRecordToggle}
                 disabled={!playerReady}
+                maxSeconds={25}
                 micError={micError}
                 checkError={checkError}
                 result={result}
@@ -768,6 +769,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                   )
                 }
                 soundRows={soundRows}
+                words={practiceWords}
                 onPracticePhoneme={async (phoneme) => {
                   const data = await lessonApi.getPhonemeLesson(
                     phoneme,

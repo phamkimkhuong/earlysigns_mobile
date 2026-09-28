@@ -1,5 +1,8 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Keyboard, Linking, Platform } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import * as Clipboard from "expo-clipboard";
+import { customAlert } from "@/utils/customAlert";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/services/Auth";
@@ -17,6 +20,7 @@ import {
   textPracticeKeys,
 } from "@/hooks/queries/useTextPracticeQueries";
 import { useBillingUsageQuery } from "@/hooks/queries/useBillingQueries";
+import { hapticFeedback } from "@/utils/haptics";
 import type { Dialect, LessonSession } from "@/types/domain";
 
 export function useTextPracticeViewModel(navigation?: any) {
@@ -44,6 +48,50 @@ export function useTextPracticeViewModel(navigation?: any) {
   const [ocrLoading, setOcrLoading] = useState(false);
   const [lessonSession, setLessonSession] = useState<LessonSession | null>(null);
   const [lessonSessionKey, setLessonSessionKey] = useState(0);
+
+  const scrollViewRef = useRef<any>(null);
+  const [showSaveForm, setShowSaveForm] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+
+    const showSub = Keyboard.addListener(showEvent, (e) => {
+      const h = e.endCoordinates?.height || 0;
+      setKeyboardHeight(h);
+    });
+
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setKeyboardHeight(0);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+  const openSaveForm = useCallback(() => {
+    setShowSaveForm(true);
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 150);
+  }, []);
+
+  const onSaveTitleFocus = useCallback(() => {
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, Platform.OS === "android" ? 200 : 120);
+  }, []);
+
+  // Dynamic Word Count
+  const wordCount = useMemo(() => {
+    const trimmed = inputText.trim();
+    if (!trimmed) return 0;
+    return trimmed.split(/\s+/).filter(Boolean).length;
+  }, [inputText]);
 
   const userTier = useMemo(
     () =>
@@ -111,8 +159,10 @@ export function useTextPracticeViewModel(navigation?: any) {
       await textPracticeApi.savePassage(text, title, dialect);
       setSaveTitle("");
       await queryClient.invalidateQueries({ queryKey: textPracticeKeys.passages(30) });
+      return true;
     } catch (e: any) {
       setError(String(e?.message || e));
+      return false;
     } finally {
       setSaveLoading(false);
     }
@@ -128,22 +178,101 @@ export function useTextPracticeViewModel(navigation?: any) {
         setError(t("textPractice.ocrExhausted"));
         return;
       }
-      const result = fromCamera
-        ? await ImagePicker.launchCameraAsync({ quality: 0.8, base64: false })
-        : await ImagePicker.launchImageLibraryAsync({ quality: 0.8, base64: false });
-      if (result.canceled || !result.assets?.[0]) return;
-      setOcrLoading(true);
+      setError("");
+
       try {
-        const asset = result.assets[0];
-        const text = await textPracticeApi.scanOcr(asset.uri, asset.mimeType || "image/jpeg");
-        if (!text) throw new Error(t("textPractice.ocr.empty"));
-        setInputText(text);
-        incrementQuotaUsage(userKey, "ocr");
-        useBillingStore.getState().decrementDailyRemaining();
+        if (fromCamera) {
+          let perm = await ImagePicker.getCameraPermissionsAsync();
+          if (!perm.granted) {
+            perm = await ImagePicker.requestCameraPermissionsAsync();
+          }
+          if (!perm.granted) {
+            const deniedMsg = t(
+              "textPractice.ocr.cameraPermissionDenied",
+              "Ứng dụng cần quyền sử dụng máy ảnh để chụp và nhận diện văn bản. Vui lòng cấp quyền trong Cài đặt."
+            );
+            customAlert.alert(
+              t("textPractice.ocr.permissionRequired", "Yêu cầu cấp quyền"),
+              deniedMsg,
+              [
+                { text: t("common.cancel", "Huỷ"), style: "cancel" },
+                {
+                  text: t("common.openSettings", "Mở Cài đặt"),
+                  onPress: () => Linking.openSettings?.(),
+                },
+              ]
+            );
+            return;
+          }
+        } else {
+          let perm = await ImagePicker.getMediaLibraryPermissionsAsync();
+          if (!perm.granted) {
+            perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+          }
+          if (!perm.granted) {
+            const deniedMsg = t(
+              "textPractice.ocr.galleryPermissionDenied",
+              "Ứng dụng cần quyền truy cập thư viện ảnh để chọn ảnh nhận diện. Vui lòng cấp quyền trong Cài đặt."
+            );
+            customAlert.alert(
+              t("textPractice.ocr.permissionRequired", "Yêu cầu cấp quyền"),
+              deniedMsg,
+              [
+                { text: t("common.cancel", "Huỷ"), style: "cancel" },
+                {
+                  text: t("common.openSettings", "Mở Cài đặt"),
+                  onPress: () => Linking.openSettings?.(),
+                },
+              ]
+            );
+            return;
+          }
+        }
+
+        const result = fromCamera
+          ? await ImagePicker.launchCameraAsync({ quality: 0.8, base64: false })
+          : await ImagePicker.launchImageLibraryAsync({ quality: 0.8, base64: false });
+
+        if (result.canceled || !result.assets?.[0]) return;
+
+        setOcrLoading(true);
+        try {
+          const asset = result.assets[0];
+          const text = await textPracticeApi.scanOcr(asset.uri, asset.mimeType || "image/jpeg");
+          if (!text) throw new Error(t("textPractice.ocr.empty"));
+          setInputText(text);
+          incrementQuotaUsage(userKey, "ocr");
+          useBillingStore.getState().decrementDailyRemaining();
+        } finally {
+          setOcrLoading(false);
+        }
       } catch (e: any) {
-        setError(String(e?.message || e));
-      } finally {
         setOcrLoading(false);
+        const errMsg = String(e?.message || e);
+        if (errMsg.toLowerCase().includes("permission")) {
+          const deniedMsg = fromCamera
+            ? t(
+                "textPractice.ocr.cameraPermissionDenied",
+                "Ứng dụng cần quyền sử dụng máy ảnh để chụp và nhận diện văn bản. Vui lòng cấp quyền trong Cài đặt."
+              )
+            : t(
+                "textPractice.ocr.galleryPermissionDenied",
+                "Ứng dụng cần quyền truy cập thư viện ảnh để chọn ảnh nhận diện. Vui lòng cấp quyền trong Cài đặt."
+              );
+          customAlert.alert(
+            t("textPractice.ocr.permissionRequired", "Yêu cầu cấp quyền"),
+            deniedMsg,
+            [
+              { text: t("common.cancel", "Huỷ"), style: "cancel" },
+              {
+                text: t("common.openSettings", "Mở Cài đặt"),
+                onPress: () => Linking.openSettings?.(),
+              },
+            ]
+          );
+        } else {
+          setError(errMsg);
+        }
       }
     },
     [authToken, navigation, t, usageStatus, userKey, userTier]
@@ -179,6 +308,51 @@ export function useTextPracticeViewModel(navigation?: any) {
     setLessonSession(null);
   }, []);
 
+  // Fast Clipboard Paste
+  const handlePaste = useCallback(async () => {
+    try {
+      const text = await Clipboard.getStringAsync();
+      if (text) {
+        hapticFeedback.light();
+        setInputText((prev) => (prev.trim() ? `${prev.trim()}\n${text.trim()}` : text.trim()));
+        if (error) setError("");
+      }
+    } catch {
+      /* ignore clipboard error */
+    }
+  }, [error, setError, setInputText]);
+
+  // Clear Input Text
+  const handleClearText = useCallback(() => {
+    hapticFeedback.light();
+    setInputText("");
+    setSaveTitle("");
+    setShowSaveForm(false);
+    if (error) setError("");
+  }, [error, setError, setInputText, setSaveTitle]);
+
+  // Integrated Save Handler
+  const handleSavePassage = useCallback(async () => {
+    hapticFeedback.medium();
+    const ok = await savePassage();
+    if (ok) {
+      setShowSaveForm(false);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2500);
+    }
+  }, [savePassage]);
+
+  // Select Saved Passage with Haptics and Auto-Scroll
+  const onSelectPassage = useCallback(
+    (item: any) => {
+      hapticFeedback.selection();
+      setInputText(String(item?.text || ""));
+      setSaveTitle(String(item?.title || ""));
+      scrollViewRef.current?.scrollTo?.({ y: 0, animated: true });
+    },
+    [setInputText, setSaveTitle]
+  );
+
   return {
     t,
     dialect,
@@ -205,6 +379,18 @@ export function useTextPracticeViewModel(navigation?: any) {
     requestSentenceWords,
     requestSampleAudio,
     closeLessonSession,
+    scrollViewRef,
+    wordCount,
+    showSaveForm,
+    setShowSaveForm,
+    openSaveForm,
+    onSaveTitleFocus,
+    keyboardHeight,
+    saveSuccess,
+    handleSavePassage,
+    handlePaste,
+    handleClearText,
+    onSelectPassage,
   };
 }
 

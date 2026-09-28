@@ -25,7 +25,7 @@ Tài liệu này đặc tả các tính năng và luồng người dùng cần c
 8. Nhận thông báo nhắc luyện tập và thông tin sản phẩm theo lựa chọn cá nhân.
 
 ## 3. Đối tượng sử dụng
-
+<!-- 
 ### 3.1. Người dùng chưa đăng nhập hoặc đã đăng xuất
 
 Người dùng chưa đăng nhập hoặc đã đăng xuất chỉ có thể:
@@ -38,9 +38,9 @@ Người dùng chưa đăng nhập hoặc đã đăng xuất chỉ có thể:
 
 Khi người dùng chọn một tính năng trên Trang chủ mà chưa đăng nhập, ứng dụng yêu cầu đăng nhập. Sau khi đăng nhập thành công, người dùng được đưa tới đúng tính năng vừa chọn.
 
-Người dùng phải đăng nhập thành công trước khi sử dụng bất kỳ tính năng luyện tập, lưu dữ liệu, xem tiến độ, nhận thông báo hoặc mua gói nào.
+Người dùng phải đăng nhập thành công trước khi sử dụng bất kỳ tính năng luyện tập, lưu dữ liệu, xem tiến độ, nhận thông báo hoặc mua gói nào. -->
 
-### 3.2. Người dùng miễn phí đã đăng nhập
+<!-- ### 3.2. Người dùng miễn phí đã đăng nhập
 
 Người dùng miễn phí đã đăng nhập có thể:
 
@@ -50,13 +50,13 @@ Người dùng miễn phí đã đăng nhập có thể:
 - xem lịch sử và streak;
 - sử dụng các quyền lợi của tài khoản;
 - mua, khôi phục và quản lý gói Pro;
-- sử dụng hạn mức miễn phí theo tháng.
+- sử dụng hạn mức miễn phí theo tháng. -->
 
-### 3.3. Người dùng Pro
+<!-- ### 3.3. Người dùng Pro
 
-Người dùng Pro được sử dụng các tính năng và quyền lợi theo gói đã mua. Các hạn mức miễn phí theo tháng không áp dụng cho người dùng Pro trong phạm vi quyền lợi của gói. Quyền lợi cụ thể của từng gói phải được hiển thị rõ trên màn hình mua hàng và trong thông tin tài khoản.
+Người dùng Pro được sử dụng các tính năng và quyền lợi theo gói đã mua. Các hạn mức miễn phí theo tháng không áp dụng cho người dùng Pro trong phạm vi quyền lợi của gói. Quyền lợi cụ thể của từng gói phải được hiển thị rõ trên màn hình mua hàng và trong thông tin tài khoản. -->
 
-## 4. Cấu trúc chức năng chính
+<!-- ## 4. Cấu trúc chức năng chính
 
 Ứng dụng gồm hai tab chính ở thanh điều hướng phía dưới:
 
@@ -77,9 +77,9 @@ Các khu vực pháp lý và hỗ trợ gồm:
 - Điều khoản sử dụng;
 - Chính sách bảo mật;
 - Chương trình giới thiệu;
-- Liên hệ hỗ trợ.
+- Liên hệ hỗ trợ. -->
 
-## 5. Khởi động và lựa chọn ngôn ngữ
+<!-- ## 5. Khởi động và lựa chọn ngôn ngữ
 
 ### 5.1. Lần mở ứng dụng đầu tiên
 
@@ -99,7 +99,7 @@ Các khu vực pháp lý và hỗ trợ gồm:
 - Mở Trang chủ.
 - Không yêu cầu mở lại đúng bài đang luyện tập từ lần sử dụng trước.
 
-Người dùng có thể đổi ngôn ngữ bất kỳ lúc nào trong phần Hồ sơ. Thay đổi ngôn ngữ phải áp dụng ngay cho toàn bộ nội dung giao diện.
+Người dùng có thể đổi ngôn ngữ bất kỳ lúc nào trong phần Hồ sơ. Thay đổi ngôn ngữ phải áp dụng ngay cho toàn bộ nội dung giao diện. -->
 
 ## 6. Đăng nhập và tài khoản
 
@@ -114,7 +114,7 @@ Màn hình đăng nhập phải cung cấp:
 
 Trên iOS, khi ứng dụng cung cấp đăng nhập bằng Google hoặc Meta/Facebook, phải đồng thời cung cấp lựa chọn Đăng nhập với Apple tương đương.
 
-### 6.2. Đăng nhập bằng email OTP
+<!-- ### 6.2. Đăng nhập bằng email OTP
 
 Luồng sử dụng:
 
@@ -130,7 +130,7 @@ Yêu cầu:
 - Cho phép gửi lại mã.
 - Hiển thị thời gian chờ gửi lại nếu có.
 - Thông báo rõ mã sai, mã hết hạn hoặc vượt số lần thử.
-- Giữ lại mục tiêu ban đầu của người dùng, chẳng hạn bài học, paywall hoặc nội dung từ thông báo.
+- Giữ lại mục tiêu ban đầu của người dùng, chẳng hạn bài học, paywall hoặc nội dung từ thông báo. -->
 
 ### 6.3. Đăng nhập bằng Apple, Google và Meta/Facebook
 
@@ -268,7 +268,7 @@ Nếu điểm thấp, ứng dụng phải khuyến khích người dùng thử l
 
 Người dùng phải có thể thử lại mà không cần khởi động lại ứng dụng.
 
-## 9. Luyện qua video
+<!-- ## 9. Luyện qua video
 
 ### 9.1. Danh mục video
 
@@ -282,9 +282,9 @@ Danh mục phải cho phép:
 - tải thêm nội dung;
 - mở chi tiết một video.
 
-Khi không có video phù hợp, hiển thị hướng dẫn thay đổi bộ lọc.
+Khi không có video phù hợp, hiển thị hướng dẫn thay đổi bộ lọc. -->
 
-### 9.2. Luyện từng câu trong video
+<!-- ### 9.2. Luyện từng câu trong video
 
 1. Người dùng mở một video.
 2. Ứng dụng hiển thị trình phát và câu hiện tại.
@@ -294,7 +294,7 @@ Khi không có video phù hợp, hiển thị hướng dẫn thay đổi bộ l�
 6. Ứng dụng hiển thị kết quả phát âm.
 7. Người dùng tiếp tục tới câu kế tiếp hoặc luyện lại câu hiện tại.
 
-Ứng dụng phải ghi nhận tiến độ đã xem/luyện để người dùng có thể tiếp tục vào lần sau.
+Ứng dụng phải ghi nhận tiến độ đã xem/luyện để người dùng có thể tiếp tục vào lần sau. -->
 
 ## 10. Luyện văn bản cá nhân
 
@@ -385,7 +385,7 @@ Sau khi đạt ngưỡng, hiển thị:
 
 Khi chưa có dữ liệu hoặc chưa đạt ngưỡng, không hiển thị biểu đồ trống hoặc điểm mặc định gây hiểu nhầm.
 
-### 13.2. Cài đặt tài khoản
+<!-- ### 13.2. Cài đặt tài khoản
 
 Người dùng có thể:
 
@@ -399,7 +399,7 @@ Người dùng có thể:
 - cài đặt thông báo;
 - xem chương trình giới thiệu;
 - mở Điều khoản và Chính sách bảo mật;
-- đăng xuất.
+- đăng xuất. -->
 
 <!-- ## 14. Hạn mức người dùng miễn phí
 

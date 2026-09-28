@@ -150,6 +150,19 @@ export default function IPAChecking({
   }, [sessionKey, open, instructionsHtml, clearResult]);
 
   useEffect(() => {
+    return () => {
+      if (sampleSoundRef.current) {
+        try {
+          sampleSoundRef.current.remove();
+        } catch {
+          /* ignore */
+        }
+        sampleSoundRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     if (result) {
       setResultsByIndex((prev) => ({ ...prev, [currentIndex]: result }));
       const score = Number(result.accuracy ?? result.overall_score ?? 0);
@@ -363,9 +376,9 @@ export default function IPAChecking({
                   {t(`sentence.micError.${micError.type}.title`)}{" "}
                   {t(`sentence.micError.${micError.type}.body`)}
                 </Text>
+              ) : error ? (
+                <Text className="text-danger">{error}</Text>
               ) : null}
-              {showTryAgain ? <Text className="text-appTextSecondary">{t("sentence.tryAgainLowScore")}</Text> : null}
-              {error ? <Text className="text-danger">{error}</Text> : null}
               {showResultDetails ? (
                 <Text className="text-4xl font-extrabold text-center" style={{ color: checkResultScoreColor(sentenceScore01) }}>
                   {scorePct}%
@@ -375,6 +388,7 @@ export default function IPAChecking({
                 showDetails ? (
                   <SoundAnalysis
                     rows={soundRows}
+                    words={displayWords}
                     onPracticePhoneme={onPracticePhoneme}
                     practicePhonemeLoading={practicePhonemeLoading}
                     disabled={isRecording || checking}

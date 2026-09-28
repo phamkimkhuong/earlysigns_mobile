@@ -196,10 +196,11 @@
       "checkFailed": "Check failed. Try recording again."
     },
     "micError": {
+      "openSettings": "Open Settings",
       "denied": {
-        "title": "Microphone access denied",
-        "body": "Your browser has blocked microphone access. Allow it and try again.",
-        "hint": "Click the lock or microphone icon in the address bar, set Microphone to \"Allow\", then reload the page."
+        "title": "Microphone permission denied",
+        "body": "Microphone access is not permitted. Please grant microphone permission in device settings to practice speaking.",
+        "hint": "Please go to device Settings > App permissions > Enable Microphone."
       },
       "notFound": {
         "title": "No microphone found",
@@ -256,6 +257,16 @@
       "videoLabel": "Watch tutorial video",
       "learnPhoneme": "Learn /{{phoneme}}/",
       "learnLoading": "Loading lesson...",
+      "selectWordHint": "Tap a word to inspect its phonemes:",
+      "wordPerfect": "Perfect",
+      "wordErrors": "{{count}} to improve",
+      "prevWord": "Previous",
+      "nextWord": "Next",
+      "wordProgress": "Word {{current}}/{{total}}",
+      "allWordsPerfect": "All words pronounced accurately! 🎉",
+      "noPhonemesForWord": "No phonetic data for this word.",
+      "correctSound": "Correct",
+      "needsImprovement": "Needs practice",
       "marker": {
         "stress": {
           "explanation": "Stress mark error: word stress was not placed correctly.",
@@ -469,12 +480,17 @@
     "save": "Save",
     "saving": "Saving...",
     "saveTitlePlaceholder": "Title for this text",
+    "paste": "Paste",
     "dialect": "Dialect",
     "ocr": {
       "title": "OCR Text Scan",
       "camera": "Take photo",
       "gallery": "Choose photo",
       "working": "Reading photo...",
+      "readingTip": "Extracting English text from image...",
+      "permissionRequired": "Permission Required",
+      "cameraPermissionDenied": "Camera access is needed to capture and recognize practice text. Please allow camera access in Settings.",
+      "galleryPermissionDenied": "Photo library access is needed to choose pictures to recognize. Please allow photo access in Settings.",
       "error": "Could not read text from this photo.",
       "empty": "No English practice text found in this photo.",
       "cameraTitle": "Take a photo",
@@ -1112,7 +1128,9 @@
       "practiceSentence": "Practice sentence",
       "listeningModeActive": "Listening mode active (subtitles hidden)",
       "showSubtitles": "Show subtitles",
-      "pausesOnSilence": "Speak clearly, tap to finish",
+      "pausesOnSilence": "Speak clearly, tap to finish (max 25s)",
+      "endingSoon": "Ending soon",
+      "tapHint": "Tap mic to speak, tap again to finish",
       "accessibilityStopRecording": "Stop recording and submit for AI score",
       "accessibilityStartRecording": "Start pronunciation recording",
       "accessibilityStarting": "Starting microphone...",

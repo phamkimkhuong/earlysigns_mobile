@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import {
+  AppState,
   ScrollView,
   Switch,
   Text,
@@ -46,9 +47,9 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
   const [settings, setSettings] = useState<NotificationSettings>(getStoredNotificationSettings());
   const [permissionGranted, setPermissionGranted] = useState(false);
 
-  // Sync real device permission on mount
+  // Sync real device permission on mount and when app resumes from background (e.g. from Settings)
   useEffect(() => {
-    (async () => {
+    const syncStatus = async () => {
       const status = await getNotificationPermissionStatus();
       setPermissionGranted(status.granted);
 
@@ -74,7 +75,19 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
           await saveNotificationSettings(synced);
         }
       }
-    })();
+    };
+
+    syncStatus();
+
+    const sub = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "active") {
+        syncStatus();
+      }
+    });
+
+    return () => {
+      sub.remove();
+    };
   }, []);
 
   /**

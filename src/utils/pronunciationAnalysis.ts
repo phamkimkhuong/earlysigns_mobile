@@ -89,6 +89,7 @@ export function buildSoundAnalysisRows(alignment?: WordAlignmentItem[]): SoundAn
         status,
         pronounced: status === "deleted" ? "" : predicted || expected,
         tipText: String(item?.tip || ""),
+        wordIndex: typeof item?.word_index === "number" ? item.word_index : undefined,
       };
     })
     .filter((row) => Boolean(row.expected));

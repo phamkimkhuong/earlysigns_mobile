@@ -4,7 +4,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { CheckCircle2, Circle, Sparkles } from "lucide-react-native";
+import { AudioLines, CheckCircle2, Circle } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 
 export interface StagedAiProgressProps {
@@ -52,7 +52,7 @@ export default function StagedAiProgress({
     };
   }, [progressAnim]);
 
-  // Breathing pulse animation for AI Sparkle icon
+  // Breathing pulse animation for progress indicator icon
   useEffect(() => {
     if (!active) {
       pulseAnim.setValue(1);
@@ -136,7 +136,7 @@ export default function StagedAiProgress({
           <View className="flex-row items-center gap-2 flex-1 pr-2">
             <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
               <View className="w-6 h-6 rounded-lg bg-indigo-600 items-center justify-center">
-                <Sparkles size={13} color="#ffffff" />
+                <AudioLines size={13} color="#ffffff" />
               </View>
             </Animated.View>
             <Text className="text-xs font-bold text-indigo-900" numberOfLines={1}>
@@ -144,7 +144,7 @@ export default function StagedAiProgress({
             </Text>
           </View>
           <View className="bg-indigo-600 px-2 py-0.5 rounded-full">
-            <Text className="text-2xs font-black text-white">{percent}%</Text>
+            <Text className="text-xs font-black text-white">{percent}%</Text>
           </View>
         </View>
 
@@ -167,14 +167,14 @@ export default function StagedAiProgress({
         <View className="flex-row items-center gap-2.5">
           <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
             <View className="w-9 h-9 rounded-2xl bg-indigo-600 items-center justify-center shadow-sm">
-              <Sparkles size={18} color="#ffffff" />
+              <AudioLines size={18} color="#ffffff" />
             </View>
           </Animated.View>
           <View>
             <Text className="text-sm font-black text-slate-900 tracking-tight">
               {title || t("sentence.aiProgress.title")}
             </Text>
-            <Text className="text-2xs font-medium text-slate-500">
+            <Text className="text-xs font-medium text-slate-500">
               {stages[currentStageIndex]?.label}...
             </Text>
           </View>
@@ -195,7 +195,10 @@ export default function StagedAiProgress({
       </View>
 
       {/* 3-Stage Checklist */}
-      <View className="bg-white/80 rounded-2xl p-3 gap-2.5 border border-indigo-100">
+      <View
+        className="rounded-2xl p-3 gap-2.5 border border-indigo-100"
+        style={{ backgroundColor: "#ffffff" }}
+      >
         {stages.map((stage, idx) => {
           const isDone = currentStageIndex > idx;
           const isCurrent = currentStageIndex === idx;
@@ -231,11 +234,11 @@ export default function StagedAiProgress({
 
               {/* Status pill on right */}
               {isDone ? (
-                <Text className="text-2xs font-bold text-emerald-600">✓</Text>
+                <Text className="text-xs font-bold text-emerald-600">✓</Text>
               ) : isCurrent ? (
-                <Text className="text-2xs font-bold text-indigo-600 animate-pulse">...</Text>
+                <Text className="text-xs font-bold text-indigo-600 animate-pulse">...</Text>
               ) : (
-                <Text className="text-2xs font-medium text-slate-300">--</Text>
+                <Text className="text-xs font-medium text-slate-300">--</Text>
               )}
             </View>
           );

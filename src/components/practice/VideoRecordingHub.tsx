@@ -2,17 +2,18 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
+  Linking,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import {
   AlertCircle,
+  AudioLines,
   ChevronDown,
   ChevronUp,
   Mic,
   RotateCcw,
-  Sparkles,
   Square,
   Volume2,
 } from "lucide-react-native";
@@ -38,8 +39,10 @@ export interface VideoRecordingHubProps {
   replayRecording: () => Promise<void>;
   onToggleDetails: () => void;
   soundRows?: any[];
+  words?: { word: string; ipa?: string }[];
   onPracticePhoneme?: (phoneme: string) => void;
   hasSentence: boolean;
+  maxSeconds?: number;
 }
 
 export default function VideoRecordingHub({
@@ -57,12 +60,14 @@ export default function VideoRecordingHub({
   replayRecording,
   onToggleDetails,
   soundRows = [],
+  words = [],
   onPracticePhoneme,
   hasSentence,
+  maxSeconds = 25,
 }: VideoRecordingHubProps) {
   const { t } = useTranslation();
 
-  // Timer counter during recording (00:00)
+  // Timer counter during recording (00:00 / 00:25)
   const [recordSeconds, setRecordSeconds] = useState(0);
   const startTimeRef = useRef<number | null>(null);
 
@@ -89,19 +94,22 @@ export default function VideoRecordingHub({
   useEffect(() => {
     if (!isRecording) {
       startTimeRef.current = null;
+      setRecordSeconds(0);
       return;
     }
     startTimeRef.current = Date.now();
+    setRecordSeconds(0);
     const interval = setInterval(() => {
       if (startTimeRef.current) {
-        setRecordSeconds(Math.floor((Date.now() - startTimeRef.current) / 1000));
+        const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
+        setRecordSeconds(Math.min(elapsed, maxSeconds));
       }
-    }, 1000);
+    }, 500);
     return () => {
       clearInterval(interval);
       startTimeRef.current = null;
     };
-  }, [isRecording]);
+  }, [isRecording, maxSeconds]);
 
   // Format MM:SS
   const formattedTime = useMemo(() => {
@@ -110,6 +118,15 @@ export default function VideoRecordingHub({
     const secs = elapsed % 60;
     return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
   }, [isRecording, recordSeconds]);
+
+  const maxTimeFormatted = useMemo(() => {
+    const mins = Math.floor(maxSeconds / 60);
+    const secs = maxSeconds % 60;
+    return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  }, [maxSeconds]);
+
+  const remainingSeconds = Math.max(0, maxSeconds - recordSeconds);
+  const isNearLimit = isRecording && remainingSeconds <= 5;
 
   // Multi-tier ripple soundwaves animation when recording
   useEffect(() => {
@@ -270,7 +287,7 @@ export default function VideoRecordingHub({
 
   return (
     <View
-      className="bg-white rounded-3xl p-5 items-center gap-3.5"
+      className="bg-white rounded-3xl p-4 items-center gap-2"
       style={{
         borderColor: "#f1f5f9",
         borderWidth: 1,
@@ -281,48 +298,53 @@ export default function VideoRecordingHub({
         shadowRadius: 8,
       }}
     >
-      {/* 1. TOP DYNAMIC STATUS PILL */}
-      <View className="items-center">
-        {isStarting ? (
+      {/* 1. TOP DYNAMIC STATUS PILL (Only during active recording/starting/checking states) */}
+      {isStarting ? (
+        <View className="items-center">
           <View className="flex-row items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-50 border border-amber-200">
             <ActivityIndicator size={11} color="#d97706" />
-            <Text className="text-2xs font-bold text-amber-800">
+            <Text className="text-xs font-bold text-amber-800">
               {t("videos.practice.startingMic")}
             </Text>
           </View>
-        ) : isRecording ? (
-          <View className="flex-row items-center gap-2 px-4 py-1.5 rounded-full bg-rose-50 border border-rose-200">
-            <View className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse" />
-            <Text className="text-xs font-black text-rose-700 tracking-wide">
-              {t("videos.practice.record")} • {formattedTime}
+        </View>
+      ) : isRecording ? (
+        <View className="items-center">
+          <View
+            className="flex-row items-center gap-2 px-4 py-1.5 rounded-full"
+            style={{
+              backgroundColor: isNearLimit ? "#fff7ed" : "#fff1f2",
+              borderColor: isNearLimit ? "#fdba74" : "#fecdd3",
+              borderWidth: 1,
+            }}
+          >
+            <View
+              className="w-2.5 h-2.5 rounded-full"
+              style={{ backgroundColor: isNearLimit ? "#ea580c" : "#f43f5e" }}
+            />
+            <Text
+              className="text-xs font-black tracking-wide"
+              style={{ color: isNearLimit ? "#c2410c" : "#be123c" }}
+            >
+              {isNearLimit
+                ? `${t("videos.practice.endingSoon", "Sắp hết giờ")} (${remainingSeconds}s) • ${formattedTime} / ${maxTimeFormatted}`
+                : `${t("videos.practice.record")} • ${formattedTime} / ${maxTimeFormatted}`}
             </Text>
           </View>
-        ) : checking ? (
+        </View>
+      ) : checking ? (
+        <View className="items-center">
           <View className="flex-row items-center gap-1.5 px-3.5 py-1 rounded-full bg-indigo-50 border border-indigo-200">
-            <Sparkles size={13} color="#4f46e5" />
-            <Text className="text-2xs font-bold text-indigo-700">
+            <ActivityIndicator size={11} color="#4f46e5" />
+            <Text className="text-xs font-bold text-indigo-700">
               {t("sentence.checking")}
             </Text>
           </View>
-        ) : showResultDetails ? (
-          <View className="flex-row items-center gap-1.5 px-3.5 py-1 rounded-full bg-emerald-50 border border-emerald-200">
-            <View className="w-2 h-2 rounded-full bg-emerald-500" />
-            <Text className="text-2xs font-bold text-emerald-800">
-              {t("videos.practice.practiceSentence")}
-            </Text>
-          </View>
-        ) : (
-          <View className="flex-row items-center gap-1.5 px-3.5 py-1 rounded-full bg-slate-100 border border-slate-200">
-            <View className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
-            <Text className="text-2xs font-bold text-slate-700">
-              {t("videos.practice.tapToRecord")}
-            </Text>
-          </View>
-        )}
-      </View>
+        </View>
+      ) : null}
 
       {/* 2. HERO MICROPHONE BUTTON WITH MULTI-TIER WAVES */}
-      <View className="items-center justify-center my-2 relative" style={{ width: 140, height: 140 }}>
+      <View className="items-center justify-center relative my-0.5" style={{ width: 110, height: 110 }}>
         {/* Multi-tier Ripple Sound Waves (Recording) */}
         {isRecording ? (
           <>
@@ -465,7 +487,7 @@ export default function VideoRecordingHub({
             ? t("videos.practice.pausesOnSilence")
             : checking
             ? t("sentence.aiProgress.title")
-            : t("videos.practice.pausesAfterEach")}
+            : t("videos.practice.tapHint", "Chạm mic để bắt đầu luyện nói")}
         </Text>
       </View>
 
@@ -478,14 +500,34 @@ export default function VideoRecordingHub({
 
       {/* 6. ERROR NOTIFICATIONS */}
       {micError ? (
-        <View className="flex-row items-center gap-2 bg-rose-50 border border-rose-200 rounded-2xl p-3.5 w-full">
-          <AlertCircle size={18} color="#e11d48" />
-          <Text className="flex-1 text-danger text-xs font-semibold">
-            {t(`sentence.micError.${micError.type}.title`)}
+        <View className="bg-rose-50 border border-rose-200 rounded-2xl p-3.5 w-full gap-2">
+          <View className="flex-row items-center gap-2">
+            <AlertCircle size={18} color="#e11d48" />
+            <Text className="flex-1 text-danger text-xs font-bold">
+              {t(`sentence.micError.${micError.type}.title`)}
+            </Text>
+          </View>
+          <Text className="text-xs text-rose-800 leading-relaxed pl-6">
+            {t(`sentence.micError.${micError.type}.body`)}
           </Text>
+          {micError.type === "denied" ? (
+            <View className="flex-row justify-end pt-1">
+              <TouchableOpacity
+                accessible={true}
+                accessibilityRole="button"
+                accessibilityLabel={t("sentence.micError.openSettings", "Mở Cài đặt")}
+                activeOpacity={0.8}
+                onPress={() => Linking.openSettings()}
+                className="px-3.5 py-1.5 rounded-xl bg-rose-600 active:bg-rose-700"
+              >
+                <Text className="text-xs font-bold text-white">
+                  {t("sentence.micError.openSettings", "Mở Cài đặt")}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
         </View>
-      ) : null}
-      {checkError ? (
+      ) : checkError ? (
         <View className="flex-row items-center gap-2 bg-rose-50 border border-rose-200 rounded-2xl p-3.5 w-full">
           <AlertCircle size={18} color="#e11d48" />
           <Text className="flex-1 text-danger text-xs font-semibold">
@@ -494,12 +536,9 @@ export default function VideoRecordingHub({
         </View>
       ) : null}
 
-      {/* 7. AI EVALUATION SCORE CARD */}
+      {/* 7. AI EVALUATION SCORE CARD (Seamless Flat Layout) */}
       {showResultDetails && !checking && !isRecording ? (
-        <View
-          className="w-full bg-slate-50 rounded-2xl p-4 items-center gap-3 mt-1"
-          style={{ borderWidth: 1, borderColor: "#e2e8f0" }}
-        >
+        <View className="w-full pt-4 mt-1 border-t border-slate-100 items-center gap-3">
           {/* Score Crown */}
           <View className="items-center">
             <Text
@@ -526,8 +565,16 @@ export default function VideoRecordingHub({
               accessibilityLabel={t("videos.practice.accessibilityPlayVoice") || t("videos.practice.listenMyVoice") || "Nghe lại giọng tôi"}
               activeOpacity={0.8}
               onPress={handleReplay}
-              className="flex-1 py-2.5 bg-white rounded-xl items-center justify-center flex-row gap-1.5 shadow-2xs"
-              style={{ borderWidth: 1, borderColor: "#cbd5e1" }}
+              className="flex-1 py-2.5 bg-white rounded-xl items-center justify-center flex-row gap-1.5"
+              style={{
+                borderWidth: 1,
+                borderColor: "#cbd5e1",
+                elevation: 1,
+                shadowColor: "#0f172a",
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.05,
+                shadowRadius: 2,
+              }}
             >
               <Volume2 size={16} color="#4f46e5" />
               <Text className="text-xs font-bold text-slate-800">
@@ -545,7 +592,7 @@ export default function VideoRecordingHub({
               onPress={handleToggleDetails}
               className="flex-1 py-2.5 bg-indigo-600 rounded-xl items-center justify-center flex-row gap-1.5 shadow-sm active:bg-indigo-700"
             >
-              <Sparkles size={16} color="#ffffff" />
+              <AudioLines size={16} color="#ffffff" />
               <Text className="text-xs font-bold text-white">
                 {t("videos.practice.viewPhonemeDetails")}
               </Text>
@@ -567,7 +614,7 @@ export default function VideoRecordingHub({
             className="flex-row items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg"
           >
             <RotateCcw size={13} color="#64748b" />
-            <Text className="text-2xs font-bold text-slate-500">
+            <Text className="text-xs font-bold text-slate-500">
               {t("sentence.tryAgainLowScore")}
             </Text>
           </TouchableOpacity>
@@ -577,6 +624,7 @@ export default function VideoRecordingHub({
             <View className="w-full pt-2">
               <SoundAnalysis
                 rows={soundRows}
+                words={words}
                 onPracticePhoneme={onPracticePhoneme}
               />
             </View>
