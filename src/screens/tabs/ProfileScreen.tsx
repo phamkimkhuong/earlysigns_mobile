@@ -1111,7 +1111,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                   <TouchableOpacity
                     activeOpacity={0.75}
                     onPress={openManageSubscriptions}
-                    className="px-4 py-3.5 flex-row items-center justify-between active:bg-slate-50"
+                    className="px-4 py-3.5 flex-row items-center justify-between border-b border-slate-100 active:bg-slate-50"
                   >
                     <View className="flex-row items-center gap-2.5 flex-1 pr-2">
                       <ExternalLink size={18} color="#0284c7" />
@@ -1125,6 +1125,31 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                       </View>
                     </View>
                     <ChevronRight size={14} color="#94a3b8" />
+                  </TouchableOpacity>
+
+                  {/* Row 3: Restore Purchases */}
+                  <TouchableOpacity
+                    activeOpacity={0.75}
+                    onPress={handleRestorePurchases}
+                    disabled={isRestoring}
+                    className="px-4 py-3.5 flex-row items-center justify-between active:bg-slate-50"
+                  >
+                    <View className="flex-row items-center gap-2.5 flex-1 pr-2">
+                      <RefreshCw size={18} color="#6366f1" />
+                      <View className="flex-1">
+                        <Text className="text-[15px] font-bold text-[#0f172a]">
+                          {t("profile.restorePurchasesTitle") || "Khôi phục giao dịch"}
+                        </Text>
+                        <Text className="text-[13px] text-slate-500 mt-0.5">
+                          {t("profile.restorePurchasesDesc") || "Đồng bộ lại quyền Pro từ Apple ID / Google Play"}
+                        </Text>
+                      </View>
+                    </View>
+                    {isRestoring ? (
+                      <ActivityIndicator size="small" color="#0c2340" />
+                    ) : (
+                      <ChevronRight size={14} color="#94a3b8" />
+                    )}
                   </TouchableOpacity>
                 </View>
               ) : (

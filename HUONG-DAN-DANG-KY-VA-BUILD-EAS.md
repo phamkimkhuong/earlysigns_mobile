@@ -144,7 +144,27 @@ Nếu bạn không dùng `npx eas init`:
 
 ## 5. Bước 4: Quy trình 1-Click Build Ứng dụng
 
-Mã nguồn đã được tích hợp sẵn các lệnh build rút gọn trong `package.json`. Bạn chỉ cần mở Terminal và gõ:
+Mã nguồn đã được tích hợp sẵn các lệnh thực thi rút gọn trong `package.json`. Dưới đây là bảng tra cứu nhanh toàn bộ các lệnh:
+
+| Lệnh (Command) | Chức năng chi tiết | Khi nào sử dụng? |
+| :--- | :--- | :--- |
+| `npm start` | Khởi động Metro Bundler kết nối với app Dev Client | Khi bắt đầu lập trình code hàng ngày |
+| `npm run android` | Tự động biên dịch mã native và chạy app trên máy Android thật / máy ảo local | Khi debug native local trên máy Android |
+| `npm run ios` | Tự động biên dịch mã native và chạy app trên máy ảo iOS local (trên Mac) | Khi debug native local trên máy macOS |
+| `npm run typecheck` | Rà soát toàn bộ lỗi định kiểu dữ liệu tĩnh TypeScript (`tsc --noEmit`) | Trước khi commit code hoặc ra lệnh build |
+| `npm run lint` | Kiểm tra quy chuẩn chất lượng và format code theo ESLint của Expo | Đảm bảo code sạch, không có biến thừa |
+| `npm test` | Chạy 61 kịch bản kiểm thử tự động (Unit Tests) nghiệp vụ âm và thanh toán | Đảm bảo 100% logic không bị hồi quy |
+| `npm run build:dev:android` | Build Cloud bản Dev Client xuất file APK cho Android | Khi thêm thư viện native mới cần build lại app dev |
+| `npm run build:dev:ios` | Build Cloud bản Dev Client cho thiết bị iPhone thật | Khi cần test app dev trên iPhone thật |
+| `npm run build:dev:sim` | Build Cloud bản Dev Client cho máy ảo iOS Simulator (miễn phí, không cần Apple Dev) | Khi test app dev trên máy ảo Mac |
+| `npm run build:preview:android` | **Build Cloud xuất file APK thử nghiệm độc lập** cho khách hàng & tester | 👉 **Khuyên dùng:** Gửi file APK cho khách hàng test trực tiếp |
+| `npm run build:preview:ios` | Build Cloud bản Preview thử nghiệm cho iOS (TestFlight / Ad-hoc) | Gửi cho tester iOS nội bộ kiểm thử |
+| `npm run build:prod:android` | Build Cloud bản Production xuất file `.aab` (Android App Bundle) | Chuẩn bị nộp app lên Google Play Store |
+| `npm run build:prod:ios` | Build Cloud bản Production xuất file `.ipa` chuẩn App Store | Chuẩn bị nộp app lên Apple App Store |
+| `npm run build:prod` | Build Cloud cả 2 bản Production (Android + iOS) cùng một lúc | Khi phát hành bản cập nhật chính thức |
+| `npm run submit:prod` | Tự động tải bản build Production lên Google Play và TestFlight/App Store | Nộp app tự động không cần upload thủ công |
+
+---
 
 ### 🧪 1. Build bản thử nghiệm cho Tester / Khách hàng (Tạo file APK)
 *Dành cho điện thoại Android, tải file APK cài trực tiếp, không cần tài khoản Google Play.*

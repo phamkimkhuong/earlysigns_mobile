@@ -13,6 +13,7 @@ import { reportApiError } from "@/core/errorReporter";
 import { xhrFormDataFetch } from "@/utils/nativeFormDataFetch";
 import i18n, { setStoredLanguage } from "@/core/i18n";
 import { clearSessionDataCaches, seedBillingUsage } from "./sessionData";
+import { initRevenueCat, logOutRevenueCat } from "./iap";
 import {
   getItem,
   hasCompletedOnboarding,
@@ -131,6 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setScoreUnlocked(false);
     setShowScreeningPrompt(false);
     clearSessionDataCaches();
+    logOutRevenueCat().catch(() => {});
   }, []);
 
   const appAuthFetch = useCallback(
@@ -218,6 +220,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (userId) {
         setAuthUserId(userId);
         setItem(AUTH_USER_ID_KEY, userId);
+        initRevenueCat(userId).catch(() => {});
       }
       useAuthStore.getState().setAuth({ token, email, userId });
       try {

@@ -15,6 +15,7 @@ import { AuthProvider } from "@/services/Auth";
 import { getStoredLanguage, initI18n } from "@/core/i18n";
 import { hydrateStorage } from "@/services/storage";
 import { initNotifications, setupNotificationResponseListener } from "@/services/notifications";
+import { initRevenueCat } from "@/services/iap";
 import { NavigationContainer } from "@react-navigation/native";
 import { navigationRef } from "@/navigation/nav";
 import RootNavigator, { navTheme } from "@/navigation/RootNavigator";
@@ -54,6 +55,7 @@ export default function App() {
         await initI18n(stored === "en" ? "en" : "vi");
         initNotifications();
         cleanupNotifListener = setupNotificationResponseListener();
+        initRevenueCat().catch(() => {});
       } catch {
         // proceed even if error occurs
       } finally {

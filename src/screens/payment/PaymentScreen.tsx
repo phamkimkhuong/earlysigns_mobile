@@ -21,11 +21,13 @@ import {
   Crown,
   ExternalLink,
   Gift,
+  RefreshCw,
   ShieldCheck,
   Zap,
 } from "lucide-react-native";
 import { useAuth } from "@/services/Auth";
 import { showToast } from "@/utils/toast";
+import { customAlert } from "@/utils/customAlert";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import { billingApi } from "@/api";
 import { useBillingStore } from "@/store/useBillingStore";
@@ -98,6 +100,7 @@ export default function PaymentScreen({ navigation, route }: Props) {
 
   const [purchasing, setPurchasing] = useState(false);
   const [purchaseError, setPurchaseError] = useState("");
+  const [restoring, setRestoring] = useState(false);
 
   // Activation Code section state
   const [showActivation, setShowActivation] = useState(false);
@@ -166,7 +169,6 @@ export default function PaymentScreen({ navigation, route }: Props) {
     [authToken, usage]
   );
   const isPro = userTier === "pro";
-  const isTrial = userTier === "trial";
 
   const selectedProduct: StoreProduct | undefined = useMemo(
     () => products.find((p) => p.id === selectedProductId) || products[0],
@@ -201,6 +203,47 @@ export default function PaymentScreen({ navigation, route }: Props) {
       setPurchaseError(getFriendlyErrorMessage(err, t("payment.transactionFailed") || "Giao dịch không thành công."));
     } finally {
       setPurchasing(false);
+    }
+  }
+
+  // Restore Purchases
+  async function handleRestorePurchases() {
+    if (restoring) return;
+    setPurchaseError("");
+    setRestoring(true);
+
+    try {
+      const res = await restoreStorePurchases({ authToken });
+      if (res.restored) {
+        customAlert.alert(
+          t("payment.restoreSuccessTitle") || "Khôi phục thành công!",
+          res.message ||
+            t("payment.restoreSuccessMsg") ||
+            "Giao dịch đã được khôi phục. Quyền lợi EarlySigns Pro đã được áp dụng."
+        );
+        navigation.navigate("PaymentResult", {
+          variant: "success",
+          status: "confirmed",
+        });
+      } else {
+        customAlert.alert(
+          t("payment.restoreNoneTitle") || "Không tìm thấy giao dịch",
+          res.message ||
+            t("payment.restoreNoneMsg") ||
+            "Không tìm thấy gói đăng ký nào còn hiệu lực trên tài khoản cửa hàng của bạn."
+        );
+      }
+    } catch (err: any) {
+      customAlert.alert(
+        t("payment.restoreErrorTitle") || "Lỗi khôi phục",
+        getFriendlyErrorMessage(
+          err,
+          t("payment.restoreErrorMsg") ||
+            "Không thể khôi phục giao dịch lúc này. Vui lòng thử lại sau."
+        )
+      );
+    } finally {
+      setRestoring(false);
     }
   }
 
@@ -284,9 +327,7 @@ export default function PaymentScreen({ navigation, route }: Props) {
               <Text className="text-2xl font-black text-white text-center">
                 {isPro
                   ? (t("payment.heroTitlePro") || "EarlySigns Pro")
-                  : isTrial
-                    ? (t("payment.heroTitleTrial") || "Dùng thử EarlySigns Pro")
-                    : (t("payment.heroTitleUpgrade") || "Nâng cấp EarlySigns Pro")}
+                  : (t("payment.heroTitleUpgrade") || "Nâng cấp EarlySigns Pro")}
               </Text>
             </View>
             <Text className="text-[14px] text-slate-300 text-center px-4 leading-relaxed font-medium">
@@ -313,9 +354,7 @@ export default function PaymentScreen({ navigation, route }: Props) {
             >
               {isPro
                 ? (t("payment.statusPro") || "Thành viên Pro Đang Hoạt Động")
-                : isTrial
-                  ? (t("payment.statusTrial") || "Đang trong thời gian Dùng thử")
-                  : (t("payment.statusFree") || "Hạn mức Miễn phí (Free Tier)")}
+                : (t("payment.statusFree") || "Hạn mức Miễn phí (Free Tier)")}
             </Text>
           </View>
         </View>
@@ -609,15 +648,36 @@ export default function PaymentScreen({ navigation, route }: Props) {
               {t("payment.storeAssuranceNote") || "Thanh toán an toàn bảo mật qua Store. Hủy bất kỳ lúc nào trong Cài đặt thiết bị."}
             </Text>
 
-            {/* Store Compliance Utilities */}
-            <View className="flex-row justify-center items-center px-1 pt-1">
+            {/* Store Compliance Utilities (Apple Guideline 3.1.2: Restore & Manage) */}
+            <View className="flex-row justify-center items-center gap-4 px-1 pt-1.5 flex-wrap">
+              <TouchableOpacity
+                onPress={handleRestorePurchases}
+                disabled={restoring || purchasing}
+                className="flex-row items-center gap-1.5 py-1 px-1"
+                activeOpacity={0.7}
+              >
+                {restoring ? (
+                  <ActivityIndicator size="small" color="#0284c7" />
+                ) : (
+                  <RefreshCw size={14} color="#0284c7" />
+                )}
+                <Text style={{ color: "#0284c7" }} className="text-[13.5px] font-bold">
+                  {restoring
+                    ? (t("payment.restoring") || "Đang khôi phục...")
+                    : (t("payment.restorePurchases") || "Khôi phục giao dịch")}
+                </Text>
+              </TouchableOpacity>
+
+              <Text className="text-slate-300 font-bold">·</Text>
+
               <TouchableOpacity
                 onPress={openManageSubscriptions}
-                className="flex-row items-center gap-1.5 py-1"
+                className="flex-row items-center gap-1.5 py-1 px-1"
+                activeOpacity={0.7}
               >
                 <ExternalLink size={14} color="#64748b" />
                 <Text className="text-[13.5px] text-slate-600 font-semibold">
-                  {t("payment.manageSubscriptions") || "Quản lý gói cước trên Cửa hàng ứng dụng"}
+                  {t("payment.manageSubscriptions") || "Quản lý gói cước"}
                 </Text>
               </TouchableOpacity>
             </View>

@@ -1,6 +1,7 @@
 import { Linking, Platform } from "react-native";
 import Purchases, {
   LOG_LEVEL,
+  PURCHASES_ERROR_CODE,
   type PurchasesPackage,
   type CustomerInfo,
 } from "react-native-purchases";
@@ -40,7 +41,7 @@ export async function initRevenueCat(userId?: string): Promise<boolean> {
           /* ignore log level error */
         }
       }
-      Purchases.configure({ apiKey, appUserID: userId });
+      Purchases.configure({ apiKey, appUserID: userId || undefined });
       isPurchasesConfigured = true;
     } else if (userId) {
       try {
@@ -53,6 +54,21 @@ export async function initRevenueCat(userId?: string): Promise<boolean> {
   } catch (err) {
     console.warn("RevenueCat init failed:", err);
     return false;
+  }
+}
+
+/**
+ * Log out user from RevenueCat on app logout
+ */
+export async function logOutRevenueCat(): Promise<void> {
+  if (!isNativeMobile || !isPurchasesConfigured) return;
+  try {
+    const isAnon = await Purchases.isAnonymous();
+    if (!isAnon) {
+      await Purchases.logOut();
+    }
+  } catch (err) {
+    console.warn("RevenueCat logout error:", err);
   }
 }
 
@@ -190,88 +206,171 @@ export async function purchaseStoreProduct(
     };
   }
 
-  try {
-    let serverExpiresAt: string | null = null;
-
-    // 1. If RevenueCat is available, invoke native StoreKit 2 / Google Play purchase sheet:
-    if (isRevenueCatAvailable()) {
+  // 1. PRODUCTION ENFORCEMENT: Native StoreKit / Google Play Billing
+  if (!isRevenueCatAvailable()) {
+    // Development sandbox simulation mode: ONLY allowed when explicitly flagged in DEV
+    if (__DEV__ && process.env.EXPO_PUBLIC_MOCK_IAP === "true") {
+      console.warn("[IAP] Running in mock dev mode with simulated transaction.");
+      const fakeTxId = `mock-iap-${Date.now()}`;
+      let serverExpiresAt: string | null = null;
       try {
-        const offerings = await Purchases.getOfferings();
-        const currentOffering = offerings.current;
-        const availablePackages = currentOffering?.availablePackages || [];
-        const targetPackage = availablePackages.find(
-          (pkg) =>
-            pkg.product.identifier === productId ||
-            pkg.identifier === productId ||
-            pkg.packageType?.toLowerCase().includes(
-              product.months === 12
-                ? "annual"
-                : product.months === 3
-                ? "three_month"
-                : "monthly"
-            )
-        );
-        if (targetPackage) {
-          const { customerInfo } = await Purchases.purchasePackage(targetPackage);
-          const activeEntitlements = Object.values(customerInfo.entitlements.active);
-          if (activeEntitlements.length > 0) {
-            const latestExp = activeEntitlements[0].expirationDate;
-            if (latestExp) {
-              serverExpiresAt = latestExp;
-            }
-          }
-        }
-      } catch (rcError: any) {
-        if (rcError?.userCancelled) {
-          return {
-            success: false,
-            error:
-              i18n.t("upgrade.cancelled") || "Đã hủy giao dịch thanh toán.",
-          };
-        }
-        console.warn("RevenueCat purchase error:", rcError);
+        const data = await billingApi.verifyIap(productId, Platform.OS, fakeTxId);
+        serverExpiresAt = data?.subscription_expires_at || null;
+      } catch {}
+      const now = new Date();
+      const expiry = new Date(now);
+      expiry.setMonth(expiry.getMonth() + product.months);
+      const expiresAt = serverExpiresAt || expiry.toISOString();
+      const subData: StoredSubscriptionData = {
+        productId: product.id,
+        purchasedAt: now.toISOString(),
+        expiresAt,
+        platform: Platform.OS === "ios" ? "ios" : Platform.OS === "android" ? "android" : "other",
+        orderId: `mock_${Date.now()}`,
+      };
+      saveIapSubscription(subData);
+      if (options?.authToken) {
+        seedBillingUsage(options.authToken, {
+          has_active_subscription: true,
+          is_in_trial: false,
+          subscription_expires_at: expiresAt,
+          tier: "pro",
+          daily_remaining: 9999,
+        });
       }
+      return { success: true, expiresAt };
     }
 
-    if (options?.authFetch && options?.authToken) {
-      try {
-        const res = await options.authFetch(API_ENDPOINTS.BILLING.IAP_VERIFY, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            product_id: productId,
-            platform: Platform.OS,
-            transaction_id: `iap-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-          }),
-        });
-        if (res.ok) {
-          const data = await res.json().catch(() => ({}));
-          serverExpiresAt = data.subscription_expires_at || null;
-        }
-      } catch {
-        // Fall back to client receipt record
+    return {
+      success: false,
+      error:
+        i18n.t("upgrade.storeUnavailable") ||
+        "Cổng thanh toán Store (Apple App Store / Google Play) chưa sẵn sàng hoặc chưa được cấu hình trên thiết bị này. Vui lòng thử lại sau.",
+    };
+  }
+
+  try {
+    // 2. Query Store Offerings from native store:
+    const offerings = await Purchases.getOfferings();
+    const currentOffering = offerings.current;
+    const availablePackages = currentOffering?.availablePackages || [];
+
+    const targetPackage = availablePackages.find(
+      (pkg) =>
+        pkg.product.identifier === productId ||
+        pkg.identifier === productId ||
+        pkg.packageType?.toLowerCase().includes(
+          product.months === 12
+            ? "annual"
+            : product.months === 3
+            ? "three_month"
+            : "monthly"
+        )
+    );
+
+    if (!targetPackage) {
+      return {
+        success: false,
+        error:
+          i18n.t("upgrade.packageNotConfiguredInStore") ||
+          `Gói cước "${product.name}" chưa được cấu hình trên Cửa hàng ứng dụng (App Store / Google Play).`,
+      };
+    }
+
+    // 3. Invoke Native StoreKit 2 / Google Play purchase sheet:
+    let customerInfo: CustomerInfo;
+    try {
+      const result = await Purchases.purchasePackage(targetPackage);
+      customerInfo = result.customerInfo;
+    } catch (rcError: any) {
+      if (
+        rcError?.userCancelled ||
+        rcError?.code === PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR
+      ) {
+        return {
+          success: false,
+          error: i18n.t("upgrade.cancelled") || "Đã hủy giao dịch thanh toán.",
+        };
       }
-    } else {
-      try {
-        const transactionId = `iap-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-        const data = await billingApi.verifyIap(productId, Platform.OS, transactionId);
-        serverExpiresAt = data?.subscription_expires_at || null;
-      } catch {
-        // Fall back to client receipt record
+      if (rcError?.code === PURCHASES_ERROR_CODE.PRODUCT_ALREADY_PURCHASED_ERROR) {
+        return {
+          success: false,
+          error:
+            i18n.t("upgrade.alreadyPurchased") ||
+            "Gói cước này đã được mua trước đó. Vui lòng bấm 'Khôi phục giao dịch'.",
+        };
       }
+      if (rcError?.code === PURCHASES_ERROR_CODE.PURCHASE_NOT_ALLOWED_ERROR) {
+        return {
+          success: false,
+          error:
+            i18n.t("upgrade.notAllowed") ||
+            "Thiết bị của bạn không được phép thực hiện giao dịch mua trong ứng dụng.",
+        };
+      }
+      if (rcError?.code === PURCHASES_ERROR_CODE.PAYMENT_PENDING_ERROR) {
+        return {
+          success: false,
+          error:
+            i18n.t("upgrade.paymentPending") ||
+            "Giao dịch đang chờ xác nhận từ Cửa hàng ứng dụng hoặc người giám hộ.",
+        };
+      }
+      return {
+        success: false,
+        error:
+          rcError?.message ||
+          i18n.t("upgrade.storeInterrupted") ||
+          "Giao dịch Store bị gián đoạn. Vui lòng thử lại sau.",
+      };
+    }
+
+    // 4. Verify Active Entitlements from Store:
+    const activeEntitlements = Object.values(customerInfo.entitlements.active);
+    if (activeEntitlements.length === 0) {
+      return {
+        success: false,
+        error:
+          i18n.t("upgrade.paymentPending") ||
+          "Giao dịch chưa được kích hoạt từ Cửa hàng ứng dụng. Vui lòng bấm 'Khôi phục giao dịch' sau vài phút.",
+      };
+    }
+
+    const latestEntitlement = activeEntitlements[0];
+    const realExpiresAt = latestEntitlement.expirationDate;
+    const realTransactionId =
+      latestEntitlement.latestPurchaseDate ||
+      latestEntitlement.identifier ||
+      customerInfo.originalAppUserId ||
+      `store_${Date.now()}`;
+
+    let serverExpiresAt: string | null = realExpiresAt || null;
+
+    // 5. Verify & Synchronize Receipt with Backend
+    try {
+      const data = await billingApi.verifyIap(
+        targetPackage.product.identifier,
+        Platform.OS,
+        realTransactionId
+      );
+      if (data?.subscription_expires_at) {
+        serverExpiresAt = data.subscription_expires_at;
+      }
+    } catch (syncErr) {
+      console.warn("[IAP] Backend verification sync failed:", syncErr);
     }
 
     const now = new Date();
     const expiry = new Date(now);
     expiry.setMonth(expiry.getMonth() + product.months);
-    const expiresAt = serverExpiresAt || expiry.toISOString();
+    const expiresAt = serverExpiresAt || realExpiresAt || expiry.toISOString();
 
     const subData: StoredSubscriptionData = {
       productId: product.id,
       purchasedAt: now.toISOString(),
       expiresAt,
       platform: Platform.OS === "ios" ? "ios" : Platform.OS === "android" ? "android" : "other",
-      orderId: `store_${Date.now()}`,
+      orderId: realTransactionId,
     };
     saveIapSubscription(subData);
 
