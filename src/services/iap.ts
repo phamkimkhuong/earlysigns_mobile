@@ -1,11 +1,67 @@
 import { Linking, Platform } from "react-native";
+import Purchases, {
+  LOG_LEVEL,
+  type PurchasesPackage,
+  type CustomerInfo,
+} from "react-native-purchases";
 import { getItem, setItem } from "./storage";
 import { seedBillingUsage } from "./sessionData";
-import { API_ENDPOINTS } from "@/core/config";
+import {
+  API_ENDPOINTS,
+  REVENUECAT_APPLE_KEY,
+  REVENUECAT_GOOGLE_KEY,
+} from "@/core/config";
 import { billingApi } from "@/api";
 import type { BillingUsage } from "@/types/domain";
+import i18n from "@/core/i18n";
 
 export const IAP_SUBSCRIPTION_KEY = "earlysigns_active_iap_subscription";
+
+const isNativeMobile = Platform.OS === "android" || Platform.OS === "ios";
+
+let isPurchasesConfigured = false;
+
+/**
+ * Initialize RevenueCat SDK for native StoreKit & Google Play Billing
+ */
+export async function initRevenueCat(userId?: string): Promise<boolean> {
+  if (!isNativeMobile) return false;
+  const apiKey =
+    Platform.OS === "ios" ? REVENUECAT_APPLE_KEY : REVENUECAT_GOOGLE_KEY;
+  if (!apiKey) {
+    return false;
+  }
+  try {
+    if (!isPurchasesConfigured) {
+      if (__DEV__) {
+        try {
+          await Purchases.setLogLevel(LOG_LEVEL.DEBUG);
+        } catch {
+          /* ignore log level error */
+        }
+      }
+      Purchases.configure({ apiKey, appUserID: userId });
+      isPurchasesConfigured = true;
+    } else if (userId) {
+      try {
+        await Purchases.logIn(userId);
+      } catch {
+        /* ignore login error */
+      }
+    }
+    return true;
+  } catch (err) {
+    console.warn("RevenueCat init failed:", err);
+    return false;
+  }
+}
+
+export function isRevenueCatAvailable(): boolean {
+  if (!isNativeMobile) return false;
+  const apiKey =
+    Platform.OS === "ios" ? REVENUECAT_APPLE_KEY : REVENUECAT_GOOGLE_KEY;
+  return Boolean(apiKey && isPurchasesConfigured);
+}
 
 export interface StoreProduct {
   id: string;
@@ -126,13 +182,56 @@ export async function purchaseStoreProduct(
     });
 
   if (!product) {
-    return { success: false, error: "Gói dịch vụ không tồn tại trên hệ thống." };
+    return {
+      success: false,
+      error:
+        i18n.t("upgrade.packageNotFound") ||
+        "Gói dịch vụ không tồn tại trên hệ thống.",
+    };
   }
 
   try {
-    // In production, native StoreKit 2 / Google Play Billing sheet is presented here.
-    // For app builds and staging, we verify with backend if available, or simulate receipt verification.
     let serverExpiresAt: string | null = null;
+
+    // 1. If RevenueCat is available, invoke native StoreKit 2 / Google Play purchase sheet:
+    if (isRevenueCatAvailable()) {
+      try {
+        const offerings = await Purchases.getOfferings();
+        const currentOffering = offerings.current;
+        const availablePackages = currentOffering?.availablePackages || [];
+        const targetPackage = availablePackages.find(
+          (pkg) =>
+            pkg.product.identifier === productId ||
+            pkg.identifier === productId ||
+            pkg.packageType?.toLowerCase().includes(
+              product.months === 12
+                ? "annual"
+                : product.months === 3
+                ? "three_month"
+                : "monthly"
+            )
+        );
+        if (targetPackage) {
+          const { customerInfo } = await Purchases.purchasePackage(targetPackage);
+          const activeEntitlements = Object.values(customerInfo.entitlements.active);
+          if (activeEntitlements.length > 0) {
+            const latestExp = activeEntitlements[0].expirationDate;
+            if (latestExp) {
+              serverExpiresAt = latestExp;
+            }
+          }
+        }
+      } catch (rcError: any) {
+        if (rcError?.userCancelled) {
+          return {
+            success: false,
+            error:
+              i18n.t("upgrade.cancelled") || "Đã hủy giao dịch thanh toán.",
+          };
+        }
+        console.warn("RevenueCat purchase error:", rcError);
+      }
+    }
 
     if (options?.authFetch && options?.authToken) {
       try {
@@ -192,7 +291,10 @@ export async function purchaseStoreProduct(
   } catch (err: any) {
     return {
       success: false,
-      error: err?.message || "Giao dịch Store bị gián đoạn. Vui lòng thử lại sau.",
+      error:
+        err?.message ||
+        i18n.t("upgrade.storeInterrupted") ||
+        "Giao dịch Store bị gián đoạn. Vui lòng thử lại sau.",
     };
   }
 }
@@ -205,7 +307,39 @@ export async function restoreStorePurchases(options?: {
   authFetch?: (path: string, opts?: any) => Promise<Response>;
 }): Promise<{ restored: boolean; message: string; expiresAt?: string }> {
   try {
-    // 1. Try server restore endpoint if available
+    // 1. If RevenueCat is configured, query native store entitlements first:
+    if (isRevenueCatAvailable()) {
+      try {
+        const customerInfo = await Purchases.restorePurchases();
+        const activeEntitlements = Object.values(customerInfo.entitlements.active);
+        if (activeEntitlements.length > 0) {
+          const expiry =
+            activeEntitlements[0].expirationDate ||
+            new Date(Date.now() + 30 * 86400000).toISOString();
+          const usage: BillingUsage = {
+            has_active_subscription: true,
+            is_in_trial: false,
+            subscription_expires_at: expiry,
+            tier: "pro",
+            daily_remaining: 9999,
+          };
+          if (options?.authToken) {
+            seedBillingUsage(options.authToken, usage);
+          }
+          return {
+            restored: true,
+            message:
+              i18n.t("upgrade.restoreSuccessStore") ||
+              "Đã khôi phục thành công gói EarlySigns Pro qua cửa hàng ứng dụng.",
+            expiresAt: expiry,
+          };
+        }
+      } catch (rcErr: any) {
+        console.warn("RevenueCat restore error:", rcErr);
+      }
+    }
+
+    // 2. Try server restore endpoint if available
     if (options?.authFetch && options?.authToken) {
       try {
         const res = await options.authFetch(API_ENDPOINTS.BILLING.IAP_RESTORE, {
@@ -226,7 +360,9 @@ export async function restoreStorePurchases(options?: {
             seedBillingUsage(options.authToken, usage);
             return {
               restored: true,
-              message: "Đã khôi phục thành công gói EarlySigns Pro của bạn.",
+              message:
+                i18n.t("upgrade.restoreSuccessServer") ||
+                "Đã khôi phục thành công gói EarlySigns Pro của bạn.",
               expiresAt: data.subscription_expires_at,
             };
           }
@@ -240,7 +376,9 @@ export async function restoreStorePurchases(options?: {
         if (data?.has_active_subscription) {
           return {
             restored: true,
-            message: "Đã khôi phục thành công gói EarlySigns Pro của bạn.",
+            message:
+              i18n.t("upgrade.restoreSuccessServer") ||
+              "Đã khôi phục thành công gói EarlySigns Pro của bạn.",
             expiresAt: data.subscription_expires_at,
           };
         }
@@ -264,19 +402,26 @@ export async function restoreStorePurchases(options?: {
       }
       return {
         restored: true,
-        message: "Đã khôi phục thành công gói EarlySigns Pro từ biên nhận thiết bị.",
+        message:
+          i18n.t("upgrade.restoreSuccessDevice") ||
+          "Đã khôi phục thành công gói EarlySigns Pro từ biên nhận thiết bị.",
         expiresAt: existing.expiresAt,
       };
     }
 
     return {
       restored: false,
-      message: "Không tìm thấy giao dịch nào cần khôi phục cho tài khoản Apple ID / Google Play này.",
+      message:
+        i18n.t("upgrade.restoreNotFound") ||
+        "Không tìm thấy giao dịch nào cần khôi phục cho tài khoản Apple ID / Google Play này.",
     };
   } catch (err: any) {
     return {
       restored: false,
-      message: err?.message || "Không thể kết nối đến máy chủ cửa hàng để khôi phục giao dịch.",
+      message:
+        err?.message ||
+        i18n.t("upgrade.storeConnectionFailed") ||
+        "Không thể kết nối đến máy chủ cửa hàng để khôi phục giao dịch.",
     };
   }
 }

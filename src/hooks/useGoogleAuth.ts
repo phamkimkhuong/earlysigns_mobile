@@ -1,16 +1,31 @@
-import { useEffect, useState } from "react";
-import * as WebBrowser from "expo-web-browser";
-import { makeRedirectUri, useAuthRequest, ResponseType } from "expo-auth-session";
-import { GOOGLE_CLIENT_ID } from "@/core/config";
+import { useState } from "react";
+import { Platform } from "react-native";
+import { useTranslation } from "react-i18next";
+import {
+  GoogleSignin,
+  statusCodes,
+  isErrorWithCode,
+  isSuccessResponse,
+} from "@react-native-google-signin/google-signin";
+import { GOOGLE_CLIENT_ID, GOOGLE_IOS_CLIENT_ID } from "@/core/config";
 import { showToast } from "@/utils/toast";
 
-WebBrowser.maybeCompleteAuthSession();
+const isNativeMobile = Platform.OS === "android" || Platform.OS === "ios";
 
-const googleDiscovery = {
-  authorizationEndpoint: "https://accounts.google.com/o/oauth2/v2/auth",
-  tokenEndpoint: "https://oauth2.googleapis.com/token",
-  revocationEndpoint: "https://oauth2.googleapis.com/revoke",
-};
+let isGoogleSigninConfigured = false;
+function ensureGoogleSigninConfigured() {
+  if (!isNativeMobile || isGoogleSigninConfigured) return;
+  try {
+    GoogleSignin.configure({
+      webClientId: GOOGLE_CLIENT_ID || undefined,
+      iosClientId: GOOGLE_IOS_CLIENT_ID || undefined,
+      offlineAccess: true,
+    });
+    isGoogleSigninConfigured = true;
+  } catch (err) {
+    console.warn("Failed to configure GoogleSignin:", err);
+  }
+}
 
 export interface UseGoogleAuthOptions {
   onSuccess: (tokens: { idToken?: string; accessToken?: string }) => Promise<void> | void;
@@ -18,64 +33,56 @@ export interface UseGoogleAuthOptions {
 }
 
 export function useGoogleAuth({ onSuccess, onError }: UseGoogleAuthOptions) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
 
-  const redirectUri = makeRedirectUri({
-    scheme: "earlysigns",
-    preferLocalhost: false,
-  });
-
-  const [request, response, promptAsync] = useAuthRequest(
-    {
-      clientId: GOOGLE_CLIENT_ID || "not_configured",
-      scopes: ["openid", "profile", "email"],
-      responseType: ResponseType.IdToken,
-      redirectUri,
-    },
-    googleDiscovery
-  );
-
-  useEffect(() => {
-    if (!response) return;
-
-    if (response.type === "success") {
-      setLoading(true);
-      const { id_token, access_token } = response.params;
-      Promise.resolve(onSuccess({ idToken: id_token, accessToken: access_token }))
-        .catch((err: any) => {
-          onError?.(err?.message || "Google sign in error");
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    } else if (response.type === "error") {
-      setLoading(false);
-      onError?.(response.error?.message || "Google login cancelled");
-    } else if (response.type === "cancel" || response.type === "dismiss") {
-      setLoading(false);
-    }
-  }, [response, onSuccess, onError]);
-
   const signIn = async () => {
+    if (!isNativeMobile) {
+      onError?.(t("login.googleSignInFailed"));
+      return;
+    }
+
     if (!GOOGLE_CLIENT_ID) {
       showToast.error(
-        "Thiếu cấu hình",
-        "Chưa cài đặt EXPO_PUBLIC_GOOGLE_CLIENT_ID trong file .env"
+        t("login.missingConfig"),
+        t("login.googleMissingClientId")
       );
       return;
     }
+
     setLoading(true);
     try {
-      await promptAsync();
-    } catch (e: any) {
+      ensureGoogleSigninConfigured();
+      await GoogleSignin.hasPlayServices();
+      const res = await GoogleSignin.signIn();
+      if (isSuccessResponse(res)) {
+        const idToken = res.data.idToken;
+        if (idToken) {
+          await Promise.resolve(onSuccess({ idToken }));
+        } else {
+          throw new Error(t("login.googleMissingToken"));
+        }
+      } else if ((res as any)?.data?.idToken) {
+        await Promise.resolve(onSuccess({ idToken: (res as any).data.idToken }));
+      }
+    } catch (err: any) {
+      if (isErrorWithCode(err)) {
+        if (
+          err.code === statusCodes.SIGN_IN_CANCELLED ||
+          err.code === statusCodes.IN_PROGRESS
+        ) {
+          return;
+        }
+      }
+      onError?.(err?.message || t("login.googleSignInFailed"));
+    } finally {
       setLoading(false);
-      onError?.(e?.message || "Failed to start Google sign in");
     }
   };
 
   return {
     signIn,
-    loading: loading || !request,
-    isReady: Boolean(request && GOOGLE_CLIENT_ID),
+    loading,
+    isReady: Boolean(GOOGLE_CLIENT_ID && isNativeMobile),
   };
 }

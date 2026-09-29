@@ -165,6 +165,7 @@
     "otpResent": "Mã mới đã được gửi.",
     "backToEmail": "Dùng email khác",
     "googleSignIn": "Tiếp tục với Google",
+    "facebookSignIn": "Tiếp tục với Facebook",
     "appleSignIn": "Tiếp tục với Apple",
     "appleSignInFailed": "Đăng nhập Apple không thành công. Vui lòng thử lại.",
     "loginToContinue": "Vui lòng đăng nhập để tiếp tục tính năng này.",
@@ -185,7 +186,16 @@
     "loginSuccess": "Đăng nhập thành công!",
     "otpSendFailed": "Lỗi gửi mã OTP",
     "otpVerifyFailed": "Xác minh OTP thất bại",
-    "otpSentSuccess": "Mã xác thực đã được gửi đến email của bạn."
+    "otpSentSuccess": "Mã xác thực đã được gửi đến email của bạn.",
+    "facebookTitle": "Facebook",
+    "facebookSignInFailed": "Đăng nhập Facebook không thành công. Vui lòng thử lại.",
+    "facebookMissingToken": "Không lấy được access token từ Facebook.",
+    "facebookAuthSuccess": "Đã xác thực tài khoản Facebook thành công.",
+    "facebookOnlyNative": "Đăng nhập Facebook chỉ hỗ trợ trên thiết bị di động.",
+    "googleMissingToken": "Không nhận được token xác thực từ Google.",
+    "appleMissingToken": "Không nhận được token xác thực từ Apple.",
+    "missingConfig": "Thiếu cấu hình",
+    "loginFailed": "Đăng nhập thất bại"
   },
   "onboarding": {
     "brandName": "EarlySigns",
@@ -1350,7 +1360,15 @@
     "freeQuotaFeaturesTitle": "Dùng chung cho cả 3 tính năng AI:",
     "featPronunciation": "Chấm phát âm",
     "featOcr": "Quét ảnh OCR",
-    "featAudio": "Sinh giọng mẫu"
+    "featAudio": "Sinh giọng mẫu",
+    "cancelled": "Đã hủy giao dịch thanh toán.",
+    "restoreSuccessStore": "Đã khôi phục thành công gói EarlySigns Pro qua cửa hàng ứng dụng.",
+    "restoreSuccessServer": "Đã khôi phục thành công gói EarlySigns Pro của bạn.",
+    "restoreSuccessDevice": "Đã khôi phục thành công gói EarlySigns Pro từ biên nhận thiết bị.",
+    "restoreNotFound": "Không tìm thấy giao dịch nào cần khôi phục cho tài khoản Apple ID / Google Play này.",
+    "packageNotFound": "Gói dịch vụ không tồn tại trên hệ thống.",
+    "storeInterrupted": "Giao dịch Store bị gián đoạn. Vui lòng thử lại sau.",
+    "storeConnectionFailed": "Không thể kết nối đến máy chủ cửa hàng để khôi phục giao dịch."
   },
   "profileExtra": {
     "screenTitle": "Hồ sơ cá nhân",

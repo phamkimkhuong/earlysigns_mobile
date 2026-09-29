@@ -2,12 +2,14 @@
   "expo": {
     "name": "EarlySigns",
     "slug": "earlysigns",
+    "owner": "phamkhuong436",
     "version": "0.1.0",
     "orientation": "portrait",
-    "icon": "./assets/logo.png",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "scheme": "earlysigns",
     "ios": {
+      "bundleIdentifier": "net.earlysigns.app",
       "supportsTablet": true,
       "infoPlist": {
         "NSMicrophoneUsageDescription": "EarlySigns records your voice to check English pronunciation.",
@@ -19,23 +21,23 @@
       }
     },
     "android": {
+      "package": "net.earlysigns.app",
       "adaptiveIcon": {
-        "backgroundColor": "#f7f6f3",
-        "foregroundImage": "./assets/logo.png"
+        "backgroundColor": "#e0f4fd",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "permissions": [
         "RECORD_AUDIO",
         "CAMERA",
         "READ_EXTERNAL_STORAGE"
       ],
-      "usesCleartextTraffic": true,
       "softwareKeyboardLayoutMode": "resize"
     },
     "web": {
-      "favicon": "./assets/logo.png"
+      "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-web-browser",
       [
         "expo-audio",
         {
@@ -49,8 +51,45 @@
           "cameraPermission": "EarlySigns uses the camera to scan text for pronunciation practice."
         }
       ],
-      "expo-splash-screen",
-      "expo-secure-store"
-    ]
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#e0f4fd"
+        }
+      ],
+      "expo-asset",
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#256392"
+        }
+      ],
+      "@react-native-google-signin/google-signin",
+      [
+        "react-native-fbsdk-next",
+        {
+          "appID": "000000000000000",
+          "clientToken": "00000000000000000000000000000000",
+          "displayName": "EarlySigns",
+          "scheme": "fb000000000000000"
+        }
+      ]
+    ],
+    "updates": {
+      "url": "https://u.expo.dev/3e87d6c1-9158-4efe-9a34-8da11d90a19f"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "3e87d6c1-9158-4efe-9a34-8da11d90a19f"
+      }
+    }
   }
 }

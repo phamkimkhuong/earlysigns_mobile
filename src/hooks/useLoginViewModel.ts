@@ -6,6 +6,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { normalizeLoginEmail } from "@/utils/loginEmail";
 import { useGoogleAuth } from "./useGoogleAuth";
 import { useAppleAuth } from "./useAppleAuth";
+import { useFacebookAuth } from "./useFacebookAuth";
 import { showToast } from "@/utils/toast";
 import { hapticFeedback } from "@/utils/haptics";
 import { navigateAfterLogin } from "@/navigation/nav";
@@ -85,7 +86,7 @@ export function useLoginViewModel({
       setAuthError("");
       try {
         const token = idToken || accessToken;
-        if (!token) throw new Error("No Google token received");
+        if (!token) throw new Error(t("login.googleMissingToken"));
 
         const data = await authApi.loginGoogle({
           token,
@@ -118,12 +119,38 @@ export function useLoginViewModel({
     },
   });
 
+  const handleFacebookSuccess = useCallback(
+    async (result: any) => {
+      setAuthError("");
+      try {
+        if (!result.accessToken) {
+          throw new Error(t("login.facebookMissingToken"));
+        }
+        showToast.info(t("login.facebookTitle") || "Facebook", t("login.facebookAuthSuccess"));
+      } catch (err: any) {
+        const msg = getFriendlyErrorMessage(err, t("login.facebookSignInFailed"));
+        setAuthError(msg);
+        showToast.error(t("login.loginFailed") || "Đăng nhập thất bại", msg);
+      }
+    },
+    [t]
+  );
+
+  const { signIn: signInFacebook, loading: facebookLoading } = useFacebookAuth({
+    onSuccess: handleFacebookSuccess,
+    onError: (err) => {
+      const msg = getFriendlyErrorMessage(err, t("login.facebookSignInFailed"));
+      setAuthError(msg);
+      showToast.error(t("login.loginFailed") || "Đăng nhập thất bại", msg);
+    },
+  });
+
   const handleAppleSuccess = useCallback(
     async (credential: any) => {
       setAuthError("");
       try {
         const token = credential.identityToken;
-        if (!token) throw new Error("No Apple identity token received");
+        if (!token) throw new Error(t("login.appleMissingToken"));
 
         const fullName = credential.fullName
           ? [credential.fullName.familyName, credential.fullName.givenName].filter(Boolean).join(" ")
@@ -256,8 +283,10 @@ export function useLoginViewModel({
     isAppleAvailable,
     appleLoading,
     googleLoading,
+    facebookLoading,
     signInApple,
     signInGoogle,
+    signInFacebook,
     handleRequestOtp,
     handleVerifyOtp,
     handleContinueAsGuest,

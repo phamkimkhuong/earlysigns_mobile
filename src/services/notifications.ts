@@ -1,5 +1,10 @@
 import { AppState, Linking, Platform } from "react-native";
-import { setNotificationHandler } from "expo-notifications/build/NotificationsHandler";
+import {
+  setNotificationHandler,
+  setNotificationChannelAsync,
+  AndroidImportance,
+  getExpoPushTokenAsync,
+} from "expo-notifications";
 import {
   getPermissionsAsync,
   requestPermissionsAsync,
@@ -92,9 +97,36 @@ export function initNotifications(): void {
         shouldSetBadge: false,
       }),
     });
+    if (Platform.OS === "android") {
+      setNotificationChannelAsync("default", {
+        name: i18n.t("notifications.channelStudyName") || "Thông báo học tập",
+        importance: AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: "#4f46e5",
+      }).catch(() => {});
+    }
     handlerInitialized = true;
   } catch (err) {
     console.warn("Failed to set notification handler:", err);
+  }
+}
+
+const isNativeMobile = Platform.OS === "android" || Platform.OS === "ios";
+
+/**
+ * Register for remote push notifications and obtain device token for backend
+ */
+export async function registerForPushNotificationsAsync(): Promise<string | null> {
+  if (!isNativeMobile) return null;
+  initNotifications();
+  try {
+    const perm = await requestNotificationPermission();
+    if (!perm.granted) return null;
+    const tokenResult = await getExpoPushTokenAsync();
+    return tokenResult?.data || null;
+  } catch (err) {
+    console.warn("Error getting push token:", err);
+    return null;
   }
 }
 

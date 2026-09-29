@@ -176,6 +176,7 @@
     "otpResent": "A new code has been sent.",
     "backToEmail": "Use a different email",
     "googleSignIn": "Continue with Google",
+    "facebookSignIn": "Continue with Facebook",
     "appleSignIn": "Continue with Apple",
     "appleSignInFailed": "Apple Sign-In failed. Please try again.",
     "loginToContinue": "Please log in to continue with this feature.",
@@ -196,7 +197,16 @@
     "loginSuccess": "Sign in successful!",
     "otpSendFailed": "Failed to send verification code",
     "otpVerifyFailed": "Verification failed",
-    "otpSentSuccess": "Verification code has been sent to your email."
+    "otpSentSuccess": "Verification code has been sent to your email.",
+    "facebookTitle": "Facebook",
+    "facebookSignInFailed": "Facebook Sign-In failed. Please try again.",
+    "facebookMissingToken": "Failed to get access token from Facebook.",
+    "facebookAuthSuccess": "Facebook account verified successfully.",
+    "facebookOnlyNative": "Facebook Login is only available on iOS/Android native client.",
+    "googleMissingToken": "No authentication token received from Google.",
+    "appleMissingToken": "No identity token received from Apple.",
+    "missingConfig": "Missing configuration",
+    "loginFailed": "Login failed"
   },
   "onboarding": {
     "brandName": "EarlySigns",
@@ -1352,7 +1362,15 @@
     "freeQuotaFeaturesTitle": "Shared across all 3 AI features:",
     "featPronunciation": "Pronunciation Scoring",
     "featOcr": "Camera OCR Scanning",
-    "featAudio": "UK Voice Generation"
+    "featAudio": "UK Voice Generation",
+    "cancelled": "Payment transaction cancelled.",
+    "restoreSuccessStore": "Successfully restored your EarlySigns Pro access via App Store / Google Play.",
+    "restoreSuccessServer": "Successfully restored your EarlySigns Pro subscription.",
+    "restoreSuccessDevice": "Successfully restored your EarlySigns Pro subscription from device receipt.",
+    "restoreNotFound": "No purchases found to restore for this Apple ID / Google Play account.",
+    "packageNotFound": "Subscription package does not exist on system.",
+    "storeInterrupted": "Store transaction was interrupted. Please try again later.",
+    "storeConnectionFailed": "Could not connect to store server to restore purchases."
   },
   "profileExtra": {
     "screenTitle": "User Profile",

@@ -24,6 +24,7 @@ import { colors } from "@/core/theme";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import GoogleSignInButton from "@/components/ui/GoogleSignInButton";
+import FacebookSignInButton from "@/components/ui/FacebookSignInButton";
 import AppleSignInButton from "@/components/ui/AppleSignInButton";
 import OtpInputView from "@/components/ui/OtpInputView";
 import KeyboardAwareContainer from "@/components/ui/KeyboardAwareContainer";
@@ -116,6 +117,12 @@ export default function LoginScreen({ navigation, route }: Props) {
                   title={t("login.googleSignIn")}
                   loading={vm.googleLoading}
                   onPress={vm.signInGoogle}
+                />
+
+                <FacebookSignInButton
+                  title={t("login.facebookSignIn")}
+                  loading={vm.facebookLoading}
+                  onPress={vm.signInFacebook}
                 />
               </View>
 
