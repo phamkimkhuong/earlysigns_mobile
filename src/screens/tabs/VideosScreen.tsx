@@ -330,15 +330,19 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
   );
 
   const openVideo = useCallback(
-    (youtubeId: string) => {
+    (youtubeId: string, initialIndex?: number) => {
+      const params: { youtubeId: string; initialIndex?: number } = { youtubeId };
+      if (typeof initialIndex === "number" && Number.isFinite(initialIndex) && initialIndex >= 0) {
+        params.initialIndex = initialIndex;
+      }
       if (!authToken) {
         navigation.navigate("Login", {
           next: "VideoPractice",
-          nextParams: { youtubeId },
+          nextParams: params,
         });
         return;
       }
-      navigation.navigate("VideoPractice", { youtubeId });
+      navigation.navigate("VideoPractice", params);
     },
     [authToken, navigation]
   );
@@ -598,7 +602,7 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
                     video={item}
                     t={t}
                     showProgress
-                    onPress={() => openVideo(item.youtube_id)}
+                    onPress={() => openVideo(item.youtube_id, item.played_count)}
                   />
                 )}
               />

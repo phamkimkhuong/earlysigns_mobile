@@ -62,14 +62,19 @@ export function buildWordScores(
   const wordScores: WordScore[] = words.map((word) => ({
     ipaTokens: tokenizeIpa(word?.ipa || ""),
     alignment: [],
+    inserted: [],
   }));
   if (!Array.isArray(alignment) || alignment.length === 0) return wordScores;
 
   alignment.forEach((item) => {
-    if (item?.status === "inserted" || item?.status === "space") return;
+    if (item?.status === "space") return;
     const wordIndex = item?.word_index;
     if (wordIndex != null && wordIndex >= 0 && wordIndex < wordScores.length) {
-      wordScores[wordIndex].alignment.push(item);
+      if (item?.status === "inserted") {
+        wordScores[wordIndex].inserted!.push(item);
+      } else {
+        wordScores[wordIndex].alignment.push(item);
+      }
     }
   });
   return wordScores;
@@ -78,11 +83,12 @@ export function buildWordScores(
 export function buildSoundAnalysisRows(alignment?: WordAlignmentItem[]): SoundAnalysisRow[] {
   if (!Array.isArray(alignment)) return [];
   return alignment
-    .filter((item) => ["correct", "deleted", "replaced"].includes(item?.status || ""))
+    .filter((item) => ["correct", "deleted", "replaced", "inserted"].includes(item?.status || ""))
     .map((item, index) => {
-      const expected = String(item?.char || "").trim();
       const status = String(item?.status || "");
+      const rawExpected = String(item?.char || "").trim();
       const predicted = String(item?.predicted_char ?? "").trim();
+      const expected = status === "inserted" ? (rawExpected || predicted || "+") : rawExpected;
       return {
         id: `${index}-${expected}-${status}`,
         expected,

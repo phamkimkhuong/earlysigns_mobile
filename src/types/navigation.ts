@@ -10,7 +10,7 @@ export type RootStackParamList = {
   Text: { entry?: "input" | "ocr" } | undefined;
   Phonemes: { startLesson?: boolean; startScreening?: boolean; view?: "catalog" } | undefined;
   Journey: undefined;
-  VideoPractice: { youtubeId: string };
+  VideoPractice: { youtubeId: string; initialIndex?: number };
   SentencePractice: {
     sentences: Array<{
       index?: number;

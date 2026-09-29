@@ -24,6 +24,7 @@ export interface WordAlignmentItem {
 export interface WordScore {
   ipaTokens: string[];
   alignment: WordAlignmentItem[];
+  inserted?: WordAlignmentItem[];
 }
 
 export interface SentenceCheckResult {

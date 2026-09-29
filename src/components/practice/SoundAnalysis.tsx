@@ -42,7 +42,7 @@ export default function SoundAnalysis({
     return words.map((w, index) => {
       const phonemes = (rows || []).filter((r) => r.wordIndex === index);
       const errorPhonemes = phonemes.filter(
-        (r) => r.status === "replaced" || r.status === "deleted"
+        (r) => r.status === "replaced" || r.status === "deleted" || r.status === "inserted"
       );
       const correctPhonemes = phonemes.filter((r) => r.status === "correct");
       const hasErrors = errorPhonemes.length > 0;
@@ -103,16 +103,21 @@ export default function SoundAnalysis({
             (isStressMark || isSeparatorMark) &&
             (row.status === "deleted" || row.status === "replaced");
           const markerType = isStressMark ? "stress" : "separator";
+          const isInserted = row.status === "inserted";
           const explanation = isFixedMarkerError
             ? t(`result.soundAnalysis.marker.${markerType}.explanation`)
             : row.status === "correct"
             ? t("result.soundAnalysis.correct")
             : row.status === "deleted"
             ? t("result.soundAnalysis.missed")
+            : isInserted
+            ? t("result.soundAnalysis.inserted", {
+                pronounced: row.pronounced || row.expected,
+              })
             : t("result.soundAnalysis.replaced", {
                 pronounced: row.pronounced || "",
               });
-          const needsTip = row.status === "deleted" || row.status === "replaced";
+          const needsTip = row.status === "deleted" || row.status === "replaced" || isInserted;
           const tipText = isFixedMarkerError
             ? t(`result.soundAnalysis.marker.${markerType}.tip`)
             : row.tipText;
@@ -121,6 +126,8 @@ export default function SoundAnalysis({
               ? colors.success
               : row.status === "deleted"
               ? colors.danger
+              : isInserted
+              ? "#ea580c"
               : colors.warning;
           return (
             <View
@@ -128,14 +135,16 @@ export default function SoundAnalysis({
               className="border-l-[3px] pl-2.5 py-2 gap-1"
               style={{ borderLeftColor: statusColor }}
             >
-              <Text className="font-bold text-slate-900">/{row.expected}/</Text>
+              <Text className="font-bold text-slate-900">
+                {isInserted ? `+/${row.pronounced || row.expected}/` : `/${row.expected}/`}
+              </Text>
               <Text className="text-slate-600 text-xs">{explanation}</Text>
               {needsTip && tipText ? (
                 <Text className="text-slate-700 text-xs">
                   {t("result.soundAnalysis.tipLabel")} {tipText}
                 </Text>
               ) : null}
-              {needsTip && !isFixedMarkerError && onPracticePhoneme ? (
+              {needsTip && !isFixedMarkerError && !isInserted && onPracticePhoneme ? (
                 <PrimaryButton
                   title={
                     practicePhonemeLoading === row.expected
@@ -321,8 +330,9 @@ export default function SoundAnalysis({
                 (isStressMark || isSeparatorMark) &&
                 (row.status === "deleted" || row.status === "replaced");
               const markerType = isStressMark ? "stress" : "separator";
+              const isInserted = row.status === "inserted";
               const isError =
-                row.status === "replaced" || row.status === "deleted";
+                row.status === "replaced" || row.status === "deleted" || isInserted;
 
               const explanation = isFixedMarkerError
                 ? t(`result.soundAnalysis.marker.${markerType}.explanation`)
@@ -330,6 +340,10 @@ export default function SoundAnalysis({
                 ? t("result.soundAnalysis.correct")
                 : row.status === "deleted"
                 ? t("result.soundAnalysis.missed")
+                : isInserted
+                ? t("result.soundAnalysis.inserted", {
+                    pronounced: row.pronounced || row.expected,
+                  })
                 : t("result.soundAnalysis.replaced", {
                     pronounced: row.pronounced || "",
                   });
@@ -344,8 +358,8 @@ export default function SoundAnalysis({
                     key={row.id}
                     className="rounded-2xl p-3.5 gap-2"
                     style={{
-                      backgroundColor: "#fffbeb",
-                      borderColor: "#fde68a",
+                      backgroundColor: isInserted ? "#fff7ed" : "#fffbeb",
+                      borderColor: isInserted ? "#fed7aa" : "#fde68a",
                       borderWidth: 1,
                     }}
                   >
@@ -354,37 +368,68 @@ export default function SoundAnalysis({
                       <View className="flex-row items-center gap-2">
                         <View
                           className="px-2.5 py-1 rounded-lg"
-                          style={{ backgroundColor: "#fef3c7" }}
+                          style={{
+                            backgroundColor: isInserted ? "#ffedd5" : "#fef3c7",
+                          }}
                         >
-                          <Text className="text-base font-black text-amber-950">
-                            /{row.expected}/
+                          <Text
+                            className="text-base font-black"
+                            style={{
+                              color: isInserted ? "#c2410c" : "#78350f",
+                            }}
+                          >
+                            {isInserted
+                              ? `+/${row.pronounced || row.expected}/`
+                              : `/${row.expected}/`}
                           </Text>
                         </View>
-                        <Text className="text-xs font-bold text-amber-800">
-                          {t("result.soundAnalysis.needsImprovement")}
+                        <Text
+                          className="text-xs font-bold"
+                          style={{
+                            color: isInserted ? "#c2410c" : "#92400e",
+                          }}
+                        >
+                          {isInserted
+                            ? t("result.soundAnalysis.insertedBadge")
+                            : t("result.soundAnalysis.needsImprovement")}
                         </Text>
                       </View>
                     </View>
 
                     {/* Explanation */}
-                    <Text className="text-xs font-semibold text-amber-950 leading-relaxed">
+                    <Text
+                      className="text-xs font-semibold leading-relaxed"
+                      style={{
+                        color: isInserted ? "#9a3412" : "#78350f",
+                      }}
+                    >
                       {explanation}
                     </Text>
 
                     {/* Pronunciation Tip (Inline, seamless layout) */}
                     {tipText ? (
                       <View className="flex-row items-start gap-1.5 pt-0.5">
-                        <Text className="text-xs font-bold text-amber-900 shrink-0">
+                        <Text
+                          className="text-xs font-bold shrink-0"
+                          style={{
+                            color: isInserted ? "#9a3412" : "#78350f",
+                          }}
+                        >
                           💡 {t("result.soundAnalysis.tipLabel")}
                         </Text>
-                        <Text className="flex-1 text-xs text-amber-950 font-medium leading-relaxed">
+                        <Text
+                          className="flex-1 text-xs font-medium leading-relaxed"
+                          style={{
+                            color: isInserted ? "#7c2d12" : "#78350f",
+                          }}
+                        >
                           {tipText}
                         </Text>
                       </View>
                     ) : null}
 
                     {/* Learn Phoneme CTA Button */}
-                    {!isFixedMarkerError && onPracticePhoneme ? (
+                    {!isFixedMarkerError && !isInserted && onPracticePhoneme ? (
                       <TouchableOpacity
                         accessible={true}
                         accessibilityRole="button"

@@ -324,6 +324,8 @@
       "correct": "You pronounced it correctly.",
       "missed": "You missed this sound.",
       "replaced": "You mistaked this sound with /{{pronounced}}/.",
+      "inserted": "You pronounced an extra sound /{{pronounced}}/.",
+      "insertedBadge": "Extra sound",
       "tipLabel": "Tip:",
       "viewDetails": "View detailed analysis",
       "hideDetails": "Hide details",

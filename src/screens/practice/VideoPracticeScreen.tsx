@@ -34,9 +34,11 @@ import {
   scheduleIncompleteLessonReminder,
   cancelIncompleteLessonReminder,
 } from "@/services/notifications";
+import { getItem, setItem } from "@/services/storage";
 import type { Dialect, VideoSegment } from "@/types/domain";
 
 const SENTENCE_PRE_ROLL_MS = 250;
+const STORAGE_KEY_LAST_PRACTICED_PREFIX = "earlysigns_video_last_index_";
 
 function segmentSeekSec(seg: VideoSegment, prevSeg?: VideoSegment | null): number {
   let seekMs = Math.max(0, seg.start_ms - SENTENCE_PRE_ROLL_MS);
@@ -121,6 +123,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
           youtubeId,
           title: detailData?.title,
           delayHours: 3,
+          initialIndex: activeIndexRef.current,
         }).catch(() => {});
       }
     };
@@ -224,6 +227,14 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
       setActiveIndex(index);
       clearResult();
 
+      if (youtubeId) {
+        try {
+          setItem(`${STORAGE_KEY_LAST_PRACTICED_PREFIX}${youtubeId}`, String(index));
+        } catch {
+          /* ignore */
+        }
+      }
+
       if (fallbackTimerRef.current) {
         clearTimeout(fallbackTimerRef.current);
         fallbackTimerRef.current = null;
@@ -273,6 +284,12 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
     [clearResult, stopPlayback]
   );
 
+  const hasInitializedRef = useRef(false);
+
+  useEffect(() => {
+    hasInitializedRef.current = false;
+  }, [youtubeId]);
+
   useEffect(() => {
     if (!detailData) return;
     videoRef.current = detailData;
@@ -284,13 +301,34 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
     if (detailData?.dialect) {
       practiceDialectRef.current = detailData.dialect;
     }
-    if (segs.length > 0) {
-      activeIndexRef.current = 0;
-      setActiveIndex(0);
+    if (segs.length > 0 && !hasInitializedRef.current) {
+      hasInitializedRef.current = true;
+      let targetIndex = 0;
+      const paramIndex = route.params?.initialIndex;
+      if (typeof paramIndex === "number" && Number.isFinite(paramIndex) && paramIndex >= 0) {
+        targetIndex = paramIndex;
+      } else {
+        const stored = getItem(`${STORAGE_KEY_LAST_PRACTICED_PREFIX}${youtubeId}`);
+        const parsed = stored != null ? parseInt(stored, 10) : NaN;
+        if (Number.isFinite(parsed) && parsed >= 0) {
+          targetIndex = parsed;
+        } else if (
+          typeof detailData?.played_count === "number" &&
+          Number.isFinite(detailData.played_count) &&
+          detailData.played_count > 0 &&
+          detailData.played_count < segs.length
+        ) {
+          targetIndex = detailData.played_count;
+        }
+      }
+
+      const clampedIndex = Math.max(0, Math.min(segs.length - 1, targetIndex));
+      activeIndexRef.current = clampedIndex;
+      setActiveIndex(clampedIndex);
       hasPracticedRef.current = false;
-      armSentence(0, { play: false, seek: "preroll" });
+      armSentence(clampedIndex, { play: false, seek: "preroll" });
     }
-  }, [detailData, armSentence]);
+  }, [detailData, armSentence, route.params?.initialIndex, youtubeId]);
 
   useEffect(() => {
     pollRef.current = setInterval(async () => {
@@ -523,7 +561,17 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                   height={205}
                   videoId={youtubeId}
                   play={playing}
-                  onReady={() => setPlayerReady(true)}
+                  onReady={() => {
+                    setPlayerReady(true);
+                    const segs = segmentsRef.current;
+                    const currentIdx = activeIndexRef.current;
+                    if (currentIdx > 0 && segs[currentIdx] && playerRef.current) {
+                      const prevSeg = segs[currentIdx - 1] || null;
+                      const seekSec = segmentSeekSec(segs[currentIdx], prevSeg);
+                      seekTimeRef.current = Date.now();
+                      playerRef.current.seekTo?.(seekSec, true);
+                    }
+                  }}
                   onChangeState={(state: string) => {
                     if (state === "playing") {
                       // Discard ghost "playing" events fired by WebView right after a programmatic pause

@@ -269,6 +269,7 @@ export async function scheduleIncompleteLessonReminder(params: {
   lessonType?: "video" | "text" | "phonemes";
   title?: string;
   delayHours?: number;
+  initialIndex?: number;
 }): Promise<boolean> {
   initNotifications();
   try {
@@ -310,7 +311,12 @@ export async function scheduleIncompleteLessonReminder(params: {
           youtubeId: params.youtubeId,
           lessonType: params.lessonType || "video",
           targetRoute: params.youtubeId ? "VideoPractice" : "Main",
-          targetParams: params.youtubeId ? { youtubeId: params.youtubeId } : undefined,
+          targetParams: params.youtubeId
+            ? {
+                youtubeId: params.youtubeId,
+                ...(typeof params.initialIndex === "number" ? { initialIndex: params.initialIndex } : {}),
+              }
+            : undefined,
           requiresAuth: true,
         },
         sound: true,

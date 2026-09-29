@@ -313,6 +313,8 @@
       "correct": "Bạn đã phát âm đúng âm này.",
       "missed": "Bạn đã thiếu âm này.",
       "replaced": "Bạn đã nhầm âm này với /{{pronounced}}/.",
+      "inserted": "Bạn đã phát âm thừa âm /{{pronounced}}/.",
+      "insertedBadge": "Âm thừa",
       "tipLabel": "Mẹo:",
       "viewDetails": "Xem phân tích chi tiết",
       "hideDetails": "Ẩn chi tiết",
