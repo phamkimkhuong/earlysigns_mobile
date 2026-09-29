@@ -14,6 +14,7 @@ export interface ScoreWordsItem {
 export interface ScoreWordsProps {
   words?: ScoreWordsItem[];
   alignment?: WordAlignmentItem[];
+  showWord?: boolean;
   showIpa?: boolean;
   showResultDetails?: boolean;
   loadingIpa?: boolean;
@@ -29,6 +30,7 @@ const PHONE_COLORS: Record<string, string> = {
 export default function ScoreWords({
   words = [],
   alignment,
+  showWord = true,
   showIpa = true,
   showResultDetails = false,
   loadingIpa = false,
@@ -46,7 +48,9 @@ export default function ScoreWords({
             : ipaTokens.map((phone) => ({ char: phone, status: "neutral" }));
         return (
           <View key={`${w.word}-${i}`} className="items-center max-w-[120px]">
-            <Text className="text-appText text-base font-semibold">{w.word || ""}</Text>
+            {showWord ? (
+              <Text className="text-appText text-base font-semibold">{w.word || ""}</Text>
+            ) : null}
             {showIpa ? (
               <Text className="text-appTextSecondary text-[13px] mt-0.5">
                 /

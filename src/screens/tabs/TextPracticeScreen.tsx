@@ -17,12 +17,12 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardPaste,
+  Crown,
   Image as ImageIcon,
   Save,
   Trash2,
 } from "lucide-react-native";
 import DialectToggle from "@/components/ui/DialectToggle";
-import IPAChecking from "@/components/practice/IPAChecking";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import { PassageListSkeleton } from "@/components/ui/Skeleton";
 import { useTextPracticeViewModel } from "@/hooks/useTextPracticeViewModel";
@@ -51,38 +51,45 @@ export default function TextPracticeScreen({ navigation, route }: NativeStackScr
     ocrLoading,
     passages,
     passagesLoading,
-    lessonSession,
-    lessonSessionKey,
-    userTier,
+    userTier = "free",
     userKey,
     usageStatus,
     startPractice,
     handleOcr,
-    requestSentenceWords,
-    requestSampleAudio,
-    closeLessonSession,
     scrollViewRef,
     wordCount = 0,
     showSaveForm = false,
-    setShowSaveForm = () => {},
-    openSaveForm = () => {},
-    onSaveTitleFocus = () => {},
+    setShowSaveForm = () => { },
+    openSaveForm = () => { },
+    onSaveTitleFocus = () => { },
     keyboardHeight = 0,
     saveSuccess = false,
-    handleSavePassage = () => {},
-    handlePaste = () => {},
-    handleClearText = () => {},
-    onSelectPassage = () => {},
+    handleSavePassage = () => { },
+    handlePaste = () => { },
+    handleClearText = () => { },
+    onSelectPassage = () => { },
   } = useTextPracticeViewModel(navigation);
 
   const isOcrEntry = route.params?.entry === "ocr";
+  const isPro = userTier === "pro" || userTier === "trial";
   const ocrActions = (
     <View testID="text-ocr-actions" className="gap-2.5">
-      {isOcrEntry ? (
+      <View className="flex-row items-center justify-between">
         <Text className="text-sm font-semibold text-slate-600">
-          {t("homeDesign.chooseImage")}
+          {isOcrEntry ? t("homeDesign.chooseImage") : t("textPractice.ocr.title", "Quét ảnh OCR")}
         </Text>
-      ) : null}
+        {!isPro ? (
+          <View
+            className="flex-row items-center gap-1 px-2.5 py-0.5 rounded-full border border-amber-300 shrink-0"
+            style={{ backgroundColor: "#fef3c7" }}
+          >
+            <Crown size={12} color="#b45309" />
+            <Text className="text-xs font-bold text-amber-900" numberOfLines={1}>
+              {t("textPractice.ocr.proBadge", "PRO")}
+            </Text>
+          </View>
+        ) : null}
+      </View>
       <View className="flex-row flex-wrap gap-2.5">
         <TouchableOpacity
           accessibilityRole="button"
@@ -90,15 +97,20 @@ export default function TextPracticeScreen({ navigation, route }: NativeStackScr
           disabled={ocrLoading}
           onPress={() => handleOcr(true)}
           className="flex-1 min-w-[120px] flex-row items-center justify-center gap-2 bg-sky-50 border border-sky-200 py-3 px-2 rounded-2xl"
+          style={{ opacity: ocrLoading ? 0.6 : 1 }}
         >
-          {ocrLoading ? (
-            <ActivityIndicator size="small" color="#0284c7" />
-          ) : (
-            <Camera size={16} color="#0284c7" />
-          )}
+          <Camera size={16} color="#0284c7" />
           <Text className="text-sm font-bold text-sky-800 flex-shrink">
             {t("textPractice.ocr.camera")}
           </Text>
+          {!isPro ? (
+            <View
+              className="px-1.5 py-0.5 rounded-md shrink-0"
+              style={{ backgroundColor: "#0a2644" }}
+            >
+              <Text className="text-xs font-black text-amber-300" numberOfLines={1}>PRO</Text>
+            </View>
+          ) : null}
         </TouchableOpacity>
         <TouchableOpacity
           accessibilityRole="button"
@@ -106,19 +118,26 @@ export default function TextPracticeScreen({ navigation, route }: NativeStackScr
           disabled={ocrLoading}
           onPress={() => handleOcr(false)}
           className="flex-1 min-w-[120px] flex-row items-center justify-center gap-2 bg-indigo-50 border border-indigo-200 py-3 px-2 rounded-2xl"
+          style={{ opacity: ocrLoading ? 0.6 : 1 }}
         >
-          {ocrLoading ? (
-            <ActivityIndicator size="small" color="#4f46e5" />
-          ) : (
-            <ImageIcon size={16} color="#4f46e5" />
-          )}
+          <ImageIcon size={16} color="#4f46e5" />
           <Text className="text-sm font-bold text-indigo-800 flex-shrink">
             {t("textPractice.ocr.gallery")}
           </Text>
+          {!isPro ? (
+            <View
+              className="px-1.5 py-0.5 rounded-md shrink-0"
+              style={{ backgroundColor: "#0a2644" }}
+            >
+              <Text className="text-xs font-black text-amber-300" numberOfLines={1}>PRO</Text>
+            </View>
+          ) : null}
         </TouchableOpacity>
       </View>
     </View>
   );
+
+
 
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-[#0a2644]">
@@ -236,7 +255,7 @@ export default function TextPracticeScreen({ navigation, route }: NativeStackScr
             {/* OCR Prompts when routed with entry === "ocr" */}
             {isOcrEntry ? ocrActions : null}
 
-            {/* OCR Live Recognition Status Banner */}
+            {/* OCR Live Recognition Status Banner (Single focused indicator) */}
             {ocrLoading ? (
               <View className="flex-row items-center gap-3 p-3.5 rounded-2xl bg-indigo-50 border border-indigo-200">
                 <ActivityIndicator size="small" color="#4f46e5" />
@@ -420,23 +439,6 @@ export default function TextPracticeScreen({ navigation, route }: NativeStackScr
           ) : null}
         </View>
       </ScrollView>
-
-      {/* IPA Checking Practice Sheet Modal */}
-      <IPAChecking
-        open={Boolean(lessonSession)}
-        onClose={closeLessonSession}
-        sentences={lessonSession?.sentences || []}
-        dialect={lessonSession?.dialect || dialect}
-        sessionKey={lessonSessionKey}
-        autoRecordKey={lessonSessionKey}
-        lessonTitle={lessonSession?.title}
-        userTier={userTier}
-        userKey={userKey}
-        usageStatus={usageStatus}
-        mode="free-input"
-        onRequestSentenceWords={requestSentenceWords}
-        onRequestSampleAudio={requestSampleAudio}
-      />
     </SafeAreaView>
   );
 }

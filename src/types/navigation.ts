@@ -8,9 +8,21 @@ export type RootStackParamList = {
   Main: undefined;
   Videos: undefined;
   Text: { entry?: "input" | "ocr" } | undefined;
-  Phonemes: { startLesson?: boolean; startScreening?: boolean } | undefined;
+  Phonemes: { startLesson?: boolean; startScreening?: boolean; view?: "catalog" } | undefined;
   Journey: undefined;
   VideoPractice: { youtubeId: string };
+  SentencePractice: {
+    sentences: Array<{
+      index?: number;
+      text: string;
+      audio_url?: string;
+      words?: any[];
+      [key: string]: any;
+    }>;
+    dialect?: string;
+    lessonTitle?: string;
+    mode?: string;
+  };
   Terms: undefined;
   Privacy: undefined;
   Referral: undefined;

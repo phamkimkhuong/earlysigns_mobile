@@ -13,7 +13,7 @@ import {
 import type { AudioStreamBuffer } from "expo-audio";
 import { File, Paths } from "expo-file-system";
 import { useTranslation } from "react-i18next";
-import { MOBILE_FREE_ACCESS, API_ENDPOINTS } from "@/core/config";
+import { API_ENDPOINTS } from "@/core/config";
 import { incrementDailyUsage, isPronunciationQuotaExhausted } from "@/services/usageLimits";
 import { parseErrorDetail } from "@/utils/errors";
 import { appendLocalFile } from "@/utils/formDataFile";
@@ -164,6 +164,7 @@ export interface UsePronunciationCheckResult {
     options?: { updateUi?: boolean; countUsage?: boolean }
   ) => Promise<SentenceCheckResult | null>;
   clearResult: () => void;
+  cancelRecording: () => Promise<void>;
   replayRecording: () => Promise<void>;
 }
 
@@ -400,7 +401,6 @@ export function usePronunciationCheck({
   );
 
   const recordLocalCheckUsage = useCallback(() => {
-    if (MOBILE_FREE_ACCESS) return;
     if (userTier === "pro" || userTier === "trial") return;
     if (sessionCountedRef.current) return;
     sessionCountedRef.current = true;
@@ -557,7 +557,8 @@ export function usePronunciationCheck({
   const startRecording = useCallback(
     async ({ text, dialect }: { text: string; dialect?: Dialect | string }) => {
       if (!text) return;
-      if (isPronunciationQuotaExhausted({ userTier, userKey })) {
+      const currentUsage = useBillingStore.getState().usage;
+      if (isPronunciationQuotaExhausted({ userTier, userKey, usageStatus: currentUsage })) {
         onDailyLimitReached?.(userTier === "anonymous" ? "anonymous" : "free");
         return;
       }
@@ -670,6 +671,16 @@ export function usePronunciationCheck({
     [clearTimers, onDailyLimitReached, recorder, stopRecorder, stream, t, userKey, userTier]
   );
 
+  const cancelRecording = useCallback(async () => {
+    sessionRef.current += 1;
+    clearTimers();
+    setIsStarting(false);
+    setIsRecording(false);
+    await stopRecorder();
+    releasePlayer(soundRef.current);
+    soundRef.current = null;
+  }, [clearTimers, stopRecorder]);
+
   const clearResult = useCallback(() => {
     setResult(null);
     setAudioUri(null);
@@ -728,5 +739,6 @@ export function usePronunciationCheck({
     checkPronunciation,
     clearResult,
     replayRecording,
+    cancelRecording,
   };
 }

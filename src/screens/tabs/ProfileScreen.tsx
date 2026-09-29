@@ -22,7 +22,6 @@ import {
   Bell,
   Check,
   ChevronRight,
-  Clock,
   Crown,
   ExternalLink,
   Flame,

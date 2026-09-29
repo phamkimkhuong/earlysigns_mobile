@@ -12,8 +12,6 @@ export const API_BASE: string =
   extra.apiBase ||
   "http://localhost:8000";
 
-// Mobile practice is intentionally available without an account or subscription.
-export const MOBILE_FREE_ACCESS: boolean = true;
 export const MOBILE_APP_CLIENT: string = "mobile-free";
 export const GOOGLE_CLIENT_ID: string =
   process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ||

@@ -10,6 +10,7 @@ export { default as NotificationSettingsScreen } from "./tabs/NotificationSettin
 
 // Practice Flow
 export { default as VideoPracticeScreen } from "./practice/VideoPracticeScreen";
+export { default as SentencePracticeScreen } from "./practice/SentencePracticeScreen";
 
 // Auth & Onboarding Flow
 export { default as OnboardingScreen } from "./onboarding/OnboardingScreen";

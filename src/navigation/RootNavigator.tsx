@@ -15,6 +15,7 @@ import {
   JourneyScreen,
   ProfileScreen,
   VideoPracticeScreen,
+  SentencePracticeScreen,
   TermsScreen,
   PrivacyScreen,
   ReferralScreen,
@@ -104,11 +105,16 @@ export default function RootNavigator() {
       <Stack.Screen name="Main" component={MainTabs} options={{ headerShown: false }} />
       <Stack.Screen name="Videos" component={VideosScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Text" component={TextPracticeScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="Phonemes" component={PhonemesScreen} options={{ title: t("nav.phonemes") }} />
+      <Stack.Screen name="Phonemes" component={PhonemesScreen} options={({ route }) => ({ title: t(route.params?.view === "catalog" ? "phonemesHome.catalogTitle" : "nav.phonemes") })} />
       <Stack.Screen name="Journey" component={JourneyScreen} options={{ title: t("home.journey.viewAll") }} />
       <Stack.Screen
         name="VideoPractice"
         component={VideoPracticeScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="SentencePractice"
+        component={SentencePracticeScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen name="Terms" component={TermsScreen} options={{ headerShown: false }} />

@@ -13,14 +13,8 @@ import {
 import { useBillingUsageQuery } from "@/hooks/queries/useBillingQueries";
 import { progressKeys } from "@/hooks/queries/useProgressQueries";
 import type { Dialect, LessonSession } from "@/types/domain";
-
-const DEFAULT_CORE_PHONEMES = [
-  { sound: "ə" },
-  { sound: "n" },
-  { sound: "ɪ" },
-  { sound: "t" },
-  { sound: "r" },
-];
+import { getFriendlyErrorMessage } from "@/utils/localizedError";
+import { SCREENING_SENTENCE_COUNT } from "@/utils/screeningSession";
 
 export function usePhonemesViewModel(navigation: any) {
   const { t, i18n } = useTranslation();
@@ -30,16 +24,16 @@ export function usePhonemesViewModel(navigation: any) {
     authEmail,
     authLoading,
     userDialect,
-    showScreeningPrompt,
+    screeningCompleted,
     refreshScreeningStatus,
   } = useAuth();
   const dialect: Dialect = userDialect || "uk";
 
   // TanStack Query: Home summary & Billing usage
-  useHomeSummaryQuery(dialect, Boolean(authToken && !authLoading));
+  const summaryQuery = useHomeSummaryQuery(dialect, Boolean(authToken && !authLoading));
   useBillingUsageQuery(Boolean(authToken && !authLoading));
 
-  const homeSummary = useBillingStore((s) => s.homeSummary);
+  const homeSummary = authToken ? summaryQuery.data : null;
   const usageStatus = useBillingStore((s) => s.usage);
 
   const [lessonSession, setLessonSession] = useState<LessonSession | null>(null);
@@ -49,6 +43,10 @@ export function usePhonemesViewModel(navigation: any) {
   const [lessonMode, setLessonMode] = useState<"lesson" | "screening">("lesson");
   const [screeningResult, setScreeningResult] = useState<{ totalAccuracy?: number } | null>(null);
   const [screeningLoading, setScreeningLoading] = useState(false);
+  const [screeningError, setScreeningError] = useState("");
+  const [screeningConfirmed, setScreeningConfirmed] = useState(false);
+  const [phonemeLoading, setPhonemeLoading] = useState<string | null>(null);
+  const startingRef = useRef(false);
   const [journeyLessonProgress, setJourneyLessonProgress] = useState<any>(null);
   const lessonKindRef = useRef<string | null>(null);
 
@@ -67,10 +65,12 @@ export function usePhonemesViewModel(navigation: any) {
   );
 
   const startPersonalizedLesson = useCallback(async () => {
+    if (startingRef.current) return;
     if (!authToken) {
       navigation.navigate("Login", { next: "Phonemes" });
       return;
     }
+    startingRef.current = true;
     setLessonLoading(true);
     setLessonError("");
     try {
@@ -85,22 +85,29 @@ export function usePhonemesViewModel(navigation: any) {
       setLessonSessionKey((k) => k + 1);
       setLessonMode("lesson");
     } catch (e: any) {
-      setLessonError(String(e?.message || e));
+      setLessonError(getFriendlyErrorMessage(e, t("phonemesHome.startError"), i18n.language.startsWith("vi") ? "vi" : "en"));
     } finally {
+      startingRef.current = false;
       setLessonLoading(false);
     }
   }, [authToken, dialect, i18n.language, navigation, t]);
 
   const startScreeningTest = useCallback(async () => {
+    if (startingRef.current) return;
     if (!authToken) {
       navigation.navigate("Login", { next: "Phonemes" });
       return;
     }
+    startingRef.current = true;
     setScreeningLoading(true);
+    setScreeningError("");
     try {
       const data = await lessonApi.getScreeningSentences(dialect);
       const sentences = Array.isArray(data?.sentences) ? data.sentences : [];
-      if (!sentences.length) return;
+      if (sentences.length !== SCREENING_SENTENCE_COUNT || sentences.some((sentence: any) => typeof sentence?.text !== "string" || !sentence.text.trim())) {
+        setScreeningError(t("screeningPractice.unavailable"));
+        return;
+      }
       lessonKindRef.current = "screening";
       setLessonSession({
         kind: "screening",
@@ -113,23 +120,40 @@ export function usePhonemesViewModel(navigation: any) {
       });
       setLessonSessionKey((k) => k + 1);
       setLessonMode("screening");
+    } catch (e) {
+      setScreeningError(getFriendlyErrorMessage(e, t("phonemesHome.startError"), i18n.language.startsWith("vi") ? "vi" : "en"));
     } finally {
+      startingRef.current = false;
       setScreeningLoading(false);
     }
-  }, [authToken, dialect, navigation, t]);
+  }, [authToken, dialect, navigation, t, i18n.language]);
 
   const startPhoneme = useCallback(async (phoneme: string) => {
+    if (startingRef.current) return;
     if (!authToken) {
       navigation.navigate("Login", { next: "Phonemes" });
       return;
     }
-    const data = await lessonApi.getPhonemeLesson(phoneme, dialect, true);
-    const session = buildLessonSession("phoneme", data, { phoneme, dialect }, t, i18n.language);
-    if (!session) return;
-    lessonKindRef.current = session.kind;
-    setLessonSession({ ...session, instructionsHtml: "" });
-    setLessonSessionKey((k) => k + 1);
-    setLessonMode("lesson");
+    startingRef.current = true;
+    setPhonemeLoading(phoneme);
+    setLessonError("");
+    try {
+      const data = await lessonApi.getPhonemeLesson(phoneme, dialect, true);
+      const session = buildLessonSession("phoneme", data, { phoneme, dialect }, t, i18n.language);
+      if (!session) {
+        setLessonError(t("lesson.empty"));
+        return;
+      }
+      lessonKindRef.current = session.kind;
+      setLessonSession(session);
+      setLessonSessionKey((k) => k + 1);
+      setLessonMode("lesson");
+    } catch (e) {
+      setLessonError(getFriendlyErrorMessage(e, t("phonemesHome.startError"), i18n.language.startsWith("vi") ? "vi" : "en"));
+    } finally {
+      startingRef.current = false;
+      setPhonemeLoading(null);
+    }
   }, [authToken, dialect, i18n.language, navigation, t]);
 
   const closeLessonSession = useCallback(async () => {
@@ -145,7 +169,7 @@ export function usePhonemesViewModel(navigation: any) {
     if (lessonKindRef.current === "journey" || lessonKindRef.current === "personalized") {
       try {
         const res = await lessonApi.completeJourney();
-        if (res?.progress) setJourneyLessonProgress(res.progress);
+        if (res?.journey) setJourneyLessonProgress(res.journey);
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: lessonKeys.homeSummary(dialect) }),
           queryClient.invalidateQueries({ queryKey: progressKeys.sounds(dialect) }),
@@ -156,30 +180,33 @@ export function usePhonemesViewModel(navigation: any) {
     }
   }, [dialect, queryClient]);
 
-  const handleScreeningHalfReached = useCallback(async () => {
-    await lessonApi.completeScreening().catch(() => {});
-    refreshScreeningStatus?.();
-  }, [refreshScreeningStatus]);
-
   const handleScreeningFinished = useCallback(async () => {
-    setLessonSession(null);
-    let finalScore = 0;
+    setScreeningError("");
     try {
       const data = await lessonApi.completeScreening();
-      if (data?.total_accuracy != null) finalScore = Number(data.total_accuracy);
-    } catch {
-      /* ignore */
+      const status = await refreshScreeningStatus?.();
+      const confirmed = data?.screening_completed === true || data?.screening_status?.screening_completed === true || status?.screening_completed === true;
+      if (!confirmed) {
+        setScreeningError(t("screeningPractice.saveError"));
+        return false;
+      }
+      setScreeningConfirmed(true);
+      const summary = await summaryQuery.refetch();
+      const rawScore = data?.total_accuracy ?? summary.data?.total_accuracy;
+      const validScore = rawScore != null && rawScore !== "" && Number.isFinite(Number(rawScore)) && Number(rawScore) >= 0 && Number(rawScore) <= 1;
+      setLessonSession(null);
+      setScreeningResult({ totalAccuracy: validScore ? Number(rawScore) : undefined });
+      return true;
+    } catch (e) {
+      setScreeningError(getFriendlyErrorMessage(e, t("phonemesHome.screeningSaveError"), i18n.language.startsWith("vi") ? "vi" : "en"));
+      return false;
     }
-    const summary = await lessonApi.getHomeSummary(dialect).catch(() => null);
-    if (summary?.total_accuracy != null) finalScore = Number(summary.total_accuracy);
-    refreshScreeningStatus?.();
-    setScreeningResult({ totalAccuracy: finalScore });
-  }, [dialect, refreshScreeningStatus]);
+  }, [refreshScreeningStatus, summaryQuery, t, i18n.language]);
 
   const loadNextLesson = useCallback(async () => {
     if (!lessonSession) return;
     if (lessonSession.kind === "personalized") {
-      await lessonApi.markPracticed(lessonSession.phonemes || []).catch(() => {});
+      await lessonApi.markPracticed(lessonSession.phonemes || []).catch(() => { });
     }
     const data =
       lessonSession.kind === "phoneme"
@@ -205,17 +232,29 @@ export function usePhonemesViewModel(navigation: any) {
     [dialect, lessonSession?.dialect]
   );
 
-  const weakestPhonemes =
-    Array.isArray(homeSummary?.weakest_phonemes) && homeSummary.weakest_phonemes.length > 0
-      ? homeSummary.weakest_phonemes
-      : DEFAULT_CORE_PHONEMES;
+  const weakestPhonemes = useMemo(() => {
+    const items: any[] = Array.isArray(homeSummary?.weakest_phonemes) ? homeSummary.weakest_phonemes : [];
+    const seen = new Set<string>();
+    return items.filter(item => item?.accuracy != null && item.accuracy !== "" && Number.isFinite(Number(item.accuracy)) && Number(item.accuracy) >= 0 && Number(item.accuracy) <= 1)
+      .map(item => ({ sound: String(item.sound || "").trim().replace(/^\/+|\/+$/g, ""), accuracy: Number(item.accuracy) }))
+      .sort((a, b) => a.accuracy - b.accuracy)
+      .filter(item => {
+        if (!item.sound || seen.has(item.sound)) return false;
+        seen.add(item.sound);
+        return true;
+      });
+  }, [homeSummary]);
   const journey = journeyLessonProgress || homeSummary?.journey || null;
-  const clarityRatio = Number(homeSummary?.total_accuracy);
 
   return {
     t,
     dialect,
-    showScreeningPrompt,
+    screeningCompleted: Boolean(screeningCompleted || screeningConfirmed),
+    summaryLoading: summaryQuery.isLoading,
+    summaryError: summaryQuery.isError,
+    retrySummary: () => { void summaryQuery.refetch(); },
+    phonemeLoading,
+    screeningError,
     screeningLoading,
     startScreeningTest,
     homeSummary,
@@ -223,7 +262,6 @@ export function usePhonemesViewModel(navigation: any) {
     lessonLoading,
     lessonError,
     startPersonalizedLesson,
-    clarityRatio,
     weakestPhonemes,
     startPhoneme,
     lessonSession,
@@ -236,7 +274,6 @@ export function usePhonemesViewModel(navigation: any) {
     screeningResult,
     setScreeningResult,
     handleLessonAllCompleted,
-    handleScreeningHalfReached,
     handleScreeningFinished,
     loadNextLesson:
       lessonSession?.kind === "personalized" || lessonSession?.kind === "phoneme"

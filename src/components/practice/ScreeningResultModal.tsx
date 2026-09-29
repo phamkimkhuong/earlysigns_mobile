@@ -27,6 +27,7 @@ export default function ScreeningResultModal({ open, totalAccuracy, onClose }: S
     [totalAccuracy]
   );
   const pct = Math.round(ratio * 100);
+  const hasScore = totalAccuracy != null && totalAccuracy !== "" && Number.isFinite(Number(totalAccuracy));
   const level = screeningLevel(pct);
   const color = checkResultScoreColor(ratio);
   if (!open) return null;
@@ -39,13 +40,13 @@ export default function ScreeningResultModal({ open, totalAccuracy, onClose }: S
       footer={<PrimaryButton title={t("screening.result.close")} onPress={onClose} />}
     >
       <Text style={{ fontSize: 42, fontWeight: "800", color, textAlign: "center" }}>
-        {pct}%
+        {hasScore ? `${pct}%` : "—"}
       </Text>
       <Text style={{ color: colors.text, textAlign: "center", marginTop: 8, fontWeight: "700" }}>
-        {t(`screening.result.levels.${level}.label`)}
+        {hasScore ? t(`screening.result.levels.${level}.label`) : t("phonemesHome.profileTitle")}
       </Text>
       <Text style={{ color: colors.textSecondary, textAlign: "center", marginTop: 8, lineHeight: 20 }}>
-        {t(`screening.result.levels.${level}.message`)}
+        {hasScore ? t(`screening.result.levels.${level}.message`) : t("screeningPractice.scorePending")}
       </Text>
     </AppModal>
   );

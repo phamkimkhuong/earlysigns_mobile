@@ -196,9 +196,11 @@ test("personalized lesson intent is consumed once, including a replayed mount ef
       useMemo: (fn) => fn(),
     },
     "react-native": nativeMocks,
+    "react-native-safe-area-context": { SafeAreaView: "SafeAreaView" },
     "@/components/practice/HomeJourney": { default: () => null },
     "@/components/practice/IPAChecking": { default: () => null },
     "@/components/practice/ScreeningResultModal": { default: () => null },
+    "@/components/practice/ScreeningSession": { default: () => null },
     "@/components/ui/PrimaryButton": { default: () => null },
     "@/components/ui/Skeleton": { PhonemesChipsSkeleton: () => null },
     "@/utils/checkResultScoreColor": { accuracyBandColor: () => "" },
@@ -218,4 +220,95 @@ test("personalized lesson intent is consumed once, including a replayed mount ef
   render(true);
   effects.pop()();
   assert.equal(starts, 2);
+});
+
+test("pronunciation main prioritizes screening without gating practice, sounds or journey", () => {
+  const { default: PhonemesHome } = loadSource("src/components/practice/PhonemesHome.tsx", { "react-native": nativeMocks });
+  for (const completed of [false, true]) {
+    const calls = [];
+    const tree = flatten(PhonemesHome({
+      t: key => key, dialect: "uk", screeningCompleted: completed, weakestPhonemes: [{ sound: "θ" }],
+      onScreening: () => calls.push("screening"), onLesson: () => calls.push("lesson"),
+      onPhoneme: sound => calls.push(sound), onJourney: () => calls.push("journey"),
+      onCatalog: () => calls.push("catalog"), onProfile: () => calls.push("profile"), onRetry: () => {},
+    }));
+    const find = id => tree.find(node => node.props.testID === id);
+    assert.equal(Boolean(find("phonemes-screening-card")), !completed);
+    assert.equal(Boolean(find("phonemes-lesson-hero")), completed);
+    assert.equal(Boolean(find("phonemes-profile")), completed);
+    assert.ok(find("phonemes-weak-sounds"));
+    assert.equal(find("phonemes-start-lesson").props.disabled, false);
+    find("phonemes-start-lesson").props.onPress();
+    flatten(find("phonemes-weak-sounds")).find(node => node.type === "Pressable").props.onPress();
+    find("phonemes-journey").props.onPress();
+    find("phonemes-catalog").props.onPress();
+    assert.deepEqual(calls, ["lesson", "θ", "journey", "catalog"]);
+    if (!completed) {
+      assert.ok(tree.indexOf(find("phonemes-screening-card")) < tree.indexOf(find("phonemes-start-lesson")));
+    }
+  }
+});
+
+test("pronunciation main labels generic suggestions as exploration even after screening", () => {
+  const { default: PhonemesHome } = loadSource("src/components/practice/PhonemesHome.tsx", { "react-native": nativeMocks });
+  for (const completed of [false, true]) {
+    const tree = flatten(PhonemesHome({ t: key => key, dialect: "uk", screeningCompleted: completed, weakestPhonemes: [] }));
+    assert.ok(tree.some(node => node.props.testID === "phonemes-explore-sounds"));
+    assert.ok(!tree.some(node => node.props.testID === "phonemes-weak-sounds"));
+  }
+});
+
+test("pronunciation data keeps screening independent, filters unassessed sounds, and confirms completion from the server", async () => {
+  const slots = [];
+  let cursor = 0;
+  let completionFails = false;
+  const requests = [];
+  const summary = { weakest_phonemes: [
+    { sound: "n", accuracy: null }, { sound: "t", accuracy: "" },
+    { sound: "r", accuracy: 0.6 }, { sound: "/θ/", accuracy: 0.2 }, { sound: "θ", accuracy: 0.3 },
+  ] };
+  const { usePhonemesViewModel } = loadSource("src/hooks/usePhonemesViewModel.ts", {
+    react: {
+      useCallback: fn => fn, useMemo: fn => fn(),
+      useRef: initial => { const index = cursor++; return slots[index] ??= { current: initial }; },
+      useState: initial => {
+        const index = cursor++;
+        if (!(index in slots)) slots[index] = initial;
+        return [slots[index], value => { slots[index] = typeof value === "function" ? value(slots[index]) : value; }];
+      },
+    },
+    "react-i18next": { useTranslation: () => ({ t: key => key, i18n: { language: "vi" } }) },
+    "@tanstack/react-query": { useQueryClient: () => ({ invalidateQueries: async () => {} }) },
+    "@/services/Auth": { useAuth: () => ({ authToken: "test", screeningCompleted: false, scoreUnlocked: true, refreshScreeningStatus: async () => null }) },
+    "@/services/usageLimits": { resolveUserKey: () => "test", resolveUserTier: () => "free" },
+    "@/store/useBillingStore": { useBillingStore: select => select({ usage: null }) },
+    "@/hooks/queries/useLessonQueries": { useHomeSummaryQuery: () => ({ data: summary, refetch: async () => ({ data: summary }) }), lessonKeys: { homeSummary: () => [] } },
+    "@/hooks/queries/useBillingQueries": { useBillingUsageQuery: () => {} },
+    "@/hooks/queries/useProgressQueries": { progressKeys: { sounds: () => [] } },
+    "@/utils/localizedError": { getFriendlyErrorMessage: (_, fallback) => fallback },
+    "@/api": { lessonApi: {
+      getPersonalizedLesson: async () => { requests.push("lesson"); return { sentences: [{ text: "Hello" }] }; },
+      getPhonemeLesson: async () => { requests.push("sound"); return { sentences: [{ text: "Think" }], vi_instructions: "Hướng dẫn" }; },
+      completeScreening: async () => { if (completionFails) throw Error("offline"); return { screening_completed: true, total_accuracy: 0 }; },
+    }, textPracticeApi: {} },
+  });
+  const render = () => { cursor = 0; return usePhonemesViewModel({ navigate: () => assert.fail("Unexpected login gate") }); };
+  let model = render();
+  assert.equal(model.screeningCompleted, false);
+  assert.deepEqual(model.weakestPhonemes.map(item => item.sound), ["θ", "r"]);
+  await model.startPersonalizedLesson();
+  await model.startPhoneme("θ");
+  assert.deepEqual(requests, ["lesson", "sound"]);
+  assert.equal(render().lessonSession.instructionsHtml, "Hướng dẫn");
+  completionFails = true;
+  await model.handleScreeningFinished();
+  model = render();
+  assert.equal(model.screeningCompleted, false);
+  assert.equal(model.screeningResult, null);
+  assert.ok(model.screeningError);
+  completionFails = false;
+  await model.handleScreeningFinished();
+  model = render();
+  assert.equal(model.screeningCompleted, true);
+  assert.equal(model.screeningResult.totalAccuracy, 0);
 });

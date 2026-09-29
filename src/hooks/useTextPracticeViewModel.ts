@@ -122,16 +122,12 @@ export function useTextPracticeViewModel(navigation?: any) {
     try {
       const { sentences, dialect: d } = await textPracticeApi.prepareText(text, dialect);
       if (!sentences.length) throw new Error(t("textPractice.errorEmpty"));
-      setLessonSession({
-        kind: "free-input",
-        phoneme: null,
-        phonemes: [],
-        dialect: d || dialect,
+      navigation?.navigate?.("SentencePractice", {
         sentences,
-        title: t("textPractice.practiceTitle"),
-        instructionsHtml: "",
+        dialect: d || dialect,
+        lessonTitle: t("textPractice.practiceTitle"),
+        mode: "free-input",
       });
-      setLessonSessionKey((k) => k + 1);
     } catch (e: any) {
       setError(String(e?.message || e));
     } finally {
@@ -172,6 +168,24 @@ export function useTextPracticeViewModel(navigation?: any) {
     async (fromCamera: boolean) => {
       if (!authToken) {
         navigation?.navigate("Login", { next: "Text" });
+        return;
+      }
+      const isProOrTrial = userTier === "pro" || userTier === "trial";
+      if (!isProOrTrial) {
+        customAlert.alert(
+          t("textPractice.ocr.proRequiredTitle", "Mở khóa Quét ảnh OCR với Pro"),
+          t(
+            "textPractice.ocr.proRequiredDesc",
+            "Tính năng nhận diện văn bản từ hình ảnh (OCR) bằng AI chỉ dành cho thành viên Pro. Nâng cấp ngay để trích xuất bài học từ sách, báo tiếng Anh không giới hạn."
+          ),
+          [
+            { text: t("common.cancel", "Huỷ"), style: "cancel" },
+            {
+              text: t("profile.upgradePro", "Nâng cấp Pro"),
+              onPress: () => navigation?.navigate?.("Payment"),
+            },
+          ]
+        );
         return;
       }
       if (isOcrQuotaExhausted({ userTier, userKey, usageStatus })) {
@@ -230,14 +244,24 @@ export function useTextPracticeViewModel(navigation?: any) {
         }
 
         const result = fromCamera
-          ? await ImagePicker.launchCameraAsync({ quality: 0.8, base64: false })
-          : await ImagePicker.launchImageLibraryAsync({ quality: 0.8, base64: false });
+          ? await ImagePicker.launchCameraAsync({
+            mediaTypes: ["images"],
+            quality: 0.8,
+            base64: false,
+          })
+          : await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ["images"],
+            allowsMultipleSelection: false,
+            quality: 0.8,
+            base64: false,
+          });
 
         if (result.canceled || !result.assets?.[0]) return;
 
+        const asset = result.assets[0];
         setOcrLoading(true);
+        if (error) setError("");
         try {
-          const asset = result.assets[0];
           const text = await textPracticeApi.scanOcr(asset.uri, asset.mimeType || "image/jpeg");
           if (!text) throw new Error(t("textPractice.ocr.empty"));
           setInputText(text);
@@ -252,13 +276,13 @@ export function useTextPracticeViewModel(navigation?: any) {
         if (errMsg.toLowerCase().includes("permission")) {
           const deniedMsg = fromCamera
             ? t(
-                "textPractice.ocr.cameraPermissionDenied",
-                "Ứng dụng cần quyền sử dụng máy ảnh để chụp và nhận diện văn bản. Vui lòng cấp quyền trong Cài đặt."
-              )
+              "textPractice.ocr.cameraPermissionDenied",
+              "Ứng dụng cần quyền sử dụng máy ảnh để chụp và nhận diện văn bản. Vui lòng cấp quyền trong Cài đặt."
+            )
             : t(
-                "textPractice.ocr.galleryPermissionDenied",
-                "Ứng dụng cần quyền truy cập thư viện ảnh để chọn ảnh nhận diện. Vui lòng cấp quyền trong Cài đặt."
-              );
+              "textPractice.ocr.galleryPermissionDenied",
+              "Ứng dụng cần quyền truy cập thư viện ảnh để chọn ảnh nhận diện. Vui lòng cấp quyền trong Cài đặt."
+            );
           customAlert.alert(
             t("textPractice.ocr.permissionRequired", "Yêu cầu cấp quyền"),
             deniedMsg,
@@ -270,8 +294,25 @@ export function useTextPracticeViewModel(navigation?: any) {
               },
             ]
           );
+        } else if (e?.status === 422 || errMsg.includes("422") || errMsg.includes("no English text")) {
+          setError(t("textPractice.ocr.empty"));
+        } else if (e?.status === 402 || errMsg.includes("402") || errMsg.includes("PRO_REQUIRED")) {
+          customAlert.alert(
+            t("textPractice.ocr.proRequiredTitle", "Mở khóa Quét ảnh OCR với Pro"),
+            t(
+              "textPractice.ocr.proRequiredDesc",
+              "Tính năng nhận diện văn bản từ hình ảnh (OCR) bằng AI chỉ dành cho thành viên Pro. Nâng cấp ngay để trích xuất bài học từ sách, báo tiếng Anh không giới hạn."
+            ),
+            [
+              { text: t("common.cancel", "Huỷ"), style: "cancel" },
+              {
+                text: t("profile.upgradePro", "Nâng cấp Pro"),
+                onPress: () => navigation?.navigate?.("Payment"),
+              },
+            ]
+          );
         } else {
-          setError(errMsg);
+          setError(errMsg || t("textPractice.ocr.error"));
         }
       }
     },
@@ -287,7 +328,8 @@ export function useTextPracticeViewModel(navigation?: any) {
 
   const requestSampleAudio = useCallback(
     async (sentence: any) => {
-      if (isAudioQuotaExhausted({ userTier, userKey, usageStatus })) {
+      const isProOrTrial = userTier === "pro" || userTier === "trial";
+      if (!isProOrTrial || isAudioQuotaExhausted({ userTier, userKey, usageStatus })) {
         return null;
       }
       try {
