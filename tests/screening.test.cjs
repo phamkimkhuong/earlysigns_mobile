@@ -52,9 +52,9 @@ function flatten(node) {
   if (typeof node.type === 'function') return flatten(node.type(node.props));
   return [node, ...flatten(node.props?.children)];
 }
-const native = { View: 'View', Text: 'Text', Pressable: 'Pressable', ScrollView: 'ScrollView', ActivityIndicator: 'ActivityIndicator', Modal: 'Modal', AppState: { addEventListener: () => ({ remove() {} }) } };
+const native = { View: 'View', Text: 'Text', Pressable: 'Pressable', ScrollView: 'ScrollView', ActivityIndicator: 'ActivityIndicator', Modal: 'Modal', TouchableOpacity: 'TouchableOpacity', Linking: { openSettings: () => {} }, AppState: { addEventListener: () => ({ remove() {} }) } };
 const icons = new Proxy({}, { get: (_, key) => String(key) });
-const baseMocks = { 'react-native': native, 'lucide-react-native': icons, 'react-native-safe-area-context': { SafeAreaView: 'SafeAreaView' } };
+const baseMocks = { 'react-native': native, 'lucide-react-native': icons, 'react-native-safe-area-context': { SafeAreaView: 'SafeAreaView' }, 'react-i18next': { useTranslation: () => ({ t: key => key }) } };
 const { default: View } = load('src/components/practice/ScreeningPracticeView.tsx', baseMocks);
 
 test('screening UI shows one sentence and changes its main action without score gating', () => {
@@ -106,6 +106,8 @@ test('recording flow keeps results on save failure and never submits automatical
     },
     'react-i18next': { useTranslation: () => ({ t, i18n: { language: 'vi' } }) },
     'expo-audio': { createAudioPlayer: () => assert.fail('Unexpected playback'), setAudioModeAsync: async () => {} },
+    'expo-haptics': { impactAsync: async () => {}, selectionAsync: async () => {}, notificationAsync: async () => {} },
+    '@/utils/haptics': { hapticFeedback: { selection: () => {}, warning: () => {}, light: () => {}, medium: () => {}, heavy: () => {}, success: () => {}, error: () => {} } },
     '@/hooks/usePronunciationCheck': { usePronunciationCheck: () => audio },
     '@/utils/localizedError': { getFriendlyErrorMessage: (_, fallback) => fallback },
     '@/components/ui/UpgradeProModal': { default: () => null },

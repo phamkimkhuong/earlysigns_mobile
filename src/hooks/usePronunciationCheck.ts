@@ -10,7 +10,7 @@ import {
 } from "expo-audio";
 import { useTranslation } from "react-i18next";
 import { API_ENDPOINTS } from "@/core/config";
-import { incrementDailyUsage, isPronunciationQuotaExhausted } from "@/services/usageLimits";
+import { isPronunciationQuotaExhausted } from "@/services/usageLimits";
 import { parseErrorDetail } from "@/utils/errors";
 import { appendLocalFile } from "@/utils/formDataFile";
 import { progressApi } from "@/api";
@@ -171,7 +171,6 @@ export function usePronunciationCheck({
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const meterTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const speechSeenRef = useRef(false);
-  const sessionCountedRef = useRef(false);
   const soundRef = useRef<any>(null);
 
   const stopRecordingRef = useRef<((options?: { check?: boolean }) => Promise<SentenceCheckResult | null>) | null>(null);
@@ -232,13 +231,6 @@ export function usePronunciationCheck({
     [onProgressLogged]
   );
 
-  const recordLocalCheckUsage = useCallback(() => {
-    if (userTier === "pro" || userTier === "trial") return;
-    if (sessionCountedRef.current) return;
-    sessionCountedRef.current = true;
-    if (userKey) incrementDailyUsage(userKey);
-  }, [userKey, userTier]);
-
   const postCheck = useCallback(
     async (
       uri: string,
@@ -249,7 +241,7 @@ export function usePronunciationCheck({
       form.append("sentence", text);
       form.append("dialect", dialect || "uk");
       form.append("language", language);
-      form.append("count_usage", shouldCountUsage ? "true" : "false");
+      form.append("count_usage", !isScreening && shouldCountUsage ? "true" : "false");
       if (isScreening) form.append("is_screening", "true");
       await appendAudio(form, uri);
       if (authFetch) {
@@ -318,12 +310,11 @@ export function usePronunciationCheck({
           await sleep(CHECK_RETRY_DELAY_MS);
           data = await postCheck(uri, { text, dialect }, shouldCountUsage);
         }
-        if (data.usage) {
+        if (data.usage && !isScreening) {
           useBillingStore.getState().setUsage(data.usage);
           onUsageUpdated?.(data.usage);
         }
         if (updateUi) {
-          if (shouldCountUsage) recordLocalCheckUsage();
           setResult(data);
           setAudioUri(uri);
           const accuracy = normalizeAccuracy(data?.accuracy);
@@ -334,13 +325,15 @@ export function usePronunciationCheck({
         return data;
       } catch (e: any) {
         if (e?.code === "DAILY_LIMIT_REACHED") {
-          if (e?.usage) {
-            useBillingStore.getState().setUsage(e.usage);
-            onUsageUpdated?.(e.usage);
+          if (!isScreening) {
+            if (e?.usage) {
+              useBillingStore.getState().setUsage(e.usage);
+              onUsageUpdated?.(e.usage);
+            }
+            onDailyLimitReached?.(userTier === "anonymous" ? "anonymous" : "free");
+            if (updateUi) setError("");
+            return null;
           }
-          onDailyLimitReached?.(userTier === "anonymous" ? "anonymous" : "free");
-          if (updateUi) setError("");
-          return null;
         }
         if (!updateUi) return null;
         setError(
@@ -354,11 +347,11 @@ export function usePronunciationCheck({
       }
     },
     [
+      isScreening,
       logSoundProgress,
       onDailyLimitReached,
       onUsageUpdated,
       postCheck,
-      recordLocalCheckUsage,
       t,
       userTier,
     ]
@@ -377,9 +370,9 @@ export function usePronunciationCheck({
         setError("No speech detected. Try again.");
         return null;
       }
-      return checkPronunciation(uri, target, { updateUi: true, countUsage: true });
+      return checkPronunciation(uri, target, { updateUi: true, countUsage: !isScreening });
     },
-    [checkPronunciation, clearTimers, stopRecorder]
+    [checkPronunciation, clearTimers, isScreening, stopRecorder]
   );
 
   useEffect(() => {
@@ -398,7 +391,6 @@ export function usePronunciationCheck({
       sessionRef.current = sessionId;
       clearTimers();
       targetRef.current = { text, dialect: dialect || "uk" };
-      sessionCountedRef.current = false;
       speechSeenRef.current = false;
       setResult(null);
       setAudioUri(null);

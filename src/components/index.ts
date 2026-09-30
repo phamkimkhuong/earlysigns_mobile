@@ -22,6 +22,7 @@ export { default as StagedAiProgress } from "./practice/StagedAiProgress";
 export { default as PracticePromptCard } from "./practice/PracticePromptCard";
 export { default as PracticeFeedbackCard } from "./practice/PracticeFeedbackCard";
 export { default as SpeechRecordingDock } from "./practice/SpeechRecordingDock";
+export { default as MicErrorCard } from "./practice/MicErrorCard";
 
 // Payment Components
 export { default as Packages } from "./payment/Packages";

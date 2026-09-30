@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import { usePronunciationCheck } from "@/hooks/usePronunciationCheck";
 import { getFriendlyErrorMessage } from "@/utils/localizedError";
 import { isScreeningComplete, screeningAccuracy, screeningReducer, SCREENING_SENTENCE_COUNT } from "@/utils/screeningSession";
-import UpgradeProModal from "@/components/ui/UpgradeProModal";
+import { hapticFeedback } from "@/utils/haptics";
 import ScreeningPracticeView, { type ScreeningPhase } from "./ScreeningPracticeView";
 import type { LessonSentence, UserTier } from "@/types/domain";
 
@@ -30,7 +30,6 @@ export default function ScreeningSession({ sentences, dialect, userTier, userKey
   const [showSupport, setShowSupport] = useState(false);
   const [showScore, setShowScore] = useState(false);
   const [confirmExit, setConfirmExit] = useState(false);
-  const [quotaOpen, setQuotaOpen] = useState(false);
   const [playing, setPlaying] = useState<"sample" | "replay" | null>(null);
   const [recordings, setRecordings] = useState<Record<number, string>>({});
   const attemptIndex = useRef<number | null>(null);
@@ -38,8 +37,8 @@ export default function ScreeningSession({ sentences, dialect, userTier, userKey
   const mounted = useRef(true);
   const playerRef = useRef<ReturnType<typeof createAudioPlayer> | null>(null);
   const playbackId = useRef(0);
-  const quotaReached = useCallback(() => setQuotaOpen(true), []);
-  const audio = usePronunciationCheck({ language: i18n.language, userTier, userKey, isScreening: true, autoStopOnSilence: false, onDailyLimitReached: quotaReached });
+  const primaryRef = useRef<() => Promise<void>>(async () => {});
+  const audio = usePronunciationCheck({ language: i18n.language, userTier, userKey, isScreening: true, autoStopOnSilence: false });
   const sentence = sentences[progress.current];
   const recorded = screeningAccuracy(progress.results[progress.current]) !== null;
   const phase: ScreeningPhase = saving ? "saving" : audio.isRecording ? "recording" : audio.checking || transition === "checking" ? "checking" : audio.isStarting || transition === "starting" ? "starting" : recorded ? "recorded" : "ready";
@@ -61,10 +60,23 @@ export default function ScreeningSession({ sentences, dialect, userTier, userKey
   }, [stopPlayback]);
 
   useEffect(() => {
-    if (!audio.isRecording) return;
+    if (!audio.isRecording) {
+      setSeconds(0);
+      return;
+    }
     const started = Date.now();
     setSeconds(0);
-    const timer = setInterval(() => setSeconds(Math.floor((Date.now() - started) / 1000)), 250);
+    let autoStopped = false;
+    const timer = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - started) / 1000);
+      setSeconds(elapsed);
+      if (elapsed >= 25 && !autoStopped) {
+        autoStopped = true;
+        clearInterval(timer);
+        hapticFeedback.warning();
+        void primaryRef.current();
+      }
+    }, 250);
     return () => clearInterval(timer);
   }, [audio.isRecording]);
 
@@ -82,19 +94,19 @@ export default function ScreeningSession({ sentences, dialect, userTier, userKey
     setLocalError("");
   }, [audio.result, audio.audioUri, t]);
 
-  const { isRecording: audioRecording, isStarting: audioStarting, cancelRecording: audioCancelRecording } = audio;
+  const { isRecording: audioRecording, cancelRecording: audioCancelRecording } = audio;
   useEffect(() => {
     const subscription = AppState.addEventListener("change", state => {
-      if (state === "active") return;
+      if (state !== "background") return;
       stopPlayback();
-      if (audioRecording || audioStarting) {
+      if (audioRecording) {
         attemptIndex.current = null;
         void audioCancelRecording().catch(() => {});
         setLocalError(t("screeningPractice.interrupted"));
       }
     });
     return () => subscription.remove();
-  }, [audioRecording, audioStarting, audioCancelRecording, stopPlayback, t]);
+  }, [audioRecording, audioCancelRecording, stopPlayback, t]);
 
   const message = (error: unknown, key: string) => getFriendlyErrorMessage(error, t(key), i18n.language.startsWith("vi") ? "vi" : "en");
 
@@ -106,9 +118,21 @@ export default function ScreeningSession({ sentences, dialect, userTier, userKey
     setLocalError("");
     setTransition("starting");
     attemptIndex.current = progress.current;
-    try { await audio.startRecording({ text: textToRecord, dialect }); }
-    catch (error) { if (mounted.current) setLocalError(message(error, "screeningPractice.recordError")); }
-    finally { actionLocked.current = false; if (mounted.current) setTransition(null); }
+    hapticFeedback.selection();
+    try {
+      await audio.startRecording({ text: textToRecord, dialect });
+    } catch (error) {
+      if (mounted.current) {
+        const msg = String((error as any)?.message || error || "");
+        const isMicErr = /permission|not.?allowed|denied|microphone|not.?found|unavailable/i.test(msg);
+        if (!isMicErr) {
+          setLocalError(message(error, "screeningPractice.recordError"));
+        }
+      }
+    } finally {
+      actionLocked.current = false;
+      if (mounted.current) setTransition(null);
+    }
   }
 
   async function primary() {
@@ -116,6 +140,7 @@ export default function ScreeningSession({ sentences, dialect, userTier, userKey
     if (audio.isRecording) {
       actionLocked.current = true;
       setTransition("checking");
+      hapticFeedback.selection();
       try { await audio.stopRecording({ check: true }); }
       catch (error) { if (mounted.current) setLocalError(message(error, "screeningPractice.recordError")); }
       finally { actionLocked.current = false; if (mounted.current) setTransition(null); }
@@ -124,6 +149,7 @@ export default function ScreeningSession({ sentences, dialect, userTier, userKey
     if (!recorded) { await record(); return; }
     stopPlayback();
     if (progress.current < SCREENING_SENTENCE_COUNT - 1) {
+      hapticFeedback.light();
       move("next");
       return;
     }
@@ -136,6 +162,8 @@ export default function ScreeningSession({ sentences, dialect, userTier, userKey
     } catch (error) { if (mounted.current) setLocalError(message(error, "screeningPractice.saveError")); }
     finally { actionLocked.current = false; if (mounted.current) setSaving(false); }
   }
+
+  primaryRef.current = primary;
 
   function move(direction: "previous" | "next") {
     if (busy || actionLocked.current) return;
@@ -183,7 +211,7 @@ export default function ScreeningSession({ sentences, dialect, userTier, userKey
     else void discard();
   }
 
-  const error = localError || (audio.micError ? `${t(`sentence.micError.${audio.micError.type}.title`)} ${t(`sentence.micError.${audio.micError.type}.body`)}` : audio.error === "No speech detected. Try again." ? t("screeningPractice.noSpeech") : audio.error);
+  const error = audio.micError ? "" : localError || (audio.error === "No speech detected. Try again." ? t("screeningPractice.noSpeech") : audio.error);
   if (!sentence) return null;
   const content = (
     <SafeAreaView edges={["top"]} className="flex-1 bg-[#0a2644]">
@@ -194,6 +222,7 @@ export default function ScreeningSession({ sentences, dialect, userTier, userKey
         completed={Object.keys(progress.results).map(Number)}
         phase={phase}
         seconds={seconds}
+        micError={audio.micError}
         error={error}
         showSupport={showSupport}
         showScore={showScore}
@@ -213,7 +242,6 @@ export default function ScreeningSession({ sentences, dialect, userTier, userKey
         onSample={() => void play("sample")}
         onReplay={() => void play("replay")}
       />
-      <UpgradeProModal open={quotaOpen} onClose={() => setQuotaOpen(false)} />
     </SafeAreaView>
   );
 

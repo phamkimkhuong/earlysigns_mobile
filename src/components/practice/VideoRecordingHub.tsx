@@ -2,13 +2,11 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
-  Linking,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import {
-  AlertCircle,
   AudioLines,
   ChevronDown,
   ChevronUp,
@@ -22,6 +20,7 @@ import { hapticFeedback } from "@/utils/haptics";
 import { checkResultScoreColorFromPct } from "@/utils/checkResultScoreColor";
 import SoundAnalysis from "./SoundAnalysis";
 import StagedAiProgress from "./StagedAiProgress";
+import MicErrorCard from "./MicErrorCard";
 import type { MicError, SentenceCheckResult } from "@/types/domain";
 
 export interface VideoRecordingHubProps {
@@ -499,42 +498,7 @@ export default function VideoRecordingHub({
       ) : null}
 
       {/* 6. ERROR NOTIFICATIONS */}
-      {micError ? (
-        <View className="bg-rose-50 border border-rose-200 rounded-2xl p-3.5 w-full gap-2">
-          <View className="flex-row items-center gap-2">
-            <AlertCircle size={18} color="#e11d48" />
-            <Text className="flex-1 text-danger text-xs font-bold">
-              {t(`sentence.micError.${micError.type}.title`)}
-            </Text>
-          </View>
-          <Text className="text-xs text-rose-800 leading-relaxed pl-6">
-            {t(`sentence.micError.${micError.type}.body`)}
-          </Text>
-          {micError.type === "denied" ? (
-            <View className="flex-row justify-end pt-1">
-              <TouchableOpacity
-                accessible={true}
-                accessibilityRole="button"
-                accessibilityLabel={t("sentence.micError.openSettings", "Mở Cài đặt")}
-                activeOpacity={0.8}
-                onPress={() => Linking.openSettings()}
-                className="px-3.5 py-1.5 rounded-xl bg-rose-600 active:bg-rose-700"
-              >
-                <Text className="text-xs font-bold text-white">
-                  {t("sentence.micError.openSettings", "Mở Cài đặt")}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          ) : null}
-        </View>
-      ) : checkError ? (
-        <View className="flex-row items-center gap-2 bg-rose-50 border border-rose-200 rounded-2xl p-3.5 w-full">
-          <AlertCircle size={18} color="#e11d48" />
-          <Text className="flex-1 text-danger text-xs font-semibold">
-            {checkError}
-          </Text>
-        </View>
-      ) : null}
+      <MicErrorCard micError={micError} error={checkError} />
 
       {/* 7. AI EVALUATION SCORE CARD (Seamless Flat Layout) */}
       {showResultDetails && !checking && !isRecording ? (

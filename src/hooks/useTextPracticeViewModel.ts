@@ -11,7 +11,6 @@ import {
   resolveUserTier,
   isOcrQuotaExhausted,
   isAudioQuotaExhausted,
-  incrementQuotaUsage,
 } from "@/services/usageLimits";
 import { useBillingStore } from "@/store/useBillingStore";
 import { textPracticeApi } from "@/api";
@@ -265,8 +264,6 @@ export function useTextPracticeViewModel(navigation?: any) {
           const text = await textPracticeApi.scanOcr(asset.uri, asset.mimeType || "image/jpeg");
           if (!text) throw new Error(t("textPractice.ocr.empty"));
           setInputText(text);
-          incrementQuotaUsage(userKey, "ocr");
-          useBillingStore.getState().decrementDailyRemaining();
         } finally {
           setOcrLoading(false);
         }
@@ -334,10 +331,6 @@ export function useTextPracticeViewModel(navigation?: any) {
       }
       try {
         const audioUrl = await textPracticeApi.generateAudio(sentence.text, lessonSession?.dialect || dialect);
-        if (audioUrl) {
-          incrementQuotaUsage(userKey, "audio");
-          useBillingStore.getState().decrementDailyRemaining();
-        }
         return audioUrl;
       } catch {
         return null;

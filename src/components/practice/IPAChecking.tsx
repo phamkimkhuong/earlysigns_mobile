@@ -22,6 +22,7 @@ import UpgradeProModal from "@/components/ui/UpgradeProModal";
 import PracticePromptCard from "./PracticePromptCard";
 import PracticeFeedbackCard from "./PracticeFeedbackCard";
 import SpeechRecordingDock from "./SpeechRecordingDock";
+import MicErrorCard from "./MicErrorCard";
 import type { Dialect, SentenceCheckResult, UserTier } from "@/types/domain";
 
 const LOW_SCORE_THRESHOLD = 0.4;
@@ -505,37 +506,7 @@ export default function IPAChecking({
               ) : null}
 
               {/* Errors */}
-              {micError ? (
-                <View
-                  style={{
-                    backgroundColor: "#fef2f2",
-                    borderRadius: 14,
-                    padding: 14,
-                    borderWidth: 1,
-                    borderColor: "#fecaca",
-                    gap: 4,
-                  }}
-                >
-                  <Text style={{ fontSize: 14, fontWeight: "700", color: "#991b1b" }}>
-                    {t(`sentence.micError.${micError.type}.title`)}
-                  </Text>
-                  <Text style={{ fontSize: 13, color: "#b91c1c", lineHeight: 20 }}>
-                    {t(`sentence.micError.${micError.type}.body`)}
-                  </Text>
-                </View>
-              ) : error ? (
-                <View
-                  style={{
-                    backgroundColor: "#fef2f2",
-                    borderRadius: 14,
-                    padding: 14,
-                    borderWidth: 1,
-                    borderColor: "#fecaca",
-                  }}
-                >
-                  <Text style={{ fontSize: 13, color: "#b91c1c" }}>{error}</Text>
-                </View>
-              ) : null}
+              <MicErrorCard micError={micError} error={error} />
             </>
           )}
         </ScrollView>

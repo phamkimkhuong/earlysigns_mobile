@@ -2,8 +2,9 @@ import React from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { AlertCircle, Check, ChevronLeft, Mic, RotateCcw, Square, Volume2 } from "lucide-react-native";
 import type { TFunction } from "i18next";
-import type { LessonSentence } from "@/types/domain";
+import type { LessonSentence, MicError } from "@/types/domain";
 import { SCREENING_SENTENCE_COUNT } from "@/utils/screeningSession";
+import MicErrorCard from "./MicErrorCard";
 
 export type ScreeningPhase = "ready" | "starting" | "recording" | "checking" | "recorded" | "saving";
 
@@ -14,6 +15,7 @@ export interface ScreeningPracticeViewProps {
   completed: number[];
   phase: ScreeningPhase;
   seconds: number;
+  micError?: MicError | null;
   error: string;
   showSupport: boolean;
   samplePlaying: boolean;
@@ -190,12 +192,20 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
                   className="flex-row items-center gap-3.5 rounded-2xl px-4 py-4 border"
                   style={{ backgroundColor: "#fef2f2", borderColor: "#fecaca" }}
                 >
-                  <View className="h-3 w-3 rounded-full bg-[#dc2626]" />
+                  <View className="flex-row items-center gap-1.5">
+                    <View className="h-3 w-3 rounded-full bg-[#dc2626]" />
+                    <View className="flex-row items-center gap-0.5">
+                      <View className="w-1 h-3 rounded-full bg-[#dc2626]" />
+                      <View className="w-1 h-5 rounded-full bg-[#dc2626]" />
+                      <View className="w-1 h-2 rounded-full bg-[#dc2626]" />
+                      <View className="w-1 h-4 rounded-full bg-[#dc2626]" />
+                    </View>
+                  </View>
                   <Text className="flex-1 text-[15px] font-bold text-[#991b1b]">
                     {t("screeningPractice.recording")}
                   </Text>
                   <Text className="text-base font-extrabold font-mono text-[#dc2626]">
-                    {Math.floor(p.seconds / 60)}:{String(p.seconds % 60).padStart(2, "0")}
+                    {String(Math.floor(p.seconds / 60)).padStart(2, "0")}:{String(p.seconds % 60).padStart(2, "0")} / 00:25
                   </Text>
                 </View>
               ) : null}
@@ -285,8 +295,13 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
                 </View>
               ) : null}
 
-              {/* Error Alert */}
-              {p.error ? (
+              {/* Microphone Error Card (with Open Settings button when permission denied) */}
+              {p.micError ? (
+                <MicErrorCard micError={p.micError} />
+              ) : null}
+
+              {/* General Error Alert */}
+              {p.error && !p.micError ? (
                 <View
                   className="flex-row items-center gap-3 p-4 rounded-2xl border"
                   style={{ backgroundColor: "#fef2f2", borderColor: "#fecaca" }}

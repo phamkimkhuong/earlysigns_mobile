@@ -18,7 +18,6 @@ import { usePronunciationCheck } from "@/hooks/usePronunciationCheck";
 import { buildSoundAnalysisRows } from "@/utils/pronunciationAnalysis";
 import {
   isQuotaExhausted,
-  incrementQuotaUsage,
   resolveUserKey,
   resolveUserTier,
 } from "@/services/usageLimits";
@@ -31,6 +30,7 @@ import UpgradeProModal from "@/components/ui/UpgradeProModal";
 import PracticePromptCard from "@/components/practice/PracticePromptCard";
 import PracticeFeedbackCard from "@/components/practice/PracticeFeedbackCard";
 import SpeechRecordingDock from "@/components/practice/SpeechRecordingDock";
+import MicErrorCard from "@/components/practice/MicErrorCard";
 import type { Dialect, SentenceCheckResult } from "@/types/domain";
 
 type Props = NativeStackScreenProps<RootStackParamList, "SentencePractice">;
@@ -204,8 +204,6 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
         url = await textPracticeApi.generateAudio(currentSentence.text, dialect);
         if (url) {
           sampleAudioUrlsRef.current[currentIndex] = url;
-          incrementQuotaUsage(userKey, "audio");
-          useBillingStore.getState().decrementDailyRemaining();
         }
       }
 
@@ -461,19 +459,7 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
           />
         </View>
         {/* ERROR / MIC ISSUE ALERT CARD */}
-        {error || micError ? (
-          <View className="bg-red-50 rounded-2xl p-4 border border-red-200 gap-2">
-            <Text className="text-sm font-bold text-red-700">
-              {t("sentence.recordingIssue", "Chưa nhận diện được giọng nói")}
-            </Text>
-            <Text className="text-xs text-red-600 leading-5">
-              {error ||
-                (micError ? t(`sentence.micError.${micError.type}.body`, "Lỗi micro") : null) ||
-                t("sentence.trySpeakingLouder", "Vui lòng giữ mic gần miệng và phát âm rõ ràng hơn.")}
-            </Text>
-          </View>
-        ) : null}
-
+        <MicErrorCard micError={micError} error={error} />
         {/* Practice Feedback Card */}
         <PracticeFeedbackCard
           scorePct={scorePct}

@@ -34,7 +34,7 @@ export default function PrimaryButton({
     ? "bg-transparent border border-appBorderStrong"
     : isDanger
     ? "bg-danger"
-    : "bg-accent";
+    : "bg-[#0c2340]";
 
   const stateClass = disabled || loading ? "opacity-50" : "active:opacity-85";
 
