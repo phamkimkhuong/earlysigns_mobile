@@ -44,4 +44,18 @@ Khi viết giao diện trong dự án (NativeWind v4 + React Native 0.86):
    - Các badge ngắn (như "Miễn phí", "Pro", "Không giới hạn") khi nằm trong hàng tiêu đề phải luôn phân bổ ở phía đối diện (`justify-between`) hoặc có `shrink-0` và `numberOfLines={1}`.
    - Tuyệt đối không gom badge và tiêu đề dài chung một container chật hẹp khiến React Native tự ngắt dòng ở khoảng trắng (làm rớt chữ như "Miễn phí" thành "Miễn").
 
+## 🛡️ 5. Quy Chuẩn Bắt Buộc: Kiểm Tra Type-check & Linter (Zero Errors & Zero Warnings)
+Mục tiêu: Đảm bảo độ tin cậy tuyệt đối cho code, không để lọt bất kỳ lỗi ngầm nào làm vỡ build CI/CD hay gây gián đoạn trải nghiệm người dùng.
 
+1. **Bắt buộc chạy Type-check (`npm run typecheck` hoặc `npx tsc --noEmit`):**
+   - Trước khi báo cáo hoàn thành bất kỳ tác vụ nào, Agent bắt buộc phải chạy type-check tĩnh.
+   - Tiêu chí đạt: **0 errors** (không có bất kỳ type error hay biên dịch lỗi nào).
+2. **Bắt buộc chạy Linter (`npm run lint` hoặc `npx eslint src`):**
+   - Không được chỉ kiểm tra riêng `--quiet` (chỉ xem errors). Bắt buộc phải chạy kiểm tra toàn bộ và đảm bảo: **0 problems (0 errors, 0 warnings)**. Lệnh `npm run lint` đã được khóa cờ `--max-warnings 0`.
+   - Cảnh báo (warnings) cũng nghiêm ngặt như lỗi: Mọi biến khai báo không dùng (`@typescript-eslint/no-unused-vars`), mảng dependencies của React hooks (`useEffect`, `useCallback`, `useMemo`) bị thiếu hoặc tạo mới tham chiếu liên tục (`react-hooks/exhaustive-deps`), import không chuẩn mực đều phải được dọn dẹp và xử lý triệt để 100%.
+   - Tuyệt đối KHÔNG báo cáo hoàn thành công việc nếu terminal vẫn còn cảnh báo mà chưa xử lý.
+3. **Bộ 3 lệnh nghiệm thu tiêu chuẩn trước khi bàn giao:**
+   - Bước 1: `npm run typecheck` -> Đạt 0 lỗi.
+   - Bước 2: `npm run lint` -> Đạt 0 lỗi, 0 cảnh báo (`--max-warnings 0`).
+   - Bước 3: `npm test` -> 100% test suites passed (toàn bộ 75/75 tests hoặc nhiều hơn).
+   - Chỉ khi cả 3 bước đều xanh (PASS), Agent mới được phép hoàn thành tác vụ và xuất báo cáo bàn giao kèm mục **"🛡️ Đánh giá Tác động Chéo & Vùng Lân Cận"**.

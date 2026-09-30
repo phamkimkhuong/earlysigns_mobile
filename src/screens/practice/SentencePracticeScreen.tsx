@@ -79,7 +79,7 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
   const [samplePlaying, setSamplePlaying] = useState(false);
   const [replayPlaying, setReplayPlaying] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [upgradeFeatureKey, setUpgradeFeatureKey] = useState<"generic" | "sampleAudio">("sampleAudio");
+  const [upgradeFeatureKey, setUpgradeFeatureKey] = useState<"dailyLimit" | "generic" | "sampleAudio">("dailyLimit");
   const [isCompletedAll, setIsCompletedAll] = useState(false);
 
   const sampleSoundRef = useRef<any>(null);
@@ -88,6 +88,10 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
 
   const totalSentences = sentences.length || 1;
   const currentSentence = sentences[currentIndex] || null;
+  const currentSentenceText =
+    typeof currentSentence === "string"
+      ? currentSentence
+      : currentSentence?.text || currentSentence?.sentence || "";
 
   const isProOrTrial = userTier === "pro" || userTier === "trial";
   const hasPreloadedAudio = Boolean(currentSentence?.audio_url);
@@ -106,6 +110,10 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
   } = usePronunciationCheck({
     language: i18n.resolvedLanguage || i18n.language || "vi",
     onUsageUpdated: (u) => useBillingStore.getState().setUsage(u),
+    onDailyLimitReached: () => {
+      setUpgradeFeatureKey("dailyLimit");
+      setShowUpgradeModal(true);
+    },
     userTier,
     userKey,
   });
@@ -252,7 +260,7 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
     hapticFeedback.light();
     if (isQuotaExhausted({ userTier, userKey, usageStatus })) {
       hapticFeedback.warning();
-      setUpgradeFeatureKey("generic");
+      setUpgradeFeatureKey("dailyLimit");
       setShowUpgradeModal(true);
       return;
     }
@@ -262,8 +270,8 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
       return;
     }
 
-    if (!currentSentence?.text) return;
-    await startRecording({ text: currentSentence.text, dialect });
+    if (!currentSentenceText) return;
+    await startRecording({ text: currentSentenceText, dialect });
   }
 
   // Navigation between sentences
@@ -488,7 +496,7 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
           isRecording={isRecording}
           isStarting={isStarting}
           checking={checking}
-          disabled={!currentSentence?.text}
+          disabled={!currentSentenceText}
           onRecordToggle={handleRecordToggle}
           maxSeconds={25}
           hasPrev={currentIndex > 0}

@@ -47,7 +47,7 @@ export function useTextPracticeViewModel(navigation?: any) {
   const [saveLoading, setSaveLoading] = useState(false);
   const [ocrLoading, setOcrLoading] = useState(false);
   const [lessonSession, setLessonSession] = useState<LessonSession | null>(null);
-  const [lessonSessionKey, setLessonSessionKey] = useState(0);
+  const [lessonSessionKey] = useState(0);
 
   const scrollViewRef = useRef<any>(null);
   const [showSaveForm, setShowSaveForm] = useState(false);
@@ -260,7 +260,7 @@ export function useTextPracticeViewModel(navigation?: any) {
 
         const asset = result.assets[0];
         setOcrLoading(true);
-        if (error) setError("");
+        setError("");
         try {
           const text = await textPracticeApi.scanOcr(asset.uri, asset.mimeType || "image/jpeg");
           if (!text) throw new Error(t("textPractice.ocr.empty"));

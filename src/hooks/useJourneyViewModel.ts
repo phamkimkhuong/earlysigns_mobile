@@ -58,9 +58,8 @@ export function useJourneyViewModel(navigation?: any) {
   const [journeyLessonProgress, setJourneyLessonProgress] = useState<any>(null);
   const [lessonSession, setLessonSession] = useState<LessonSession | null>(null);
   const [lessonSessionKey, setLessonSessionKey] = useState(0);
-  const [lessonLoading, setLessonLoading] = useState(false);
-  const [lessonError, setLessonError] = useState("");
-  const lessonKindRef = useRef<string | null>(null);
+  const [lessonLoading] = useState(false);
+  const [lessonError] = useState("");
 
   const userTier = useMemo(
     () =>

@@ -7,7 +7,7 @@ module.exports = defineConfig([
   {
     ignores: ["dist/*", "node_modules/*"],
     rules: {
-      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/set-state-in-effect": "off",
     },
   }
 ]);

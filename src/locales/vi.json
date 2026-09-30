@@ -78,7 +78,12 @@
     "retry": "Thử lại",
     "startError": "Chưa mở được bài luyện. Vui lòng thử lại.",
     "screeningSaveError": "Chưa xác nhận được kết quả sàng lọc. Vui lòng kiểm tra kết nối.",
-    "categories": { "all": "Tất cả (44)", "monophthong": "Nguyên âm đơn (12)", "diphthong": "Nguyên âm đôi (8)", "consonant": "Phụ âm (24)" }
+    "categories": {
+      "all": "Tất cả (44)",
+      "monophthong": "Nguyên âm đơn (12)",
+      "diphthong": "Nguyên âm đôi (8)",
+      "consonant": "Phụ âm (24)"
+    }
   },
   "homeDesign": {
     "account": "Tài khoản",
@@ -539,11 +544,16 @@
   },
   "upgradePro": {
     "title": "Nâng cấp Pro",
-    "genericMessage": "Tính năng này dành cho EarlySigns Pro.",
-    "sampleAudioMessage": "Nghe mẫu phát âm chuẩn với EarlySigns Pro. Nâng cấp để mở khóa audio cho văn bản luyện tập của bạn.",
-    "ocrMessage": "Trích văn bản tiếng Anh từ ảnh với EarlySigns Pro.",
+    "dailyLimitTitle": "Hết lượt luyện tập hôm nay",
+    "dailyLimitMessage": "Bạn đã sử dụng hết lượt phát âm miễn phí trong ngày hôm nay. Hãy nâng cấp EarlySigns Pro để tiếp tục luyện phát âm không giới hạn và nhận phân tích AI chuyên sâu!",
+    "genericTitle": "Nâng cấp EarlySigns Pro",
+    "genericMessage": "Bạn đã đạt giới hạn lượt dùng hôm nay. Nâng cấp EarlySigns Pro để tiếp tục luyện phát âm không giới hạn!",
+    "sampleAudioTitle": "Nghe phát âm mẫu với Pro",
+    "sampleAudioMessage": "Tính năng nghe audio mẫu bản xứ chuẩn AI dành riêng cho gói Pro. Nâng cấp để mở khóa audio cho mọi bài luyện tập của bạn.",
+    "ocrTitle": "Quét ảnh OCR với Pro",
+    "ocrMessage": "Tính năng nhận diện văn bản từ hình ảnh (OCR) bằng AI chỉ dành cho thành viên Pro. Nâng cấp ngay để trích xuất bài học từ sách, báo tiếng Anh không giới hạn.",
     "cta": "Nâng cấp Pro",
-    "close": "Đóng"
+    "close": "Huỷ"
   },
   "textPractice": {
     "title": "Luyện văn bản của bạn",

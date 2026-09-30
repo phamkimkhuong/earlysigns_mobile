@@ -98,15 +98,16 @@ export default function JourneyLessonScreen({ navigation, route }: Props) {
     ]);
   }, [queryClient]);
 
-  const targetPhonemes = lessonSession?.phonemes || [];
+  const lessonTitle = route.params?.lessonTitle;
+  const phonemes = lessonSession?.phonemes;
   const displayTitle = useMemo(() => {
-    if (route.params?.lessonTitle) return route.params.lessonTitle;
+    if (lessonTitle) return lessonTitle;
     const baseTitle = t("journeyPage.lessonTitle", "Bài học lộ trình");
-    if (targetPhonemes.length > 0) {
-      return `${baseTitle} · ${targetPhonemes.map((p) => `/${p}/`).join(" ")}`;
+    if (phonemes && phonemes.length > 0) {
+      return `${baseTitle} · ${phonemes.map((p) => `/${p}/`).join(" ")}`;
     }
     return baseTitle;
-  }, [route.params?.lessonTitle, targetPhonemes, t]);
+  }, [lessonTitle, phonemes, t]);
 
   const currentModule = storeHomeSummary?.journey?.current_module;
   const totalModules = storeHomeSummary?.journey?.total_modules || currentModule;

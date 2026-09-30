@@ -175,6 +175,10 @@ function TopicSectionRow({
   const cursorRef = useRef(cursor);
   const videoIdsRef = useRef(videoIds);
   const lastProcessedTriggerRef = useRef(loadMoreTrigger || 0);
+  const loadMoreTriggerRef = useRef(loadMoreTrigger || 0);
+  useEffect(() => {
+    loadMoreTriggerRef.current = loadMoreTrigger || 0;
+  }, [loadMoreTrigger]);
 
   // Sync state when initialVideos, videoIds, or topicVideosKey change
   useEffect(() => {
@@ -186,7 +190,7 @@ function TopicSectionRow({
     videoIdsRef.current = videoIds;
     setIsLoadingMore(false);
     fetchingRef.current = false;
-    lastProcessedTriggerRef.current = loadMoreTrigger || 0;
+    lastProcessedTriggerRef.current = loadMoreTriggerRef.current;
   }, [initialVideos, videoIds, topicVideosKey, queryClient]);
 
   // Stable callback that fetches cards via TanStack Query cache

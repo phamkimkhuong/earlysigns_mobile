@@ -78,7 +78,12 @@
     "retry": "Try again",
     "startError": "The lesson could not be opened. Please try again.",
     "screeningSaveError": "Your assessment result could not be confirmed. Please check your connection.",
-    "categories": { "all": "All (44)", "monophthong": "Monophthongs (12)", "diphthong": "Diphthongs (8)", "consonant": "Consonants (24)" }
+    "categories": {
+      "all": "All (44)",
+      "monophthong": "Monophthongs (12)",
+      "diphthong": "Diphthongs (8)",
+      "consonant": "Consonants (24)"
+    }
   },
   "homeDesign": {
     "account": "Account",
@@ -540,11 +545,16 @@
   },
   "upgradePro": {
     "title": "Upgrade to Pro",
-    "genericMessage": "This feature is available on EarlySigns Pro.",
-    "sampleAudioMessage": "Listen to native sample audio with EarlySigns Pro. Upgrade to unlock pronunciation models for your practice text.",
-    "ocrMessage": "Extract English practice text from photos with EarlySigns Pro.",
+    "dailyLimitTitle": "Daily Limit Reached",
+    "dailyLimitMessage": "You have reached your free daily pronunciation checks today. Upgrade to EarlySigns Pro for unlimited practice and in-depth AI feedback!",
+    "genericTitle": "Upgrade to EarlySigns Pro",
+    "genericMessage": "You have reached your daily practice limit. Upgrade to EarlySigns Pro for unlimited pronunciation checks!",
+    "sampleAudioTitle": "Sample Audio with Pro",
+    "sampleAudioMessage": "Listen to native AI sample audio with EarlySigns Pro. Upgrade to unlock pronunciation models for your practice text.",
+    "ocrTitle": "OCR Text Scanner with Pro",
+    "ocrMessage": "AI OCR text recognition from images is exclusive to Pro members. Upgrade now to extract English lessons from photos without limits.",
     "cta": "Upgrade to Pro",
-    "close": "Close"
+    "close": "Cancel"
   },
   "textPractice": {
     "title": "Practice your own text",

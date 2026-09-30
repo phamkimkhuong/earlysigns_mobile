@@ -398,7 +398,7 @@ export default function VideoRecordingHub({
               width: 98,
               height: 98,
               borderRadius: 49,
-              backgroundColor: "#6366f1",
+              backgroundColor: "#0a2644",
               transform: [{ scale: idleBreath }],
               opacity: idleOpacity,
             }}
@@ -430,22 +430,22 @@ export default function VideoRecordingHub({
           activeOpacity={0.85}
           disabled={disabled || isStarting || checking || !hasSentence}
           onPress={handlePress}
-          className={`w-[82px] h-[82px] rounded-full items-center justify-center ${
-            isRecording
-              ? "bg-rose-500 shadow-rose-400"
-              : isStarting
-              ? "bg-amber-500 shadow-amber-300"
-              : checking
-              ? "bg-indigo-400"
-              : "bg-indigo-600 shadow-indigo-400"
-          }`}
+          className="w-[82px] h-[82px] rounded-full items-center justify-center"
           style={{
             elevation: 8,
             shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
+            shadowOpacity: 0.35,
             shadowRadius: 10,
             borderWidth: 3,
-            borderColor: isRecording ? "#fecdd3" : "#e0e7ff",
+            borderColor: isRecording ? "#fecdd3" : "#1e3a5f",
+            backgroundColor: isRecording
+              ? "#f43f5e"
+              : isStarting
+              ? "#f59e0b"
+              : checking
+              ? "#1e3a5f"
+              : "#0a2644",
+            shadowColor: isRecording ? "#f43f5e" : "#0a2644",
           }}
         >
           {isStarting ? (

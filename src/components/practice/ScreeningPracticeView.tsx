@@ -1,5 +1,5 @@
 import React from "react";
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { AlertCircle, Check, ChevronLeft, Mic, RotateCcw, Square, Volume2 } from "lucide-react-native";
 import type { TFunction } from "i18next";
 import type { LessonSentence } from "@/types/domain";
@@ -316,12 +316,13 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
             }}
           >
             {/* Primary Action Button */}
-            <Pressable
+            <TouchableOpacity
               testID="screening-primary"
               accessibilityRole="button"
               accessibilityState={{ disabled: waiting, busy: waiting }}
               disabled={waiting}
               onPress={p.onPrimary}
+              activeOpacity={0.85}
               style={{
                 backgroundColor:
                   phase === "recording"
@@ -329,11 +330,11 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
                     : phase === "recorded"
                     ? last
                       ? "#059669"
-                      : "#0c2340"
-                    : "#0c2340",
+                      : "#0a2644"
+                    : "#0a2644",
                 opacity: waiting ? 0.7 : 1,
               }}
-              className="min-h-[54px] rounded-2xl px-5 py-3.5 flex-row items-center justify-center gap-2.5 active:opacity-90"
+              className="min-h-[54px] rounded-2xl px-5 py-3.5 flex-row items-center justify-center gap-2.5"
             >
               {waiting ? (
                 <ActivityIndicator color="#ffffff" />
@@ -347,7 +348,7 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
               <Text className="text-base font-extrabold text-white text-center shrink">
                 {t(`screeningPractice.${primaryKey}`)}
               </Text>
-            </Pressable>
+            </TouchableOpacity>
 
             {/* Secondary Controls / Previous Button */}
             {p.current > 0 ? (

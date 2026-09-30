@@ -82,29 +82,31 @@ export default function ScreeningSession({ sentences, dialect, userTier, userKey
     setLocalError("");
   }, [audio.result, audio.audioUri, t]);
 
+  const { isRecording: audioRecording, isStarting: audioStarting, cancelRecording: audioCancelRecording } = audio;
   useEffect(() => {
     const subscription = AppState.addEventListener("change", state => {
       if (state === "active") return;
       stopPlayback();
-      if (audio.isRecording || audio.isStarting) {
+      if (audioRecording || audioStarting) {
         attemptIndex.current = null;
-        void audio.cancelRecording().catch(() => {});
+        void audioCancelRecording().catch(() => {});
         setLocalError(t("screeningPractice.interrupted"));
       }
     });
     return () => subscription.remove();
-  }, [audio.isRecording, audio.isStarting, audio.cancelRecording, stopPlayback, t]);
+  }, [audioRecording, audioStarting, audioCancelRecording, stopPlayback, t]);
 
   const message = (error: unknown, key: string) => getFriendlyErrorMessage(error, t(key), i18n.language.startsWith("vi") ? "vi" : "en");
 
   async function record() {
-    if (actionLocked.current || busy || !sentence) return;
+    const textToRecord = typeof sentence === "string" ? sentence : sentence?.text || (sentence as any)?.sentence || "";
+    if (actionLocked.current || busy || !textToRecord) return;
     actionLocked.current = true;
     stopPlayback();
     setLocalError("");
     setTransition("starting");
     attemptIndex.current = progress.current;
-    try { await audio.startRecording({ text: sentence.text, dialect }); }
+    try { await audio.startRecording({ text: textToRecord, dialect }); }
     catch (error) { if (mounted.current) setLocalError(message(error, "screeningPractice.recordError")); }
     finally { actionLocked.current = false; if (mounted.current) setTransition(null); }
   }

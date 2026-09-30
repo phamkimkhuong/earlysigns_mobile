@@ -117,7 +117,7 @@ export default function IPAChecking({
   const [resolvedWordsByKey, setResolvedWordsByKey] = useState<Record<string, any[]>>({});
   const [samplePlaying, setSamplePlaying] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [upgradeFeatureKey, setUpgradeFeatureKey] = useState<"generic" | "sampleAudio">("sampleAudio");
+  const [upgradeFeatureKey, setUpgradeFeatureKey] = useState<"dailyLimit" | "generic" | "sampleAudio">("dailyLimit");
   const [replayPlaying, setReplayPlaying] = useState(false);
   const sampleAudioUrlsRef = useRef<Record<string, string>>({});
   const halfFiredRef = useRef(false);
@@ -140,7 +140,12 @@ export default function IPAChecking({
     authFetch,
     language: i18n.resolvedLanguage || i18n.language || "vi",
     onUsageUpdated,
-    onDailyLimitReached,
+    onDailyLimitReached:
+      onDailyLimitReached ||
+      ((_tier) => {
+        setUpgradeFeatureKey("dailyLimit");
+        setShowUpgradeModal(true);
+      }),
     userTier,
     userKey,
     isScreening,
@@ -194,6 +199,10 @@ export default function IPAChecking({
   }, [result, currentIndex]);
 
   const currentSentence = sentences?.[currentIndex] || null;
+  const currentSentenceText =
+    typeof currentSentence === "string"
+      ? currentSentence
+      : currentSentence?.text || currentSentence?.sentence || "";
 
   useEffect(() => {
     if (!open || !currentSentence || !onRequestSentenceWords) return;
@@ -308,11 +317,11 @@ export default function IPAChecking({
 
   async function handleRecordToggle() {
     hapticFeedback.light();
-    if (isQuotaExhausted({ userTier, userKey, usageStatus })) {
+    if (!isScreening && isQuotaExhausted({ userTier, userKey, usageStatus })) {
       hapticFeedback.warning();
       if (onDailyLimitReached) onDailyLimitReached(userTier);
       else {
-        setUpgradeFeatureKey("generic");
+        setUpgradeFeatureKey("dailyLimit");
         setShowUpgradeModal(true);
       }
       return;
@@ -321,8 +330,8 @@ export default function IPAChecking({
       await stopRecording({ check: true });
       return;
     }
-    if (!currentSentence?.text) return;
-    await startRecording({ text: currentSentence.text, dialect });
+    if (!currentSentenceText) return;
+    await startRecording({ text: currentSentenceText, dialect });
   }
 
   if (!open) return null;
@@ -433,7 +442,7 @@ export default function IPAChecking({
                 gap: 16,
               }}
             >
-              <Text style={{ fontSize: 15, color: "#334155", lineHeight: 24 }}>
+              <Text style={{ fontSize: 15, color: "#334155", lineHeight: 24 }} className="leading-6">
                 {stripHtml(instructionsHtml)}
               </Text>
               <PrimaryButton
@@ -537,7 +546,7 @@ export default function IPAChecking({
             isRecording={isRecording}
             isStarting={isStarting}
             checking={checking}
-            disabled={!currentSentence?.text || nextLessonLoading}
+            disabled={!currentSentenceText || nextLessonLoading}
             onRecordToggle={handleRecordToggle}
             maxSeconds={25}
             hasPrev={currentIndex > 0}

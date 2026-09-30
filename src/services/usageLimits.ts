@@ -1,7 +1,8 @@
 import { getItem, setItem } from "./storage";
 import type { UserTier } from "@/types/domain";
 
-const STORAGE_KEY_MONTHLY = "earlysigns_monthly_quota_v2";
+const STORAGE_KEY_DAILY = "earlysigns_daily_quota_v3";
+export const STORAGE_KEY_MONTHLY = "earlysigns_monthly_quota_v2";
 
 // Shared daily quota: 20 daily uses across all AI features (Pronunciation, OCR, Audio)
 export const DAILY_SHARED_LIMIT = 20;
@@ -27,8 +28,8 @@ interface UserQuotaRecord {
   audio?: number;
 }
 
-interface MonthlyStore {
-  month: string; // YYYY-MM
+interface DailyStore {
+  day: string; // YYYY-MM-DD
   users: Record<string, UserQuotaRecord>;
 }
 
@@ -59,71 +60,72 @@ export function resolveUserKey({
   return normalized || "__signed_in__";
 }
 
-function getCurrentMonthKey(): string {
+function getCurrentDayKey(): string {
   const now = new Date();
   const y = now.getFullYear();
   const m = String(now.getMonth() + 1).padStart(2, "0");
-  return `${y}-${m}`;
+  const d = String(now.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
-function readMonthlyStore(): MonthlyStore {
-  const currentMonth = getCurrentMonthKey();
+function readDailyStore(): DailyStore {
+  const currentDay = getCurrentDayKey();
   try {
-    const raw = getItem(STORAGE_KEY_MONTHLY);
-    if (!raw) return { month: currentMonth, users: {} };
+    const raw = getItem(STORAGE_KEY_DAILY);
+    if (!raw) return { day: currentDay, users: {} };
     const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== "object" || parsed.month !== currentMonth) {
-      return { month: currentMonth, users: {} };
+    if (!parsed || typeof parsed !== "object" || parsed.day !== currentDay) {
+      return { day: currentDay, users: {} };
     }
     return {
-      month: currentMonth,
+      day: currentDay,
       users: parsed.users && typeof parsed.users === "object" ? parsed.users : {},
     };
   } catch {
-    return { month: currentMonth, users: {} };
+    return { day: currentDay, users: {} };
   }
 }
 
-function writeMonthlyStore(store: MonthlyStore): void {
+function writeDailyStore(store: DailyStore): void {
   try {
-    setItem(STORAGE_KEY_MONTHLY, JSON.stringify(store));
+    setItem(STORAGE_KEY_DAILY, JSON.stringify(store));
   } catch {
     /* ignore */
   }
 }
 
 /**
- * Get quota usage for a given user and type
+ * Get quota usage for a given user and type today
  */
 export function getQuotaUsage(userKey: string, type: QuotaType): number {
   if (!userKey) return 0;
-  const store = readMonthlyStore();
+  const store = readDailyStore();
   const record = store.users[userKey];
   const value = Number(record?.[type] || 0);
   return Number.isFinite(value) && value > 0 ? value : 0;
 }
 
 /**
- * Increment quota usage for a given user and type
+ * Increment quota usage for a given user and type today
  */
 export function incrementQuotaUsage(userKey: string, type: QuotaType): number {
   if (!userKey) return 0;
-  const store = readMonthlyStore();
+  const store = readDailyStore();
   const record = store.users[userKey] || {};
   const current = Number(record[type] || 0);
   const next = (Number.isFinite(current) && current > 0 ? current : 0) + 1;
   record[type] = next;
   store.users[userKey] = record;
-  writeMonthlyStore(store);
+  writeDailyStore(store);
   return next;
 }
 
 /**
- * Get total shared AI usage across pronunciation, OCR, and audio
+ * Get total shared AI usage today across pronunciation, OCR, and audio
  */
 export function getLocalSharedUsage(userKey: string): number {
   if (!userKey) return 0;
-  const store = readMonthlyStore();
+  const store = readDailyStore();
   const record = store.users[userKey] || {};
   const pron = Number(record.pronunciation) || 0;
   const ocr = Number(record.ocr) || 0;
@@ -256,7 +258,12 @@ export function isPronunciationQuotaExhausted({
     return usageStatus.daily_remaining <= 0;
   }
   const key = userKey || "__anonymous__";
-  const limit = typeof usageStatus?.daily_limit === "number" ? usageStatus.daily_limit : DAILY_SHARED_LIMIT;
+  const limit =
+    typeof usageStatus?.daily_limit === "number"
+      ? usageStatus.daily_limit
+      : userTier === "anonymous"
+      ? ANONYMOUS_PRONUNCIATION_LIMIT
+      : DAILY_SHARED_LIMIT;
   return getLocalSharedUsage(key) >= limit;
 }
 

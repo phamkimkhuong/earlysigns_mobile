@@ -4,6 +4,7 @@ import {
   Animated,
   Pressable,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { CheckCircle2, ChevronLeft, ChevronRight, Mic, Square } from "lucide-react-native";
@@ -262,7 +263,7 @@ export default function SpeechRecordingDock({
   }, [isRecording, bar1, bar2, bar3, bar4, bar5]);
 
   const handlePress = () => {
-    if (disabled || isStarting || checking) return;
+    if (disabled || checking) return;
     hapticFeedback.medium();
     onRecordToggle();
   };
@@ -368,6 +369,7 @@ export default function SpeechRecordingDock({
 
         {/* Hero Mic Button with Ripple Waves & Equalizer */}
         <View
+          pointerEvents="box-none"
           style={{
             alignItems: "center",
             justifyContent: "center",
@@ -425,7 +427,7 @@ export default function SpeechRecordingDock({
                 width: 86,
                 height: 86,
                 borderRadius: 43,
-                backgroundColor: "#0284c7",
+                backgroundColor: "#0a2644",
                 transform: [{ scale: idleBreath }],
                 opacity: idleOpacity,
               }}
@@ -433,9 +435,10 @@ export default function SpeechRecordingDock({
           )}
 
           {/* Touchable Hero Mic Circle */}
-          <Pressable
+          <TouchableOpacity
             onPress={handlePress}
-            disabled={disabled || isStarting || checking}
+            activeOpacity={0.85}
+            disabled={disabled || checking}
             accessible
             accessibilityRole="button"
             accessibilityLabel={
@@ -443,29 +446,31 @@ export default function SpeechRecordingDock({
                 ? t("sentence.stopRecording", "Dừng ghi âm")
                 : t("sentence.startRecording", "Bắt đầu ghi âm")
             }
-            style={({ pressed }) => ({
+            style={{
               width: 72,
               height: 72,
               borderRadius: 36,
-              backgroundColor: isRecording ? "#ef4444" : "#0284c7",
+              backgroundColor: isRecording ? "#f43f5e" : isStarting ? "#f59e0b" : "#0a2644",
+              borderWidth: 2.5,
+              borderColor: isRecording ? "#fecdd3" : isStarting ? "#fde68a" : "#1e3a5f",
               alignItems: "center",
               justifyContent: "center",
-              shadowColor: isRecording ? "#ef4444" : "#0284c7",
+              shadowColor: isRecording ? "#f43f5e" : "#0a2644",
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.35,
               shadowRadius: 10,
               elevation: 6,
-              opacity: pressed ? 0.9 : 1,
-            })}
+              opacity: disabled ? 0.45 : 1,
+            }}
           >
-            {checking ? (
+            {checking || isStarting ? (
               <ActivityIndicator size="small" color="#ffffff" />
             ) : isRecording ? (
               <Square size={26} color="#ffffff" fill="#ffffff" />
             ) : (
               <Mic size={30} color="#ffffff" strokeWidth={2.4} />
             )}
-          </Pressable>
+          </TouchableOpacity>
         </View>
 
         {/* Next / Complete Sentence Button */}

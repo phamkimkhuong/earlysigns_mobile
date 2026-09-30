@@ -27,6 +27,7 @@ import DialectToggle from "@/components/ui/DialectToggle";
 import IPAChecking from "@/components/practice/IPAChecking";
 import ScoreWords from "@/components/practice/ScoreWords";
 import VideoRecordingHub from "@/components/practice/VideoRecordingHub";
+import UpgradeProModal from "@/components/ui/UpgradeProModal";
 import { VideoPracticeSkeleton } from "@/components/ui/Skeleton";
 import { videoApi, lessonApi, billingApi } from "@/api";
 import { useVideoDetailQuery } from "@/hooks/queries/useVideoQueries";
@@ -78,6 +79,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
   const [userSelectedDialect, setUserSelectedDialect] = useState<Dialect | null>(null);
   const practiceDialect: Dialect = userSelectedDialect || detailData?.dialect || userDialect || "uk";
   const [dialectSaving, setDialectSaving] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const usageStatus = useBillingStore((s) => s.usage);
 
   const playerRef = useRef<any>(null);
@@ -158,6 +160,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
     userTier,
     userKey,
     onUsageUpdated: (u) => useBillingStore.getState().setUsage(u),
+    onDailyLimitReached: () => setShowUpgradeModal(true),
   });
 
   useEffect(() => {
@@ -281,7 +284,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
         setPlaying(false);
       }
     },
-    [clearResult, stopPlayback]
+    [clearResult, stopPlayback, youtubeId]
   );
 
   const hasInitializedRef = useRef(false);
@@ -802,7 +805,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                 isStarting={isStarting}
                 checking={checking}
                 onRecordToggle={handleRecordToggle}
-                disabled={!playerReady}
+                disabled={!current?.text}
                 maxSeconds={25}
                 micError={micError}
                 checkError={checkError}
@@ -855,6 +858,15 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
         userTier={userTier}
         userKey={userKey}
         usageStatus={usageStatus}
+      />
+
+      <UpgradeProModal
+        open={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        featureKey="dailyLimit"
+        onUpgrade={() => {
+          navigation.navigate("Payment");
+        }}
       />
     </SafeAreaView>
   );

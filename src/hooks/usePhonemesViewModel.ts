@@ -15,10 +15,12 @@ import { progressKeys, useProgressSoundsQuery } from "@/hooks/queries/useProgres
 import type { Dialect, LessonSession } from "@/types/domain";
 import { getFriendlyErrorMessage } from "@/utils/localizedError";
 
+const EMPTY_SOUND_RECORDS: any[] = [];
+
 const safeUseProgressSoundsQuery =
   typeof useProgressSoundsQuery === "function"
     ? useProgressSoundsQuery
-    : () => ({ data: [] } as any);
+    : () => ({ data: EMPTY_SOUND_RECORDS } as any);
 
 export function usePhonemesViewModel(navigation: any) {
   const { t, i18n } = useTranslation();
@@ -37,7 +39,7 @@ export function usePhonemesViewModel(navigation: any) {
   const summaryQuery = useHomeSummaryQuery(dialect, Boolean(authToken && !authLoading));
   useBillingUsageQuery(Boolean(authToken && !authLoading));
   const soundsProgressQuery = safeUseProgressSoundsQuery(dialect, Boolean(authToken && !authLoading));
-  const soundRecords = soundsProgressQuery?.data || [];
+  const soundRecords = soundsProgressQuery?.data ?? EMPTY_SOUND_RECORDS;
 
   const homeSummary = authToken ? summaryQuery.data : null;
   const usageStatus = useBillingStore((s) => s.usage);
@@ -48,7 +50,7 @@ export function usePhonemesViewModel(navigation: any) {
   const [lessonError, setLessonError] = useState("");
   const [lessonMode, setLessonMode] = useState<"lesson" | "screening">("lesson");
   const [screeningResult, setScreeningResult] = useState<{ totalAccuracy?: number } | null>(null);
-  const [screeningLoading, setScreeningLoading] = useState(false);
+  const [screeningLoading] = useState(false);
   const [screeningError, setScreeningError] = useState("");
   const [screeningConfirmed, setScreeningConfirmed] = useState(false);
   const [phonemeLoading, setPhonemeLoading] = useState<string | null>(null);
