@@ -18,6 +18,7 @@ export interface ScoreWordsProps {
   showIpa?: boolean;
   showResultDetails?: boolean;
   loadingIpa?: boolean;
+  showInserted?: boolean;
 }
 
 const PHONE_COLORS: Record<string, string> = {
@@ -35,6 +36,7 @@ export default function ScoreWords({
   showIpa = true,
   showResultDetails = false,
   loadingIpa = false,
+  showInserted = false,
 }: ScoreWordsProps) {
   const wordScores = useMemo(() => buildWordScores(words, alignment), [words, alignment]);
   if (!words.length) return null;
@@ -71,7 +73,7 @@ export default function ScoreWords({
                       : "—"}
                   /
                 </Text>
-                {showResultDetails && insertedPhones.length > 0 ? (
+                {showInserted && showResultDetails && insertedPhones.length > 0 ? (
                   <View className="flex-row items-center ml-1 gap-1">
                     {insertedPhones.map((ins, insIdx) => {
                       const sound = ins.predicted_char || ins.char || "";

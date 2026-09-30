@@ -76,29 +76,24 @@ export function useJourneyViewModel(navigation?: any) {
     [authToken, authEmail]
   );
 
-  const startPersonalizedLesson = useCallback(async () => {
+  const navigatingRef = useRef(false);
+
+  const startPersonalizedLesson = useCallback(() => {
+    if (navigatingRef.current) return;
+    navigatingRef.current = true;
+    setTimeout(() => {
+      navigatingRef.current = false;
+    }, 1000);
+
     if (!authToken) {
-      navigation?.navigate("Login", { next: "Journey" });
+      navigation?.navigate("Login", { next: "JourneyLesson" });
       return;
     }
-    setLessonLoading(true);
-    setLessonError("");
-    try {
-      const data = await lessonApi.getPersonalizedLesson(dialect, false);
-      const session = buildLessonSession("personalized", data, { dialect }, t, i18n.language);
-      if (!session) {
-        setLessonError(t("lesson.empty"));
-        return;
-      }
-      lessonKindRef.current = session.kind;
-      setLessonSession(session);
-      setLessonSessionKey((k) => k + 1);
-    } catch (e: any) {
-      setLessonError(String(e?.message || e));
-    } finally {
-      setLessonLoading(false);
-    }
-  }, [authToken, dialect, i18n.language, navigation, t]);
+    navigation?.navigate("JourneyLesson", {
+      dialect,
+      lessonTitle: t("journeyPage.lessonTitle", "Bài học lộ trình"),
+    });
+  }, [authToken, dialect, navigation, t]);
 
   const closeLessonSession = useCallback(async () => {
     setLessonSession(null);

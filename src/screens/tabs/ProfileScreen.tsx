@@ -680,7 +680,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                 {/* Primary Button */}
                 <TouchableOpacity
                   activeOpacity={0.85}
-                  onPress={() => handleNavigate("Phonemes", { startScreening: true })}
+                  onPress={() => handleNavigate("Screening")}
                   style={{
                     backgroundColor: "#0066ff",
                     shadowColor: "#0066ff",

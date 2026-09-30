@@ -36,6 +36,16 @@
         "buildType": "apk"
       }
     },
+    "preview-store": {
+      "distribution": "internal",
+      "channel": "production",
+      "env": {
+        "APP_VARIANT": "production"
+      },
+      "android": {
+        "buildType": "apk"
+      }
+    },
     "production": {
       "distribution": "store",
       "channel": "production",

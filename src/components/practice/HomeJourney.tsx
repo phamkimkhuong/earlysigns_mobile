@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
-import { CheckCircle2, Lock, Play, Sparkles, Trophy, ChevronRight } from "lucide-react-native";
+import { CheckCircle2, Lock, Play, Flag, Trophy, ChevronRight } from "lucide-react-native";
 import { JourneyPathSkeleton } from "@/components/ui/Skeleton";
 
 const NAMED_MILESTONE_COUNT = 5;
@@ -99,8 +99,8 @@ function NodeCircle({
 
       {/* Main Node Circle with multi-layer styling */}
       <Pressable
-        onPress={isCurrent ? onStartLesson : undefined}
-        disabled={!isCurrent || lessonLoading}
+        onPress={isCurrent || isCompleted ? onStartLesson : undefined}
+        disabled={(!isCurrent && !isCompleted) || lessonLoading}
         style={{
           width: 58,
           height: 58,
@@ -134,7 +134,7 @@ function NodeCircle({
       >
         <Text
           style={{ color: isCurrent ? "#4338ca" : "#64748b" }}
-          className="text-2xs font-bold"
+          className="text-xs font-bold"
         >
           {t("home.journey.module", { n: mod.index })}
         </Text>
@@ -166,8 +166,8 @@ export function WindingPath({
             >
               <View className="flex-1 pr-3">
                 <View className="flex-row items-center gap-1.5 mb-1">
-                  <Sparkles size={14} color="#4f46e5" />
-                  <Text style={{ color: "#4f46e5" }} className="text-2xs font-extrabold uppercase tracking-wider">
+                  <Flag size={13} color="#4f46e5" />
+                  <Text style={{ color: "#4f46e5" }} className="text-xs font-extrabold uppercase tracking-wider">
                     {t("home.journey.milestone", { n: item.index })}
                   </Text>
                 </View>
@@ -275,7 +275,7 @@ export default function HomeJourney({
           className="flex-row items-center gap-2 px-3 py-2 rounded-xl border"
         >
           <Trophy size={14} color="#16a34a" />
-          <Text className="text-xs font-semibold text-emerald-800">
+          <Text className="text-[13px] font-semibold text-emerald-800">
             {t("home.journey.milestonesCompleted", { count: completedMilestones })}
           </Text>
         </View>

@@ -9,6 +9,7 @@ export { default as GoogleSignInButton } from "./ui/GoogleSignInButton";
 export { default as GoogleIcon } from "./ui/GoogleIcon";
 export { default as MonthlyQuotaCard } from "./ui/MonthlyQuotaCard";
 export { default as SplashScreenView } from "./ui/SplashScreenView";
+export * from "./ui/Skeleton";
 
 // Practice Components
 export { default as IPAChecking } from "./practice/IPAChecking";
@@ -18,6 +19,9 @@ export { default as ScreeningResultModal } from "./practice/ScreeningResultModal
 export { default as HomeJourney, buildItems, WindingPath } from "./practice/HomeJourney";
 export { default as YoutubePlayer } from "./practice/YoutubePlayer";
 export { default as StagedAiProgress } from "./practice/StagedAiProgress";
+export { default as PracticePromptCard } from "./practice/PracticePromptCard";
+export { default as PracticeFeedbackCard } from "./practice/PracticeFeedbackCard";
+export { default as SpeechRecordingDock } from "./practice/SpeechRecordingDock";
 
 // Payment Components
 export { default as Packages } from "./payment/Packages";

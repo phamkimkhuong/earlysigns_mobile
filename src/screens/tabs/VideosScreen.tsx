@@ -22,7 +22,7 @@ import {
 import { useAuth } from "@/services/Auth";
 import { formatDuration, topicLabel, videoThumbnail } from "@/utils/errors";
 import { useQueryClient } from "@tanstack/react-query";
-import { VideoCardSkeleton, VideoCatalogSkeleton } from "@/components/ui/Skeleton";
+import { VideoCatalogSkeleton } from "@/components/ui/Skeleton";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import {
   fetchVideoCards,
@@ -30,7 +30,6 @@ import {
   useViewedVideosQuery,
   videoKeys,
 } from "@/hooks/queries/useVideoQueries";
-import { videoApi } from "@/api";
 import type { VideoItem } from "@/types/domain";
 
 const VIEWED_PREVIEW_SIZE = 4;
@@ -189,8 +188,6 @@ function TopicSectionRow({
     fetchingRef.current = false;
     lastProcessedTriggerRef.current = loadMoreTrigger || 0;
   }, [initialVideos, videoIds, topicVideosKey, queryClient]);
-
-  const hasMore = cursor < videoIds.length;
 
   // Stable callback that fetches cards via TanStack Query cache
   const handleLoadMore = useCallback(async () => {

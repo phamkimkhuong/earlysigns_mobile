@@ -9,7 +9,7 @@
     "userInterfaceStyle": "light",
     "scheme": "earlysigns",
     "ios": {
-      "bundleIdentifier": "net.earlysigns.app",
+      "bundleIdentifier": "net.earlysigns.android",
       "supportsTablet": true,
       "infoPlist": {
         "NSMicrophoneUsageDescription": "EarlySigns records your voice to check English pronunciation.",
@@ -21,7 +21,7 @@
       }
     },
     "android": {
-      "package": "net.earlysigns.app",
+      "package": "net.earlysigns.android",
       "adaptiveIcon": {
         "backgroundColor": "#e0f4fd",
         "foregroundImage": "./assets/android-icon-foreground.png",

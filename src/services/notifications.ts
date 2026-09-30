@@ -21,13 +21,14 @@ import {
   PermissionStatus,
   SchedulableTriggerInputTypes,
 } from "expo-notifications/build/Notifications.types";
-export { PermissionStatus };
 import { getItem, setItem } from "./storage";
 import { navigationRef, safeNavigate } from "@/navigation/nav";
 import { useAuthStore } from "@/store/useAuthStore";
 import { showToast } from "@/utils/toast";
 import { customAlert } from "@/utils/customAlert";
 import i18n from "@/core/i18n";
+
+export { PermissionStatus };
 
 export const NOTIF_STORAGE_DAILY_ENABLED = "earlysigns_notif_daily_enabled";
 export const NOTIF_STORAGE_DAILY_HOUR = "earlysigns_notif_daily_hour";

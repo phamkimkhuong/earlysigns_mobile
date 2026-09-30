@@ -22,7 +22,6 @@ import {
   Save,
   Trash2,
 } from "lucide-react-native";
-import DialectToggle from "@/components/ui/DialectToggle";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import { PassageListSkeleton } from "@/components/ui/Skeleton";
 import { useTextPracticeViewModel } from "@/hooks/useTextPracticeViewModel";
@@ -38,8 +37,6 @@ function previewText(text: string, max = 90): string {
 export default function TextPracticeScreen({ navigation, route }: NativeStackScreenProps<RootStackParamList, "Text">) {
   const {
     t,
-    dialect,
-    setDialect,
     inputText,
     setInputText,
     saveTitle,
@@ -52,8 +49,6 @@ export default function TextPracticeScreen({ navigation, route }: NativeStackScr
     passages,
     passagesLoading,
     userTier = "free",
-    userKey,
-    usageStatus,
     startPractice,
     handleOcr,
     scrollViewRef,

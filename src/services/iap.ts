@@ -2,25 +2,136 @@ import { Linking, Platform } from "react-native";
 import Purchases, {
   LOG_LEVEL,
   PURCHASES_ERROR_CODE,
-  type PurchasesPackage,
   type CustomerInfo,
+  type CustomerInfoUpdateListener,
 } from "react-native-purchases";
-import { getItem, setItem } from "./storage";
-import { seedBillingUsage } from "./sessionData";
+import { getItem, setItem, removeItem } from "./storage";
+import { seedBillingUsage, getCachedBillingUsage } from "./sessionData";
+import { notifyBillingUsageChanged } from "./billingEvents";
+import { AUTH_TOKEN_KEY } from "@/store/useAuthStore";
 import {
-  API_ENDPOINTS,
   REVENUECAT_APPLE_KEY,
   REVENUECAT_GOOGLE_KEY,
 } from "@/core/config";
-import { billingApi } from "@/api";
 import type { BillingUsage } from "@/types/domain";
 import i18n from "@/core/i18n";
 
 export const IAP_SUBSCRIPTION_KEY = "earlysigns_active_iap_subscription";
+export const PRO_ENTITLEMENT_ID = "pro";
 
 const isNativeMobile = Platform.OS === "android" || Platform.OS === "ios";
 
 let isPurchasesConfigured = false;
+let customerInfoListenerRegistered = false;
+let customerInfoListener: CustomerInfoUpdateListener | null = null;
+
+/**
+ * Synchronize RevenueCat CustomerInfo with local store and billing state.
+ * Handles active entitlement grant/renewal, and handles clean downgrade
+ * when entitlement expires, is cancelled, or is refunded.
+ */
+export function handleCustomerInfoUpdate(customerInfo: CustomerInfo): void {
+  if (!customerInfo || typeof customerInfo !== "object") return;
+
+  const proEntitlement = customerInfo.entitlements?.active?.[PRO_ENTITLEMENT_ID];
+  const token = getItem(AUTH_TOKEN_KEY) || "";
+
+  if (proEntitlement) {
+    // 1. Pro Entitlement is ACTIVE (New purchase, renewal, or restore)
+    const expiresAt =
+      proEntitlement.expirationDate ||
+      new Date(Date.now() + 30 * 86400000).toISOString();
+
+    const subData: StoredSubscriptionData = {
+      productId: proEntitlement.productIdentifier,
+      purchasedAt: proEntitlement.latestPurchaseDate || new Date().toISOString(),
+      expiresAt,
+      platform: Platform.OS === "ios" ? "ios" : Platform.OS === "android" ? "android" : "other",
+      orderId: proEntitlement.identifier || `store_${Date.now()}`,
+    };
+    saveIapSubscription(subData);
+
+    const usage: BillingUsage = {
+      has_active_subscription: true,
+      is_in_trial: false,
+      subscription_expires_at: expiresAt,
+      tier: "pro",
+      daily_remaining: 9999,
+    };
+
+    if (token) {
+      seedBillingUsage(token, usage);
+    } else {
+      notifyBillingUsageChanged(usage);
+    }
+  } else {
+    // 2. Pro Entitlement is NOT active
+    // Check if user previously held an IAP Store subscription that lapsed/refunded
+    const hadStoreSubscription =
+      Boolean(customerInfo.entitlements?.all?.[PRO_ENTITLEMENT_ID]) ||
+      Boolean(getItem(IAP_SUBSCRIPTION_KEY));
+
+    if (hadStoreSubscription) {
+      removeItem(IAP_SUBSCRIPTION_KEY);
+
+      if (token) {
+        const cached = getCachedBillingUsage(token);
+        if (cached?.has_active_subscription || cached?.tier === "pro") {
+          const downgraded: BillingUsage = {
+            ...cached,
+            has_active_subscription: false,
+            is_in_trial: false,
+            tier: "free",
+            subscription_expires_at: undefined,
+            daily_remaining:
+              typeof cached.daily_remaining === "number"
+                ? Math.min(cached.daily_remaining, 5)
+                : 5,
+          };
+          seedBillingUsage(token, downgraded);
+        }
+      } else {
+        notifyBillingUsageChanged({
+          has_active_subscription: false,
+          is_in_trial: false,
+          tier: "free",
+          daily_remaining: 5,
+        });
+      }
+    }
+  }
+}
+
+/**
+ * Register CustomerInfo update listener to automatically detect subscription
+ * lifecycle changes (renewals, cancellations, refunds, expirations).
+ */
+export function setupCustomerInfoListener(): () => void {
+  if (!isNativeMobile) {
+    return () => {};
+  }
+  if (!customerInfoListenerRegistered) {
+    customerInfoListener = (customerInfo: CustomerInfo) => {
+      try {
+        handleCustomerInfoUpdate(customerInfo);
+      } catch (err) {
+        console.warn("[IAP] Error handling customer info update:", err);
+      }
+    };
+    Purchases.addCustomerInfoUpdateListener(customerInfoListener);
+    customerInfoListenerRegistered = true;
+  }
+
+  return () => {
+    if (customerInfoListener && customerInfoListenerRegistered) {
+      try {
+        Purchases.removeCustomerInfoUpdateListener(customerInfoListener);
+      } catch {}
+      customerInfoListenerRegistered = false;
+      customerInfoListener = null;
+    }
+  };
+}
 
 /**
  * Initialize RevenueCat SDK for native StoreKit & Google Play Billing
@@ -43,11 +154,26 @@ export async function initRevenueCat(userId?: string): Promise<boolean> {
       }
       Purchases.configure({ apiKey, appUserID: userId || undefined });
       isPurchasesConfigured = true;
+
+      // Register lifecycle listener
+      setupCustomerInfoListener();
+
+      // Proactively reconcile initial customer info on cold start
+      try {
+        const initialInfo = await Purchases.getCustomerInfo();
+        handleCustomerInfoUpdate(initialInfo);
+      } catch (custErr) {
+        console.warn("[IAP] Initial customer info fetch error:", custErr);
+      }
     } else if (userId) {
       try {
-        await Purchases.logIn(userId);
-      } catch {
-        /* ignore login error */
+        const logInResult = await Purchases.logIn(userId);
+        if (logInResult?.customerInfo) {
+          handleCustomerInfoUpdate(logInResult.customerInfo);
+        }
+      } catch (logInErr) {
+        console.warn("[IAP] RevenueCat logIn error:", logInErr);
+        return false;
       }
     }
     return true;
@@ -65,7 +191,10 @@ export async function logOutRevenueCat(): Promise<void> {
   try {
     const isAnon = await Purchases.isAnonymous();
     if (!isAnon) {
-      await Purchases.logOut();
+      const logoutInfo = await Purchases.logOut();
+      if (logoutInfo) {
+        handleCustomerInfoUpdate(logoutInfo);
+      }
     }
   } catch (err) {
     console.warn("RevenueCat logout error:", err);
@@ -211,16 +340,10 @@ export async function purchaseStoreProduct(
     // Development sandbox simulation mode: ONLY allowed when explicitly flagged in DEV
     if (__DEV__ && process.env.EXPO_PUBLIC_MOCK_IAP === "true") {
       console.warn("[IAP] Running in mock dev mode with simulated transaction.");
-      const fakeTxId = `mock-iap-${Date.now()}`;
-      let serverExpiresAt: string | null = null;
-      try {
-        const data = await billingApi.verifyIap(productId, Platform.OS, fakeTxId);
-        serverExpiresAt = data?.subscription_expires_at || null;
-      } catch {}
       const now = new Date();
       const expiry = new Date(now);
       expiry.setMonth(expiry.getMonth() + product.months);
-      const expiresAt = serverExpiresAt || expiry.toISOString();
+      const expiresAt = expiry.toISOString();
       const subData: StoredSubscriptionData = {
         productId: product.id,
         purchasedAt: now.toISOString(),
@@ -282,6 +405,7 @@ export async function purchaseStoreProduct(
     try {
       const result = await Purchases.purchasePackage(targetPackage);
       customerInfo = result.customerInfo;
+      handleCustomerInfoUpdate(customerInfo);
     } catch (rcError: any) {
       if (
         rcError?.userCancelled ||
@@ -325,65 +449,29 @@ export async function purchaseStoreProduct(
       };
     }
 
-    // 4. Verify Active Entitlements from Store:
-    const activeEntitlements = Object.values(customerInfo.entitlements.active);
-    if (activeEntitlements.length === 0) {
+    // 4. Verify Exact Pro Entitlement from Store:
+    const proEntitlement = customerInfo.entitlements.active[PRO_ENTITLEMENT_ID];
+    if (!proEntitlement) {
       return {
         success: false,
         error:
-          i18n.t("upgrade.paymentPending") ||
-          "Giao dịch chưa được kích hoạt từ Cửa hàng ứng dụng. Vui lòng bấm 'Khôi phục giao dịch' sau vài phút.",
+          i18n.t("upgrade.proNotActive") ||
+          "Quyền lợi EarlySigns Pro chưa được kích hoạt trên Cửa hàng ứng dụng. Vui lòng bấm 'Khôi phục giao dịch' sau vài phút.",
       };
     }
 
-    const latestEntitlement = activeEntitlements[0];
-    const realExpiresAt = latestEntitlement.expirationDate;
-    const realTransactionId =
-      latestEntitlement.latestPurchaseDate ||
-      latestEntitlement.identifier ||
-      customerInfo.originalAppUserId ||
-      `store_${Date.now()}`;
+    const expiresAt =
+      proEntitlement.expirationDate ||
+      new Date(Date.now() + product.months * 30 * 86400000).toISOString();
 
-    let serverExpiresAt: string | null = realExpiresAt || null;
-
-    // 5. Verify & Synchronize Receipt with Backend
-    try {
-      const data = await billingApi.verifyIap(
-        targetPackage.product.identifier,
-        Platform.OS,
-        realTransactionId
-      );
-      if (data?.subscription_expires_at) {
-        serverExpiresAt = data.subscription_expires_at;
-      }
-    } catch (syncErr) {
-      console.warn("[IAP] Backend verification sync failed:", syncErr);
-    }
-
-    const now = new Date();
-    const expiry = new Date(now);
-    expiry.setMonth(expiry.getMonth() + product.months);
-    const expiresAt = serverExpiresAt || realExpiresAt || expiry.toISOString();
-
-    const subData: StoredSubscriptionData = {
-      productId: product.id,
-      purchasedAt: now.toISOString(),
-      expiresAt,
-      platform: Platform.OS === "ios" ? "ios" : Platform.OS === "android" ? "android" : "other",
-      orderId: realTransactionId,
-    };
-    saveIapSubscription(subData);
-
-    // Synchronize global billing usage state
-    const usagePayload: BillingUsage = {
-      has_active_subscription: true,
-      is_in_trial: false,
-      subscription_expires_at: expiresAt,
-      tier: "pro",
-      daily_remaining: 9999,
-    };
     if (options?.authToken) {
-      seedBillingUsage(options.authToken, usagePayload);
+      seedBillingUsage(options.authToken, {
+        has_active_subscription: true,
+        is_in_trial: false,
+        subscription_expires_at: expiresAt,
+        tier: "pro",
+        daily_remaining: 9999,
+      });
     }
 
     return { success: true, expiresAt };
@@ -400,20 +488,26 @@ export async function purchaseStoreProduct(
 
 /**
  * Restore Store Purchases (Mandatory for App Store review)
+ *
+ * RevenueCat acts as the Single Source of Truth: it contacts Apple StoreKit /
+ * Google Play Billing directly to restore previous transactions.
+ * If active entitlements exist, Pro status is restored.
+ * If no active entitlements exist, any outdated local Pro state is cleared.
  */
 export async function restoreStorePurchases(options?: {
   authToken?: string;
   authFetch?: (path: string, opts?: any) => Promise<Response>;
 }): Promise<{ restored: boolean; message: string; expiresAt?: string }> {
   try {
-    // 1. If RevenueCat is configured, query native store entitlements first:
+    // 1. Production Native StoreKit / Google Play Billing restoration via RevenueCat
     if (isRevenueCatAvailable()) {
       try {
         const customerInfo = await Purchases.restorePurchases();
-        const activeEntitlements = Object.values(customerInfo.entitlements.active);
-        if (activeEntitlements.length > 0) {
+        handleCustomerInfoUpdate(customerInfo);
+        const proEntitlement = customerInfo.entitlements.active[PRO_ENTITLEMENT_ID];
+        if (proEntitlement) {
           const expiry =
-            activeEntitlements[0].expirationDate ||
+            proEntitlement.expirationDate ||
             new Date(Date.now() + 30 * 86400000).toISOString();
           const usage: BillingUsage = {
             has_active_subscription: true,
@@ -433,86 +527,55 @@ export async function restoreStorePurchases(options?: {
             expiresAt: expiry,
           };
         }
+
+        // Entitlement is NOT active on this Store account (expired, refunded, or never bought)
+        return {
+          restored: false,
+          message:
+            i18n.t("upgrade.restoreNotFound") ||
+            "Không tìm thấy gói đăng ký nào đang hoạt động liên kết với tài khoản Apple ID / Google Play này.",
+        };
       } catch (rcErr: any) {
-        console.warn("RevenueCat restore error:", rcErr);
+        console.warn("[IAP] RevenueCat restore error:", rcErr);
+        return {
+          restored: false,
+          message:
+            rcErr?.message ||
+            i18n.t("upgrade.storeConnectionFailed") ||
+            "Không thể kết nối đến máy chủ cửa hàng để khôi phục giao dịch.",
+        };
       }
     }
 
-    // 2. Try server restore endpoint if available
-    if (options?.authFetch && options?.authToken) {
-      try {
-        const res = await options.authFetch(API_ENDPOINTS.BILLING.IAP_RESTORE, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ platform: Platform.OS }),
-        });
-        if (res.ok) {
-          const data = await res.json().catch(() => ({}));
-          if (data.has_active_subscription) {
-            const usage: BillingUsage = {
-              has_active_subscription: true,
-              is_in_trial: false,
-              subscription_expires_at: data.subscription_expires_at,
-              tier: "pro",
-              daily_remaining: 9999,
-            };
-            seedBillingUsage(options.authToken, usage);
-            return {
-              restored: true,
-              message:
-                i18n.t("upgrade.restoreSuccessServer") ||
-                "Đã khôi phục thành công gói EarlySigns Pro của bạn.",
-              expiresAt: data.subscription_expires_at,
-            };
-          }
+    // 2. Development Sandbox Mock Mode (Only active when EXPO_PUBLIC_MOCK_IAP is explicitly enabled in DEV)
+    if (__DEV__ && process.env.EXPO_PUBLIC_MOCK_IAP === "true") {
+      const existing = getStoredIapSubscription();
+      if (existing) {
+        const usage: BillingUsage = {
+          has_active_subscription: true,
+          is_in_trial: false,
+          subscription_expires_at: existing.expiresAt,
+          tier: "pro",
+          daily_remaining: 9999,
+        };
+        if (options?.authToken) {
+          seedBillingUsage(options.authToken, usage);
         }
-      } catch {
-        /* fallback to local receipt check */
+        return {
+          restored: true,
+          message:
+            i18n.t("upgrade.restoreSuccessDevice") ||
+            "Đã khôi phục thành công gói EarlySigns Pro từ biên nhận thiết bị.",
+          expiresAt: existing.expiresAt,
+        };
       }
-    } else {
-      try {
-        const data = await billingApi.restoreIap(Platform.OS);
-        if (data?.has_active_subscription) {
-          return {
-            restored: true,
-            message:
-              i18n.t("upgrade.restoreSuccessServer") ||
-              "Đã khôi phục thành công gói EarlySigns Pro của bạn.",
-            expiresAt: data.subscription_expires_at,
-          };
-        }
-      } catch {
-        /* fallback to local receipt check */
-      }
-    }
-
-    // 2. Check locally recorded receipt
-    const existing = getStoredIapSubscription();
-    if (existing) {
-      const usage: BillingUsage = {
-        has_active_subscription: true,
-        is_in_trial: false,
-        subscription_expires_at: existing.expiresAt,
-        tier: "pro",
-        daily_remaining: 9999,
-      };
-      if (options?.authToken) {
-        seedBillingUsage(options.authToken, usage);
-      }
-      return {
-        restored: true,
-        message:
-          i18n.t("upgrade.restoreSuccessDevice") ||
-          "Đã khôi phục thành công gói EarlySigns Pro từ biên nhận thiết bị.",
-        expiresAt: existing.expiresAt,
-      };
     }
 
     return {
       restored: false,
       message:
-        i18n.t("upgrade.restoreNotFound") ||
-        "Không tìm thấy giao dịch nào cần khôi phục cho tài khoản Apple ID / Google Play này.",
+        i18n.t("upgrade.storeUnavailable") ||
+        "Cổng thanh toán Store (Apple App Store / Google Play) chưa sẵn sàng hoặc chưa được cấu hình trên thiết bị này.",
     };
   } catch (err: any) {
     return {

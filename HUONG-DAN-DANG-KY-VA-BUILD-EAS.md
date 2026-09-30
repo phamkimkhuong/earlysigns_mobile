@@ -281,13 +281,13 @@ Google bảo mật bằng cách kiểm tra nghiêm ngặt cặp đôi **`Package
 Tiếp tục tại trang Google Cloud Credentials, bấm **Create Credentials** -> **OAuth client ID** -> Chọn Application type: **Android**:
 
 - **Cho bản Lập trình viên (Development):**
-  - **Package Name:** `net.earlysigns.app.dev`
+  - **Package Name:** `net.earlysigns.android.dev`
   - **SHA-1 certificate fingerprint:** Dán mã SHA-1 lấy từ profile `development` ở Bước 7.1.
 - **Cho bản Thử nghiệm Tester (Preview APK):**
-  - **Package Name:** `net.earlysigns.app.preview`
+  - **Package Name:** `net.earlysigns.android.preview`
   - **SHA-1 certificate fingerprint:** Dán mã SHA-1 lấy từ profile `preview` ở Bước 7.1.
 - **Cho bản Phát hành chính thức (Production):**
-  - **Package Name:** `net.earlysigns.app`
+  - **Package Name:** `net.earlysigns.android`
   - **SHA-1 certificate fingerprint:** Dán mã SHA-1 lấy từ profile `production` ở Bước 7.1.
 
 > 💡 **Mẹo khi đưa app lên Google Play Store:**  
@@ -299,9 +299,9 @@ Tiếp tục tại trang Google Cloud Credentials, bấm **Create Credentials** 
 
 ### Q1: Cài đặt cả 3 bản Dev, Preview và Production trên cùng 1 điện thoại có bị ghi đè không?
 **Trả lời:** **Hoàn toàn KHÔNG**. Hệ thống đã được cấu hình cơ chế *App Variants* thông minh:
-- Bản Dev: Tên `EarlySigns (Dev)`, Package: `net.earlysigns.app.dev`
-- Bản Preview: Tên `EarlySigns (Prev)`, Package: `net.earlysigns.app.preview`
-- Bản Production: Tên `EarlySigns`, Package: `net.earlysigns.app`  
+- Bản Dev: Tên `EarlySigns (Dev)`, Package: `net.earlysigns.android.dev`
+- Bản Preview: Tên `EarlySigns (Prev)`, Package: `net.earlysigns.android.preview`
+- Bản Production: Tên `EarlySigns`, Package: `net.earlysigns.android`  
 Cả 3 bản là 3 app hoàn toàn riêng biệt trên hệ điều hành.
 
 ### Q2: Tôi không dùng máy Mac thì có build được file iOS (.ipa) không?

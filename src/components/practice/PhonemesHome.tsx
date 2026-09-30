@@ -1,17 +1,20 @@
 import React from "react";
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
-import { BookOpen, CheckCircle2, ChevronRight, Compass } from "lucide-react-native";
+import { ActivityIndicator, Pressable, ScrollView, Text, View, type ViewStyle } from "react-native";
+import { CheckCircle2, ChevronRight, Compass } from "lucide-react-native";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import type { TFunction } from "i18next";
+import { getIpaSoundMeta } from "@/utils/ipaData";
+import { PhonemesChipsSkeleton } from "@/components/ui/Skeleton";
 
 const EXPLORE_SOUNDS = ["θ", "ɪ", "æ"];
-const blue = "#0369a1";
+const primaryBlue = "#0284c7";
 
 type Props = {
   t: TFunction;
   dialect: string;
   screeningCompleted: boolean;
-  weakestPhonemes: { sound: string }[];
+  weakestPhonemes: { sound: string; accuracy?: number }[];
+  dailyMissionPhonemes?: string[];
   summaryLoading?: boolean;
   summaryError?: boolean;
   journey?: any;
@@ -29,9 +32,46 @@ type Props = {
   onRetry: () => void;
 };
 
-function Action({ title, onPress, secondary = false, loading, disabled, testID }: {
-  title: string; onPress: () => void; secondary?: boolean; loading?: boolean; disabled?: boolean; testID: string;
+function Action({
+  title,
+  onPress,
+  secondary = false,
+  loading,
+  disabled,
+  testID,
+}: {
+  title: string;
+  onPress: () => void;
+  secondary?: boolean;
+  loading?: boolean;
+  disabled?: boolean;
+  testID: string;
 }) {
+  const containerStyle: ViewStyle = {
+    minHeight: secondary ? 44 : 50,
+    paddingHorizontal: 18,
+    paddingVertical: secondary ? 10 : 12,
+    borderRadius: secondary ? 13 : 15,
+    backgroundColor: secondary ? "#f0f7fd" : "#0284c7",
+    borderWidth: secondary ? 1.5 : 0,
+    borderColor: secondary ? "#bae6fd" : "transparent",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    marginTop: secondary ? 6 : 8,
+    opacity: disabled ? 0.6 : 1,
+    ...(secondary
+      ? {}
+      : {
+          shadowColor: "#0284c7",
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.22,
+          shadowRadius: 8,
+          elevation: 3,
+        }),
+  };
+
   return (
     <Pressable
       testID={testID}
@@ -39,24 +79,13 @@ function Action({ title, onPress, secondary = false, loading, disabled, testID }
       accessibilityState={{ disabled: Boolean(disabled), busy: Boolean(loading) }}
       disabled={disabled}
       onPress={onPress}
-      className={`flex-row justify-center items-center ${secondary ? "bg-white border border-[#cbdde9]" : "bg-[#0369a1]"}`}
-      style={({ pressed }) => ({
-        minHeight: 52, paddingHorizontal: 14, paddingVertical: 13,
-        borderRadius: 14, gap: 8, marginTop: 6,
-        opacity: disabled ? 0.6 : pressed ? 0.8 : 1,
-        ...(secondary ? {} : {
-          shadowColor: "#0369a1",
-          shadowOffset: { width: 0, height: 3 },
-          shadowOpacity: 0.2,
-          shadowRadius: 6,
-          elevation: 3,
-        }),
-      })}
+      className="active:opacity-85"
+      style={containerStyle}
     >
-      {loading ? <ActivityIndicator color={secondary ? blue : "#ffffff"} /> : null}
+      {loading ? <ActivityIndicator color={secondary ? primaryBlue : "#ffffff"} /> : null}
       <Text
-        className={`text-base font-extrabold text-center shrink ${secondary ? "text-[#0369a1]" : "text-white"}`}
-        style={{ lineHeight: 23 }}
+        className={secondary ? "text-sm font-bold text-center text-[#0284c7]" : "text-base font-extrabold text-center text-white"}
+        style={{ lineHeight: secondary ? 20 : 23 }}
       >
         {title}
       </Text>
@@ -66,7 +95,16 @@ function Action({ title, onPress, secondary = false, loading, disabled, testID }
 
 function Hero({ children }: { children: React.ReactNode }) {
   return (
-    <View className="rounded-3xl overflow-hidden" style={{ padding: 22, gap: 10 }}>
+    <View
+      className="overflow-hidden"
+      style={{
+        borderRadius: 24,
+        padding: 22,
+        gap: 12,
+        borderWidth: 1,
+        borderColor: "#dbeafe",
+      }}
+    >
       <View
         pointerEvents="none"
         className="absolute top-0 left-0 right-0 bottom-0"
@@ -77,8 +115,8 @@ function Hero({ children }: { children: React.ReactNode }) {
         <Svg width="100%" height="100%">
           <Defs>
             <LinearGradient id="phonemesHero" x1="0%" y1="0%" x2="100%" y2="100%">
-              <Stop offset="0%" stopColor="#e6f4fe" />
-              <Stop offset="100%" stopColor="#eefaf5" />
+              <Stop offset="0%" stopColor="#e0f2fe" />
+              <Stop offset="100%" stopColor="#f0fdfa" />
             </LinearGradient>
           </Defs>
           <Rect width="100%" height="100%" fill="url(#phonemesHero)" />
@@ -92,37 +130,86 @@ function Hero({ children }: { children: React.ReactNode }) {
 export default function PhonemesHome(props: Props) {
   const { t, screeningCompleted, weakestPhonemes, lessonLoading, screeningLoading, phonemeLoading } = props;
   const busy = Boolean(lessonLoading || screeningLoading || phonemeLoading);
-  const sounds = weakestPhonemes.length ? weakestPhonemes.slice(0, 5).map(item => item.sound) : EXPLORE_SOUNDS;
-  const hasWeakSounds = weakestPhonemes.length > 0;
+
+  // Normalize weak sounds and ensure empty or invalid strings fall back to standard core phonemes
+  const validWeakSounds = (weakestPhonemes || [])
+    .map(item => String(typeof item === "string" ? item : (item?.sound || "")).replace(/^\/+|\/+$/g, "").trim())
+    .filter(s => s.length > 0 && s !== "/");
+  const hasWeakSounds = validWeakSounds.length > 0;
+
+  // When user has fewer than 3 weak sounds (e.g. only 1 weak sound), combine with core explore sounds
+  // so the grid always presents 3 balanced sound badges (matching HomeScreen behavior)
+  const combinedSounds: string[] = [];
+  for (const s of [...validWeakSounds, ...EXPLORE_SOUNDS]) {
+    if (!combinedSounds.includes(s)) {
+      combinedSounds.push(s);
+    }
+    if (combinedSounds.length >= 3) break;
+  }
+  const sounds = validWeakSounds.length >= 3 ? validWeakSounds.slice(0, 5) : combinedSounds;
+
+  // Map accuracy percentages for weak sounds
+  const soundAccuracyMap = new Map<string, number>();
+  (weakestPhonemes || []).forEach(item => {
+    const s = String(typeof item === "string" ? item : (item?.sound || "")).replace(/^\/+|\/+$/g, "").trim();
+    if (s && typeof item === "object" && item?.accuracy != null && Number.isFinite(Number(item.accuracy))) {
+      const num = Number(item.accuracy);
+      soundAccuracyMap.set(s, num > 1 ? Math.round(num) : Math.round(num * 100));
+    }
+  });
+
+  // Target sounds specifically for today's lesson (from dailyMissionPhonemes or top weak sounds)
+  const targetSounds = (props.dailyMissionPhonemes && props.dailyMissionPhonemes.length > 0)
+    ? props.dailyMissionPhonemes
+    : validWeakSounds.slice(0, 3);
+  const hasTargetSounds = targetSounds.length > 0;
+
+  const renderTargetSoundChips = (isHero: boolean) => {
+    if (!hasTargetSounds) return null;
+    return (
+      <View className="flex-row flex-wrap items-center gap-2 pt-0.5 pb-1">
+        {targetSounds.map((sound) => {
+          const accPct = soundAccuracyMap.get(sound);
+          return (
+            <View
+              key={sound}
+              className="flex-row items-center gap-1.5 px-3 py-1.5 rounded-xl border"
+              style={{
+                backgroundColor: isHero ? "#ffffff" : "#f0f7fd",
+                borderColor: "#bae6fd",
+              }}
+            >
+              <Text className="text-[#0284c7] text-sm font-extrabold" numberOfLines={1}>
+                {`/${sound}/`}
+              </Text>
+              {accPct != null ? (
+                <Text
+                  className="text-xs font-bold"
+                  style={{ color: accPct < 50 ? "#dc2626" : "#d97706" }}
+                  numberOfLines={1}
+                >
+                  {`${accPct}%`}
+                </Text>
+              ) : null}
+            </View>
+          );
+        })}
+      </View>
+    );
+  };
+
   const lessonButton = (secondary: boolean) => (
     <Action
       testID="phonemes-start-lesson"
-      title={t(lessonLoading ? "phonemesHome.preparing" : "phonemesHome.startLesson")}
+      title={t(lessonLoading ? "phonemesHome.preparing" : "phonemesHome.startLessonWithCount", t("phonemesHome.startLesson"))}
       onPress={props.onLesson}
       secondary={secondary}
       loading={lessonLoading}
       disabled={busy}
     />
   );
+
   const links = [
-    {
-      id: "phonemes-journey",
-      Icon: Compass,
-      title: t("phonemesHome.journeyTitle"),
-      description: props.journey?.current_module && props.journey?.current_lesson_in_module
-        ? t("phonemesHome.journeyPosition", { module: props.journey.current_module, lesson: props.journey.current_lesson_in_module })
-        : t("phonemesHome.journeyDescription"),
-      onPress: props.onJourney,
-      iconBg: "#e5f1fa",
-    },
-    {
-      id: "phonemes-catalog",
-      Icon: BookOpen,
-      title: t("phonemesHome.catalogTitle"),
-      description: t("phonemesHome.catalogDescription"),
-      onPress: props.onCatalog,
-      iconBg: "#e5f1fa",
-    },
     ...(screeningCompleted
       ? [{
         id: "phonemes-profile",
@@ -137,55 +224,70 @@ export default function PhonemesHome(props: Props) {
 
   return (
     <ScrollView
-      className="flex-1 bg-[#f5f8fb]"
-      contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 36, gap: 22 }}
+      className="flex-1 bg-[#f8fafc]"
+      contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 40, gap: 24 }}
       showsVerticalScrollIndicator={false}
     >
-      <Text className="text-[#53677a] font-semibold text-right" style={{ fontSize: 13 }}>
-        {props.dialect === "us" ? "US · General American" : "UK · RP"}
-      </Text>
-
-      {/* ── Hero Card ── */}
+      {/* ── 1. Hero Card ── */}
       {!screeningCompleted ? (
         <View
           testID="phonemes-screening-card"
           style={{
             borderRadius: 24,
-            shadowColor: "#0c2340",
+            shadowColor: "#0284c7",
             shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.08,
-            shadowRadius: 12,
+            shadowOpacity: 0.1,
+            shadowRadius: 14,
             elevation: 3,
           }}
         >
           <Hero>
-            <Text className="text-[#0369a1] text-xs font-bold uppercase" style={{ letterSpacing: 0.7 }}>
-              {t("phonemesHome.screeningEyebrow")}
-            </Text>
+            {/* Pill Eyebrow Badge */}
+            <View
+              className="self-start px-2.5 py-1 rounded-full"
+              style={{ backgroundColor: "#e0effe", borderWidth: 1, borderColor: "#bae6fd" }}
+            >
+              <Text className="text-[#0284c7] text-xs font-bold uppercase tracking-wider">
+                {t("phonemesHome.screeningEyebrow")}
+              </Text>
+            </View>
+
+            {/* Main Headline */}
             <Text
               accessibilityRole="header"
               className="text-[#0c2340] font-extrabold"
-              style={{ fontSize: 27, lineHeight: 34, letterSpacing: -0.5 }}
+              style={{ fontSize: 26, lineHeight: 33, letterSpacing: -0.5 }}
             >
               {t("phonemesHome.screeningTitle")}
             </Text>
-            <Text className="text-[#53677a] text-sm" style={{ lineHeight: 22 }}>
+
+            {/* Description */}
+            <Text className="text-[#475569] text-sm" style={{ lineHeight: 21 }}>
               {t("phonemesHome.screeningDescription")}
             </Text>
+
+            {/* 5 Sentence Indicator Bars */}
             <View
-              className="flex-row mt-1"
-              style={{ gap: 5 }}
+              className="flex-row items-center gap-1.5 my-0.5"
               accessible={false}
               accessibilityElementsHidden
               importantForAccessibility="no-hide-descendants"
             >
               {[0, 1, 2, 3, 4].map(item => (
-                <View key={item} className="flex-1 bg-[#a5d7ef]" style={{ height: 5, borderRadius: 3 }} />
+                <View
+                  key={item}
+                  className="flex-1 bg-[#38bdf8]"
+                  style={{ height: 5, borderRadius: 3, opacity: 0.75 }}
+                />
               ))}
             </View>
-            <Text className="text-[#53677a] text-sm" style={{ lineHeight: 22 }}>
+
+            {/* Coverage Note */}
+            <Text className="text-[#64748b] text-xs font-medium" style={{ lineHeight: 18 }}>
               {t("phonemesHome.screeningCoverage")}
             </Text>
+
+            {/* Primary Action Button */}
             <Action
               testID="phonemes-start-screening"
               title={t(screeningLoading ? "phonemesHome.preparing" : "phonemesHome.startScreening")}
@@ -193,8 +295,9 @@ export default function PhonemesHome(props: Props) {
               loading={screeningLoading}
               disabled={busy}
             />
+
             {props.screeningError ? (
-              <Text accessibilityRole="alert" className="text-[#b42318] text-sm" style={{ lineHeight: 22 }}>
+              <Text accessibilityRole="alert" className="text-[#b42318] text-sm" style={{ lineHeight: 21 }}>
                 {props.screeningError}
               </Text>
             ) : null}
@@ -205,49 +308,92 @@ export default function PhonemesHome(props: Props) {
           testID="phonemes-lesson-hero"
           style={{
             borderRadius: 24,
-            shadowColor: "#0c2340",
+            shadowColor: "#0284c7",
             shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.08,
-            shadowRadius: 12,
+            shadowOpacity: 0.1,
+            shadowRadius: 14,
             elevation: 3,
           }}
         >
           <Hero>
-            <Text className="text-[#0369a1] text-xs font-bold uppercase" style={{ letterSpacing: 0.7 }}>
-              {t("phonemesHome.lessonTitle")}
-            </Text>
+            <View className="flex-row items-center justify-between">
+              <View
+                className="self-start px-2.5 py-1 rounded-full"
+                style={{ backgroundColor: "#e0effe", borderWidth: 1, borderColor: "#bae6fd" }}
+              >
+                <Text className="text-[#0284c7] text-xs font-bold uppercase tracking-wider">
+                  {t("phonemesHome.lessonTitle")}
+                </Text>
+              </View>
+              <Pressable
+                testID="phonemes-journey"
+                accessibilityRole="button"
+                accessibilityLabel={t("phonemesHome.journeyTitle")}
+                onPress={props.onJourney}
+                className="flex-row items-center gap-1.5 px-3 py-1 rounded-full border active:opacity-75"
+                style={{ backgroundColor: "#e0effe", borderColor: "#bae6fd" }}
+              >
+                <Compass size={14} color="#0284c7" />
+                <Text className="text-[#0284c7] text-xs font-bold uppercase tracking-wider">
+                  {t("phonemesHome.journeyLink", "Hành trình")} →
+                </Text>
+              </Pressable>
+            </View>
             <Text
               accessibilityRole="header"
               className="text-[#0c2340] font-extrabold"
-              style={{ fontSize: 27, lineHeight: 34, letterSpacing: -0.5 }}
+              style={{ fontSize: 24, lineHeight: 31, letterSpacing: -0.5 }}
             >
-              {t("phonemesHome.lessonHeadline")}
+              {hasTargetSounds
+                ? t("phonemesHome.personalizedHeadline", "Cải thiện các âm cần lưu ý")
+                : t("phonemesHome.lessonHeadline")}
             </Text>
-            <Text className="text-[#53677a] text-sm" style={{ lineHeight: 22 }}>
-              {t("phonemesHome.lessonDescription")}
+            <Text className="text-[#475569] text-sm" style={{ lineHeight: 21 }}>
+              {hasTargetSounds
+                ? t("phonemesHome.personalizedDescription", "5 câu luyện tập cá nhân hoá nhắm trúng các âm bạn hay phát âm chưa chuẩn:")
+                : t("phonemesHome.lessonDescription")}
             </Text>
+            {renderTargetSoundChips(true)}
             {lessonButton(false)}
           </Hero>
         </View>
       )}
 
-      {/* ── Practice Section ── */}
+      {/* ── 2. Practice Section ("Bài luyện hôm nay") ── */}
       {!screeningCompleted ? (
-        <View className="gap-3">
-          <Text
-            accessibilityRole="header"
-            className="text-[#0c2340] text-lg font-bold"
-            style={{ lineHeight: 25 }}
-          >
-            {t("phonemesHome.practiceTitle")}
-          </Text>
+        <View className="gap-2.5">
+          <View className="flex-row items-center justify-between">
+            <Text
+              accessibilityRole="header"
+              className="text-[#0c2340] text-lg font-bold"
+              style={{ lineHeight: 25 }}
+            >
+              {t("phonemesHome.practiceTitle")}
+            </Text>
+            <Pressable
+              testID="phonemes-journey"
+              accessibilityRole="button"
+              accessibilityLabel={t("phonemesHome.journeyTitle")}
+              onPress={props.onJourney}
+              className="justify-center py-1 active:opacity-75"
+              style={{ minHeight: 36 }}
+            >
+              <Text className="text-[#0284c7] text-sm font-bold">
+                {t("phonemesHome.journeyLink", "Hành trình")} →
+              </Text>
+            </Pressable>
+          </View>
           <View
-            className="bg-white border border-[#e2eaf2]"
+            className="bg-white"
             style={{
-              padding: 18, gap: 10, borderRadius: 20,
+              padding: 18,
+              gap: 8,
+              borderRadius: 20,
+              borderWidth: 1,
+              borderColor: "#e2eaf2",
               shadowColor: "#0c2340",
               shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.05,
+              shadowOpacity: 0.04,
               shadowRadius: 8,
               elevation: 1,
             }}
@@ -255,130 +401,220 @@ export default function PhonemesHome(props: Props) {
             <Text className="text-[#0c2340] text-base font-bold" style={{ lineHeight: 23 }}>
               {t("phonemesHome.lessonTitle")}
             </Text>
-            <Text className="text-[#53677a] text-sm" style={{ lineHeight: 22 }}>
-              {t("phonemesHome.lessonDescription")}
+            <Text className="text-[#64748b] text-sm" style={{ lineHeight: 21 }}>
+              {hasTargetSounds
+                ? t("phonemesHome.personalizedDescriptionShort", "5 câu luyện tập nhắm vào các âm cần cải thiện:")
+                : t("phonemesHome.lessonDescription")}
             </Text>
+            {renderTargetSoundChips(false)}
             {lessonButton(true)}
           </View>
         </View>
       ) : null}
+
       {props.lessonError ? (
-        <Text accessibilityRole="alert" className="text-[#b42318] text-sm" style={{ lineHeight: 22 }}>
+        <Text accessibilityRole="alert" className="text-[#b42318] text-sm" style={{ lineHeight: 21 }}>
           {props.lessonError}
         </Text>
       ) : null}
 
-      {/* ── Sounds Section ── */}
-      <View className="gap-3">
-        <View className="flex-row items-center gap-3 flex-wrap">
+      {/* ── 3. Sounds Section ("Âm cần cải thiện" / "Khám phá các âm") ── */}
+      <View className="gap-2.5">
+        {/* Header Row: Title & Link */}
+        <View className="flex-row items-center justify-between">
           <Text
             accessibilityRole="header"
-            className="flex-1 text-[#0c2340] text-lg font-bold"
+            className="text-[#0c2340] text-lg font-bold"
             style={{ lineHeight: 25 }}
           >
             {t(hasWeakSounds ? "phonemesHome.weakTitle" : "phonemesHome.exploreTitle")}
           </Text>
           <Pressable
+            testID="phonemes-catalog"
             accessibilityRole="button"
+            accessibilityLabel={t("phonemesHome.allSounds")}
             onPress={props.onCatalog}
-            className="justify-center self-start"
-            style={{ minHeight: 44 }}
+            className="justify-center py-1 active:opacity-75"
+            style={{ minHeight: 36 }}
           >
-            <Text className="text-[#0369a1] text-sm font-bold">
+            <Text className="text-[#0284c7] text-sm font-bold">
               {t("phonemesHome.allSounds")} →
             </Text>
           </Pressable>
         </View>
+
+        {/* Instructional Subtitle */}
+        <Text className="text-[#64748b] text-sm" style={{ lineHeight: 21 }}>
+          {t(hasWeakSounds ? "phonemesHome.weakDescription" : "phonemesHome.exploreDescription")}
+        </Text>
+
         {props.summaryLoading ? (
-          <ActivityIndicator color={blue} accessibilityLabel={t("phonemesHome.loadingProgress")} />
+          <PhonemesChipsSkeleton count={6} />
         ) : null}
+
         {props.summaryError ? (
-          <View>
-            <Text className="text-[#53677a] text-sm" style={{ lineHeight: 22 }}>
+          <View className="gap-1">
+            <Text className="text-[#64748b] text-sm" style={{ lineHeight: 21 }}>
               {t("phonemesHome.summaryError")}
             </Text>
             <Pressable
               accessibilityRole="button"
               onPress={props.onRetry}
-              className="justify-center self-start"
-              style={{ minHeight: 44 }}
+              className="justify-center self-start active:opacity-75"
+              style={{ minHeight: 36 }}
             >
-              <Text className="text-[#0369a1] text-sm font-bold">
+              <Text className="text-[#0284c7] text-sm font-bold">
                 {t("phonemesHome.retry")}
               </Text>
             </Pressable>
           </View>
         ) : null}
-        <View className="flex-row flex-wrap gap-2.5" testID={hasWeakSounds ? "phonemes-weak-sounds" : "phonemes-explore-sounds"}>
-          {sounds.map(sound => (
+
+        {/* Interactive Sound Chips Grid */}
+        {!props.summaryLoading && !props.summaryError ? (
+          <View
+            className="flex-row flex-wrap gap-3 pt-1"
+            testID={hasWeakSounds ? "phonemes-weak-sounds" : "phonemes-explore-sounds"}
+          >
+          {sounds.map(sound => {
+            const cleanSound = String(sound || "").replace(/^\/+|\/+$/g, "").trim();
+            const meta = getIpaSoundMeta(cleanSound);
+            const exampleWord = meta.example ? meta.example.split(" /", 1)[0].trim() : "";
+            const accPct = soundAccuracyMap.get(cleanSound);
+            const hasScore = accPct != null;
+
+            return (
+              <Pressable
+                key={sound}
+                accessibilityRole="button"
+                accessibilityLabel={t("phonemesHome.practiceSound", { sound: cleanSound })}
+                accessibilityState={{ disabled: busy, busy: phonemeLoading === sound }}
+                disabled={busy}
+                onPress={() => props.onPhoneme(cleanSound)}
+                className="active:opacity-80"
+                style={{
+                  minWidth: 92,
+                  minHeight: 80,
+                  paddingHorizontal: 12,
+                  paddingVertical: 10,
+                  borderRadius: 18,
+                  backgroundColor: "#ffffff",
+                  borderWidth: 1.5,
+                  borderColor: hasScore ? (accPct < 50 ? "#fecaca" : "#fed7aa") : "#e2eaf2",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 3,
+                  shadowColor: "#0c2340",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.04,
+                  shadowRadius: 6,
+                  elevation: 1,
+                  opacity: busy ? 0.6 : 1,
+                }}
+              >
+                {phonemeLoading === sound ? (
+                  <ActivityIndicator color={primaryBlue} />
+                ) : (
+                  <>
+                    <Text
+                      numberOfLines={1}
+                      className="text-[#0c2340] text-lg font-extrabold text-center"
+                      style={{ includeFontPadding: false, textAlign: "center" }}
+                    >
+                      {`/${cleanSound}/`}
+                    </Text>
+                    {exampleWord ? (
+                      <Text
+                        numberOfLines={1}
+                        className="text-[#64748b] text-xs text-center font-medium"
+                      >
+                        {exampleWord}
+                      </Text>
+                    ) : null}
+                    {hasScore ? (
+                      <View
+                        className="px-2 py-0.5 rounded-full mt-0.5"
+                        style={{
+                          backgroundColor: accPct < 50 ? "#fee2e2" : "#ffedd5",
+                          borderWidth: 1,
+                          borderColor: accPct < 50 ? "#fca5a5" : "#fdba74",
+                        }}
+                      >
+                        <Text
+                          numberOfLines={1}
+                          className="text-xs font-bold text-center"
+                          style={{ color: accPct < 50 ? "#dc2626" : "#c2410c" }}
+                        >
+                          {`${accPct}%`}
+                        </Text>
+                      </View>
+                    ) : null}
+                  </>
+                )}
+              </Pressable>
+            );
+          })}
+        </View>
+      ) : null}
+      </View>
+
+      {/* ── 4. Navigation Links (Grouped Elevated Card) ── */}
+      {links.length > 0 ? (
+        <View
+          className="bg-white"
+          style={{
+            borderRadius: 20,
+            borderWidth: 1,
+            borderColor: "#e2eaf2",
+            overflow: "hidden",
+            shadowColor: "#0c2340",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.04,
+            shadowRadius: 8,
+            elevation: 1,
+          }}
+        >
+          {links.map(({ id, Icon, title, description, onPress, iconBg }, index) => (
             <Pressable
-              key={sound}
+              key={id}
+              testID={id}
               accessibilityRole="button"
-              accessibilityLabel={t("phonemesHome.practiceSound", { sound })}
-              accessibilityState={{ disabled: busy, busy: phonemeLoading === sound }}
-              disabled={busy}
-              onPress={() => props.onPhoneme(sound)}
-              className="bg-[#e5f1fa] items-center justify-center border border-[#c5ddf0]"
-              style={({ pressed }) => ({
-                minWidth: 72, minHeight: 60,
-                paddingHorizontal: 18, paddingVertical: 12,
-                borderRadius: 14,
-                shadowColor: "#0369a1",
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.06,
-                shadowRadius: 4,
-                elevation: 1,
-                opacity: busy ? 0.6 : pressed ? 0.8 : 1,
-              })}
+              onPress={onPress}
+              className="flex-row items-center px-4 active:opacity-75"
+              style={{
+                gap: 14,
+                paddingVertical: 16,
+                borderTopWidth: index > 0 ? 1 : 0,
+                borderTopColor: "#f1f5f9",
+              }}
             >
-              {phonemeLoading === sound ? (
-                <ActivityIndicator color={blue} />
-              ) : (
-                <Text className="text-[#0c2340] text-2xl font-bold">/{sound}/</Text>
-              )}
+              <View
+                className="items-center justify-center"
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 14,
+                  backgroundColor: iconBg,
+                }}
+              >
+                <Icon size={21} color="#147d64" />
+              </View>
+              <View className="flex-1">
+                <Text
+                  className="text-[15px] font-bold text-[#147d64]"
+                  style={{ lineHeight: 22 }}
+                >
+                  {title}
+                </Text>
+                <Text className="text-[#64748b]" style={{ fontSize: 13, lineHeight: 18, marginTop: 2 }}>
+                  {description}
+                </Text>
+              </View>
+              <ChevronRight size={18} color="#94a3b8" />
             </Pressable>
           ))}
         </View>
-        <Text className="text-[#53677a] text-sm" style={{ lineHeight: 22 }}>
-          {t(hasWeakSounds ? "phonemesHome.weakDescription" : "phonemesHome.exploreDescription")}
-        </Text>
-      </View>
-
-      {/* ── Navigation Links ── */}
-      <View>
-        {links.map(({ id, Icon, title, description, onPress, iconBg }) => (
-          <Pressable
-            key={id}
-            testID={id}
-            accessibilityRole="button"
-            onPress={onPress}
-            className="flex-row items-center border-t border-[#e2eaf2]"
-            style={({ pressed }) => ({ gap: 14, paddingVertical: 19, opacity: pressed ? 0.7 : 1 })}
-          >
-            <View
-              className="items-center justify-center"
-              style={{
-                width: 42, height: 42, borderRadius: 13,
-                backgroundColor: iconBg,
-              }}
-            >
-              <Icon size={20} color={id === "phonemes-profile" ? "#147d64" : blue} />
-            </View>
-            <View className="flex-1">
-              <Text
-                className={`text-base font-bold ${id === "phonemes-profile" ? "text-[#147d64]" : "text-[#0c2340]"}`}
-                style={{ lineHeight: 23 }}
-              >
-                {title}
-              </Text>
-              <Text className="text-[#53677a]" style={{ fontSize: 13, lineHeight: 20, marginTop: 3 }}>
-                {description}
-              </Text>
-            </View>
-            <ChevronRight size={20} color="#94a3b8" />
-          </Pressable>
-        ))}
-      </View>
+      ) : null}
     </ScrollView>
   );
 }

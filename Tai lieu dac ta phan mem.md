@@ -297,7 +297,7 @@ Khi không có video phù hợp, hiển thị hướng dẫn thay đổi bộ l�
 Ứng dụng phải ghi nhận tiến độ đã xem/luyện để người dùng có thể tiếp tục vào lần sau. -->
 
 ## 10. Luyện văn bản cá nhân
-
+<!-- 
 ### 10.1. Nhập văn bản
 
 - Người dùng có thể gõ hoặc dán văn bản tiếng Anh.
@@ -321,7 +321,7 @@ Khi không có video phù hợp, hiển thị hướng dẫn thay đổi bộ l�
 - Hiển thị danh sách các đoạn văn đã lưu.
 - Cho phép mở lại, chỉnh sửa và bắt đầu luyện.
 - Không tự động xóa nội dung đang nhập khi tải danh sách.
-- Sau khi đăng xuất, không hiển thị đoạn văn của tài khoản trước.
+- Sau khi đăng xuất, không hiển thị đoạn văn của tài khoản trước. -->
 
 ## 11. Luyện theo âm IPA
 

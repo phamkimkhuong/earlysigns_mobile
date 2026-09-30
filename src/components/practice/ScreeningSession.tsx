@@ -17,9 +17,10 @@ export interface ScreeningSessionProps {
   userKey: string;
   onClose: () => void;
   onComplete: () => Promise<boolean>;
+  isModal?: boolean;
 }
 
-export default function ScreeningSession({ sentences, dialect, userTier, userKey, onClose, onComplete }: ScreeningSessionProps) {
+export default function ScreeningSession({ sentences, dialect, userTier, userKey, onClose, onComplete, isModal = false }: ScreeningSessionProps) {
   const { t, i18n } = useTranslation();
   const [progress, dispatch] = useReducer(screeningReducer, { current: 0, results: {} });
   const [seconds, setSeconds] = useState(0);
@@ -46,7 +47,10 @@ export default function ScreeningSession({ sentences, dialect, userTier, userKey
 
   const stopPlayback = useCallback(() => {
     playbackId.current += 1;
-    try { playerRef.current?.remove(); } catch { /* Player already released. */ }
+    try {
+      playerRef.current?.pause?.();
+      playerRef.current?.remove?.();
+    } catch { /* Player already released. */ }
     playerRef.current = null;
     if (mounted.current) setPlaying(null);
   }, []);
@@ -179,19 +183,45 @@ export default function ScreeningSession({ sentences, dialect, userTier, userKey
 
   const error = localError || (audio.micError ? `${t(`sentence.micError.${audio.micError.type}.title`)} ${t(`sentence.micError.${audio.micError.type}.body`)}` : audio.error === "No speech detected. Try again." ? t("screeningPractice.noSpeech") : audio.error);
   if (!sentence) return null;
-  return (
-    <Modal visible animationType="slide" onRequestClose={requestClose}>
-      <SafeAreaView className="flex-1 bg-white">
-        <ScreeningPracticeView t={t} sentence={sentence} current={progress.current} completed={Object.keys(progress.results).map(Number)}
-          phase={phase} seconds={seconds} error={error} showSupport={showSupport} showScore={showScore}
-          score={screeningAccuracy(progress.results[progress.current])} canReplay={Boolean(recordings[progress.current])}
-          samplePlaying={playing === "sample"} replayPlaying={playing === "replay"} confirmExit={confirmExit}
-          onClose={requestClose} onStay={() => setConfirmExit(false)} onDiscard={() => void discard()}
-          onPrimary={() => void primary()} onPrevious={() => move("previous")} onRetryRecording={() => void record()}
-          onSupport={() => setShowSupport(value => !value)} onScore={() => setShowScore(value => !value)}
-          onSample={() => void play("sample")} onReplay={() => void play("replay")} />
-        <UpgradeProModal open={quotaOpen} onClose={() => setQuotaOpen(false)} />
-      </SafeAreaView>
-    </Modal>
+  const content = (
+    <SafeAreaView edges={["top"]} className="flex-1 bg-[#0a2644]">
+      <ScreeningPracticeView
+        t={t}
+        sentence={sentence}
+        current={progress.current}
+        completed={Object.keys(progress.results).map(Number)}
+        phase={phase}
+        seconds={seconds}
+        error={error}
+        showSupport={showSupport}
+        showScore={showScore}
+        score={screeningAccuracy(progress.results[progress.current])}
+        canReplay={Boolean(recordings[progress.current])}
+        samplePlaying={playing === "sample"}
+        replayPlaying={playing === "replay"}
+        confirmExit={confirmExit}
+        onClose={requestClose}
+        onStay={() => setConfirmExit(false)}
+        onDiscard={() => void discard()}
+        onPrimary={() => void primary()}
+        onPrevious={() => move("previous")}
+        onRetryRecording={() => void record()}
+        onSupport={() => setShowSupport(value => !value)}
+        onScore={() => setShowScore(value => !value)}
+        onSample={() => void play("sample")}
+        onReplay={() => void play("replay")}
+      />
+      <UpgradeProModal open={quotaOpen} onClose={() => setQuotaOpen(false)} />
+    </SafeAreaView>
   );
+
+  if (isModal) {
+    return (
+      <Modal visible animationType="slide" onRequestClose={requestClose}>
+        {content}
+      </Modal>
+    );
+  }
+
+  return content;
 }

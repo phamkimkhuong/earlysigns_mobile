@@ -190,9 +190,12 @@ export function usePronunciationCheck({
   const [micError, setMicError] = useState<MicError | null>(null);
 
   const maxRecordingMsRef = useRef(maxRecordingMs);
-  maxRecordingMsRef.current = maxRecordingMs;
   const autoStopOnSilenceRef = useRef(autoStopOnSilence);
-  autoStopOnSilenceRef.current = autoStopOnSilence;
+
+  useEffect(() => {
+    maxRecordingMsRef.current = maxRecordingMs;
+    autoStopOnSilenceRef.current = autoStopOnSilence;
+  }, [maxRecordingMs, autoStopOnSilence]);
 
   const recorder = useAudioRecorder(RECORDING_OPTIONS);
   const recordingRef = useRef(false);

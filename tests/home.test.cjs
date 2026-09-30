@@ -284,7 +284,7 @@ test("pronunciation data keeps screening independent, filters unassessed sounds,
     "@/store/useBillingStore": { useBillingStore: select => select({ usage: null }) },
     "@/hooks/queries/useLessonQueries": { useHomeSummaryQuery: () => ({ data: summary, refetch: async () => ({ data: summary }) }), lessonKeys: { homeSummary: () => [] } },
     "@/hooks/queries/useBillingQueries": { useBillingUsageQuery: () => {} },
-    "@/hooks/queries/useProgressQueries": { progressKeys: { sounds: () => [] } },
+    "@/hooks/queries/useProgressQueries": { progressKeys: { sounds: () => [] }, useProgressSoundsQuery: () => ({ data: [] }) },
     "@/utils/localizedError": { getFriendlyErrorMessage: (_, fallback) => fallback },
     "@/api": { lessonApi: {
       getPersonalizedLesson: async () => { requests.push("lesson"); return { sentences: [{ text: "Hello" }] }; },

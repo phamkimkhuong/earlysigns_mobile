@@ -20,7 +20,6 @@ import {
   Phone,
   MessageCircle,
   Globe,
-  Info,
   Sparkles,
   ExternalLink,
 } from "lucide-react-native";

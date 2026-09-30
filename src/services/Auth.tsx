@@ -335,6 +335,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       useAuthStore.getState().syncFromStorage();
       useAuthStore.getState().setDeviceId(id);
       setHasOnboarded(hasCompletedOnboarding());
+      if (userId) {
+        initRevenueCat(userId).catch(() => {});
+      }
       setReady(true);
     })();
     return () => {

@@ -6,19 +6,19 @@ module.exports = ({ config }) => {
   const isPreview = variant === "preview";
 
   let name = "EarlySigns";
-  let bundleIdentifier = "net.earlysigns.app";
-  let packageName = "net.earlysigns.app";
+  let bundleIdentifier = "net.earlysigns.android";
+  let packageName = "net.earlysigns.android";
   let scheme = "earlysigns";
 
   if (isDev) {
     name = "EarlySigns (Dev)";
-    bundleIdentifier = "net.earlysigns.app.dev";
-    packageName = "net.earlysigns.app.dev";
+    bundleIdentifier = "net.earlysigns.android.dev";
+    packageName = "net.earlysigns.android.dev";
     scheme = "earlysigns-dev";
   } else if (isPreview) {
     name = "EarlySigns (Prev)";
-    bundleIdentifier = "net.earlysigns.app.preview";
-    packageName = "net.earlysigns.app.preview";
+    bundleIdentifier = "net.earlysigns.android.preview";
+    packageName = "net.earlysigns.android.preview";
     scheme = "earlysigns-preview";
   }
 

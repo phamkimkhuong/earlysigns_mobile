@@ -1,6 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -11,22 +10,14 @@ import { useTranslation } from "react-i18next";
 import {
   CheckCircle2,
   ChevronLeft,
-  ChevronRight,
-  Crown,
-  Mic,
-  RotateCcw,
-  Square,
-  Volume2,
 } from "lucide-react-native";
 import { createAudioPlayer } from "expo-audio";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "@/types/navigation";
 import { usePronunciationCheck } from "@/hooks/usePronunciationCheck";
 import { buildSoundAnalysisRows } from "@/utils/pronunciationAnalysis";
-import { checkResultScoreColor } from "@/utils/checkResultScoreColor";
 import {
   isQuotaExhausted,
-  isAudioQuotaExhausted,
   incrementQuotaUsage,
   resolveUserKey,
   resolveUserTier,
@@ -37,9 +28,9 @@ import { useBillingStore } from "@/store/useBillingStore";
 import { textPracticeApi } from "@/api/textPracticeApi";
 import { safeNavigate } from "@/navigation/nav";
 import UpgradeProModal from "@/components/ui/UpgradeProModal";
-import ScoreWords from "@/components/practice/ScoreWords";
-import SoundAnalysis from "@/components/practice/SoundAnalysis";
-import StagedAiProgress from "@/components/practice/StagedAiProgress";
+import PracticePromptCard from "@/components/practice/PracticePromptCard";
+import PracticeFeedbackCard from "@/components/practice/PracticeFeedbackCard";
+import SpeechRecordingDock from "@/components/practice/SpeechRecordingDock";
 import type { Dialect, SentenceCheckResult } from "@/types/domain";
 
 type Props = NativeStackScreenProps<RootStackParamList, "SentencePractice">;
@@ -86,13 +77,13 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
   const [resultsByIndex, setResultsByIndex] = useState<Record<number, SentenceCheckResult>>({});
   const [resolvedWordsByIndex, setResolvedWordsByIndex] = useState<Record<number, any[]>>({});
   const [samplePlaying, setSamplePlaying] = useState(false);
-  const [sampleLoading, setSampleLoading] = useState(false);
   const [replayPlaying, setReplayPlaying] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeFeatureKey, setUpgradeFeatureKey] = useState<"generic" | "sampleAudio">("sampleAudio");
   const [isCompletedAll, setIsCompletedAll] = useState(false);
 
   const sampleSoundRef = useRef<any>(null);
+  const sampleAudioUrlsRef = useRef<Record<number, string>>({});
   const scrollViewRef = useRef<ScrollView>(null);
 
   const totalSentences = sentences.length || 1;
@@ -100,7 +91,6 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
 
   const isProOrTrial = userTier === "pro" || userTier === "trial";
   const hasPreloadedAudio = Boolean(currentSentence?.audio_url);
-  const canPlaySampleAudio = isProOrTrial || hasPreloadedAudio;
 
   const {
     isRecording,
@@ -158,7 +148,7 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
           setResolvedWordsByIndex((prev) => ({ ...prev, [currentIndex]: words }));
         }
       })
-      .catch(() => {});
+      .catch(() => { });
 
     return () => {
       cancelled = true;
@@ -174,7 +164,6 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
   }, [storedResult]);
 
   const scorePct = sentenceScore01 == null ? null : Math.round(sentenceScore01 * 1000) / 10;
-  const scoreColor = scorePct != null ? checkResultScoreColor(sentenceScore01) : "#0284c7";
 
   const displayWords = useMemo(() => {
     const loaded = resolvedWordsByIndex[currentIndex] || currentSentence?.words;
@@ -201,18 +190,16 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
     }
 
     try {
-      setSampleLoading(true);
       setSamplePlaying(true);
-      let url: string | null = currentSentence.audio_url || null;
+      let url: string | null = currentSentence.audio_url || sampleAudioUrlsRef.current[currentIndex] || null;
       if (!url) {
         url = await textPracticeApi.generateAudio(currentSentence.text, dialect);
         if (url) {
-          currentSentence.audio_url = url;
+          sampleAudioUrlsRef.current[currentIndex] = url;
           incrementQuotaUsage(userKey, "audio");
           useBillingStore.getState().decrementDailyRemaining();
         }
       }
-      setSampleLoading(false);
 
       if (!url) {
         setSamplePlaying(false);
@@ -243,7 +230,6 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
       });
       player.play();
     } catch {
-      setSampleLoading(false);
       setSamplePlaying(false);
     }
   }
@@ -306,49 +292,6 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
       setIsCompletedAll(true);
     }
   }
-
-  // Performance rating evaluation
-  const scoreBadge = useMemo(() => {
-    if (scorePct == null) return null;
-    if (scorePct >= 80) {
-      return {
-        text: t("sentence.excellent", "Xuất sắc!"),
-        sub: t("sentence.excellentDesc", "Phát âm rất chuẩn xác"),
-        bg: "#ecfdf5",
-        border: "#a7f3d0",
-        color: "#059669",
-        emoji: "🎉",
-      };
-    }
-    if (scorePct >= 60) {
-      return {
-        text: t("sentence.good", "Khá tốt"),
-        sub: t("sentence.goodDesc", "Ngữ điệu tự nhiên, tiếp tục phát huy"),
-        bg: "#f0f9ff",
-        border: "#bae6fd",
-        color: "#0284c7",
-        emoji: "👍",
-      };
-    }
-    if (scorePct >= 40) {
-      return {
-        text: t("sentence.needWork", "Cần cố gắng"),
-        sub: t("sentence.needWorkDesc", "Chú ý các âm gạch đỏ bên dưới"),
-        bg: "#fffbeb",
-        border: "#fde68a",
-        color: "#d97706",
-        emoji: "💪",
-      };
-    }
-    return {
-      text: t("sentence.tryAgainBand", "Hãy thử lại"),
-      sub: t("sentence.tryAgainBandDesc", "Nói chậm rãi và rõ ràng hơn"),
-      bg: "#fef2f2",
-      border: "#fecaca",
-      color: "#dc2626",
-      emoji: "🔥",
-    };
-  }, [scorePct, t]);
 
   // All sentences completed celebration view
   if (isCompletedAll) {
@@ -470,9 +413,8 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
                   key={i}
                   activeOpacity={0.7}
                   onPress={() => goToSentence(i)}
-                  className={`h-2 rounded-full ${
-                    isCurrent ? "w-6 bg-[#0284c7]" : isDone ? "w-2 bg-emerald-500" : "w-2 bg-slate-300"
-                  }`}
+                  className={`h-2 rounded-full ${isCurrent ? "w-6 bg-[#0284c7]" : isDone ? "w-2 bg-emerald-500" : "w-2 bg-slate-300"
+                    }`}
                 />
               );
             })}
@@ -499,58 +441,17 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
             ) : null}
           </View>
 
-          {/* Single High-Contrast English Sentence (NO DUPLICATION) */}
-          {currentSentence?.text ? (
-            <Text className="text-2xl font-black text-[#0c2340] leading-9 text-center">
-              {currentSentence.text}
-            </Text>
-          ) : null}
-
-          {/* Clean Phonetic IPA Guide (rendered without repeating the word) */}
-          <View className="items-center justify-center py-2 px-3 rounded-xl bg-[#f0f9ff] border border-sky-100 min-h-[36px]">
-            <ScoreWords
-              words={displayWords}
-              alignment={storedResult?.char_alignment}
-              showWord={false}
-              showResultDetails={scorePct != null}
-              loadingIpa={!displayWords.some((w: any) => w.ipa)}
-            />
-          </View>
-
-          {/* Sample Audio Pill Button */}
-          <View className="items-center mt-1">
-            <TouchableOpacity
-              activeOpacity={0.75}
-              disabled={samplePlaying}
-              onPress={handleSampleAudio}
-              className="flex-row items-center justify-center gap-2 py-2.5 px-5 rounded-2xl bg-sky-50 border border-sky-200 active:opacity-75"
-              style={{ opacity: samplePlaying ? 0.75 : 1 }}
-            >
-              {sampleLoading ? (
-                <ActivityIndicator size="small" color="#0284c7" />
-              ) : (
-                <Volume2 size={17} color="#0284c7" />
-              )}
-              <Text className="text-sm font-bold text-sky-800">
-                {samplePlaying
-                  ? t("sentence.playingSample", "Đang phát mẫu...")
-                  : t("sentence.listenToSample", "Nghe phát âm mẫu")}
-              </Text>
-              {!canPlaySampleAudio ? (
-                <View className="flex-row items-center gap-1 px-2 py-0.5 rounded-md bg-amber-100 border border-amber-300 shrink-0">
-                  <Crown size={12} color="#b45309" />
-                  <Text numberOfLines={1} className="text-xs font-black text-amber-900">
-                    PRO
-                  </Text>
-                </View>
-              ) : null}
-            </TouchableOpacity>
-          </View>
+          {/* Practice Prompt Card */}
+          <PracticePromptCard
+            text={currentSentence?.text}
+            words={displayWords}
+            alignment={storedResult?.char_alignment}
+            showResultDetails={scorePct != null}
+            loadingIpa={!displayWords.some((w: any) => w.ipa)}
+            onPlaySample={handleSampleAudio}
+            samplePlaying={samplePlaying}
+          />
         </View>
-
-        {/* AI Progress Card (during check) */}
-        {checking ? <StagedAiProgress active={checking} variant="card" /> : null}
-
         {/* ERROR / MIC ISSUE ALERT CARD */}
         {error || micError ? (
           <View className="bg-red-50 rounded-2xl p-4 border border-red-200 gap-2">
@@ -565,161 +466,38 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
           </View>
         ) : null}
 
-        {/* SCORE & DETAILED FEEDBACK CARD (after speaking) */}
-        {scorePct != null && scoreBadge ? (
-          <View className="bg-white rounded-3xl p-5 border border-slate-200 items-center gap-4 shadow-sm">
-            {/* Score Ring */}
-            <View
-              className="w-32 h-32 rounded-full items-center justify-center border-8"
-              style={{ borderColor: scoreColor + "25" }}
-            >
-              <View
-                className="w-26 h-26 rounded-full items-center justify-center flex-row"
-                style={{ backgroundColor: scoreColor + "12" }}
-              >
-                <Text className="text-3xl font-black" style={{ color: scoreColor }}>
-                  {scorePct}%
-                </Text>
-              </View>
-            </View>
-
-            {/* Performance Badge */}
-            <View
-              className="items-center gap-1 px-4 py-2 rounded-2xl border"
-              style={{
-                backgroundColor: scoreBadge.bg,
-                borderColor: scoreBadge.border,
-              }}
-            >
-              <Text className="text-sm font-black" style={{ color: scoreBadge.color }}>
-                {scoreBadge.emoji} {scoreBadge.text}
-              </Text>
-              <Text className="text-xs font-medium" style={{ color: scoreBadge.color, opacity: 0.9 }}>
-                {scoreBadge.sub}
-              </Text>
-            </View>
-
-            {/* Replay User Recording Button */}
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={handleReplay}
-              disabled={replayPlaying}
-              className="flex-row items-center gap-2 py-2.5 px-4 rounded-xl bg-slate-100 border border-slate-200 active:opacity-70"
-            >
-              <RotateCcw size={15} color="#475569" />
-              <Text className="text-xs font-bold text-slate-700">
-                {replayPlaying
-                  ? t("sentence.replaying", "Đang phát giọng bạn...")
-                  : t("sentence.listenYourVoice", "Nghe lại giọng của bạn")}
-              </Text>
-            </TouchableOpacity>
-
-            {/* Sound Analysis Accordion */}
-            {soundRows.length > 0 ? (
-              <View className="w-full mt-2">
-                <SoundAnalysis rows={soundRows} words={displayWords} />
-              </View>
-            ) : null}
-          </View>
-        ) : null}
+        {/* Practice Feedback Card */}
+        <PracticeFeedbackCard
+          scorePct={scorePct}
+          checking={checking}
+          replayPlaying={replayPlaying}
+          onReplayVoice={handleReplay}
+          showDetails={true}
+          soundRows={soundRows}
+          words={displayWords}
+          isRecording={isRecording}
+        />
       </ScrollView>
 
-      {/* 4. FIXED BOTTOM ACTION DOCK (Ocean Navy & Sky Theme) */}
+      {/* 4. FIXED BOTTOM ACTION DOCK (Unified SpeechRecordingDock) */}
       <View
-        className="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-5 pt-3 gap-3 shadow-lg"
-        style={{ paddingBottom: Math.max(insets.bottom, 16) + 12 }}
+        className="absolute bottom-0 left-0 right-0 bg-white shadow-lg"
+        style={{ paddingBottom: Math.max(insets.bottom, 16) }}
       >
-        {/* Mic Hero & Arrow Navigation Row */}
-        <View className="flex-row items-center justify-between">
-          {/* Previous Button */}
-          <TouchableOpacity
-            activeOpacity={0.7}
-            disabled={currentIndex === 0}
-            onPress={() => goToSentence(currentIndex - 1)}
-            className="w-12 h-12 rounded-full bg-[#f8fafc] border border-slate-200 items-center justify-center active:opacity-70"
-            style={{ opacity: currentIndex === 0 ? 0.35 : 1 }}
-          >
-            <ChevronLeft size={24} color={currentIndex === 0 ? "#94a3b8" : "#0c2340"} />
-          </TouchableOpacity>
-
-          {/* Hero Mic Button with Halo Ring */}
-          <View
-            className="w-[92px] h-[92px] rounded-full items-center justify-center border-2"
-            style={{
-              backgroundColor: isRecording ? "#fee2e2" : "#e0f2fe",
-              borderColor: isRecording ? "#fca5a5" : "#bae6fd",
-            }}
-          >
-            <TouchableOpacity
-              activeOpacity={0.85}
-              disabled={checking}
-              onPress={handleRecordToggle}
-              className="w-[72px] h-[72px] rounded-full items-center justify-center shadow-lg active:opacity-90"
-              style={{
-                backgroundColor: isRecording ? "#ef4444" : "#0284c7",
-                shadowColor: isRecording ? "#ef4444" : "#0284c7",
-                shadowOffset: { width: 0, height: 6 },
-                shadowOpacity: 0.4,
-                shadowRadius: 12,
-                elevation: 8,
-              }}
-            >
-              {checking ? (
-                <ActivityIndicator size="small" color="#ffffff" />
-              ) : isRecording ? (
-                <Square size={26} color="#ffffff" fill="#ffffff" />
-              ) : (
-                <Mic size={32} color="#ffffff" strokeWidth={2.4} />
-              )}
-            </TouchableOpacity>
-          </View>
-
-          {/* Next / Complete Button */}
-          <TouchableOpacity
-            activeOpacity={0.7}
-            disabled={currentIndex === totalSentences - 1 && scorePct == null}
-            onPress={handleNext}
-            accessibilityRole="button"
-            accessibilityLabel={t("sentence.nextSentence", "Câu tiếp theo")}
-            className="w-12 h-12 rounded-full border items-center justify-center active:opacity-70"
-            style={{
-              backgroundColor:
-                currentIndex === totalSentences - 1 && scorePct != null
-                  ? "#ecfdf5"
-                  : "#f8fafc",
-              borderColor:
-                currentIndex === totalSentences - 1 && scorePct != null
-                  ? "#a7f3d0"
-                  : "#e2e8f0",
-              opacity:
-                currentIndex === totalSentences - 1 && scorePct == null
-                  ? 0.35
-                  : 1,
-            }}
-          >
-            {currentIndex === totalSentences - 1 && scorePct != null ? (
-              <CheckCircle2 size={22} color="#059669" strokeWidth={2.5} />
-            ) : (
-              <ChevronRight
-                size={24}
-                color={
-                  currentIndex === totalSentences - 1 && scorePct == null
-                    ? "#94a3b8"
-                    : "#0c2340"
-                }
-              />
-            )}
-          </TouchableOpacity>
-        </View>
-
-        {/* Status Prompt text below mic */}
-        <Text className="text-xs font-semibold text-slate-500 text-center">
-          {isRecording
-            ? t("sentence.listeningHint", "Đang lắng nghe... Chạm để dừng")
-            : checking
-            ? t("sentence.evaluatingHint", "AI đang phân tích ngữ âm...")
-            : t("sentence.tapToRecord", "Chạm vào mic để bắt đầu nói")}
-        </Text>
+        <SpeechRecordingDock
+          isRecording={isRecording}
+          isStarting={isStarting}
+          checking={checking}
+          disabled={!currentSentence?.text}
+          onRecordToggle={handleRecordToggle}
+          maxSeconds={25}
+          hasPrev={currentIndex > 0}
+          hasNext={currentIndex < totalSentences - 1}
+          isLast={currentIndex === totalSentences - 1}
+          hasScore={scorePct != null}
+          onPrev={() => goToSentence(currentIndex - 1)}
+          onNext={handleNext}
+        />
       </View>
 
       {/* 5. UPGRADE PRO MODAL */}

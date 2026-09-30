@@ -851,7 +851,6 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
         dialect={phonemeLesson?.dialect || practiceDialect}
         onUsageUpdated={(u) => useBillingStore.getState().setUsage(u)}
         sessionKey={phonemeLesson?.sessionKey}
-        autoRecordKey={phonemeLesson?.sessionKey}
         lessonTitle={phonemeLesson?.title}
         userTier={userTier}
         userKey={userKey}

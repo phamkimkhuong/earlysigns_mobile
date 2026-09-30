@@ -39,7 +39,8 @@ export const billingApi = {
   },
 
   /**
-   * Verify native StoreKit / Google Play In-App Purchase
+   * @deprecated RevenueCat tự động xác thực biên lai trực tiếp với Apple StoreKit & Google Play Billing,
+   * sau đó đồng bộ quyền lợi qua RevenueCat Webhook về Backend. Client không cần gọi hàm này nữa.
    */
   async verifyIap(productId: string, platform: string, transactionId: string): Promise<any> {
     const data = await httpClient.post(API_ENDPOINTS.BILLING.IAP_VERIFY, {
@@ -54,7 +55,8 @@ export const billingApi = {
   },
 
   /**
-   * Restore In-App Purchases from native store
+   * @deprecated Khôi phục In-App Purchases hiện do RevenueCat (Purchases.restorePurchases) đảm nhiệm
+   * trực tiếp với Store. Client không cần gửi request lên endpoint này nữa.
    */
   async restoreIap(platform: string): Promise<any> {
     const data = await httpClient.post(API_ENDPOINTS.BILLING.IAP_RESTORE, { platform });

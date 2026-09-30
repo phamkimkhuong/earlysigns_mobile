@@ -11,10 +11,14 @@ import {
   lessonKeys,
 } from "@/hooks/queries/useLessonQueries";
 import { useBillingUsageQuery } from "@/hooks/queries/useBillingQueries";
-import { progressKeys } from "@/hooks/queries/useProgressQueries";
+import { progressKeys, useProgressSoundsQuery } from "@/hooks/queries/useProgressQueries";
 import type { Dialect, LessonSession } from "@/types/domain";
 import { getFriendlyErrorMessage } from "@/utils/localizedError";
-import { SCREENING_SENTENCE_COUNT } from "@/utils/screeningSession";
+
+const safeUseProgressSoundsQuery =
+  typeof useProgressSoundsQuery === "function"
+    ? useProgressSoundsQuery
+    : () => ({ data: [] } as any);
 
 export function usePhonemesViewModel(navigation: any) {
   const { t, i18n } = useTranslation();
@@ -29,9 +33,11 @@ export function usePhonemesViewModel(navigation: any) {
   } = useAuth();
   const dialect: Dialect = userDialect || "uk";
 
-  // TanStack Query: Home summary & Billing usage
+  // TanStack Query: Home summary, Billing usage & 44 sounds progress
   const summaryQuery = useHomeSummaryQuery(dialect, Boolean(authToken && !authLoading));
   useBillingUsageQuery(Boolean(authToken && !authLoading));
+  const soundsProgressQuery = safeUseProgressSoundsQuery(dialect, Boolean(authToken && !authLoading));
+  const soundRecords = soundsProgressQuery?.data || [];
 
   const homeSummary = authToken ? summaryQuery.data : null;
   const usageStatus = useBillingStore((s) => s.usage);
@@ -95,38 +101,11 @@ export function usePhonemesViewModel(navigation: any) {
   const startScreeningTest = useCallback(async () => {
     if (startingRef.current) return;
     if (!authToken) {
-      navigation.navigate("Login", { next: "Phonemes" });
+      navigation.navigate("Login", { next: "Screening" });
       return;
     }
-    startingRef.current = true;
-    setScreeningLoading(true);
-    setScreeningError("");
-    try {
-      const data = await lessonApi.getScreeningSentences(dialect);
-      const sentences = Array.isArray(data?.sentences) ? data.sentences : [];
-      if (sentences.length !== SCREENING_SENTENCE_COUNT || sentences.some((sentence: any) => typeof sentence?.text !== "string" || !sentence.text.trim())) {
-        setScreeningError(t("screeningPractice.unavailable"));
-        return;
-      }
-      lessonKindRef.current = "screening";
-      setLessonSession({
-        kind: "screening",
-        phoneme: null,
-        phonemes: [],
-        dialect: data?.dialect || dialect,
-        sentences,
-        title: t("screening.banner"),
-        instructionsHtml: "",
-      });
-      setLessonSessionKey((k) => k + 1);
-      setLessonMode("screening");
-    } catch (e) {
-      setScreeningError(getFriendlyErrorMessage(e, t("phonemesHome.startError"), i18n.language.startsWith("vi") ? "vi" : "en"));
-    } finally {
-      startingRef.current = false;
-      setScreeningLoading(false);
-    }
-  }, [authToken, dialect, navigation, t, i18n.language]);
+    (navigation as any).navigate("Screening", { dialect });
+  }, [authToken, dialect, navigation]);
 
   const startPhoneme = useCallback(async (phoneme: string) => {
     if (startingRef.current) return;
@@ -134,12 +113,14 @@ export function usePhonemesViewModel(navigation: any) {
       navigation.navigate("Login", { next: "Phonemes" });
       return;
     }
+    const cleanPhoneme = String(phoneme || "").replace(/^\/+|\/+$/g, "").trim();
+    if (!cleanPhoneme) return;
     startingRef.current = true;
     setPhonemeLoading(phoneme);
     setLessonError("");
     try {
-      const data = await lessonApi.getPhonemeLesson(phoneme, dialect, true);
-      const session = buildLessonSession("phoneme", data, { phoneme, dialect }, t, i18n.language);
+      const data = await lessonApi.getPhonemeLesson(cleanPhoneme, dialect, true);
+      const session = buildLessonSession("phoneme", data, { phoneme: cleanPhoneme, dialect }, t, i18n.language);
       if (!session) {
         setLessonError(t("lesson.empty"));
         return;
@@ -244,6 +225,50 @@ export function usePhonemesViewModel(navigation: any) {
         return true;
       });
   }, [homeSummary]);
+  const dailyMissionPhonemes = useMemo(() => {
+    if (Array.isArray(homeSummary?.daily_mission_phonemes)) {
+      return homeSummary.daily_mission_phonemes
+        .map((s: any) => String(s || "").trim().replace(/^\/+|\/+$/g, ""))
+        .filter(Boolean);
+    }
+    return [];
+  }, [homeSummary]);
+
+  const soundsAccuracyMap = useMemo(() => {
+    const map = new Map<string, { accuracyPct: number; checksCount: number }>();
+    (soundRecords || []).forEach((r: any) => {
+      const soundKey = r?.sound || r?.phoneme || r?.ipa;
+      if (soundKey) {
+        const clean = String(soundKey).replace(/^\/+|\/+$/g, "").trim().toLowerCase();
+        const rawAcc = r.accuracy ?? r.accuracy_score ?? r.score;
+        if (rawAcc != null && Number.isFinite(Number(rawAcc))) {
+          const num = Number(rawAcc);
+          const accuracyPct = num > 1 ? Math.round(num) : Math.round(num * 100);
+          map.set(clean, {
+            accuracyPct,
+            checksCount: Number(r.checks_count ?? r.count ?? 1),
+          });
+        }
+      }
+    });
+    // Merge from weakest_phonemes in homeSummary
+    const weakList = Array.isArray(homeSummary?.weakest_phonemes) ? homeSummary.weakest_phonemes : [];
+    weakList.forEach((item: any) => {
+      if (item?.sound) {
+        const clean = String(item.sound).replace(/^\/+|\/+$/g, "").trim().toLowerCase();
+        if (!map.has(clean) && item.accuracy != null && Number.isFinite(Number(item.accuracy))) {
+          const num = Number(item.accuracy);
+          const accuracyPct = num > 1 ? Math.round(num) : Math.round(num * 100);
+          map.set(clean, {
+            accuracyPct,
+            checksCount: 1,
+          });
+        }
+      }
+    });
+    return map;
+  }, [soundRecords, homeSummary]);
+
   const journey = journeyLessonProgress || homeSummary?.journey || null;
 
   return {
@@ -258,6 +283,8 @@ export function usePhonemesViewModel(navigation: any) {
     screeningLoading,
     startScreeningTest,
     homeSummary,
+    dailyMissionPhonemes,
+    soundsAccuracyMap,
     journey,
     lessonLoading,
     lessonError,

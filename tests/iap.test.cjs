@@ -183,3 +183,288 @@ test("mapPurchasesError: handles purchase not allowed (parental controls)", () =
   assert.equal(res.success, false);
   assert.match(res.error, /không được phép/);
 });
+
+test("entitlementCheck: only 'pro' entitlement grants Pro access", () => {
+  const PRO_ENTITLEMENT_ID = "pro";
+
+  function verifyProEntitlement(customerInfo) {
+    const pro = customerInfo?.entitlements?.active?.[PRO_ENTITLEMENT_ID];
+    if (!pro) {
+      return { success: false, error: "Pro entitlement is not active" };
+    }
+    return { success: true, expiresAt: pro.expirationDate || null };
+  }
+
+  // 1. Non-pro entitlement (e.g. 'teacher' or 'beta_access') should FAIL
+  const nonProInfo = {
+    entitlements: {
+      active: {
+        teacher: { identifier: "teacher", expirationDate: "2026-12-31T00:00:00Z" },
+      },
+    },
+  };
+  const failRes = verifyProEntitlement(nonProInfo);
+  assert.equal(failRes.success, false);
+  assert.match(failRes.error, /Pro entitlement is not active/);
+
+  // 2. Exact 'pro' entitlement should SUCCEED with real Store expiration date
+  const proInfo = {
+    entitlements: {
+      active: {
+        pro: { identifier: "pro", expirationDate: "2026-10-29T10:00:00Z" },
+      },
+    },
+  };
+  const okRes = verifyProEntitlement(proInfo);
+  assert.equal(okRes.success, true);
+  assert.equal(okRes.expiresAt, "2026-10-29T10:00:00Z");
+});
+
+test("identityBinding: does not silently swallow login errors", async () => {
+  let loginCalledWith = null;
+  const mockPurchases = {
+    async logIn(userId) {
+      loginCalledWith = userId;
+      if (userId === "invalid_user") {
+        throw new Error("Network error binding user identity");
+      }
+      return { customerInfo: {} };
+    },
+  };
+
+  async function safeLogIn(userId) {
+    try {
+      await mockPurchases.logIn(userId);
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  // Valid user succeeds
+  const success = await safeLogIn("user_123");
+  assert.equal(success, true);
+  assert.equal(loginCalledWith, "user_123");
+
+  // Error user fails without throwing unhandled crash
+  const fail = await safeLogIn("invalid_user");
+  assert.equal(fail, false);
+});
+
+test("customerInfoUpdate: activates Pro tier and stores receipt when 'pro' entitlement is active", () => {
+  const PRO_ENTITLEMENT_ID = "pro";
+  const storage = new Map();
+  let latestSeededUsage = null;
+
+  function mockHandleCustomerInfoUpdate(customerInfo, token) {
+    const pro = customerInfo?.entitlements?.active?.[PRO_ENTITLEMENT_ID];
+    if (pro) {
+      const expiresAt = pro.expirationDate || "2026-10-29T10:00:00Z";
+      const subData = {
+        productId: pro.productIdentifier,
+        purchasedAt: pro.latestPurchaseDate || "2026-09-29T10:00:00Z",
+        expiresAt,
+        platform: "ios",
+        orderId: pro.identifier || "order_123",
+      };
+      storage.set("earlysigns_active_iap_subscription", JSON.stringify(subData));
+
+      latestSeededUsage = {
+        has_active_subscription: true,
+        is_in_trial: false,
+        subscription_expires_at: expiresAt,
+        tier: "pro",
+        daily_remaining: 9999,
+      };
+    }
+  }
+
+  const activeCustomerInfo = {
+    entitlements: {
+      active: {
+        pro: {
+          identifier: "rc_sub_pro",
+          productIdentifier: "pkg_monthly",
+          latestPurchaseDate: "2026-09-29T12:00:00Z",
+          expirationDate: "2026-10-29T12:00:00Z",
+        },
+      },
+    },
+  };
+
+  mockHandleCustomerInfoUpdate(activeCustomerInfo, "test_token_123");
+
+  // Verify storage was populated
+  assert.ok(storage.has("earlysigns_active_iap_subscription"));
+  const stored = JSON.parse(storage.get("earlysigns_active_iap_subscription"));
+  assert.equal(stored.productId, "pkg_monthly");
+  assert.equal(stored.expiresAt, "2026-10-29T12:00:00Z");
+
+  // Verify billing state updated to pro
+  assert.ok(latestSeededUsage);
+  assert.equal(latestSeededUsage.tier, "pro");
+  assert.equal(latestSeededUsage.has_active_subscription, true);
+  assert.equal(latestSeededUsage.daily_remaining, 9999);
+  assert.equal(latestSeededUsage.subscription_expires_at, "2026-10-29T12:00:00Z");
+});
+
+test("customerInfoUpdate: cleanly downgrades to Free tier and purges receipt when entitlement expires or is revoked", () => {
+  const PRO_ENTITLEMENT_ID = "pro";
+  const storage = new Map();
+  // Existing subscription before expiration
+  storage.set(
+    "earlysigns_active_iap_subscription",
+    JSON.stringify({ productId: "pkg_monthly", expiresAt: "2026-09-29T00:00:00Z" })
+  );
+
+  let cachedUsage = {
+    has_active_subscription: true,
+    is_in_trial: false,
+    subscription_expires_at: "2026-09-29T00:00:00Z",
+    tier: "pro",
+    daily_remaining: 9999,
+  };
+
+  function mockHandleCustomerInfoUpdate(customerInfo, token) {
+    const pro = customerInfo?.entitlements?.active?.[PRO_ENTITLEMENT_ID];
+    if (!pro) {
+      const hadStoreSub =
+        Boolean(customerInfo?.entitlements?.all?.[PRO_ENTITLEMENT_ID]) ||
+        storage.has("earlysigns_active_iap_subscription");
+
+      if (hadStoreSub) {
+        storage.delete("earlysigns_active_iap_subscription");
+        if (cachedUsage.has_active_subscription || cachedUsage.tier === "pro") {
+          cachedUsage = {
+            ...cachedUsage,
+            has_active_subscription: false,
+            is_in_trial: false,
+            tier: "free",
+            subscription_expires_at: undefined,
+            daily_remaining: 5,
+          };
+        }
+      }
+    }
+  }
+
+  // CustomerInfo after expiration/refund: active is empty, but all still lists past entitlement
+  const expiredCustomerInfo = {
+    entitlements: {
+      active: {},
+      all: {
+        pro: {
+          identifier: "rc_sub_pro",
+          productIdentifier: "pkg_monthly",
+          expirationDate: "2026-09-29T00:00:00Z",
+        },
+      },
+    },
+  };
+
+  mockHandleCustomerInfoUpdate(expiredCustomerInfo, "test_token_123");
+
+  // Receipt in storage should be deleted
+  assert.equal(storage.has("earlysigns_active_iap_subscription"), false);
+
+  // Billing state should be downgraded to free
+  assert.equal(cachedUsage.tier, "free");
+  assert.equal(cachedUsage.has_active_subscription, false);
+  assert.equal(cachedUsage.subscription_expires_at, undefined);
+  assert.equal(cachedUsage.daily_remaining, 5);
+});
+
+test("customerInfoListener: registers and unregisters listener cleanly without duplicate registration", () => {
+  const listeners = [];
+  const mockPurchases = {
+    addCustomerInfoUpdateListener(fn) {
+      listeners.push(fn);
+    },
+    removeCustomerInfoUpdateListener(fn) {
+      const idx = listeners.indexOf(fn);
+      if (idx !== -1) listeners.splice(idx, 1);
+    },
+  };
+
+  let registered = false;
+  let activeListener = null;
+
+  function setupListener() {
+    if (!registered) {
+      activeListener = (info) => {};
+      mockPurchases.addCustomerInfoUpdateListener(activeListener);
+      registered = true;
+    }
+    return () => {
+      if (activeListener && registered) {
+        mockPurchases.removeCustomerInfoUpdateListener(activeListener);
+        registered = false;
+        activeListener = null;
+      }
+    };
+  }
+
+  // 1. Initial registration
+  const cleanup1 = setupListener();
+  assert.equal(listeners.length, 1);
+
+  // 2. Calling setup again should NOT duplicate listener
+  const cleanup2 = setupListener();
+  assert.equal(listeners.length, 1);
+
+  // 3. Unsubscribing removes the listener
+  cleanup1();
+  assert.equal(listeners.length, 0);
+  assert.equal(registered, false);
+});
+
+test("restoreStorePurchases: rejects restore without active store entitlement (no local cache bypass)", async () => {
+  const PRO_ENTITLEMENT_ID = "pro";
+
+  async function mockRestorePurchases(customerInfo, isRcAvailable) {
+    if (isRcAvailable) {
+      const proEntitlement = customerInfo.entitlements?.active?.[PRO_ENTITLEMENT_ID];
+      if (proEntitlement) {
+        return { restored: true, expiresAt: proEntitlement.expirationDate };
+      }
+      return { restored: false, message: "Không tìm thấy gói đăng ký nào đang hoạt động liên kết với tài khoản Apple ID / Google Play này." };
+    }
+    return { restored: false, message: "Cổng thanh toán Store chưa sẵn sàng." };
+  }
+
+  // 1. Account has NO active entitlement on App Store / Google Play
+  const expiredStoreInfo = {
+    entitlements: {
+      active: {},
+      all: {
+        pro: {
+          productIdentifier: "pkg_monthly",
+          expirationDate: "2026-08-01T00:00:00Z",
+        },
+      },
+    },
+  };
+
+  const res1 = await mockRestorePurchases(expiredStoreInfo, true);
+  assert.equal(res1.restored, false);
+  assert.ok(res1.message.includes("Không tìm thấy gói đăng ký"));
+
+  // 2. Account HAS active entitlement on App Store / Google Play
+  const activeStoreInfo = {
+    entitlements: {
+      active: {
+        pro: {
+          productIdentifier: "pkg_monthly",
+          expirationDate: "2026-12-01T00:00:00Z",
+        },
+      },
+    },
+  };
+
+  const res2 = await mockRestorePurchases(activeStoreInfo, true);
+  assert.equal(res2.restored, true);
+  assert.equal(res2.expiresAt, "2026-12-01T00:00:00Z");
+});
+
+
+

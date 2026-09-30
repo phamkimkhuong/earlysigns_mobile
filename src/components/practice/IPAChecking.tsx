@@ -9,10 +9,9 @@ import {
 import { createAudioPlayer } from "expo-audio";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
-import { ChevronLeft, ChevronRight, Crown, Mic, MicOff, Play, Volume2 } from "lucide-react-native";
+import { ChevronLeft } from "lucide-react-native";
 import { usePronunciationCheck } from "@/hooks/usePronunciationCheck";
 import { buildSoundAnalysisRows } from "@/utils/pronunciationAnalysis";
-import { checkResultScoreColor } from "@/utils/checkResultScoreColor";
 import { isQuotaExhausted } from "@/services/usageLimits";
 import { stripHtml } from "@/utils/errors";
 import { hapticFeedback } from "@/utils/haptics";
@@ -20,9 +19,9 @@ import { setItem } from "@/services/storage";
 import { safeNavigate } from "@/navigation/nav";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import UpgradeProModal from "@/components/ui/UpgradeProModal";
-import ScoreWords from "./ScoreWords";
-import SoundAnalysis from "./SoundAnalysis";
-import StagedAiProgress from "./StagedAiProgress";
+import PracticePromptCard from "./PracticePromptCard";
+import PracticeFeedbackCard from "./PracticeFeedbackCard";
+import SpeechRecordingDock from "./SpeechRecordingDock";
 import type { Dialect, SentenceCheckResult, UserTier } from "@/types/domain";
 
 const LOW_SCORE_THRESHOLD = 0.4;
@@ -77,6 +76,7 @@ export interface IPACheckingProps {
   onScreeningFinished?: () => void;
   onRequestSampleAudio?: (sentence: IPASentence) => Promise<string | null>;
   onRequestSentenceWords?: (sentence: IPASentence) => Promise<any[]>;
+  asModal?: boolean;
 }
 
 export default function IPAChecking({
@@ -104,6 +104,7 @@ export default function IPAChecking({
   onScreeningFinished,
   onRequestSampleAudio,
   onRequestSentenceWords,
+  asModal = true,
 }: IPACheckingProps) {
   const isScreening = mode === "screening";
   const { t, i18n } = useTranslation();
@@ -117,9 +118,12 @@ export default function IPAChecking({
   const [samplePlaying, setSamplePlaying] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeFeatureKey, setUpgradeFeatureKey] = useState<"generic" | "sampleAudio">("sampleAudio");
+  const [replayPlaying, setReplayPlaying] = useState(false);
+  const sampleAudioUrlsRef = useRef<Record<string, string>>({});
   const halfFiredRef = useRef(false);
   const allFiredRef = useRef(false);
   const sampleSoundRef = useRef<any>(null);
+  const replayTimeoutRef = useRef<any>(null);
 
   const {
     isRecording,
@@ -142,11 +146,26 @@ export default function IPAChecking({
     isScreening,
   });
 
+  const handleReplayVoice = async () => {
+    if (replayPlaying) return;
+    try {
+      setReplayPlaying(true);
+      await replayRecording();
+      if (replayTimeoutRef.current) clearTimeout(replayTimeoutRef.current);
+      replayTimeoutRef.current = setTimeout(() => {
+        setReplayPlaying(false);
+      }, 3000);
+    } catch {
+      setReplayPlaying(false);
+    }
+  };
+
   useEffect(() => {
     setCurrentIndex(0);
     setResultsByIndex({});
     setShowDetails(false);
     setInstructionsDismissed(!instructionsHtml);
+    setReplayPlaying(false);
     halfFiredRef.current = false;
     allFiredRef.current = false;
     clearResult();
@@ -157,6 +176,9 @@ export default function IPAChecking({
       if (sampleSoundRef.current) {
         try { sampleSoundRef.current.remove(); } catch { /* ignore */ }
         sampleSoundRef.current = null;
+      }
+      if (replayTimeoutRef.current) {
+        clearTimeout(replayTimeoutRef.current);
       }
     };
   }, []);
@@ -199,8 +221,6 @@ export default function IPAChecking({
 
   const isProOrTrial = userTier === "pro" || userTier === "trial";
   const hasPreloadedAudio = Boolean(currentSentence?.audio_url);
-  const canPlaySampleAudio = isProOrTrial || hasPreloadedAudio;
-
   const storedResult: SentenceCheckResult | null = resultsByIndex[currentIndex] || result;
   const sentenceScore01 = useMemo(() => {
     const n = Number(storedResult?.accuracy);
@@ -260,9 +280,13 @@ export default function IPAChecking({
     }
     try {
       setSamplePlaying(true);
-      const url = currentSentence.audio_url || (await onRequestSampleAudio?.(currentSentence));
+      const sentenceKey = sentenceWordsKey(currentSentence);
+      const cachedUrl = sampleAudioUrlsRef.current[sentenceKey];
+      const url = currentSentence.audio_url || cachedUrl || (await onRequestSampleAudio?.(currentSentence));
       if (!url) { setSamplePlaying(false); return; }
-      currentSentence.audio_url = url;
+      if (!currentSentence.audio_url) {
+        sampleAudioUrlsRef.current[sentenceKey] = url;
+      }
       if (sampleSoundRef.current) {
         try { sampleSoundRef.current.remove(); } catch { /* ignore */ }
         sampleSoundRef.current = null;
@@ -304,27 +328,9 @@ export default function IPAChecking({
   if (!open) return null;
 
   const totalSentences = sentences?.length || 1;
-  const scoreColor = scorePct != null ? checkResultScoreColor(sentenceScore01) : "#4f46e5";
 
-  const scoreBandLabel = (() => {
-    if (scorePct == null) return null;
-    if (scorePct >= 80) return "Xuat sac!";
-    if (scorePct >= 60) return "Kha tot";
-    if (scorePct >= 40) return "Can co gang hon";
-    return "Hay thu lai";
-  })();
-
-  const micLabel = isStarting
-    ? t("videos.practice.startingMic")
-    : isRecording
-      ? t("sentence.stopRecording")
-      : checking
-        ? t("sentence.checking")
-        : t("sentence.startRecording");
-
-  return (
-    <Modal visible={open} animationType="slide" onRequestClose={onClose}>
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#f8fafc" }}>
+  const content = (
+    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: "#f8fafc" }}>
 
         {/* HEADER */}
         <View
@@ -341,18 +347,18 @@ export default function IPAChecking({
           <Pressable
             accessible
             accessibilityRole="button"
-            accessibilityLabel={t("common.close", "Dong bai hoc")}
+            accessibilityLabel={t("common.back", "Quay lại")}
             onPress={onClose}
             style={({ pressed }) => ({
-              width: 36,
-              height: 36,
-              borderRadius: 18,
+              width: 38,
+              height: 38,
+              borderRadius: 19,
               backgroundColor: pressed ? "#f1f5f9" : "#f8fafc",
               alignItems: "center",
               justifyContent: "center",
             })}
           >
-            <Text style={{ fontSize: 18, color: "#64748b", lineHeight: 22 }}>x</Text>
+            <ChevronLeft size={22} color="#334155" />
           </Pressable>
 
           <View style={{ flex: 1, marginHorizontal: 12 }}>
@@ -363,7 +369,7 @@ export default function IPAChecking({
               {lessonTitle || t("sentence.current", { current: currentIndex + 1, total: totalSentences })}
             </Text>
             {journeyData?.current_module != null ? (
-              <Text style={{ fontSize: 12, color: "#64748b", marginTop: 1 }}>
+              <Text style={{ fontSize: 13, fontWeight: "500", color: "#64748b", marginTop: 2 }}>
                 {t("home.journey.moduleOf", {
                   current: journeyData.current_module,
                   total: journeyData.total_modules || journeyData.current_module,
@@ -372,7 +378,7 @@ export default function IPAChecking({
             ) : null}
           </View>
 
-          <View style={{ backgroundColor: "#4f46e5", borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 }}>
+          <View style={{ backgroundColor: "#0284c7", borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 }}>
             <Text style={{ fontSize: 13, fontWeight: "700", color: "#ffffff" }}>
               {currentIndex + 1}/{totalSentences}
             </Text>
@@ -437,201 +443,35 @@ export default function IPAChecking({
             </View>
           ) : (
             <>
-              {/* Sentence Card */}
-              <View
-                style={{
-                  backgroundColor: "#ffffff",
-                  borderRadius: 20,
-                  padding: 20,
-                  borderWidth: 1,
-                  borderColor: "rgba(15,23,42,0.08)",
-                  gap: 14,
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.04,
-                  shadowRadius: 8,
-                  elevation: 2,
-                }}
-              >
-                {currentSentence?.text ? (
-                  <Text
-                    style={{
-                      fontSize: 22,
-                      fontWeight: "700",
-                      color: "#0f172a",
-                      lineHeight: 32,
-                      textAlign: "center",
-                    }}
-                  >
-                    {currentSentence.text}
-                  </Text>
-                ) : null}
+              {/* Unified Practice Prompt Card */}
+              <PracticePromptCard
+                text={currentSentence?.text}
+                words={displayWords}
+                alignment={storedResult?.char_alignment}
+                showResultDetails={showResultDetails}
+                loadingIpa={!displayWords.some((w: any) => w.ipa)}
+                onPlaySample={
+                  onRequestSampleAudio || currentSentence?.audio_url
+                    ? handleSample
+                    : undefined
+                }
+                samplePlaying={samplePlaying}
+              />
 
-                <View style={{ alignItems: "center" }}>
-                  <ScoreWords
-                    words={displayWords}
-                    alignment={storedResult?.char_alignment}
-                    showResultDetails={showResultDetails}
-                    loadingIpa={!displayWords.some((w: any) => w.ipa)}
-                  />
-                </View>
-
-                {onRequestSampleAudio || currentSentence?.audio_url ? (
-                  <Pressable
-                    onPress={samplePlaying ? undefined : handleSample}
-                    style={({ pressed }) => ({
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 8,
-                      paddingVertical: 10,
-                      paddingHorizontal: 16,
-                      borderRadius: 10,
-                      borderWidth: 1,
-                      borderColor: "rgba(79,70,229,0.25)",
-                      backgroundColor: pressed ? "#ede9fe" : "#f5f3ff",
-                      opacity: samplePlaying ? 0.7 : 1,
-                    })}
-                  >
-                    <Volume2 size={16} color="#4f46e5" />
-                    <Text style={{ fontSize: 14, fontWeight: "600", color: "#4f46e5" }}>
-                      {samplePlaying ? "Đang phát..." : t("sentence.listenToSample")}
-                    </Text>
-                    {!canPlaySampleAudio ? (
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          gap: 3,
-                          paddingHorizontal: 6,
-                          paddingVertical: 2,
-                          borderRadius: 6,
-                          backgroundColor: "#fef3c7",
-                          borderWidth: 1,
-                          borderColor: "#fde68a",
-                          flexShrink: 0,
-                        }}
-                      >
-                        <Crown size={12} color="#b45309" />
-                        <Text
-                          numberOfLines={1}
-                          style={{
-                            fontSize: 12,
-                            fontWeight: "800",
-                            color: "#92400e",
-                          }}
-                        >
-                          PRO
-                        </Text>
-                      </View>
-                    ) : null}
-                  </Pressable>
-                ) : null}
-              </View>
-
-              {/* AI Progress */}
-              {checking ? <StagedAiProgress active={checking} variant="card" /> : null}
-
-              {/* Score Result Card */}
-              {showResultDetails && scorePct != null ? (
-                <View
-                  style={{
-                    backgroundColor: "#ffffff",
-                    borderRadius: 20,
-                    padding: 20,
-                    borderWidth: 1,
-                    borderColor: scoreColor + "40",
-                    alignItems: "center",
-                    gap: 12,
-                    shadowColor: scoreColor,
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 10,
-                    elevation: 3,
-                  }}
-                >
-                  {/* Score ring */}
-                  <View
-                    style={{
-                      width: 120,
-                      height: 120,
-                      borderRadius: 60,
-                      borderWidth: 8,
-                      borderColor: scoreColor + "30",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <View
-                      style={{
-                        width: 100,
-                        height: 100,
-                        borderRadius: 50,
-                        backgroundColor: scoreColor + "15",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <Text style={{ fontSize: 34, fontWeight: "900", color: scoreColor, lineHeight: 38 }}>
-                        {scorePct}
-                      </Text>
-                      <Text style={{ fontSize: 12, fontWeight: "700", color: scoreColor }}>%</Text>
-                    </View>
-                  </View>
-
-                  {scoreBandLabel ? (
-                    <Text style={{ fontSize: 16, fontWeight: "700", color: "#334155" }}>
-                      {scoreBandLabel}
-                    </Text>
-                  ) : null}
-
-                  <Pressable
-                    onPress={replayRecording}
-                    style={({ pressed }) => ({
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 6,
-                      paddingVertical: 8,
-                      paddingHorizontal: 16,
-                      borderRadius: 10,
-                      backgroundColor: pressed ? "#f1f5f9" : "#f8fafc",
-                      borderWidth: 1,
-                      borderColor: "rgba(15,23,42,0.1)",
-                    })}
-                  >
-                    <Play size={14} color="#475569" />
-                    <Text style={{ fontSize: 13, fontWeight: "600", color: "#475569" }}>
-                      {t("sentence.listenToRecording")}
-                    </Text>
-                  </Pressable>
-
-                  {showDetails ? (
-                    <SoundAnalysis
-                      rows={soundRows}
-                      words={displayWords}
-                      onPracticePhoneme={onPracticePhoneme}
-                      practicePhonemeLoading={practicePhonemeLoading}
-                      disabled={isRecording || checking}
-                    />
-                  ) : (
-                    <Pressable
-                      onPress={() => setShowDetails(true)}
-                      style={({ pressed }) => ({
-                        paddingVertical: 10,
-                        paddingHorizontal: 20,
-                        borderRadius: 10,
-                        backgroundColor: pressed ? "#f1f5f9" : "#f8fafc",
-                        borderWidth: 1,
-                        borderColor: "rgba(15,23,42,0.1)",
-                      })}
-                    >
-                      <Text style={{ fontSize: 13, fontWeight: "600", color: "#475569" }}>
-                        {t("result.soundAnalysis.viewDetails")}
-                      </Text>
-                    </Pressable>
-                  )}
-                </View>
-              ) : null}
+              {/* Unified Practice Feedback Card */}
+              <PracticeFeedbackCard
+                scorePct={scorePct}
+                checking={checking}
+                replayPlaying={replayPlaying}
+                onReplayVoice={handleReplayVoice}
+                showDetails={showDetails}
+                onToggleDetails={() => setShowDetails((v) => !v)}
+                soundRows={soundRows}
+                words={displayWords}
+                onPracticePhoneme={onPracticePhoneme}
+                practicePhonemeLoading={practicePhonemeLoading}
+                isRecording={isRecording}
+              />
 
               {/* Low Score Card */}
               {showTryAgain ? (
@@ -691,175 +531,37 @@ export default function IPAChecking({
           )}
         </ScrollView>
 
-        {/* BOTTOM ACTION BAR */}
+        {/* BOTTOM ACTION BAR (Unified SpeechRecordingDock with 25s auto-stop & ripple waves) */}
         {(!instructionsHtml || instructionsDismissed) ? (
-          <View
-            style={{
-              backgroundColor: "#ffffff",
-              borderTopWidth: 1,
-              borderTopColor: "rgba(15,23,42,0.07)",
-              paddingHorizontal: 20,
-              paddingVertical: 16,
-              paddingBottom: 8,
-              gap: 12,
+          <SpeechRecordingDock
+            isRecording={isRecording}
+            isStarting={isStarting}
+            checking={checking}
+            disabled={!currentSentence?.text || nextLessonLoading}
+            onRecordToggle={handleRecordToggle}
+            maxSeconds={25}
+            hasPrev={currentIndex > 0}
+            hasNext={currentIndex < totalSentences - 1 || showNextLessonBtn}
+            isLast={currentIndex >= totalSentences - 1}
+            hasScore={scorePct != null}
+            onPrev={() => {
+              setCurrentIndex((v) => Math.max(0, v - 1));
+              setShowDetails(false);
+              clearResult();
             }}
-          >
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-              {/* Prev */}
-              <Pressable
-                onPress={() => {
-                  setCurrentIndex((v) => Math.max(0, v - 1));
-                  setShowDetails(false);
-                  clearResult();
-                }}
-                disabled={currentIndex === 0 || isRecording || checking}
-                accessible
-                accessibilityRole="button"
-                accessibilityLabel={t("sentence.previous")}
-                style={({ pressed }) => ({
-                  width: 48,
-                  height: 48,
-                  borderRadius: 24,
-                  backgroundColor: pressed ? "#e2e8f0" : "#f8fafc",
-                  borderWidth: 1,
-                  borderColor: "rgba(15,23,42,0.1)",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  opacity: currentIndex === 0 || isRecording || checking ? 0.35 : 1,
-                })}
-              >
-                <ChevronLeft size={22} color="#475569" />
-              </Pressable>
-
-              {/* Mic hero */}
-              <View style={{ alignItems: "center", gap: 6 }}>
-                <Pressable
-                  onPress={isStarting || checking || !currentSentence?.text ? undefined : handleRecordToggle}
-                  disabled={isStarting || checking || !currentSentence?.text}
-                  accessible
-                  accessibilityRole="button"
-                  style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
-                >
-                  <View
-                    style={{
-                      width: 88,
-                      height: 88,
-                      borderRadius: 44,
-                      backgroundColor: isRecording ? "rgba(239,68,68,0.12)" : "rgba(79,70,229,0.1)",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <View
-                      style={{
-                        width: 68,
-                        height: 68,
-                        borderRadius: 34,
-                        backgroundColor:
-                          isStarting || checking || !currentSentence?.text
-                            ? "#cbd5e1"
-                            : isRecording
-                              ? "#ef4444"
-                              : "#4f46e5",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        shadowColor: isRecording ? "#ef4444" : "#4f46e5",
-                        shadowOffset: { width: 0, height: 4 },
-                        shadowOpacity: 0.35,
-                        shadowRadius: 10,
-                        elevation: 8,
-                      }}
-                    >
-                      {isRecording
-                        ? <MicOff size={28} color="#ffffff" />
-                        : <Mic size={28} color="#ffffff" />}
-                    </View>
-                  </View>
-                </Pressable>
-                <Text style={{ fontSize: 12, fontWeight: "600", color: "#64748b" }} numberOfLines={1}>
-                  {micLabel}
-                </Text>
-              </View>
-
-              {/* Next */}
-              {showNextLessonBtn ? (
-                <Pressable
-                  onPress={async () => {
-                    setNextLessonLoading(true);
-                    try { await loadNextLesson?.(); }
-                    finally { setNextLessonLoading(false); }
-                  }}
-                  disabled={nextLessonLoading}
-                  accessible
-                  accessibilityRole="button"
-                  style={({ pressed }) => ({
-                    width: 48,
-                    height: 48,
-                    borderRadius: 24,
-                    backgroundColor: pressed ? "#4338ca" : "#4f46e5",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    opacity: nextLessonLoading ? 0.7 : 1,
-                    shadowColor: "#4f46e5",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 6,
-                    elevation: 4,
-                  })}
-                >
-                  <ChevronRight size={22} color="#ffffff" />
-                </Pressable>
-              ) : (
-                <Pressable
-                  onPress={() => {
-                    setCurrentIndex((v) => Math.min(sentences.length - 1, v + 1));
-                    setShowDetails(false);
-                    clearResult();
-                  }}
-                  disabled={currentIndex >= sentences.length - 1 || isRecording || checking}
-                  accessible
-                  accessibilityRole="button"
-                  accessibilityLabel={t("sentence.next")}
-                  style={({ pressed }) => ({
-                    width: 48,
-                    height: 48,
-                    borderRadius: 24,
-                    backgroundColor: pressed ? "#e2e8f0" : "#f8fafc",
-                    borderWidth: 1,
-                    borderColor: "rgba(15,23,42,0.1)",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    opacity: currentIndex >= sentences.length - 1 || isRecording || checking ? 0.35 : 1,
-                  })}
-                >
-                  <ChevronRight size={22} color="#475569" />
-                </Pressable>
-              )}
-            </View>
-
-            {/* Retry shortcut */}
-            {showTryAgain ? (
-              <Pressable
-                onPress={handleRecordToggle}
-                style={({ pressed }) => ({
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 6,
-                  paddingVertical: 10,
-                  borderRadius: 12,
-                  backgroundColor: pressed ? "#ede9fe" : "#f5f3ff",
-                  borderWidth: 1,
-                  borderColor: "rgba(79,70,229,0.2)",
-                })}
-              >
-                <Text style={{ fontSize: 14, fontWeight: "700", color: "#4f46e5" }}>
-                  {t("sentence.tryAgainCheckFailed")}
-                </Text>
-              </Pressable>
-            ) : null}
-          </View>
+            onNext={() => {
+              if (showNextLessonBtn) {
+                setNextLessonLoading(true);
+                void loadNextLesson?.().finally(() => setNextLessonLoading(false));
+              } else if (currentIndex < totalSentences - 1) {
+                setCurrentIndex((v) => v + 1);
+                setShowDetails(false);
+                clearResult();
+              }
+            }}
+          />
         ) : null}
+
 
         <UpgradeProModal
           open={showUpgradeModal}
@@ -872,6 +574,15 @@ export default function IPAChecking({
           }}
         />
       </SafeAreaView>
+  );
+
+  if (asModal === false) {
+    return content;
+  }
+
+  return (
+    <Modal visible={open} animationType="slide" onRequestClose={onClose}>
+      {content}
     </Modal>
   );
 }
