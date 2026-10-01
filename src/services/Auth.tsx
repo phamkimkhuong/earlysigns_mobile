@@ -24,6 +24,7 @@ import {
 } from "./storage";
 import { useAuthStore } from "@/store/useAuthStore";
 import { logger } from "@/core/logger";
+import { getOrCreateDeviceId } from "@/utils/deviceId";
 import type { Dialect } from "@/types/domain";
 
 export const AUTH_TOKEN_KEY = "earlysigns_auth_token";
@@ -71,17 +72,6 @@ function normalizeDialect(_value?: unknown): Dialect {
 
 function normalizeLanguage(value: unknown): string {
   return String(value || "vi").toLowerCase().startsWith("vi") ? "vi" : "en";
-}
-
-function getOrCreateDeviceId(): string {
-  const existing = getItem(DEVICE_ID_KEY);
-  if (existing && existing.length >= 8) return existing;
-  const generated =
-    typeof crypto !== "undefined" && crypto.randomUUID
-      ? crypto.randomUUID()
-      : `dev-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-  setItem(DEVICE_ID_KEY, generated);
-  return generated;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -245,6 +235,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch {
         /* Home still works without screening gate */
       }
+      import("@/services/notifications")
+        .then(({ syncPushTokenWithBackend }) => syncPushTokenWithBackend())
+        .catch(() => {});
     },
     [deviceId, persistDialect, persistLanguage]
   );
@@ -374,6 +367,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const handleLogout = useCallback(async (): Promise<void> => {
     try {
+      if (deviceId) {
+        import("@/api/notificationApi")
+          .then(({ notificationApi }) => notificationApi.unregisterDevice(deviceId))
+          .catch(() => {});
+      }
       if (authToken) {
         await appAuthFetch(API_ENDPOINTS.AUTH.LOGOUT, { method: "POST" });
       }
@@ -382,7 +380,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       clearAuthState();
     }
-  }, [authToken, appAuthFetch, clearAuthState]);
+  }, [authToken, appAuthFetch, clearAuthState, deviceId]);
 
   const value = useMemo<AuthContextType>(
     () => ({

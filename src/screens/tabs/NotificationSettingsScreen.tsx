@@ -28,9 +28,12 @@ import {
   openNotificationSettings,
   requestNotificationPermission,
   saveNotificationSettings,
+  syncPushTokenWithBackend,
   PermissionStatus,
   type NotificationSettings,
 } from "@/services/notifications";
+import { notificationApi } from "@/api/notificationApi";
+import { useAuthStore } from "@/store/useAuthStore";
 import { showToast } from "@/utils/toast";
 import { customAlert } from "@/utils/customAlert";
 
@@ -73,6 +76,24 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
           };
           setSettings(synced);
           await saveNotificationSettings(synced);
+        }
+      } else if (useAuthStore.getState().isAuthenticated) {
+        // Đồng bộ preferences từ server nếu đã đăng nhập và có quyền
+        try {
+          const res = await notificationApi.getPreferences();
+          if (res?.preferences) {
+            setSettings((prev) => {
+              const updated: NotificationSettings = {
+                ...prev,
+                contentUpdatesEnabled: res.preferences.content_updates_enabled,
+                promotionsEnabled: res.preferences.promotions_enabled,
+              };
+              saveNotificationSettings(updated);
+              return updated;
+            });
+          }
+        } catch {
+          // Bỏ qua lỗi mạng khi lấy preferences remote
         }
       }
     };
@@ -209,6 +230,13 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
     const next: NotificationSettings = { ...settings, contentUpdatesEnabled: val };
     setSettings(next);
     await saveNotificationSettings(next);
+
+    if (useAuthStore.getState().isAuthenticated) {
+      notificationApi.updatePreferences({ content_updates_enabled: val }).catch(() => { });
+      if (val) {
+        syncPushTokenWithBackend().catch(() => { });
+      }
+    }
   }
 
   async function handleTogglePromotions(val: boolean) {
@@ -219,6 +247,13 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
     const next: NotificationSettings = { ...settings, promotionsEnabled: val };
     setSettings(next);
     await saveNotificationSettings(next);
+
+    if (useAuthStore.getState().isAuthenticated) {
+      notificationApi.updatePreferences({ promotions_enabled: val }).catch(() => { });
+      if (val) {
+        syncPushTokenWithBackend().catch(() => { });
+      }
+    }
   }
 
   return (

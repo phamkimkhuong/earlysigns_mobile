@@ -14,7 +14,12 @@ import { setupProductionConsoleGuard } from "@/core/logger";
 import { AuthProvider } from "@/services/Auth";
 import { getStoredLanguage, initI18n } from "@/core/i18n";
 import { getItem, hydrateStorage } from "@/services/storage";
-import { initNotifications, setupNotificationResponseListener } from "@/services/notifications";
+import {
+  initNotifications,
+  setupNotificationResponseListener,
+  setupPushTokenRefreshListener,
+  syncPushTokenWithBackend,
+} from "@/services/notifications";
 import { initRevenueCat } from "@/services/iap";
 import { NavigationContainer } from "@react-navigation/native";
 import { navigationRef } from "@/navigation/nav";
@@ -46,6 +51,7 @@ export default function App() {
   useEffect(() => {
     let cancelled = false;
     let cleanupNotifListener = () => {};
+    let cleanupRefreshListener = () => {};
 
     (async () => {
       try {
@@ -54,6 +60,8 @@ export default function App() {
         await initI18n(stored === "en" ? "en" : "vi");
         initNotifications();
         cleanupNotifListener = setupNotificationResponseListener();
+        cleanupRefreshListener = setupPushTokenRefreshListener();
+        syncPushTokenWithBackend().catch(() => {});
         const savedUserId = getItem("earlysigns_auth_user_id") || undefined;
         initRevenueCat(savedUserId).catch(() => {});
       } catch {
@@ -68,6 +76,7 @@ export default function App() {
     return () => {
       cancelled = true;
       cleanupNotifListener();
+      cleanupRefreshListener();
     };
   }, []);
 

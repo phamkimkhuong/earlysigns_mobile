@@ -1,9 +1,11 @@
 import { AppState, Linking, Platform } from "react-native";
+import Constants from "expo-constants";
 import {
   setNotificationHandler,
   setNotificationChannelAsync,
   AndroidImportance,
   getExpoPushTokenAsync,
+  addPushTokenListener,
 } from "expo-notifications";
 import {
   getPermissionsAsync,
@@ -23,9 +25,10 @@ import {
 } from "expo-notifications/build/Notifications.types";
 import { getItem, setItem } from "./storage";
 import { navigationRef, safeNavigate } from "@/navigation/nav";
-import { useAuthStore } from "@/store/useAuthStore";
+import { useAuthStore, AUTH_TOKEN_KEY } from "@/store/useAuthStore";
 import { showToast } from "@/utils/toast";
 import { customAlert } from "@/utils/customAlert";
+import { logger } from "@/core/logger";
 import i18n from "@/core/i18n";
 
 export { PermissionStatus };
@@ -108,11 +111,23 @@ export function initNotifications(): void {
     }
     handlerInitialized = true;
   } catch (err) {
-    console.warn("Failed to set notification handler:", err);
+    logger.warn("Notifications", "Failed to set notification handler:", err);
   }
 }
 
 const isNativeMobile = Platform.OS === "android" || Platform.OS === "ios";
+
+/**
+ * Safely obtain EAS Project ID from runtime configuration or environment variables.
+ * Never hardcodes project ID in code to ensure portability when transferring projects.
+ */
+export function getEasProjectId(): string | undefined {
+  return (
+    process.env.EXPO_PUBLIC_EAS_PROJECT_ID ||
+    Constants?.expoConfig?.extra?.eas?.projectId ||
+    Constants?.easConfig?.projectId
+  );
+}
 
 /**
  * Register for remote push notifications and obtain device token for backend
@@ -123,11 +138,137 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
   try {
     const perm = await requestNotificationPermission();
     if (!perm.granted) return null;
-    const tokenResult = await getExpoPushTokenAsync();
+
+    const projectId = getEasProjectId();
+    if (!projectId) {
+      logger.warn("Notifications", "EAS projectId is not configured in app.json or environment.");
+      return null;
+    }
+
+    const tokenResult = await getExpoPushTokenAsync({ projectId });
     return tokenResult?.data || null;
   } catch (err) {
-    console.warn("Error getting push token:", err);
+    logger.warn("Notifications", "Error getting push token:", err);
     return null;
+  }
+}
+
+/**
+ * Setup listener for push token rotation / refresh
+ * Converts native DevicePushToken (FCM/APNs) to ExpoPushToken before notifying callback
+ */
+export function setupPushTokenRefreshListener(
+  onTokenRefresh?: (expoToken: string) => Promise<void> | void
+): () => void {
+  if (!isNativeMobile) return () => {};
+  try {
+    const subscription = addPushTokenListener(async (devicePushToken) => {
+      try {
+        const projectId = getEasProjectId();
+        if (!projectId) {
+          logger.warn("Notifications", "EAS projectId is missing during token refresh.");
+          return;
+        }
+
+        const tokenResult = await getExpoPushTokenAsync({
+          projectId,
+          devicePushToken,
+        });
+        const expoToken = tokenResult?.data;
+        if (!expoToken) return;
+
+        if (onTokenRefresh) {
+          await onTokenRefresh(expoToken);
+        }
+
+        // Tự động gửi token mới lên backend nếu người dùng đang đăng nhập
+        const authToken = getItem(AUTH_TOKEN_KEY);
+        if (authToken) {
+          const { notificationApi } = await import("@/api/notificationApi");
+          await notificationApi.registerDevice({
+            expo_push_token: expoToken,
+          });
+          logger.info("Notifications", "Refreshed Expo push token successfully synced to backend.");
+        }
+      } catch (err) {
+        logger.warn("Notifications", "Failed to refresh Expo push token:", err);
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  } catch (err) {
+    logger.warn("Notifications", "Failed to setup push token refresh listener:", err);
+    return () => {};
+  }
+}
+
+/**
+ * Đồng bộ hóa Expo Push Token và thông tin thiết bị với Backend EarlySigns.
+ *
+ * Tiêu chí kích hoạt:
+ * 1. Chỉ chạy trên thiết bị Native (iOS/Android).
+ * 2. Người dùng đã đăng nhập (có auth token).
+ * 3. Quyền thông báo đã được cấp (Permission Granted).
+ * 4. Nếu Server trả về `preferences`, tự động cập nhật local storage để đảm bảo tính đồng bộ 2 chiều.
+ */
+export async function syncPushTokenWithBackend(): Promise<{
+  success: boolean;
+  token?: string | null;
+  preferences?: {
+    content_updates_enabled: boolean;
+    promotions_enabled: boolean;
+  };
+}> {
+  if (!isNativeMobile) {
+    return { success: false };
+  }
+
+  const authToken = getItem(AUTH_TOKEN_KEY);
+  if (!authToken) {
+    logger.debug("Notifications", "Bỏ qua đồng bộ push token: Người dùng chưa đăng nhập.");
+    return { success: false };
+  }
+
+  const perm = await getNotificationPermissionStatus();
+  if (!perm.granted) {
+    logger.debug("Notifications", "Bỏ qua đồng bộ push token: Chưa được cấp quyền thông báo.");
+    return { success: false };
+  }
+
+  const token = await registerForPushNotificationsAsync();
+  if (!token) {
+    logger.warn("Notifications", "Không lấy được Expo push token để gửi lên backend.");
+    return { success: false };
+  }
+
+  try {
+    const { notificationApi } = await import("@/api/notificationApi");
+    const res = await notificationApi.registerDevice({
+      expo_push_token: token,
+    });
+
+    if (res?.preferences) {
+      await saveNotificationSettings({
+        contentUpdatesEnabled: res.preferences.content_updates_enabled,
+        promotionsEnabled: res.preferences.promotions_enabled,
+      });
+    }
+
+    logger.info(
+      "Notifications",
+      `Đã đồng bộ push token thành công với backend cho thiết bị: ${res?.device_id}`
+    );
+
+    return {
+      success: true,
+      token,
+      preferences: res?.preferences,
+    };
+  } catch (err) {
+    logger.warn("Notifications", "Lỗi khi đồng bộ push token với backend:", err);
+    return { success: false, token };
   }
 }
 
@@ -256,7 +397,7 @@ export async function scheduleDailyStudyReminder(hour: number, minute: number): 
     });
     return true;
   } catch (err) {
-    console.warn("Failed to schedule daily reminder:", err);
+    logger.warn("Notifications", "Failed to schedule daily reminder:", err);
     return false;
   }
 }
@@ -358,7 +499,7 @@ export async function scheduleIncompleteLessonReminder(params: {
     });
     return true;
   } catch (err) {
-    console.warn("Failed to schedule incomplete lesson reminder:", err);
+    logger.warn("Notifications", "Failed to schedule incomplete lesson reminder:", err);
     return false;
   }
 }
@@ -421,7 +562,7 @@ export async function scheduleStreakReminder(hour: number = 21, minute: number =
     });
     return true;
   } catch (err) {
-    console.warn("Failed to schedule streak reminder:", err);
+    logger.warn("Notifications", "Failed to schedule streak reminder:", err);
     return false;
   }
 }
@@ -607,7 +748,7 @@ export function setupNotificationResponseListener(): () => void {
       }, 600);
     }
   } catch (err) {
-    console.warn("Failed to check last notification response:", err);
+    logger.warn("Notifications", "Failed to check last notification response:", err);
   }
 
   // Foreground / background notification tap listener
@@ -619,7 +760,7 @@ export function setupNotificationResponseListener(): () => void {
       subscription.remove();
     };
   } catch (err) {
-    console.warn("Failed to register notification response listener:", err);
+    logger.warn("Notifications", "Failed to register notification response listener:", err);
     return () => {};
   }
 }

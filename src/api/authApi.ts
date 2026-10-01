@@ -41,6 +41,9 @@ export const authApi = {
         email: data.email || email,
         userId: data.user_id || "",
       });
+      import("@/services/notifications")
+        .then(({ syncPushTokenWithBackend }) => syncPushTokenWithBackend())
+        .catch(() => {});
     }
     return data;
   },
@@ -70,6 +73,9 @@ export const authApi = {
         email: data.email,
         userId: data.user_id,
       });
+      import("@/services/notifications")
+        .then(({ syncPushTokenWithBackend }) => syncPushTokenWithBackend())
+        .catch(() => {});
     }
     return data;
   },
@@ -92,6 +98,9 @@ export const authApi = {
         email: data.email || payload.email,
         userId: data.user_id || payload.user,
       });
+      import("@/services/notifications")
+        .then(({ syncPushTokenWithBackend }) => syncPushTokenWithBackend())
+        .catch(() => {});
     }
     return data;
   },
@@ -118,6 +127,11 @@ export const authApi = {
    */
   async logout(): Promise<void> {
     try {
+      const deviceId = useAuthStore.getState().deviceId;
+      if (deviceId) {
+        const { notificationApi } = await import("./notificationApi");
+        await notificationApi.unregisterDevice(deviceId).catch(() => {});
+      }
       await httpClient.post(API_ENDPOINTS.AUTH.LOGOUT, {}).catch(() => {});
     } finally {
       useAuthStore.getState().logout();

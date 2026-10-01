@@ -192,3 +192,29 @@ export function handleNotificationResponse(_response: any): void {
 export function setupNotificationResponseListener(): () => void {
   return () => {};
 }
+
+export function getEasProjectId(): string | undefined {
+  return undefined;
+}
+
+export async function registerForPushNotificationsAsync(): Promise<string | null> {
+  return null;
+}
+
+export function setupPushTokenRefreshListener(
+  _onTokenRefresh?: (expoToken: string) => Promise<void> | void
+): () => void {
+  return () => {};
+}
+
+export async function syncPushTokenWithBackend(): Promise<{
+  success: boolean;
+  token?: string | null;
+  preferences?: {
+    content_updates_enabled: boolean;
+    promotions_enabled: boolean;
+  };
+}> {
+  return { success: false };
+}
+

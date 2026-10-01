@@ -5,3 +5,4 @@ export * from "./lessonApi";
 export * from "./videoApi";
 export * from "./textPracticeApi";
 export * from "./progressApi";
+export * from "./notificationApi";

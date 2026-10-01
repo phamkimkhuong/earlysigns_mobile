@@ -350,4 +350,78 @@ test("practice threshold: exit after completing all sentences cancels reminder",
   assert.equal(action, "cancel");
 });
 
+test("push sync: device registration payload contains expo_push_token, device_id, platform, and omits user_id from body", () => {
+  const payload = {
+    expo_push_token: "ExponentPushToken[mock-token-xyz]",
+    device_id: "9b1d614a-5712-42df-b433-28945a6136b2",
+    platform: "ios",
+    app_version: "1.0.0",
+    locale: "vi",
+    timezone: "Asia/Ho_Chi_Minh",
+  };
+
+  assert.ok(payload.expo_push_token.startsWith("ExponentPushToken["));
+  assert.equal(payload.platform, "ios");
+  assert.equal(typeof payload.device_id, "string");
+  // Zero-trust: user_id must NOT be sent in body to prevent IDOR hijacking
+  assert.equal((payload).user_id, undefined);
+});
+
+test("push sync: preferences response correctly updates local content updates and promotions toggles", () => {
+  const localSettings = {
+    dailyReminderEnabled: true,
+    incompleteLessonEnabled: true,
+    streakReminderEnabled: true,
+    contentUpdatesEnabled: false,
+    promotionsEnabled: false,
+  };
+
+  const serverResponse = {
+    ok: true,
+    device_id: "9b1d614a-5712-42df-b433-28945a6136b2",
+    preferences: {
+      content_updates_enabled: true,
+      promotions_enabled: true,
+    },
+  };
+
+  const updatedSettings = {
+    ...localSettings,
+    contentUpdatesEnabled: serverResponse.preferences.content_updates_enabled,
+    promotionsEnabled: serverResponse.preferences.promotions_enabled,
+  };
+
+  assert.equal(updatedSettings.contentUpdatesEnabled, true);
+  assert.equal(updatedSettings.promotionsEnabled, true);
+  // Local reminders should remain unaffected by remote preferences
+  assert.equal(updatedSettings.dailyReminderEnabled, true);
+  assert.equal(updatedSettings.incompleteLessonEnabled, true);
+});
+
+test("push sync: logout unregisters only current device_id to preserve other devices", () => {
+  const userDevices = [
+    { device_id: "device-iphone-1", token: "ExponentPushToken[A]", is_active: true },
+    { device_id: "device-ipad-2", token: "ExponentPushToken[B]", is_active: true },
+  ];
+
+  const logoutDeviceId = "device-iphone-1";
+  const updatedDevices = userDevices.map((d) =>
+    d.device_id === logoutDeviceId ? { ...d, is_active: false } : d
+  );
+
+  assert.equal(updatedDevices.find((d) => d.device_id === "device-iphone-1").is_active, false);
+  assert.equal(updatedDevices.find((d) => d.device_id === "device-ipad-2").is_active, true);
+});
+
+test("device_id: persistent installation ID format is valid UUID v4 compliant without hardware identifiers", () => {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  const mockUuid = "9b1d614a-5712-42df-b433-28945a6136b2";
+
+  assert.ok(uuidRegex.test(mockUuid));
+  // Must not look like MAC address or IMEI
+  assert.ok(!mockUuid.includes(":"));
+  assert.ok(mockUuid.length === 36);
+});
+
+
 

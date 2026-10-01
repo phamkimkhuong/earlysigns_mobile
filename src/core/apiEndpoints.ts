@@ -177,6 +177,19 @@ export const API_ENDPOINTS = {
   // ===========================================================================
   /** [POST] Gửi báo cáo log crash hoặc sự cố mạng bất thường về server để kịp thời giám sát */
   ERROR_REPORT: "/api/error-report/",
+
+  // ===========================================================================
+  // 11. Push Notifications & Remote Devices (Thông báo từ xa & Quản lý thiết bị)
+  // ===========================================================================
+  NOTIFICATIONS: {
+    /** [POST] Đăng ký hoặc cập nhật thiết bị nhận push notifications kèm preferences */
+    DEVICES: "/api/notifications/devices",
+    /** [PUT/GET] Đồng bộ hoặc lấy tùy chọn thông báo remote của tài khoản */
+    PREFERENCES: "/api/notifications/preferences",
+    /** [DELETE] Hủy đăng ký thiết bị nhận push khi đăng xuất */
+    UNREGISTER_DEVICE: (deviceId: string) =>
+      `/api/notifications/devices/${encodeURIComponent(deviceId)}`,
+  },
 } as const;
 
 export default API_ENDPOINTS;
