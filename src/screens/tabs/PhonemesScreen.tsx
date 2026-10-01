@@ -82,7 +82,7 @@ export default function PhonemesScreen({ navigation, route }: NativeStackScreenP
   }, [navigation, route.params?.startLesson, route.params?.startScreening, startPersonalizedLesson, dialect]);
 
   const filteredCatalog = useMemo(() => ALL_44_IPA_SOUNDS.filter(item => selectedCategory === "all" || item.category === selectedCategory), [selectedCategory]);
-  const openCatalog = () => navigation.push("Phonemes", { view: "catalog" });
+  const openCatalog = () => navigation.navigate("PhonemeCatalog", { dialect });
 
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-[#0a2644]">

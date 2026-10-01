@@ -9,6 +9,7 @@ export type RootStackParamList = {
   Videos: undefined;
   Text: { entry?: "input" | "ocr" } | undefined;
   Phonemes: { startLesson?: boolean; startScreening?: boolean; view?: "catalog" } | undefined;
+  PhonemeCatalog: { dialect?: string } | undefined;
   Screening: { dialect?: string } | undefined;
   Journey: undefined;
   JourneyLesson: { dialect?: string; lessonTitle?: string } | undefined;

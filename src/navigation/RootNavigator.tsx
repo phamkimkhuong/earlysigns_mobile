@@ -12,6 +12,7 @@ import {
   VideosScreen,
   TextPracticeScreen,
   PhonemesScreen,
+  PhonemeCatalogScreen,
   JourneyScreen,
   JourneyLessonScreen,
   PhonemePracticeScreen,
@@ -108,6 +109,11 @@ export default function RootNavigator() {
       <Stack.Screen name="Videos" component={VideosScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Text" component={TextPracticeScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Phonemes" component={PhonemesScreen} options={{ headerShown: false }} />
+      <Stack.Screen
+        name="PhonemeCatalog"
+        component={PhonemeCatalogScreen}
+        options={{ headerShown: false }}
+      />
       <Stack.Screen name="Journey" component={JourneyScreen} options={{ headerShown: false }} />
       <Stack.Screen
         name="JourneyLesson"

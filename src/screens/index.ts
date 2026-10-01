@@ -12,6 +12,7 @@ export { default as VideoPracticeScreen } from "./practice/VideoPracticeScreen";
 export { default as SentencePracticeScreen } from "./practice/SentencePracticeScreen";
 export { default as JourneyLessonScreen } from "./practice/JourneyLessonScreen";
 export { default as PhonemePracticeScreen } from "./practice/PhonemePracticeScreen";
+export { default as PhonemeCatalogScreen } from "./practice/PhonemeCatalogScreen";
 export { default as ScreeningScreen } from "./practice/ScreeningScreen";
 
 // Auth & Onboarding Flow

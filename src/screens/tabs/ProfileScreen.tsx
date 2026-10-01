@@ -930,7 +930,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                     </Text>
                     <TouchableOpacity
                       activeOpacity={0.75}
-                      onPress={() => handleNavigate("Phonemes", { view: "catalog" })}
+                      onPress={() => handleNavigate("PhonemeCatalog")}
                       className="flex-row items-center gap-0.5 shrink-0"
                       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                     >

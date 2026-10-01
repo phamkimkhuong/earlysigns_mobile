@@ -118,7 +118,10 @@ export function useJourneyViewModel(navigation?: any) {
   const journey = homeSummary?.journey || null;
   const streakDays = Number(homeSummary?.streak_days ?? 0);
   const displayJourney = journeyLessonProgress || journey;
-  const items = displayJourney ? buildItems(displayJourney.milestones) : [];
+  const items = useMemo(
+    () => (displayJourney ? buildItems(displayJourney.milestones) : []),
+    [displayJourney]
+  );
 
   return {
     t,
