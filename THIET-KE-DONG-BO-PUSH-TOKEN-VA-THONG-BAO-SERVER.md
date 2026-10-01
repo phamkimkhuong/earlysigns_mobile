@@ -472,3 +472,165 @@ Mã nguồn cần đi kèm cấu hình chứng chỉ Store trên Expo Applicatio
 
 *Tài liệu này là căn cứ kỹ thuật chính thức, chuẩn hóa và thống nhất 100% giữa đội ngũ Mobile App và Backend Service của EarlySigns.*
 
+---
+
+## Phụ lục: Hướng Dẫn Lấy `google-services.json` & Cấu Hình FCM V1 Cho EarlySigns
+
+### Tổng Quan
+
+```
+Mobile App → ExpoPushToken → EarlySigns Backend → Expo Push API → FCM V1 → Android Device
+```
+
+Bạn cần tạo Firebase Project + lấy 2 thứ:
+
+1. `google-services.json` → đặt vào repo mobile
+2. **FCM V1 Server Key** (Service Account JSON) → cấu hình trên Expo Dashboard
+
+---
+
+### Bước 1: Tạo Firebase Project
+
+1. Truy cập [Firebase Console](https://console.firebase.google.com/)
+2. Click **"Add project"** (hoặc "Thêm dự án")
+3. Đặt tên: `EarlySigns` (hoặc tên bạn muốn)
+4. Google Analytics: Bật hoặc tắt đều được (không ảnh hưởng push)
+5. Click **"Create project"** → Chờ tạo xong
+
+---
+
+### Bước 2: Thêm Android App vào Firebase Project
+
+1. Trong Firebase Console → click icon **Android** (🤖) để thêm app
+2. Điền thông tin:
+
+| Field | Giá trị |
+| :--- | :--- |
+| **Android package name** | `net.earlysigns.android` |
+| **App nickname** | `EarlySigns Android` (tùy chọn) |
+| **Debug signing certificate SHA-1** | Bỏ trống (thêm sau nếu cần) |
+
+> [!IMPORTANT]
+> Package name **BẮT BUỘC** phải khớp chính xác với `"package": "net.earlysigns.android"` trong `app.json`.
+
+3. Click **"Register app"**
+
+---
+
+### Bước 3: Tải `google-services.json`
+
+1. Sau khi đăng ký app, Firebase sẽ hiển thị nút **"Download google-services.json"**
+2. Click tải về
+3. Đặt file vào thư mục gốc của project mobile:
+
+```
+mobile_app/
+├── google-services.json   ← ĐẶT Ở ĐÂY
+├── app.json
+├── App.tsx
+├── package.json
+└── ...
+```
+
+4. Skip các bước tiếp theo trong wizard Firebase (Add Firebase SDK, v.v.) vì Expo đã xử lý
+
+---
+
+### Bước 4: Cấu Hình `app.json`
+
+Thêm `googleServicesFile` vào block `android`:
+
+```diff
+ "android": {
+   "package": "net.earlysigns.android",
++  "googleServicesFile": "./google-services.json",
+   "adaptiveIcon": {
+```
+
+> [!WARNING]
+> Đừng commit `google-services.json` vào public repo! File này chứa API key. Thêm vào `.gitignore` nếu repo là public.
+
+---
+
+### Bước 5: Cấu Hình FCM V1 trên Expo Dashboard (BẮT BUỘC)
+
+Expo Push Service cần **FCM V1 Server Key** để gửi push đến Android qua FCM.
+
+#### 5.1: Tạo Service Account Key từ Google Cloud
+
+1. Vào **Firebase Console** → ⚙️ **Project Settings** → tab **"Service accounts"**
+2. Click **"Generate new private key"**
+3. Xác nhận → Tải file JSON về (ví dụ: `earlysigns-firebase-adminsdk-xxxxx.json`)
+
+> [!CAUTION]
+> File Service Account JSON này là **BÍ MẬT TUYỆT ĐỐI**.
+> - KHÔNG commit vào repo
+> - KHÔNG chia sẻ công khai
+> - Chỉ upload lên Expo Dashboard
+
+#### 5.2: Upload lên Expo Dashboard
+
+1. Truy cập [Expo Dashboard](https://expo.dev/) → Login
+2. Vào project **EarlySigns** → **Credentials** → **Android**
+3. Tìm mục **"FCM V1 Service Account Key"**
+4. Click **"Upload"** → Chọn file JSON vừa tải ở bước 5.1
+5. Expo sẽ tự động dùng key này khi gửi push qua `exp.host/--/api/v2/push/send`
+
+#### 5.3: Xác minh trên Expo Dashboard
+
+Sau khi upload, dashboard sẽ hiển thị:
+
+```
+FCM V1 Service Account Key: ✅ Configured
+```
+
+---
+
+### Bước 6: Rebuild EAS Development Build
+
+Sau khi thêm `google-services.json` và cập nhật `app.json`, bạn cần build lại:
+
+```bash
+# Development build (để test)
+eas build --platform android --profile development
+
+# Hoặc preview build
+eas build --platform android --profile preview
+```
+
+> [!NOTE]
+> `expo start` (Expo Go) **KHÔNG hỗ trợ** push notifications thực. Bạn **BẮT BUỘC** phải dùng EAS Development Build hoặc Production Build để test push.
+
+---
+
+### Bước 7: Test Push Notification
+
+**Dùng Expo Push Tool:**
+
+1. Truy cập [Expo Push Notification Tool](https://expo.dev/notifications)
+2. Nhập `ExpoPushToken` của thiết bị (xem trong log app khi boot)
+3. Điền title + body → Send
+4. Thiết bị Android sẽ nhận được push notification
+
+**Dùng cURL:**
+
+```bash
+curl -X POST https://exp.host/--/api/v2/push/send \
+  -H "Content-Type: application/json" \
+  -d '{
+    "to": "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]",
+    "title": "EarlySigns Test",
+    "body": "Push notification hoạt động!",
+    "data": { "type": "DAILY_PRACTICE", "targetRoute": "Main" }
+  }'
+```
+
+---
+
+### iOS (Bonus — nếu cần sau)
+
+iOS dùng **APNs** (Apple Push Notification service), không cần Firebase. Expo tự xử lý nếu bạn đã có:
+
+- Apple Developer Account
+- APNs Key (`.p8`) upload lên Expo Dashboard → **Credentials** → **iOS** → **Push Key**
+- Hoặc chạy `eas credentials` để Expo tự tạo/quản lý.
