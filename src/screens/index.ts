@@ -5,13 +5,13 @@ export { default as TextPracticeScreen } from "./tabs/TextPracticeScreen";
 export { default as PhonemesScreen } from "./tabs/PhonemesScreen";
 export { default as JourneyScreen } from "./tabs/JourneyScreen";
 export { default as ProfileScreen } from "./tabs/ProfileScreen";
-export { default as PronunciationProfileScreen } from "./tabs/PronunciationProfileScreen";
 export { default as NotificationSettingsScreen } from "./tabs/NotificationSettingsScreen";
 
 // Practice Flow
 export { default as VideoPracticeScreen } from "./practice/VideoPracticeScreen";
 export { default as SentencePracticeScreen } from "./practice/SentencePracticeScreen";
 export { default as JourneyLessonScreen } from "./practice/JourneyLessonScreen";
+export { default as PhonemePracticeScreen } from "./practice/PhonemePracticeScreen";
 export { default as ScreeningScreen } from "./practice/ScreeningScreen";
 
 // Auth & Onboarding Flow

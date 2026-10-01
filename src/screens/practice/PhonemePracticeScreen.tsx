@@ -12,22 +12,31 @@ import { useBillingStore } from "@/store/useBillingStore";
 import { buildLessonSession } from "@/utils/lessons";
 import { lessonApi, textPracticeApi } from "@/api";
 import { lessonKeys } from "@/hooks/queries/useLessonQueries";
-import { billingKeys, useBillingUsageQuery } from "@/hooks/queries/useBillingQueries";
-import IPAChecking, { type IPASentence } from "@/components/practice/IPAChecking";
+import { progressKeys } from "@/hooks/queries/useProgressQueries";
+import { useBillingUsageQuery } from "@/hooks/queries/useBillingQueries";
+import IPAChecking from "@/components/practice/IPAChecking";
 import { PracticeScreenSkeleton } from "@/components/ui/Skeleton";
+import { getIpaSoundMeta } from "@/utils/ipaData";
+import { getFriendlyErrorMessage } from "@/utils/localizedError";
 import type { Dialect, LessonSession } from "@/types/domain";
 
-type Props = NativeStackScreenProps<RootStackParamList, "JourneyLesson">;
+type Props = NativeStackScreenProps<RootStackParamList, "PhonemePractice">;
 
-export default function JourneyLessonScreen({ navigation, route }: Props) {
+export default function PhonemePracticeScreen({ navigation, route }: Props) {
   const { t, i18n } = useTranslation();
   const { authToken, authEmail, userDialect } = useAuth();
   const dialect: Dialect = (route.params?.dialect as Dialect) || userDialect || "uk";
   const queryClient = useQueryClient();
 
+  const rawPhoneme = route.params?.phoneme || "";
+  const cleanPhoneme = useMemo(
+    () => String(rawPhoneme).replace(/^\/+|\/+$/g, "").trim(),
+    [rawPhoneme]
+  );
+  const soundMeta = useMemo(() => getIpaSoundMeta(cleanPhoneme), [cleanPhoneme]);
+
   const { data: usageData } = useBillingUsageQuery(Boolean(authToken));
   const storeUsage = useBillingStore((s) => s.usage);
-  const storeHomeSummary = useBillingStore((s) => s.homeSummary);
   const usageStatus = usageData || storeUsage;
 
   const userTier = useMemo(
@@ -39,6 +48,7 @@ export default function JourneyLessonScreen({ navigation, route }: Props) {
       }),
     [authToken, usageStatus]
   );
+
   const userKey = useMemo(
     () => resolveUserKey({ authToken, authEmail }),
     [authToken, authEmail]
@@ -49,34 +59,63 @@ export default function JourneyLessonScreen({ navigation, route }: Props) {
   const [lessonSession, setLessonSession] = useState<LessonSession | null>(null);
   const [sessionKey, setSessionKey] = useState(0);
 
+  const displayTitle = useMemo(() => {
+    if (!cleanPhoneme) return t("lesson.practiceSound", "Luyện phát âm");
+    return t("lesson.titlePhoneme", { phoneme: `/${cleanPhoneme}/` }) || `Luyện âm /${cleanPhoneme}/`;
+  }, [cleanPhoneme, t]);
+
   const fetchLesson = useCallback(async () => {
+    if (!cleanPhoneme) {
+      setError(t("lesson.empty", "Chưa có bài học khả dụng"));
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
-      const data = await lessonApi.getPersonalizedLesson(dialect, false);
-      const session = buildLessonSession("personalized", data, { dialect }, t, i18n.language);
+      const data = await lessonApi.getPhonemeLesson(cleanPhoneme, dialect, true);
+      const session = buildLessonSession(
+        "phoneme",
+        data,
+        { phoneme: cleanPhoneme, dialect },
+        t,
+        i18n.language
+      );
       if (!session || !session.sentences?.length) {
-        setError(t("lesson.empty", "Chưa có bài học khả dụng"));
+        setError(t("lesson.empty", "Chưa có bài học khả dụng cho âm này"));
         return;
       }
       setLessonSession(session);
       setSessionKey((k) => k + 1);
     } catch (err: any) {
-      setError(String(err?.message || err));
+      setError(
+        getFriendlyErrorMessage(
+          err,
+          t("phonemesHome.startError", "Không thể bắt đầu bài học"),
+          i18n.language.startsWith("vi") ? "vi" : "en"
+        )
+      );
     } finally {
       setLoading(false);
     }
-  }, [dialect, i18n.language, t]);
+  }, [cleanPhoneme, dialect, i18n.language, t]);
 
   useEffect(() => {
     void fetchLesson();
   }, [fetchLesson]);
 
   const loadNextLesson = useCallback(async () => {
+    if (!cleanPhoneme) return;
     try {
-      await lessonApi.markPracticed(lessonSession?.phonemes || []).catch(() => {});
-      const data = await lessonApi.getPersonalizedLesson(lessonSession?.dialect || dialect, false);
-      const nextSession = buildLessonSession("personalized", data, { dialect }, t, i18n.language);
+      await lessonApi.markPracticed([cleanPhoneme]).catch(() => {});
+      const data = await lessonApi.getPhonemeLesson(cleanPhoneme, dialect, true);
+      const nextSession = buildLessonSession(
+        "phoneme",
+        data,
+        { phoneme: cleanPhoneme, dialect },
+        t,
+        i18n.language
+      );
       if (nextSession) {
         setLessonSession(nextSession);
         setSessionKey((k) => k + 1);
@@ -84,56 +123,44 @@ export default function JourneyLessonScreen({ navigation, route }: Props) {
     } catch (err: any) {
       setError(String(err?.message || err));
     }
-  }, [dialect, lessonSession, t, i18n.language]);
+  }, [cleanPhoneme, dialect, i18n.language, t]);
 
   const handleLessonAllCompleted = useCallback(async () => {
+    if (!cleanPhoneme) return;
     try {
-      await lessonApi.completeJourney();
+      await lessonApi.markPracticed([cleanPhoneme]).catch(() => {});
     } catch {
       /* ignore offline */
     }
     await Promise.all([
-      queryClient.invalidateQueries({ queryKey: lessonKeys.all }),
-      queryClient.invalidateQueries({ queryKey: billingKeys.all }),
+      queryClient.invalidateQueries({ queryKey: lessonKeys.homeSummary(dialect) }),
+      queryClient.invalidateQueries({ queryKey: progressKeys.sounds(dialect) }),
+      queryClient.invalidateQueries({ queryKey: progressKeys.all }),
     ]);
-  }, [queryClient]);
-
-  const handlePracticePhoneme = useCallback(
-    (sound: string) => {
-      navigation.navigate("PhonemePractice", { phoneme: sound, dialect });
-    },
-    [dialect, navigation]
-  );
+  }, [cleanPhoneme, dialect, queryClient]);
 
   const requestSentenceWords = useCallback(
-    async (sentence: IPASentence) => {
-      try {
-        return await textPracticeApi.getIpaWords(sentence.text, dialect);
-      } catch {
-        return [];
-      }
+    async (sentence: any) => {
+      return textPracticeApi.getIpaWords(sentence.text, dialect);
     },
     [dialect]
   );
 
-  const lessonTitle = route.params?.lessonTitle;
-  const phonemes = lessonSession?.phonemes;
-  const displayTitle = useMemo(() => {
-    const baseTitle = lessonTitle || t("journeyPage.lessonTitle", "Bài học lộ trình");
-    if (phonemes && phonemes.length > 0) {
-      return `${baseTitle} · ${phonemes.map((p) => `/${p}/`).join(" ")}`;
-    }
-    return baseTitle;
-  }, [lessonTitle, phonemes, t]);
+  const handlePracticeAnotherPhoneme = useCallback(
+    (sound: string) => {
+      const target = String(sound || "").replace(/^\/+|\/+$/g, "").trim();
+      if (target) {
+        navigation.push("PhonemePractice", { phoneme: target, dialect });
+      }
+    },
+    [dialect, navigation]
+  );
 
-  const currentModule = storeHomeSummary?.journey?.current_module;
-  const totalModules = storeHomeSummary?.journey?.total_modules || currentModule;
-
-  // Loading state (Matches IPAChecking header styling 100% to eliminate visual jump)
+  // 1. Loading State with PracticeScreenSkeleton
   if (loading) {
     return (
       <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: "#f8fafc" }}>
-        {/* UNIFIED WHITE HEADER */}
+        {/* Unified Top Navigation Header */}
         <View
           style={{
             flexDirection: "row",
@@ -155,6 +182,8 @@ export default function JourneyLessonScreen({ navigation, route }: Props) {
               height: 38,
               borderRadius: 19,
               backgroundColor: "#f8fafc",
+              borderWidth: 1,
+              borderColor: "rgba(15,23,42,0.08)",
               alignItems: "center",
               justifyContent: "center",
             }}
@@ -164,36 +193,32 @@ export default function JourneyLessonScreen({ navigation, route }: Props) {
 
           <View style={{ flex: 1, marginHorizontal: 12 }}>
             <Text
-              style={{ fontSize: 15, fontWeight: "700", color: "#0f172a" }}
+              style={{ fontSize: 16, fontWeight: "700", color: "#0f172a" }}
               numberOfLines={1}
             >
               {displayTitle}
             </Text>
-            {lessonTitle ? (
-              <Text style={{ fontSize: 13, fontWeight: "500", color: "#64748b", marginTop: 2 }}>
-                {t("phonemesHome.dailyMissionEyebrow", "Nhiệm vụ hôm nay")}
-              </Text>
-            ) : currentModule != null ? (
-              <Text style={{ fontSize: 13, fontWeight: "500", color: "#64748b", marginTop: 2 }}>
-                {t("home.journey.moduleOf", {
-                  current: currentModule,
-                  total: totalModules,
-                })}
+            {soundMeta.example ? (
+              <Text
+                style={{ fontSize: 13, fontWeight: "500", color: "#64748b", marginTop: 1 }}
+                numberOfLines={1}
+              >
+                {t("phonemesHome.exampleWord", "Từ mẫu")}: {soundMeta.example.split(" /", 1)[0]}
               </Text>
             ) : null}
           </View>
         </View>
 
+        {/* Pulse Shimmer Skeleton */}
         <PracticeScreenSkeleton />
       </SafeAreaView>
     );
   }
 
-  // Error state (Matches IPAChecking header styling)
-  if (error || !lessonSession) {
+  // 2. Error State with Retry & Back
+  if (error || !lessonSession || !lessonSession.sentences?.length) {
     return (
       <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: "#f8fafc" }}>
-        {/* UNIFIED WHITE HEADER */}
         <View
           style={{
             flexDirection: "row",
@@ -215,6 +240,8 @@ export default function JourneyLessonScreen({ navigation, route }: Props) {
               height: 38,
               borderRadius: 19,
               backgroundColor: "#f8fafc",
+              borderWidth: 1,
+              borderColor: "rgba(15,23,42,0.08)",
               alignItems: "center",
               justifyContent: "center",
             }}
@@ -224,23 +251,11 @@ export default function JourneyLessonScreen({ navigation, route }: Props) {
 
           <View style={{ flex: 1, marginHorizontal: 12 }}>
             <Text
-              style={{ fontSize: 15, fontWeight: "700", color: "#0f172a" }}
+              style={{ fontSize: 16, fontWeight: "700", color: "#0f172a" }}
               numberOfLines={1}
             >
               {displayTitle}
             </Text>
-            {lessonTitle ? (
-              <Text style={{ fontSize: 13, fontWeight: "500", color: "#64748b", marginTop: 2 }}>
-                {t("phonemesHome.dailyMissionEyebrow", "Nhiệm vụ hôm nay")}
-              </Text>
-            ) : currentModule != null ? (
-              <Text style={{ fontSize: 13, fontWeight: "500", color: "#64748b", marginTop: 2 }}>
-                {t("home.journey.moduleOf", {
-                  current: currentModule,
-                  total: totalModules,
-                })}
-              </Text>
-            ) : null}
           </View>
         </View>
 
@@ -252,7 +267,7 @@ export default function JourneyLessonScreen({ navigation, route }: Props) {
             {t("common.loadFailed", "Không thể tải bài học")}
           </Text>
           <Text className="text-[14px] text-slate-600 text-center leading-relaxed max-w-[280px]">
-            {error || t("lesson.empty", "Chưa có bài học khả dụng")}
+            {error || t("lesson.empty", "Chưa có bài học khả dụng cho âm này")}
           </Text>
 
           <View className="flex-row items-center gap-3 mt-2">
@@ -283,7 +298,7 @@ export default function JourneyLessonScreen({ navigation, route }: Props) {
     );
   }
 
-  // Active Lesson Practice View
+  // 3. Active Native Practice Screen (asModal=false -> Pushed to stack)
   return (
     <IPAChecking
       asModal={false}
@@ -299,9 +314,8 @@ export default function JourneyLessonScreen({ navigation, route }: Props) {
       usageStatus={usageStatus}
       loadNextLesson={loadNextLesson}
       onLessonAllCompleted={handleLessonAllCompleted}
-      journeyData={lessonTitle ? undefined : storeHomeSummary?.journey}
       onRequestSentenceWords={requestSentenceWords}
-      onPracticePhoneme={handlePracticePhoneme}
+      onPracticePhoneme={handlePracticeAnotherPhoneme}
     />
   );
 }

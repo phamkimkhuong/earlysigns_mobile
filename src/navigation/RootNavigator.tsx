@@ -14,6 +14,7 @@ import {
   PhonemesScreen,
   JourneyScreen,
   JourneyLessonScreen,
+  PhonemePracticeScreen,
   ProfileScreen,
   VideoPracticeScreen,
   SentencePracticeScreen,
@@ -27,7 +28,6 @@ import {
   PaymentScreen,
   PaymentWebViewScreen,
   PaymentResultScreen,
-  PronunciationProfileScreen,
   NotificationSettingsScreen,
 } from "@/screens";
 
@@ -115,6 +115,11 @@ export default function RootNavigator() {
         options={{ headerShown: false }}
       />
       <Stack.Screen
+        name="PhonemePractice"
+        component={PhonemePracticeScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
         name="VideoPractice"
         component={VideoPracticeScreen}
         options={{ headerShown: false }}
@@ -137,7 +142,6 @@ export default function RootNavigator() {
       <Stack.Screen name="Payment" component={PaymentScreen} options={{ headerShown: false }} />
       <Stack.Screen name="PaymentWebView" component={PaymentWebViewScreen} options={{ title: t("package.planName") }} />
       <Stack.Screen name="PaymentResult" component={PaymentResultScreen} options={{ title: t("package.planName") }} />
-      <Stack.Screen name="PronunciationProfile" component={PronunciationProfileScreen} options={{ headerShown: false }} />
       <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
   );

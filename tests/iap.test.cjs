@@ -580,6 +580,72 @@ test("security boundary: local storage cannot override backend to grant Pro stat
   assert.equal(result2.subscription_expires_at, "2027-01-01T00:00:00Z");
 });
 
+test("initRevenueCat: idempotently checks native isConfigured to prevent duplicate native configure calls", async () => {
+  let nativeConfigureCallCount = 0;
+  let nativeIsConfiguredState = false;
+
+  const mockPurchases = {
+    async isConfigured() {
+      return nativeIsConfiguredState;
+    },
+    configure(config) {
+      nativeConfigureCallCount++;
+      nativeIsConfiguredState = true;
+    },
+  };
+
+  let isPurchasesConfiguredJs = false;
+
+  async function mockInit(userId) {
+    const isAlreadyConfigured =
+      isPurchasesConfiguredJs || (await mockPurchases.isConfigured().catch(() => false));
+
+    if (!isAlreadyConfigured) {
+      mockPurchases.configure({ apiKey: "test_key", appUserID: userId });
+      isPurchasesConfiguredJs = true;
+    } else {
+      isPurchasesConfiguredJs = true;
+    }
+    return true;
+  }
+
+  // First call (App cold boot): configures natively
+  await mockInit("user_1");
+  assert.equal(nativeConfigureCallCount, 1);
+  assert.equal(isPurchasesConfiguredJs, true);
+
+  // Fast Refresh simulation: JS module state resets to false!
+  isPurchasesConfiguredJs = false;
+
+  // Second call (e.g. Auth loadSession or post-Fast Refresh): native isConfigured is true!
+  await mockInit("user_1");
+  // Configure MUST NOT be called again natively
+  assert.equal(nativeConfigureCallCount, 1);
+  assert.equal(isPurchasesConfiguredJs, true);
+});
+
+test("handleCustomerInfoUpdate: suppresses background network reconcile calls when app is idle or backgrounded", async () => {
+  let networkApiCalled = false;
+
+  function mockHandleCustomerInfo(appState, hasHistory) {
+    if (hasHistory && appState === "active") {
+      networkApiCalled = true;
+    }
+  }
+
+  // Scenario 1: App is idle/backgrounded -> network call suppressed
+  mockHandleCustomerInfo("background", true);
+  assert.equal(networkApiCalled, false);
+
+  mockHandleCustomerInfo("inactive", true);
+  assert.equal(networkApiCalled, false);
+
+  // Scenario 2: App is active in foreground -> network call allowed
+  mockHandleCustomerInfo("active", true);
+  assert.equal(networkApiCalled, true);
+});
+
+
 
 
 

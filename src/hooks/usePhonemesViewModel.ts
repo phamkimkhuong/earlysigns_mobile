@@ -274,6 +274,7 @@ export function usePhonemesViewModel(navigation: any) {
   const journey = journeyLessonProgress || homeSummary?.journey || null;
 
   return {
+    authToken,
     t,
     dialect,
     screeningCompleted: Boolean(screeningCompleted || screeningConfirmed),

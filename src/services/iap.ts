@@ -1,4 +1,4 @@
-import { Linking, Platform } from "react-native";
+import { AppState, Linking, Platform } from "react-native";
 import Purchases, {
   LOG_LEVEL,
   PURCHASES_ERROR_CODE,
@@ -41,7 +41,7 @@ export function hasAnyProEntitlementHistory(customerInfo: CustomerInfo) {
 const isNativeMobile = Platform.OS === "android" || Platform.OS === "ios";
 
 let isPurchasesConfigured = false;
-let customerInfoListenerRegistered = false;
+let isConfiguringInProgress = false;
 let customerInfoListener: CustomerInfoUpdateListener | null = null;
 
 /**
@@ -52,62 +52,68 @@ let customerInfoListener: CustomerInfoUpdateListener | null = null;
 export function handleCustomerInfoUpdate(customerInfo: CustomerInfo): void {
   if (!customerInfo || typeof customerInfo !== "object") return;
 
-  const proEntitlement = getActiveProEntitlement(customerInfo);
-  const token = getItem(AUTH_TOKEN_KEY) || "";
+  try {
+    const proEntitlement = getActiveProEntitlement(customerInfo);
+    const token = getItem(AUTH_TOKEN_KEY) || "";
 
-  if (proEntitlement) {
-    // 1. Pro Entitlement is ACTIVE (New purchase, renewal, or restore)
-    const expiresAt =
-      proEntitlement.expirationDate ||
-      new Date(Date.now() + 30 * 86400000).toISOString();
+    if (proEntitlement) {
+      // 1. Pro Entitlement is ACTIVE (New purchase, renewal, or restore)
+      const expiresAt =
+        proEntitlement.expirationDate ||
+        new Date(Date.now() + 30 * 86400000).toISOString();
 
-    const subData: StoredSubscriptionData = {
-      productId: proEntitlement.productIdentifier,
-      purchasedAt: proEntitlement.latestPurchaseDate || new Date().toISOString(),
-      expiresAt,
-      platform: Platform.OS === "ios" ? "ios" : Platform.OS === "android" ? "android" : "other",
-      orderId: proEntitlement.identifier || `store_${Date.now()}`,
-    };
-    saveIapSubscription(subData);
+      const subData: StoredSubscriptionData = {
+        productId: proEntitlement.productIdentifier,
+        purchasedAt: proEntitlement.latestPurchaseDate || new Date().toISOString(),
+        expiresAt,
+        platform: Platform.OS === "ios" ? "ios" : Platform.OS === "android" ? "android" : "other",
+        orderId: proEntitlement.identifier || `store_${Date.now()}`,
+      };
+      saveIapSubscription(subData);
 
-    const usage: BillingUsage = {
-      has_active_subscription: true,
-      is_in_trial: false,
-      subscription_expires_at: expiresAt,
-      tier: "pro",
-      daily_remaining: 9999,
-    };
+      const usage: BillingUsage = {
+        has_active_subscription: true,
+        is_in_trial: false,
+        subscription_expires_at: expiresAt,
+        tier: "pro",
+        daily_remaining: 9999,
+      };
 
-    if (token) {
-      seedBillingUsage(token, usage);
+      if (token) {
+        seedBillingUsage(token, usage);
+      } else {
+        notifyBillingUsageChanged(usage);
+      }
     } else {
-      notifyBillingUsageChanged(usage);
-    }
-  } else {
-    // 2. Pro Entitlement is NOT active on the Store (expired, cancelled, refunded, or never purchased)
-    // Clean up local store subscription receipt cache
-    const hadLocalStoreReceipt = Boolean(getItem(IAP_SUBSCRIPTION_KEY));
-    if (hadLocalStoreReceipt) {
-      removeItem(IAP_SUBSCRIPTION_KEY);
-    }
+      // 2. Pro Entitlement is NOT active on the Store (expired, cancelled, refunded, or never purchased)
+      // Clean up local store subscription receipt cache
+      const hadLocalStoreReceipt = Boolean(getItem(IAP_SUBSCRIPTION_KEY));
+      if (hadLocalStoreReceipt) {
+        removeItem(IAP_SUBSCRIPTION_KEY);
+      }
 
-    // MULTI-ENTITLEMENT ARCHITECTURAL SEPARATION:
-    // RevenueCat only governs Store In-App Purchases (StoreKit / Google Play).
-    // An expired or lapsed Store entitlement MUST NOT unilaterally force global tier = "free",
-    // because the user might have active Pro access granted via:
-    // - Web payment (PayOS / Stripe / VNPay)
-    // - Promo code / Gift code redemption (billingApi.activateCode)
-    // - Referral rewards
-    // - Admin manual grant
-    //
-    // Instead of crushing the user's tier to "free" locally, we trigger an authoritative
-    // re-fetch from the Backend (billingApi.getUsage()), allowing the backend to composite
-    // all entitlement sources and determine the true effective status.
-    if (token && (hadLocalStoreReceipt || hasAnyProEntitlementHistory(customerInfo))) {
-      import("@/api/billingApi")
-        .then(({ billingApi }) => billingApi.getUsage())
-        .catch(() => {});
+      // MULTI-ENTITLEMENT ARCHITECTURAL SEPARATION:
+      // RevenueCat only governs Store In-App Purchases (StoreKit / Google Play).
+      // An expired or lapsed Store entitlement MUST NOT unilaterally force global tier = "free",
+      // because the user might have active Pro access granted via:
+      // - Web payment (PayOS / Stripe / VNPay)
+      // - Promo code / Gift code redemption (billingApi.activateCode)
+      // - Referral rewards
+      // - Admin manual grant
+      //
+      // Only trigger backend refresh when user is active to prevent unhandled background rejections
+      if (
+        token &&
+        (hadLocalStoreReceipt || hasAnyProEntitlementHistory(customerInfo)) &&
+        AppState.currentState === "active"
+      ) {
+        import("@/api/billingApi")
+          .then(({ billingApi }) => billingApi.getUsage())
+          .catch(() => {});
+      }
     }
+  } catch (err) {
+    console.warn("[IAP] Error handling customer info update:", err);
   }
 }
 
@@ -119,31 +125,42 @@ export function setupCustomerInfoListener(): () => void {
   if (!isNativeMobile) {
     return () => {};
   }
-  if (!customerInfoListenerRegistered) {
-    customerInfoListener = (customerInfo: CustomerInfo) => {
-      try {
-        handleCustomerInfoUpdate(customerInfo);
-      } catch (err) {
-        console.warn("[IAP] Error handling customer info update:", err);
-      }
-    };
+
+  // Idempotently clean up any stale listener reference first to prevent memory leak
+  if (customerInfoListener) {
+    try {
+      Purchases.removeCustomerInfoUpdateListener(customerInfoListener);
+    } catch {}
+    customerInfoListener = null;
+  }
+
+  customerInfoListener = (customerInfo: CustomerInfo) => {
+    try {
+      handleCustomerInfoUpdate(customerInfo);
+    } catch (err) {
+      console.warn("[IAP] Error handling customer info update:", err);
+    }
+  };
+
+  try {
     Purchases.addCustomerInfoUpdateListener(customerInfoListener);
-    customerInfoListenerRegistered = true;
+  } catch (listenerErr) {
+    console.warn("[IAP] Failed to register customerInfoListener:", listenerErr);
   }
 
   return () => {
-    if (customerInfoListener && customerInfoListenerRegistered) {
+    if (customerInfoListener) {
       try {
         Purchases.removeCustomerInfoUpdateListener(customerInfoListener);
       } catch {}
-      customerInfoListenerRegistered = false;
       customerInfoListener = null;
     }
   };
 }
 
 /**
- * Initialize RevenueCat SDK for native StoreKit & Google Play Billing
+ * Initialize RevenueCat SDK for native StoreKit & Google Play Billing.
+ * Thread-safe and Fast-Refresh safe via native Purchases.isConfigured() check.
  */
 export async function initRevenueCat(userId?: string): Promise<boolean> {
   if (!isNativeMobile) return false;
@@ -152,19 +169,32 @@ export async function initRevenueCat(userId?: string): Promise<boolean> {
   if (!apiKey) {
     return false;
   }
-  try {
-    if (!isPurchasesConfigured) {
-      if (__DEV__) {
-        try {
-          await Purchases.setLogLevel(LOG_LEVEL.DEBUG);
-        } catch {
-          /* ignore log level error */
-        }
-      }
-      Purchases.configure({ apiKey, appUserID: userId || undefined });
-      isPurchasesConfigured = true;
 
-      // Register lifecycle listener
+  try {
+    // 1. Check native SDK status first to avoid redundant native configure calls
+    const isAlreadyConfigured =
+      isPurchasesConfigured || (await Purchases.isConfigured().catch(() => false));
+
+    if (!isAlreadyConfigured) {
+      if (isConfiguringInProgress) {
+        return true;
+      }
+      isConfiguringInProgress = true;
+      try {
+        if (__DEV__) {
+          try {
+            await Purchases.setLogLevel(LOG_LEVEL.WARN);
+          } catch {
+            /* ignore log level error */
+          }
+        }
+        Purchases.configure({ apiKey, appUserID: userId || undefined });
+        isPurchasesConfigured = true;
+      } finally {
+        isConfiguringInProgress = false;
+      }
+
+      // Register lifecycle listener safely
       setupCustomerInfoListener();
 
       // Proactively reconcile initial customer info on cold start
@@ -174,15 +204,24 @@ export async function initRevenueCat(userId?: string): Promise<boolean> {
       } catch (custErr) {
         console.warn("[IAP] Initial customer info fetch error:", custErr);
       }
-    } else if (userId) {
-      try {
-        const logInResult = await Purchases.logIn(userId);
-        if (logInResult?.customerInfo) {
-          handleCustomerInfoUpdate(logInResult.customerInfo);
+    } else {
+      isPurchasesConfigured = true;
+      // Ensure listener is safely registered after hot reload
+      setupCustomerInfoListener();
+
+      if (userId) {
+        try {
+          const currentAppUserId = await Purchases.getAppUserID().catch(() => "");
+          if (currentAppUserId !== userId) {
+            const logInResult = await Purchases.logIn(userId);
+            if (logInResult?.customerInfo) {
+              handleCustomerInfoUpdate(logInResult.customerInfo);
+            }
+          }
+        } catch (logInErr) {
+          console.warn("[IAP] RevenueCat logIn error:", logInErr);
+          return false;
         }
-      } catch (logInErr) {
-        console.warn("[IAP] RevenueCat logIn error:", logInErr);
-        return false;
       }
     }
     return true;

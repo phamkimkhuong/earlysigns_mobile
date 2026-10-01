@@ -1,6 +1,6 @@
 import React from "react";
-import { ActivityIndicator, Pressable, ScrollView, Text, View, type ViewStyle } from "react-native";
-import { CheckCircle2, ChevronRight, Compass } from "lucide-react-native";
+import { ActivityIndicator, Pressable, ScrollView, Text, TouchableOpacity, View, type ViewStyle } from "react-native";
+import { Compass } from "lucide-react-native";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import type { TFunction } from "i18next";
 import { getIpaSoundMeta } from "@/utils/ipaData";
@@ -28,7 +28,6 @@ type Props = {
   onPhoneme: (sound: string) => void;
   onJourney: () => void;
   onCatalog: () => void;
-  onProfile: () => void;
   onRetry: () => void;
 };
 
@@ -168,32 +167,22 @@ export default function PhonemesHome(props: Props) {
     if (!hasTargetSounds) return null;
     return (
       <View className="flex-row flex-wrap items-center gap-2 pt-0.5 pb-1">
-        {targetSounds.map((sound) => {
-          const accPct = soundAccuracyMap.get(sound);
-          return (
-            <View
-              key={sound}
-              className="flex-row items-center gap-1.5 px-3 py-1.5 rounded-xl border"
-              style={{
-                backgroundColor: isHero ? "#ffffff" : "#f0f7fd",
-                borderColor: "#bae6fd",
-              }}
-            >
-              <Text className="text-[#0284c7] text-sm font-extrabold" numberOfLines={1}>
-                {`/${sound}/`}
-              </Text>
-              {accPct != null ? (
-                <Text
-                  className="text-xs font-bold"
-                  style={{ color: accPct < 50 ? "#dc2626" : "#d97706" }}
-                  numberOfLines={1}
-                >
-                  {`${accPct}%`}
-                </Text>
-              ) : null}
-            </View>
-          );
-        })}
+        {targetSounds.map((sound) => (
+          <TouchableOpacity
+            key={sound}
+            activeOpacity={0.75}
+            onPress={() => props.onPhoneme(sound)}
+            className="flex-row items-center px-3.5 py-1.5 rounded-xl border active:opacity-75"
+            style={{
+              backgroundColor: isHero ? "#ffffff" : "#f0f7fd",
+              borderColor: "#bae6fd",
+            }}
+          >
+            <Text className="text-[#0284c7] text-sm font-extrabold" numberOfLines={1}>
+              {`/${sound}/`}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
     );
   };
@@ -201,26 +190,13 @@ export default function PhonemesHome(props: Props) {
   const lessonButton = (secondary: boolean) => (
     <Action
       testID="phonemes-start-lesson"
-      title={t(lessonLoading ? "phonemesHome.preparing" : "phonemesHome.startLessonWithCount", t("phonemesHome.startLesson"))}
+      title={t(lessonLoading ? "phonemesHome.preparing" : "phonemesHome.startLesson", t("phonemesHome.startLesson", "Bắt đầu bài luyện"))}
       onPress={props.onLesson}
       secondary={secondary}
       loading={lessonLoading}
       disabled={busy}
     />
   );
-
-  const links = [
-    ...(screeningCompleted
-      ? [{
-        id: "phonemes-profile",
-        Icon: CheckCircle2,
-        title: t("phonemesHome.profileTitle"),
-        description: t("phonemesHome.profileDescription"),
-        onPress: props.onProfile,
-        iconBg: "#ecfdf5",
-      }]
-      : []),
-  ];
 
   return (
     <ScrollView
@@ -322,7 +298,7 @@ export default function PhonemesHome(props: Props) {
                 style={{ backgroundColor: "#e0effe", borderWidth: 1, borderColor: "#bae6fd" }}
               >
                 <Text className="text-[#0284c7] text-xs font-bold uppercase tracking-wider">
-                  {t("phonemesHome.lessonTitle")}
+                  {t("phonemesHome.dailyMissionEyebrow", "Nhiệm vụ hôm nay")}
                 </Text>
               </View>
               <Pressable
@@ -345,12 +321,12 @@ export default function PhonemesHome(props: Props) {
               style={{ fontSize: 24, lineHeight: 31, letterSpacing: -0.5 }}
             >
               {hasTargetSounds
-                ? t("phonemesHome.personalizedHeadline", "Cải thiện các âm cần lưu ý")
+                ? t("phonemesHome.personalizedHeadline", "Mục tiêu phát âm hôm nay")
                 : t("phonemesHome.lessonHeadline")}
             </Text>
             <Text className="text-[#475569] text-sm" style={{ lineHeight: 21 }}>
               {hasTargetSounds
-                ? t("phonemesHome.personalizedDescription", "5 câu luyện tập cá nhân hoá nhắm trúng các âm bạn hay phát âm chưa chuẩn:")
+                ? t("phonemesHome.personalizedDescription", "Hoàn thành bài luyện với các âm trọng tâm để duy trì chuỗi ngày học:")
                 : t("phonemesHome.lessonDescription")}
             </Text>
             {renderTargetSoundChips(true)}
@@ -399,11 +375,11 @@ export default function PhonemesHome(props: Props) {
             }}
           >
             <Text className="text-[#0c2340] text-base font-bold" style={{ lineHeight: 23 }}>
-              {t("phonemesHome.lessonTitle")}
+              {t("phonemesHome.dailyMissionTitle", "Nhiệm vụ luyện tập hôm nay")}
             </Text>
             <Text className="text-[#64748b] text-sm" style={{ lineHeight: 21 }}>
               {hasTargetSounds
-                ? t("phonemesHome.personalizedDescriptionShort", "5 câu luyện tập nhắm vào các âm cần cải thiện:")
+                ? t("phonemesHome.personalizedDescriptionShort", "Bài luyện tập nhắm vào các âm trọng tâm hôm nay:")
                 : t("phonemesHome.lessonDescription")}
             </Text>
             {renderTargetSoundChips(false)}
@@ -488,8 +464,6 @@ export default function PhonemesHome(props: Props) {
                 key={sound}
                 accessibilityRole="button"
                 accessibilityLabel={t("phonemesHome.practiceSound", { sound: cleanSound })}
-                accessibilityState={{ disabled: busy, busy: phonemeLoading === sound }}
-                disabled={busy}
                 onPress={() => props.onPhoneme(cleanSound)}
                 className="active:opacity-80"
                 style={{
@@ -557,64 +531,6 @@ export default function PhonemesHome(props: Props) {
         </View>
       ) : null}
       </View>
-
-      {/* ── 4. Navigation Links (Grouped Elevated Card) ── */}
-      {links.length > 0 ? (
-        <View
-          className="bg-white"
-          style={{
-            borderRadius: 20,
-            borderWidth: 1,
-            borderColor: "#e2eaf2",
-            overflow: "hidden",
-            shadowColor: "#0c2340",
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.04,
-            shadowRadius: 8,
-            elevation: 1,
-          }}
-        >
-          {links.map(({ id, Icon, title, description, onPress, iconBg }, index) => (
-            <Pressable
-              key={id}
-              testID={id}
-              accessibilityRole="button"
-              onPress={onPress}
-              className="flex-row items-center px-4 active:opacity-75"
-              style={{
-                gap: 14,
-                paddingVertical: 16,
-                borderTopWidth: index > 0 ? 1 : 0,
-                borderTopColor: "#f1f5f9",
-              }}
-            >
-              <View
-                className="items-center justify-center"
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 14,
-                  backgroundColor: iconBg,
-                }}
-              >
-                <Icon size={21} color="#147d64" />
-              </View>
-              <View className="flex-1">
-                <Text
-                  className="text-[15px] font-bold text-[#147d64]"
-                  style={{ lineHeight: 22 }}
-                >
-                  {title}
-                </Text>
-                <Text className="text-[#64748b]" style={{ fontSize: 13, lineHeight: 18, marginTop: 2 }}>
-                  {description}
-                </Text>
-              </View>
-              <ChevronRight size={18} color="#94a3b8" />
-            </Pressable>
-          ))}
-        </View>
-      ) : null}
     </ScrollView>
   );
 }

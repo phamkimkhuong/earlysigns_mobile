@@ -230,12 +230,11 @@ test("pronunciation main prioritizes screening without gating practice, sounds o
       t: key => key, dialect: "uk", screeningCompleted: completed, weakestPhonemes: [{ sound: "θ" }],
       onScreening: () => calls.push("screening"), onLesson: () => calls.push("lesson"),
       onPhoneme: sound => calls.push(sound), onJourney: () => calls.push("journey"),
-      onCatalog: () => calls.push("catalog"), onProfile: () => calls.push("profile"), onRetry: () => {},
+      onCatalog: () => calls.push("catalog"), onRetry: () => {},
     }));
     const find = id => tree.find(node => node.props.testID === id);
     assert.equal(Boolean(find("phonemes-screening-card")), !completed);
     assert.equal(Boolean(find("phonemes-lesson-hero")), completed);
-    assert.equal(Boolean(find("phonemes-profile")), completed);
     assert.ok(find("phonemes-weak-sounds"));
     assert.equal(find("phonemes-start-lesson").props.disabled, false);
     find("phonemes-start-lesson").props.onPress();

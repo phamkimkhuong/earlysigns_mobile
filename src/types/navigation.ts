@@ -12,6 +12,7 @@ export type RootStackParamList = {
   Screening: { dialect?: string } | undefined;
   Journey: undefined;
   JourneyLesson: { dialect?: string; lessonTitle?: string } | undefined;
+  PhonemePractice: { phoneme: string; dialect?: string };
   VideoPractice: { youtubeId: string; initialIndex?: number };
   SentencePractice: {
     sentences: {
@@ -33,6 +34,5 @@ export type RootStackParamList = {
   Payment: { packageId?: string } | undefined;
   PaymentWebView: { url: string; orderCode?: string };
   PaymentResult: { orderCode?: string; status?: string; variant?: string } | undefined;
-  PronunciationProfile: undefined;
   NotificationSettings: undefined;
 };

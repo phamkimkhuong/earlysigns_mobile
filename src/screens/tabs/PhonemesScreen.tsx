@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Pressable,
   ScrollView,
   Text,
@@ -10,7 +9,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ChevronLeft } from "lucide-react-native";
-import IPAChecking from "@/components/practice/IPAChecking";
 import PhonemesHome from "@/components/practice/PhonemesHome";
 import ScreeningResultModal from "@/components/practice/ScreeningResultModal";
 import { usePhonemesViewModel } from "@/hooks/usePhonemesViewModel";
@@ -24,16 +22,32 @@ export default function PhonemesScreen({ navigation, route }: NativeStackScreenP
   const {
     t, dialect, screeningCompleted, screeningLoading, screeningError, startScreeningTest,
     summaryLoading, summaryError, retrySummary, journey, lessonLoading, lessonError, startPersonalizedLesson,
-    weakestPhonemes, dailyMissionPhonemes, soundsAccuracyMap, startPhoneme, phonemeLoading, lessonSession, lessonSessionKey, closeLessonSession,
-    userTier, userKey, usageStatus, lessonMode, screeningResult, setScreeningResult,
-    handleLessonAllCompleted, handleScreeningFinished, loadNextLesson, requestSentenceWords,
+    weakestPhonemes, dailyMissionPhonemes, soundsAccuracyMap, phonemeLoading,
+    screeningResult, setScreeningResult, authToken,
   } = usePhonemesViewModel(navigation);
   const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>("all");
   const { width, fontScale } = useWindowDimensions();
   const isCatalog = route.params?.view === "catalog";
   const columns = width < 360 || fontScale > 1.3 ? 2 : 3;
-  const busy = Boolean(lessonLoading || screeningLoading || phonemeLoading);
   const routeActionPending = useRef(false);
+  const navigatingLessonRef = useRef(false);
+
+  const handleStartLesson = () => {
+    if (navigatingLessonRef.current) return;
+    navigatingLessonRef.current = true;
+    setTimeout(() => {
+      navigatingLessonRef.current = false;
+    }, 1000);
+
+    if (!authToken) {
+      navigation.navigate("Login", { next: "JourneyLesson" });
+      return;
+    }
+    navigation.navigate("JourneyLesson", {
+      dialect,
+      lessonTitle: t("phonemesHome.personalizedHeadline", "Mục tiêu phát âm hôm nay"),
+    });
+  };
 
   const catalogStats = useMemo(() => {
     let practiced = 0;
@@ -65,7 +79,7 @@ export default function PhonemesScreen({ navigation, route }: NativeStackScreenP
       return;
     }
     routeActionPending.current = false;
-  }, [navigation, route.params?.startLesson, route.params?.startScreening, startPersonalizedLesson, startScreeningTest, dialect]);
+  }, [navigation, route.params?.startLesson, route.params?.startScreening, startPersonalizedLesson, dialect]);
 
   const filteredCatalog = useMemo(() => ALL_44_IPA_SOUNDS.filter(item => selectedCategory === "all" || item.category === selectedCategory), [selectedCategory]);
   const openCatalog = () => navigation.push("Phonemes", { view: "catalog" });
@@ -207,15 +221,12 @@ export default function PhonemesScreen({ navigation, route }: NativeStackScreenP
                 const soundInfo = soundsAccuracyMap?.get(clean);
                 const hasScore = soundInfo != null && soundInfo.accuracyPct != null;
                 const accuracyPct = soundInfo?.accuracyPct ?? 0;
-
                 return (
                   <View key={item.sound} style={{ width: `${100 / columns}%`, padding: 5 }}>
                     <Pressable
                       accessibilityRole="button"
                       accessibilityLabel={t("phonemesHome.practiceSound", { sound: item.sound })}
-                      accessibilityState={{ disabled: busy, busy: phonemeLoading === item.sound }}
-                      disabled={busy}
-                      onPress={() => void startPhoneme(item.sound)}
+                      onPress={() => navigation.navigate("PhonemePractice", { phoneme: item.sound, dialect })}
                       className="active:opacity-80"
                       style={{
                         backgroundColor: "#ffffff",
@@ -235,63 +246,56 @@ export default function PhonemesScreen({ navigation, route }: NativeStackScreenP
                         shadowOpacity: 0.04,
                         shadowRadius: 6,
                         elevation: 1,
-                        opacity: busy ? 0.6 : 1,
                       }}
                     >
-                      {phonemeLoading === item.sound ? (
-                        <ActivityIndicator color="#0284c7" />
-                      ) : (
-                        <>
+                      <Text
+                        className="font-extrabold text-center text-[#0c2340]"
+                        style={{
+                          fontSize: 22,
+                          includeFontPadding: false,
+                        }}
+                        numberOfLines={1}
+                      >
+                        /{item.sound}/
+                      </Text>
+                      <Text numberOfLines={1} className="text-[#64748b] text-xs text-center font-medium">
+                        {item.example.split(" /", 1)[0]}
+                      </Text>
+                      {hasScore ? (
+                        <View
+                          className="px-2.5 py-0.5 rounded-full mt-0.5 shrink-0"
+                          style={{
+                            backgroundColor: accuracyPct >= 70 ? "#ecfdf5" : accuracyPct >= 50 ? "#fffbeb" : "#fef2f2",
+                            borderWidth: 1,
+                            borderColor: accuracyPct >= 70 ? "#a7f3d0" : accuracyPct >= 50 ? "#fde68a" : "#fecaca",
+                          }}
+                        >
                           <Text
-                            className="font-extrabold text-center text-[#0c2340]"
-                            style={{
-                              fontSize: 22,
-                              includeFontPadding: false,
-                            }}
                             numberOfLines={1}
+                            className="text-xs font-bold text-center"
+                            style={{
+                              color: accuracyPct >= 70 ? "#047857" : accuracyPct >= 50 ? "#b45309" : "#dc2626",
+                            }}
                           >
-                            /{item.sound}/
+                            {`${accuracyPct}%`}
                           </Text>
-                          <Text numberOfLines={1} className="text-[#64748b] text-xs text-center font-medium">
-                            {item.example.split(" /", 1)[0]}
+                        </View>
+                      ) : (
+                        <View
+                          className="px-2.5 py-0.5 rounded-full mt-0.5 shrink-0"
+                          style={{
+                            backgroundColor: "#f8fafc",
+                            borderWidth: 1,
+                            borderColor: "#e2e8f0",
+                          }}
+                        >
+                          <Text
+                            numberOfLines={1}
+                            className="text-xs font-medium text-[#94a3b8] text-center"
+                          >
+                            {t("phonemesHome.notPracticed", "Chưa học")}
                           </Text>
-                          {hasScore ? (
-                            <View
-                              className="px-2.5 py-0.5 rounded-full mt-0.5 shrink-0"
-                              style={{
-                                backgroundColor: accuracyPct >= 70 ? "#ecfdf5" : accuracyPct >= 50 ? "#fffbeb" : "#fef2f2",
-                                borderWidth: 1,
-                                borderColor: accuracyPct >= 70 ? "#a7f3d0" : accuracyPct >= 50 ? "#fde68a" : "#fecaca",
-                              }}
-                            >
-                              <Text
-                                numberOfLines={1}
-                                className="text-xs font-bold text-center"
-                                style={{
-                                  color: accuracyPct >= 70 ? "#047857" : accuracyPct >= 50 ? "#b45309" : "#dc2626",
-                                }}
-                              >
-                                {`${accuracyPct}%`}
-                              </Text>
-                            </View>
-                          ) : (
-                            <View
-                              className="px-2.5 py-0.5 rounded-full mt-0.5 shrink-0"
-                              style={{
-                                backgroundColor: "#f8fafc",
-                                borderWidth: 1,
-                                borderColor: "#e2e8f0",
-                              }}
-                            >
-                              <Text
-                                numberOfLines={1}
-                                className="text-xs font-medium text-[#94a3b8] text-center"
-                              >
-                                {t("phonemesHome.notPracticed", "Chưa học")}
-                              </Text>
-                            </View>
-                          )}
-                        </>
+                        </View>
                       )}
                     </Pressable>
                   </View>
@@ -315,36 +319,14 @@ export default function PhonemesScreen({ navigation, route }: NativeStackScreenP
             lessonError={lessonError}
             screeningError={screeningError}
             onScreening={startScreeningTest}
-            onLesson={startPersonalizedLesson}
-            onPhoneme={startPhoneme}
+            onLesson={handleStartLesson}
+            onPhoneme={(sound) => navigation.navigate("PhonemePractice", { phoneme: sound, dialect })}
             onJourney={() => navigation.navigate("Journey")}
             onCatalog={openCatalog}
-            onProfile={() => navigation.navigate("PronunciationProfile")}
             onRetry={retrySummary}
           />
         )}
       </View>
-      {lessonSession ? (
-        <IPAChecking
-          open
-          onClose={closeLessonSession}
-          sentences={lessonSession.sentences}
-          dialect={lessonSession.dialect || dialect}
-          sessionKey={lessonSessionKey}
-          lessonTitle={lessonSession.title}
-          instructionsHtml={lessonSession.instructionsHtml}
-          userTier={userTier}
-          userKey={userKey}
-          usageStatus={usageStatus}
-          mode={lessonMode}
-          loadNextLesson={loadNextLesson}
-          onPracticePhoneme={startPhoneme}
-          onLessonAllCompleted={handleLessonAllCompleted}
-          onScreeningFinished={handleScreeningFinished}
-          onRequestSentenceWords={requestSentenceWords}
-          journeyData={journey}
-        />
-      ) : null}
       <ScreeningResultModal open={Boolean(screeningResult)} totalAccuracy={screeningResult?.totalAccuracy} onClose={() => setScreeningResult(null)} />
     </SafeAreaView>
   );

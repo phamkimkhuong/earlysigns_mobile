@@ -98,12 +98,25 @@ function fillDailyAccuracy(
   const map = new Map<string, number>();
   for (const h of history) {
     if (h && typeof h.date === "string") {
-      const v = Number(h[key]);
-      if (Number.isFinite(v)) map.set(h.date.slice(0, 10), Math.round(v * 100));
+      const raw = h?.accuracy?.[key] ?? h?.[key];
+      const v = Number(raw);
+      if (Number.isFinite(v)) {
+        const pct = v <= 1 ? Math.round(v * 100) : Math.round(v);
+        map.set(h.date.slice(0, 10), pct);
+      }
     }
   }
 
-  let last = 0;
+  // Khởi tạo điểm nền tảng bằng mốc điểm ghi nhận đầu tiên để tránh sụt 0% giả tạo
+  let firstVal = 0;
+  for (const d of dates) {
+    if (map.has(d)) {
+      firstVal = map.get(d)!;
+      break;
+    }
+  }
+
+  let last = firstVal;
   return dates.map((d) => {
     if (map.has(d)) {
       last = map.get(d)!;
@@ -304,8 +317,10 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
       const todayEntry = history.find(
         (h) => typeof h?.date === "string" && h.date.slice(0, 10) === todayStr
       );
-      if (todayEntry && (Number(todayEntry.count) > 0 || Number(todayEntry.total) > 0)) {
-        return true;
+      if (todayEntry) {
+        const todayCount = Number(todayEntry.count ?? 0);
+        const todayTotal = Number(todayEntry.accuracy?.total ?? todayEntry.total ?? 0);
+        if (todayCount > 0 || todayTotal > 0) return true;
       }
     }
     return false;
@@ -885,6 +900,8 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                     height={190}
                     yAxisSuffix="%"
                     yAxisInterval={1}
+                    fromZero={true}
+                    segments={4}
                     chartConfig={{
                       backgroundColor: "#ffffff",
                       backgroundGradientFrom: "#ffffff",
@@ -906,25 +923,26 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                 style={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0" }}
                 className="rounded-3xl p-5 border gap-3.5"
               >
-                <View className="flex-row items-center justify-between">
-                  <View className="gap-0.5">
-                    <Text className="text-sm font-extrabold text-[#0f172a]">
-                      {t("profile.weakSoundsTitle") || "Âm cần ưu tiên cải thiện"}
+                <View className="gap-1">
+                  <View className="flex-row items-center justify-between">
+                    <Text className="text-[15px] font-extrabold text-[#0f172a] flex-1 mr-2" numberOfLines={1}>
+                      {t("profile.weakSoundsTitle") || "Âm ưu tiên cải thiện"}
                     </Text>
-                    <Text className="text-xs text-slate-500">
-                      {t("profile.weakSoundsDesc") || "Các âm có độ chính xác thấp nhất cần luyện tập thêm"}
-                    </Text>
+                    <TouchableOpacity
+                      activeOpacity={0.75}
+                      onPress={() => handleNavigate("Phonemes", { view: "catalog" })}
+                      className="flex-row items-center gap-0.5 shrink-0"
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                      <Text style={{ color: "#0c2340" }} className="text-sm font-bold">
+                        {t("profile.viewAllSounds") || "Xem tất cả âm"}
+                      </Text>
+                      <ChevronRight size={14} color="#0c2340" />
+                    </TouchableOpacity>
                   </View>
-                  <TouchableOpacity
-                    activeOpacity={0.75}
-                    onPress={() => handleNavigate("PronunciationProfile")}
-                    className="flex-row items-center gap-0.5"
-                  >
-                    <Text style={{ color: "#0c2340" }} className="text-sm font-bold">
-                      {t("profile.viewAllSounds") || "Xem tất cả âm"}
-                    </Text>
-                    <ChevronRight size={14} color="#0c2340" />
-                  </TouchableOpacity>
+                  <Text className="text-[13px] text-slate-500">
+                    {t("profile.weakSoundsDesc") || "Các âm có độ chính xác thấp nhất cần luyện tập thêm"}
+                  </Text>
                 </View>
 
                 {topWeakSounds.length === 0 ? (
@@ -943,7 +961,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                         <TouchableOpacity
                           key={cleanSound}
                           activeOpacity={0.85}
-                          onPress={() => handleNavigate("Phonemes")}
+                          onPress={() => handleNavigate("PhonemePractice", { phoneme: cleanSound })}
                           style={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0" }}
                           className="rounded-2xl p-3.5 border flex-row items-center justify-between shadow-xs"
                         >
