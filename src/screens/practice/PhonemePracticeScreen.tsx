@@ -15,6 +15,7 @@ import { lessonKeys } from "@/hooks/queries/useLessonQueries";
 import { progressKeys } from "@/hooks/queries/useProgressQueries";
 import { useBillingUsageQuery } from "@/hooks/queries/useBillingQueries";
 import IPAChecking from "@/components/practice/IPAChecking";
+import PhonemeIntroGuide from "@/components/practice/PhonemeIntroGuide";
 import { PracticeScreenSkeleton } from "@/components/ui/Skeleton";
 import { getIpaSoundMeta } from "@/utils/ipaData";
 import { getFriendlyErrorMessage } from "@/utils/localizedError";
@@ -58,6 +59,7 @@ export default function PhonemePracticeScreen({ navigation, route }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [lessonSession, setLessonSession] = useState<LessonSession | null>(null);
   const [sessionKey, setSessionKey] = useState(0);
+  const [showGuideModal, setShowGuideModal] = useState(false);
 
   const displayTitle = useMemo(() => {
     if (!cleanPhoneme) return t("lesson.practiceSound", "Luyện phát âm");
@@ -209,7 +211,7 @@ export default function PhonemePracticeScreen({ navigation, route }: Props) {
           </View>
         </View>
 
-        {/* Pulse Shimmer Skeleton */}
+        {/* Pulse Shimmer Skeleton matching IPAChecking */}
         <PracticeScreenSkeleton />
       </SafeAreaView>
     );
@@ -298,24 +300,43 @@ export default function PhonemePracticeScreen({ navigation, route }: Props) {
     );
   }
 
-  // 3. Active Native Practice Screen (asModal=false -> Pushed to stack)
+  const hasGuide = Boolean(
+    lessonSession?.rawLessonData?.vi_instructions ||
+    lessonSession?.rawLessonData?.en_instructions ||
+    lessonSession?.instructionsHtml
+  );
+
   return (
-    <IPAChecking
-      asModal={false}
-      open={true}
-      onClose={() => navigation.goBack()}
-      sentences={lessonSession.sentences || []}
-      dialect={lessonSession.dialect || dialect}
-      sessionKey={sessionKey}
-      lessonTitle={displayTitle}
-      instructionsHtml={lessonSession.instructionsHtml}
-      userTier={userTier}
-      userKey={userKey}
-      usageStatus={usageStatus}
-      loadNextLesson={loadNextLesson}
-      onLessonAllCompleted={handleLessonAllCompleted}
-      onRequestSentenceWords={requestSentenceWords}
-      onPracticePhoneme={handlePracticeAnotherPhoneme}
-    />
+    <>
+      <IPAChecking
+        asModal={false}
+        open={true}
+        onClose={() => navigation.goBack()}
+        sentences={lessonSession.sentences || []}
+        dialect={lessonSession.dialect || dialect}
+        sessionKey={sessionKey}
+        lessonTitle={displayTitle}
+        instructionsHtml=""
+        userTier={userTier}
+        userKey={userKey}
+        usageStatus={usageStatus}
+        loadNextLesson={loadNextLesson}
+        onLessonAllCompleted={handleLessonAllCompleted}
+        onRequestSentenceWords={requestSentenceWords}
+        onPracticePhoneme={handlePracticeAnotherPhoneme}
+        onShowGuide={hasGuide ? () => setShowGuideModal(true) : undefined}
+      />
+
+      {hasGuide ? (
+        <PhonemeIntroGuide
+          visible={showGuideModal}
+          phoneme={cleanPhoneme}
+          dialect={dialect}
+          lessonData={lessonSession.rawLessonData}
+          soundMeta={soundMeta}
+          onClose={() => setShowGuideModal(false)}
+        />
+      ) : null}
+    </>
   );
 }

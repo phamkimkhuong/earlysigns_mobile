@@ -87,6 +87,15 @@
       "consonant": "Phụ âm (24)"
     }
   },
+  "phonemeGuide": {
+    "guideTitle": "Hướng dẫn phát âm",
+    "viewGuide": "Xem hướng dẫn",
+    "guideBtn": "Hướng dẫn",
+    "stepsTab": "Khẩu hình",
+    "contrastTab": "So sánh & Từ",
+    "curriculumTab": "Bài tập",
+    "startPractice": "Bắt đầu luyện tập"
+  },
   "homeDesign": {
     "account": "Tài khoản",
     "login": "Đăng nhập",

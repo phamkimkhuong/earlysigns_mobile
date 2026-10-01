@@ -3,6 +3,7 @@ import {
   Animated,
   DimensionValue,
   StyleProp,
+  Text,
   TouchableOpacity,
   View,
   ViewStyle,
@@ -445,6 +446,169 @@ export function ScreeningPracticeSkeleton({ onClose }: { onClose?: () => void } 
           <View className="items-center py-1">
             <SkeletonItem width={160} height={14} borderRadius={4} />
           </View>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+/**
+ * Skeleton placeholder for Phoneme Intro Guide Screen.
+ * Matches exact layout of PhonemeIntroGuide with navy header, Hero Card, tabs, and step cards.
+ */
+export function PhonemeGuideSkeleton({
+  phoneme,
+  dialect = "uk",
+  onBack,
+}: {
+  phoneme?: string;
+  dialect?: string;
+  onBack?: () => void;
+}) {
+  return (
+    <View style={{ flex: 1, backgroundColor: "#0a2644" }}>
+      {/* 1. Header with exact Navy color and title */}
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingHorizontal: 16,
+          paddingVertical: 10,
+        }}
+      >
+        {onBack ? (
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Quay lại"
+            onPress={onBack}
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "rgba(255, 255, 255, 0.12)",
+              borderWidth: 1,
+              borderColor: "rgba(255, 255, 255, 0.18)",
+            }}
+          >
+            <ChevronLeft size={22} color="#ffffff" />
+          </TouchableOpacity>
+        ) : (
+          <SkeletonItem
+            width={40}
+            height={40}
+            borderRadius={20}
+            style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
+          />
+        )}
+
+        <View style={{ alignItems: "center", gap: 4 }}>
+          {phoneme ? (
+            <Text style={{ fontSize: 16, fontWeight: "800", color: "#ffffff" }}>
+              Hướng dẫn âm /{phoneme}/
+            </Text>
+          ) : (
+            <SkeletonItem
+              width={140}
+              height={18}
+              borderRadius={6}
+              style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
+            />
+          )}
+          <View
+            style={{
+              paddingHorizontal: 8,
+              paddingVertical: 1.5,
+              borderRadius: 12,
+              backgroundColor: "rgba(56, 189, 248, 0.16)",
+              borderWidth: 1,
+              borderColor: "rgba(56, 189, 248, 0.35)",
+            }}
+          >
+            <Text style={{ fontSize: 11, fontWeight: "700", color: "#7dd3fc" }}>
+              {dialect.toUpperCase()} {dialect.toLowerCase() === "uk" ? "🇬🇧" : "🇺🇸"}
+            </Text>
+          </View>
+        </View>
+
+        <View style={{ width: 40, height: 40 }} />
+      </View>
+
+      {/* 2. Main Sheet matching PhonemeIntroGuide */}
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: "#f8fafc",
+          borderTopLeftRadius: 28,
+          borderTopRightRadius: 28,
+          paddingHorizontal: 16,
+          paddingTop: 18,
+          gap: 16,
+        }}
+      >
+        {/* A. Hero Phonetic Card Skeleton */}
+        <View
+          style={{
+            backgroundColor: "#ffffff",
+            borderRadius: 24,
+            padding: 18,
+            borderWidth: 1.5,
+            borderColor: "#e2eaf2",
+            gap: 12,
+          }}
+        >
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+              <SkeletonItem width={58} height={58} borderRadius={18} />
+              <View style={{ gap: 6 }}>
+                <SkeletonItem width={110} height={18} borderRadius={8} />
+                <SkeletonItem width={140} height={14} borderRadius={6} />
+              </View>
+            </View>
+            <SkeletonItem width={88} height={38} borderRadius={16} />
+          </View>
+        </View>
+
+        {/* B. Sequential Content Skeletons (No Tabs) */}
+        <View
+          style={{
+            backgroundColor: "#ffffff",
+            borderRadius: 18,
+            padding: 16,
+            borderWidth: 1.5,
+            borderColor: "#e2eaf2",
+            gap: 10,
+          }}
+        >
+          <SkeletonItem width="80%" height={16} borderRadius={6} />
+          <SkeletonItem width="100%" height={14} borderRadius={6} />
+          <SkeletonItem width="60%" height={14} borderRadius={6} />
+        </View>
+
+        <View style={{ gap: 10 }}>
+          {[1, 2, 3].map((step) => (
+            <View
+              key={step}
+              style={{
+                backgroundColor: "#ffffff",
+                borderRadius: 18,
+                padding: 15,
+                borderWidth: 1.5,
+                borderColor: "#e2eaf2",
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 12,
+              }}
+            >
+              <SkeletonItem width={26} height={26} borderRadius={13} />
+              <View style={{ flex: 1, gap: 6 }}>
+                <SkeletonItem width="90%" height={14} borderRadius={6} />
+                <SkeletonItem width="65%" height={14} borderRadius={6} />
+              </View>
+            </View>
+          ))}
         </View>
       </View>
     </View>

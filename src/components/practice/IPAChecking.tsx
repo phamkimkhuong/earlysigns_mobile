@@ -9,16 +9,16 @@ import {
 import { createAudioPlayer } from "expo-audio";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
-import { ChevronLeft } from "lucide-react-native";
+import { BookOpen, ChevronLeft } from "lucide-react-native";
 import { usePronunciationCheck } from "@/hooks/usePronunciationCheck";
 import { buildSoundAnalysisRows } from "@/utils/pronunciationAnalysis";
 import { isQuotaExhausted } from "@/services/usageLimits";
-import { stripHtml } from "@/utils/errors";
 import { hapticFeedback } from "@/utils/haptics";
 import { setItem } from "@/services/storage";
 import { safeNavigate } from "@/navigation/nav";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import UpgradeProModal from "@/components/ui/UpgradeProModal";
+import FormattedHtmlText from "./FormattedHtmlText";
 import PracticePromptCard from "./PracticePromptCard";
 import PracticeFeedbackCard from "./PracticeFeedbackCard";
 import SpeechRecordingDock from "./SpeechRecordingDock";
@@ -77,6 +77,7 @@ export interface IPACheckingProps {
   onScreeningFinished?: () => void;
   onRequestSampleAudio?: (sentence: IPASentence) => Promise<string | null>;
   onRequestSentenceWords?: (sentence: IPASentence) => Promise<any[]>;
+  onShowGuide?: () => void;
   asModal?: boolean;
 }
 
@@ -105,6 +106,7 @@ export default function IPAChecking({
   onScreeningFinished,
   onRequestSampleAudio,
   onRequestSentenceWords,
+  onShowGuide,
   asModal = true,
 }: IPACheckingProps) {
   const isScreening = mode === "screening";
@@ -388,10 +390,36 @@ export default function IPAChecking({
             ) : null}
           </View>
 
-          <View style={{ backgroundColor: "#0284c7", borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 }}>
-            <Text style={{ fontSize: 13, fontWeight: "700", color: "#ffffff" }}>
-              {currentIndex + 1}/{totalSentences}
-            </Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            {onShowGuide ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t("phonemeGuide.viewGuide", "Xem hướng dẫn")}
+                onPress={onShowGuide}
+                style={({ pressed }) => ({
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 4,
+                  paddingHorizontal: 9,
+                  paddingVertical: 4.5,
+                  borderRadius: 14,
+                  backgroundColor: pressed ? "#e0f2fe" : "#f0f9ff",
+                  borderWidth: 1,
+                  borderColor: "#bae6fd",
+                })}
+              >
+                <BookOpen size={13} color="#0284c7" />
+                <Text style={{ fontSize: 12, fontWeight: "700", color: "#0284c7" }}>
+                  {t("phonemeGuide.guideBtn", "Hướng dẫn")}
+                </Text>
+              </Pressable>
+            ) : null}
+
+            <View style={{ backgroundColor: "#0284c7", borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 }}>
+              <Text style={{ fontSize: 13, fontWeight: "700", color: "#ffffff" }}>
+                {currentIndex + 1}/{totalSentences}
+              </Text>
+            </View>
           </View>
         </View>
 
@@ -443,9 +471,14 @@ export default function IPAChecking({
                 gap: 16,
               }}
             >
-              <Text style={{ fontSize: 15, color: "#334155", lineHeight: 24 }} className="leading-6">
-                {stripHtml(instructionsHtml)}
-              </Text>
+              <View className="leading-6 flex-wrap">
+                <FormattedHtmlText
+                  html={instructionsHtml}
+                  style={{ fontSize: 15, color: "#334155", lineHeight: 24 }}
+                  boldStyle={{ fontWeight: "700", color: "#0284c7" }}
+                  italicStyle={{ fontStyle: "italic", color: "#0c2340" }}
+                />
+              </View>
               <PrimaryButton
                 title={t("sentence.startRecording")}
                 onPress={() => setInstructionsDismissed(true)}

@@ -87,6 +87,15 @@
       "consonant": "Consonants (24)"
     }
   },
+  "phonemeGuide": {
+    "guideTitle": "Pronunciation Guide",
+    "viewGuide": "View Guide",
+    "guideBtn": "Guide",
+    "stepsTab": "Articulation",
+    "contrastTab": "Rules & Pairs",
+    "curriculumTab": "Lessons",
+    "startPractice": "Start Practice"
+  },
   "homeDesign": {
     "account": "Account",
     "login": "Log in",

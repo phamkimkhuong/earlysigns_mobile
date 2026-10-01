@@ -55,5 +55,6 @@ export function buildLessonSession(
     sentences,
     title: lessonTitleFromData(data, t),
     instructionsHtml: kind === "phoneme" ? pickInstructions(data, language) : "",
+    rawLessonData: data,
   };
 }

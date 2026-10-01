@@ -115,6 +115,7 @@ export interface LessonSession {
   sentences: LessonSentence[];
   title: string;
   instructionsHtml: string;
+  rawLessonData?: any;
 }
 
 export interface MicError {
