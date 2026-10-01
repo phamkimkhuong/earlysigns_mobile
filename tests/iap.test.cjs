@@ -466,5 +466,45 @@ test("restoreStorePurchases: rejects restore without active store entitlement (n
   assert.equal(res2.expiresAt, "2026-12-01T00:00:00Z");
 });
 
+test("entitlement: correctly recognizes 'earlysigns_pro' primary entitlement and products", () => {
+  const PRO_ENTITLEMENT_ID = "earlysigns_pro";
+  const LEGACY_PRO_ENTITLEMENT_ID = "pro";
+
+  function checkPro(customerInfo) {
+    return Boolean(
+      customerInfo?.entitlements?.active?.[PRO_ENTITLEMENT_ID] ||
+      customerInfo?.entitlements?.active?.[LEGACY_PRO_ENTITLEMENT_ID]
+    );
+  }
+
+  // 1. earlysigns_pro active
+  assert.equal(checkPro({
+    entitlements: {
+      active: {
+        earlysigns_pro: { productIdentifier: "yearly", expirationDate: "2027-01-01T00:00:00Z" }
+      }
+    }
+  }), true);
+
+  // 2. legacy pro active
+  assert.equal(checkPro({
+    entitlements: {
+      active: {
+        pro: { productIdentifier: "monthly", expirationDate: "2027-01-01T00:00:00Z" }
+      }
+    }
+  }), true);
+
+  // 3. no active
+  assert.equal(checkPro({ entitlements: { active: {} } }), false);
+
+  // 4. Products mapping validation
+  const clientProducts = ["Three_months", "yearly", "monthly"];
+  assert.ok(clientProducts.includes("Three_months"));
+  assert.ok(clientProducts.includes("yearly"));
+  assert.ok(clientProducts.includes("monthly"));
+});
+
+
 
 

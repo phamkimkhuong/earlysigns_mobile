@@ -78,8 +78,8 @@ Sau khi tạo, bạn cần lấy đủ 4 thông tin:
 1. **Tệp khóa `.p8`:** Bấm nút **Download API Key** để tải về tệp có đuôi `.p8` (Ví dụ: `SubscriptionKey_ABC123XYZ.p8`).
    > [!CAUTION]
    > **Apple chỉ cho phép tải tệp `.p8` này DUY NHẤT 1 LẦN**. Hãy cất giữ cẩn thận trong thư mục an toàn của công ty. Nếu làm mất, bạn sẽ phải thu hồi và tạo khóa mới.
-2. **Key ID:** Dãy 10 ký tự nằm ngay cạnh tên khóa vừa tạo (Ví dụ: `ABC123XYZ9`).
-3. **Issuer ID:** Dãy UUID nằm ở ngay phía trên cùng trang Keys (Ví dụ: `69a6de70-xxxx-xxxx-xxxx-xxxxxxxxxxxx`).
+2. **Key ID:** `3GVVJ77PH8` (Dãy 10 ký tự của khóa In-App Purchase đã tạo).
+3. **Issuer ID:** `30415671-8a58-418c-8dc9-5b79c34796dc` (Mã UUID của tổ chức trên App Store Connect).
 4. **App Bundle ID:** `net.earlysigns.android`
 
 ### 4.3. Kết nối vào RevenueCat
@@ -88,8 +88,8 @@ Sau khi tạo, bạn cần lấy đủ 4 thông tin:
    - **App name:** `EarlySigns iOS`
    - **Bundle ID:** `net.earlysigns.android`
    - **In-app purchase key (.p8 file):** Bấm tải lên tệp `.p8` vừa tải ở trên.
-   - **Key ID:** Dán mã Key ID 10 ký tự.
-   - **Issuer ID:** Dán mã Issuer ID UUID.
+   - **Key ID:** `3GVVJ77PH8`
+   - **Issuer ID:** `30415671-8a58-418c-8dc9-5b79c34796dc`
 3. Bấm **Save Changes**.
 
 ---
@@ -153,47 +153,47 @@ RevenueCat sử dụng mô hình: **Store Products → Entitlement → Offering 
 ```mermaid
 graph LR
     subgraph RevenueCat Dashboard
-        E["Entitlement: pro (Bắt buộc)"] --> OFF["Default Offering"]
+        E["Entitlement: earlysigns_pro"] --> OFF["Default Offering"]
         OFF --> PKG1["$rc_monthly (1 Tháng)"]
         OFF --> PKG2["$rc_three_month (3 Tháng)"]
         OFF --> PKG3["$rc_annual (12 Tháng)"]
     end
     
     subgraph App Store & Google Play
-        SP1["earlysigns_pro_1m"] -.-> PKG1
-        SP2["earlysigns_pro_3m"] -.-> PKG2
-        SP3["earlysigns_pro_1y"] -.-> PKG3
+        SP1["monthly"] -.-> PKG1
+        SP2["Three_months"] -.-> PKG2
+        SP3["yearly"] -.-> PKG3
     end
 ```
 
-### 6.1. Tạo Entitlement (BẮT BUỘC: ID phải là `pro`)
+### 6.1. Tạo Entitlement (`earlysigns_pro`)
 > [!IMPORTANT]
 > Mã nguồn ứng dụng Mobile kiểm tra quyền lợi thông qua hằng số:  
-> `export const PRO_ENTITLEMENT_ID = "pro";`  
-> Do đó, **Identifier của Entitlement bắt buộc phải đặt chính xác là `pro` (viết thường toàn bộ)**.
+> `export const PRO_ENTITLEMENT_ID = "earlysigns_pro";` (và tương thích ngược với `"pro"`).  
+> Do đó, **Identifier của Entitlement trên RevenueCat Dashboard nên đặt là `earlysigns_pro`**.
 
 1. Tại RevenueCat Dashboard, menu trái chọn mục **Entitlements**.
 2. Bấm **+ New Entitlement**:
-   - **Identifier:** `pro`
+   - **Identifier:** `earlysigns_pro`
    - **Description:** `EarlySigns Pro Membership`
 3. Bấm **Save**.
 
 ### 6.2. Đăng ký Sản phẩm (Products) trên Store & Gắn vào RevenueCat
-Bạn tạo các gói thuê bao định kỳ (Auto-renewable Subscriptions) trên App Store Connect và Google Play Console với Product ID gợi nghị:
+Các gói thuê bao định kỳ (Auto-renewable Subscriptions) trên App Store Connect và Google Play Console theo cấu hình của khách hàng:
 
 | Gói cước | Product ID trên Store | Loại gói trên RevenueCat | Thời hạn |
 | :--- | :--- | :--- | :--- |
-| **Gói Tháng** | `earlysigns_pro_1m` | `$rc_monthly` | 1 tháng |
-| **Gói 3 Tháng** | `earlysigns_pro_3m` | `$rc_three_month` | 3 tháng |
-| **Gói 1 Năm** | `earlysigns_pro_1y` *(hoặc `earlysigns_pro_12m`)* | `$rc_annual` | 12 tháng (1 năm) |
+| **Gói Tháng** | `monthly` | `$rc_monthly` | 1 tháng |
+| **Gói 3 Tháng** | `Three_months` | `$rc_three_month` | 3 tháng |
+| **Gói 1 Năm** | `yearly` | `$rc_annual` | 12 tháng (1 năm) |
 
 1. Tại RevenueCat Dashboard → Chọn **Products** → Bấm **+ New Product**:
-   - Nhập Product ID tương ứng cho cả iOS và Android.
-   - Gắn Entitlement `pro` vào từng Product.
-2. Chọn **Offerings** → Bấm vào Offering mặc định (hoặc tạo mới với Identifier `default`):
-   - Thêm package `$rc_monthly` và gán Product 1 tháng.
-   - Thêm package `$rc_three_month` và gán Product 3 tháng.
-   - Thêm package `$rc_annual` và gán Product 1 năm.
+   - Thêm 3 Product IDs tương ứng: `monthly`, `Three_months`, `yearly`.
+   - Gắn Entitlement `earlysigns_pro` vào từng Product.
+2. Chọn **Offerings** → Bấm vào Offering mặc định (Identifier `default`):
+   - Thêm package `$rc_monthly` và gán Product `monthly`.
+   - Thêm package `$rc_three_month` và gán Product `Three_months`.
+   - Thêm package `$rc_annual` và gán Product `yearly`.
 3. Bấm **Save**.
 
 ---
@@ -210,7 +210,6 @@ Bạn tạo các gói thuê bao định kỳ (Auto-renewable Subscriptions) trê
    # RevenueCat Public API Keys
    EXPO_PUBLIC_REVENUECAT_APPLE_KEY=appl_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
    EXPO_PUBLIC_REVENUECAT_GOOGLE_KEY=goog_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-   EXPO_PUBLIC_MOCK_IAP=false
    ```
 
 ### 7.2. Nguyên Tắc Hoạt Động: Mobile Hoàn Toàn Độc Lập (Không Bị Block Bởi Backend)
@@ -330,8 +329,8 @@ Khi bạn bấm nút "Mua gói", thư viện Google Play Billing trên điện t
 
 | Bản cài đặt | Package Name | Phương án kiểm thử đề xuất | Cách thực hiện |
 | :--- | :--- | :--- | :--- |
-| **1. Bản Dev Client** | `net.earlysigns.android.dev` | 🟢 **Mock IAP (Giả lập)** | Bật `EXPO_PUBLIC_MOCK_IAP=true` trong `.env` để test UI, luồng mở khóa Pro, trừ lượt dùng mà không cần kết nối Google Play. |
-| **2. Bản Preview APK** | `net.earlysigns.android.preview` | 🟢 **Mock IAP (Giả lập)** | Dùng để gửi khách hàng test giao diện, kiểm thử bài học, chức năng chấm phát âm AI. |
+| **1. Bản Dev Client** | `net.earlysigns.android.dev` | 🟢 **RevenueCat Test Store** | Dùng API Key Test (`test_...`) của RevenueCat để mô phỏng giao dịch mua, mở khóa Pro tự động chuẩn xác 100%. |
+| **2. Bản Preview APK** | `net.earlysigns.android.preview` | 🟢 **RevenueCat Test Store** | Dùng để gửi khách hàng test giao diện, kiểm thử bài học, chức năng chấm phát âm AI. |
 | **3. Bản Production (hoặc Preview Store APK)** | **`net.earlysigns.android`** | 🟡 **Google Play Billing THẬT (License Testing)** | Kiểm thử hộp thoại thanh toán thật của Google Play bằng thẻ ảo miễn phí (Không trừ tiền thật). |
 
 #### C. Quy trình cấu hình Google Play License Testing (Thanh toán thật - Miễn phí):
@@ -377,7 +376,7 @@ Khi bạn bấm nút "Mua gói", thư viện Google Play Billing trên điện t
   2. File `.aab` chưa từng được tải lên kênh Internal Testing trên Google Play Console (Google Play chỉ mở cổng IAP khi có ít nhất 1 bản build được upload).
   3. Google Play cần từ 2 đến 12 tiếng để đồng bộ In-App Products mới tạo trên máy chủ.
 - **Cách khắc phục:**
-  - **Nếu đang phát triển tính năng / test UI:** Đổi biến môi trường trong file `.env` thành `EXPO_PUBLIC_MOCK_IAP=true`. Khi đó, bạn bấm mua là app tự động mô phỏng thành công ngay lập tức để tiếp tục test mà không bị Google chặn.
+  - **Nếu đang phát triển tính năng / test UI:** Sử dụng API Key Test (`test_...`) của RevenueCat trong file `.env`. RevenueCat SDK sẽ tự động mô phỏng giao dịch mua thành công và cấp quyền Pro mà không bị Google chặn.
   - **Nếu muốn test thanh toán thật:** Hãy cài bản build có Package Name `net.earlysigns.android` (thông qua link Google Play Internal Testing hoặc build bằng lệnh `eas build --platform android --profile preview-store`). Đồng thời đảm bảo email Google trên điện thoại đã nằm trong danh sách **License testers**.
 
 #### Q2: Bấm mua trên iOS bị đứng hoặc báo lỗi "StoreKit Unavailable"?

@@ -23,6 +23,7 @@ import {
 import { useAuth } from "@/services/Auth";
 import { formatExpiryDate } from "@/utils/errors";
 import { billingApi } from "@/api/billingApi";
+import { getStoredIapSubscription } from "@/services/iap";
 import { navigateToTab } from "@/navigation/nav";
 import type { RootStackParamList } from "@/types/navigation";
 
@@ -74,7 +75,16 @@ export default function PaymentResultScreen({ navigation, route }: Props) {
       return;
     }
 
-    // If no orderCode (e.g., Native IAP or direct return), check current billing usage
+    // If no orderCode (e.g., Native IAP or direct return)
+    // Priority 1: Check active Store IAP subscription (instant confirmation, zero webhook latency)
+    const storedIap = getStoredIapSubscription();
+    if (storedIap) {
+      setSubscriptionExpiresAt(storedIap.expiresAt);
+      setStatus("confirmed");
+      return;
+    }
+
+    // Priority 2: Check current billing usage from Backend
     try {
       const usage = await billingApi.getUsage();
       if (usage?.has_active_subscription) {

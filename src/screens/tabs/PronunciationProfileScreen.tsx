@@ -6,10 +6,11 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 import {
   AudioLines,
   ChevronLeft,
-  ChevronRight,
+  Mic,
 } from "lucide-react-native";
 import { useAuth } from "@/services/Auth";
 import { useProgressSoundsQuery } from "@/hooks/queries/useProgressQueries";
@@ -19,6 +20,7 @@ import { accuracyBandColor } from "@/utils/checkResultScoreColor";
 type SoundFilter = "all" | "weak" | "mastered" | "vowels" | "consonants";
 
 export default function PronunciationProfileScreen({ navigation }: { navigation: any }) {
+  const { t } = useTranslation();
   const { authToken, userDialect } = useAuth();
   const dialect = userDialect || "uk";
 
@@ -82,13 +84,16 @@ export default function PronunciationProfileScreen({ navigation }: { navigation:
       {/* Top Header Navigation */}
       <View className="flex-row items-center justify-between px-4 py-3 bg-white border-b border-slate-200">
         <TouchableOpacity
+          accessible={true}
+          accessibilityRole="button"
+          accessibilityLabel={t("common.back", "Quay lại")}
           onPress={() => navigation.goBack()}
           className="w-10 h-10 rounded-full items-center justify-center active:opacity-70"
         >
           <ChevronLeft size={24} color="#0f172a" />
         </TouchableOpacity>
         <Text className="text-base font-extrabold text-[#0f172a]">
-          Hồ sơ phát âm 44 âm IPA
+          {t("pronunciationProfile.title")}
         </Text>
         <View className="w-10" />
       </View>
@@ -117,20 +122,20 @@ export default function PronunciationProfileScreen({ navigation }: { navigation:
             >
               <AudioLines size={13} color="#38bdf8" />
               <Text className="text-2xs font-extrabold text-[#38bdf8] uppercase tracking-wider">
-                Giọng mẫu Anh – Anh (UK)
+                {dialect === "us" ? t("pronunciationProfile.voiceUs") : t("pronunciationProfile.voiceUk")}
               </Text>
             </View>
             <Text className="text-2xs font-bold text-slate-300">
-              Độ bao phủ: {stats.tested}/44 âm
+              {t("pronunciationProfile.coverage", { count: stats.tested })}
             </Text>
           </View>
 
           <View className="gap-1">
             <Text className="text-xl font-black text-white">
-              Bảng đánh giá năng lực phát âm
+              {t("pronunciationProfile.cardTitle")}
             </Text>
             <Text className="text-xs text-slate-300 leading-relaxed">
-              Chi tiết độ chuẩn xác và số lượt luyện của bạn cho từng âm tiết trong hệ thống ngữ âm quốc tế.
+              {t("pronunciationProfile.cardDesc")}
             </Text>
           </View>
 
@@ -144,7 +149,7 @@ export default function PronunciationProfileScreen({ navigation }: { navigation:
                 {stats.tested}
               </Text>
               <Text className="text-2xs font-semibold text-slate-300 mt-0.5">
-                Đã đánh giá
+                {t("pronunciationProfile.tested")}
               </Text>
             </View>
 
@@ -156,7 +161,7 @@ export default function PronunciationProfileScreen({ navigation }: { navigation:
                 {stats.mastered}
               </Text>
               <Text className="text-xs font-semibold text-slate-300 mt-0.5">
-                Thành thạo
+                {t("pronunciationProfile.mastered")}
               </Text>
             </View>
 
@@ -168,7 +173,7 @@ export default function PronunciationProfileScreen({ navigation }: { navigation:
                 {stats.weak}
               </Text>
               <Text className="text-xs font-semibold text-slate-300 mt-0.5">
-                Cần cải thiện
+                {t("pronunciationProfile.weak")}
               </Text>
             </View>
           </View>
@@ -182,11 +187,11 @@ export default function PronunciationProfileScreen({ navigation }: { navigation:
         >
           {(
             [
-              { id: "all", label: `Tất cả (${stats.total})` },
-              { id: "weak", label: `Cần cải thiện (${stats.weak})` },
-              { id: "mastered", label: `Đã thành thạo (${stats.mastered})` },
-              { id: "vowels", label: "Nguyên âm (20)" },
-              { id: "consonants", label: "Phụ âm (24)" },
+              { id: "all", label: t("pronunciationProfile.filterAll", { count: stats.total }) },
+              { id: "weak", label: t("pronunciationProfile.filterWeak", { count: stats.weak }) },
+              { id: "mastered", label: t("pronunciationProfile.filterMastered", { count: stats.mastered }) },
+              { id: "vowels", label: t("pronunciationProfile.filterVowels", { count: 20 }) },
+              { id: "consonants", label: t("pronunciationProfile.filterConsonants", { count: 24 }) },
             ] as const
           ).map((item) => {
             const isSelected = filter === item.id;
@@ -214,18 +219,9 @@ export default function PronunciationProfileScreen({ navigation }: { navigation:
         {/* Sound List */}
         <View className="gap-2.5">
           {filteredList.map((item) => {
-            const badgeBg =
-              item.category === "monophthong"
-                ? "#ecfdf5"
-                : item.category === "diphthong"
-                  ? "#fffbeb"
-                  : "#eff6ff";
-            const badgeColor =
-              item.category === "monophthong"
-                ? "#059669"
-                : item.category === "diphthong"
-                  ? "#d97706"
-                  : "#1d4ed8";
+            const acc = item.accuracyPct ?? 0;
+            const isGood = acc >= 70;
+            const isMid = acc >= 50;
 
             return (
               <TouchableOpacity
@@ -235,63 +231,84 @@ export default function PronunciationProfileScreen({ navigation }: { navigation:
                   backgroundColor: "#ffffff",
                   borderColor: "#e2e8f0",
                 }}
-                className="rounded-2xl p-4 border flex-row items-center justify-between active:opacity-85 shadow-sm"
+                className="rounded-2xl p-3.5 border flex-row items-center justify-between active:opacity-85 shadow-xs"
               >
-                <View className="flex-row items-center gap-3.5 flex-1 pr-2">
+                <View className="flex-row items-center gap-3.5 flex-1 min-w-0 mr-3">
                   <View
-                    style={{ backgroundColor: badgeBg, borderColor: badgeColor, borderWidth: 1 }}
-                    className="w-13 h-13 rounded-2xl items-center justify-center"
+                    className="shrink-0"
+                    style={{
+                      minWidth: 56,
+                      height: 46,
+                      paddingHorizontal: 8,
+                      borderRadius: 16,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      borderWidth: 1,
+                      backgroundColor: item.hasData
+                        ? (isGood ? "#ecfdf5" : isMid ? "#fffbeb" : "#fee2e2")
+                        : "#f1f5f9",
+                      borderColor: item.hasData
+                        ? (isGood ? "#a7f3d0" : isMid ? "#fde68a" : "#fecaca")
+                        : "#e2e8f0",
+                    }}
                   >
-                    <Text style={{ color: badgeColor }} className="text-xl font-black">
-                      /{item.sound}/
+                    <Text
+                      numberOfLines={1}
+                      textBreakStrategy="simple"
+                      style={{
+                        fontSize: 16,
+                        fontWeight: "800",
+                        color: item.hasData
+                          ? (isGood ? "#059669" : isMid ? "#d97706" : "#dc2626")
+                          : "#64748b",
+                        includeFontPadding: false,
+                        textAlign: "center",
+                      }}
+                    >
+                      {`/${item.sound}/`}
                     </Text>
                   </View>
 
-                  <View className="flex-1 gap-1">
-                    <View className="flex-row items-center gap-2">
-                      <Text className="text-[15px] font-extrabold text-[#0c2340]">
-                        {item.categoryLabelVi}
+                  <View className="flex-1 min-w-0 gap-1.5">
+                    <View className="flex-row items-center justify-between">
+                      <Text numberOfLines={1} className="text-xs text-slate-500 font-medium flex-1 mr-2">
+                        {t("pronunciationProfile.example")}{" "}
+                        <Text className="text-slate-800 font-bold">{item.example}</Text>
                       </Text>
-                      {item.isMastered ? (
-                        <View style={{ backgroundColor: "#ecfdf5" }} className="px-2 py-0.5 rounded-full border border-emerald-200">
-                          <Text className="text-xs font-bold text-emerald-700">Đạt chuẩn</Text>
-                        </View>
-                      ) : item.isWeak ? (
-                        <View style={{ backgroundColor: "#fef2f2" }} className="px-2 py-0.5 rounded-full border border-rose-200">
-                          <Text className="text-xs font-bold text-rose-600">Cần luyện</Text>
-                        </View>
-                      ) : null}
+                      <Text
+                        style={{
+                          color: item.hasData ? accuracyBandColor(Number(acc) / 100) : "#94a3b8",
+                        }}
+                        className="text-xs font-black shrink-0"
+                      >
+                        {item.hasData ? `${acc}%` : t("pronunciationProfile.notPracticed")}
+                      </Text>
                     </View>
 
-                    <Text numberOfLines={1} className="text-[13px] text-slate-500 font-medium">
-                      Ví dụ: <Text className="text-slate-800 font-bold">{item.example}</Text>
-                    </Text>
-                    <Text numberOfLines={1} className="text-xs text-slate-400">
-                      {item.vietnameseTip}
-                    </Text>
+                    {/* Thanh tiến trình hàng ngang */}
+                    <View className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                      <View
+                        className="h-full rounded-full"
+                        style={{
+                          width: item.hasData ? `${Math.max(5, Math.min(100, acc))}%` : "0%",
+                          backgroundColor: item.hasData
+                            ? (isGood ? "#10b981" : isMid ? "#f59e0b" : "#ef4444")
+                            : "transparent",
+                        }}
+                      />
+                    </View>
                   </View>
                 </View>
 
-                {/* Right: Accuracy score & Practice CTA */}
-                <View className="items-end gap-1">
-                  {item.hasData ? (
-                    <Text
-                      style={{ color: accuracyBandColor(Number(item.accuracyPct) / 100) }}
-                      className="text-base font-black"
-                    >
-                      {item.accuracyPct}%
-                    </Text>
-                  ) : (
-                    <Text className="text-sm font-bold text-slate-400">
-                      Chưa luyện
-                    </Text>
-                  )}
-                  <View className="flex-row items-center gap-0.5">
-                    <Text style={{ color: "#0284c7" }} className="text-xs font-bold">
-                      Luyện
-                    </Text>
-                    <ChevronRight size={13} color="#0284c7" />
-                  </View>
+                {/* Button Luyện */}
+                <View
+                  style={{ backgroundColor: "#0c2340" }}
+                  className="px-3 py-2 rounded-xl flex-row items-center gap-1 shrink-0"
+                >
+                  <Mic size={12} color="#ffffff" />
+                  <Text className="text-xs font-extrabold text-white">
+                    {t("pronunciationProfile.practice")}
+                  </Text>
                 </View>
               </TouchableOpacity>
             );

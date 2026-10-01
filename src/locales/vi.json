@@ -1394,7 +1394,19 @@
     "restoreNotFound": "Không tìm thấy giao dịch nào cần khôi phục cho tài khoản Apple ID / Google Play này.",
     "packageNotFound": "Gói dịch vụ không tồn tại trên hệ thống.",
     "storeInterrupted": "Giao dịch Store bị gián đoạn. Vui lòng thử lại sau.",
-    "storeConnectionFailed": "Không thể kết nối đến máy chủ cửa hàng để khôi phục giao dịch."
+    "storeConnectionFailed": "Không thể kết nối đến máy chủ cửa hàng để khôi phục giao dịch.",
+    "restoreSuccessTitle": "Khôi phục thành công!",
+    "restoreSuccessMsg": "Đã khôi phục thành công gói EarlySigns Pro của bạn.",
+    "restoreNoneTitle": "Không tìm thấy giao dịch",
+    "restoreNoneMsg": "Không tìm thấy gói đăng ký nào đang hoạt động liên kết với tài khoản Apple ID / Google Play này.",
+    "restoreErrorTitle": "Lỗi khôi phục",
+    "restoreErrorMsg": "Không thể khôi phục giao dịch lúc này. Vui lòng thử lại sau.",
+    "packageNotConfiguredInStore": "Gói cước chưa được cấu hình trên Cửa hàng ứng dụng.",
+    "alreadyPurchased": "Gói cước này đã được mua trước đó. Vui lòng bấm 'Khôi phục giao dịch'.",
+    "notAllowed": "Thiết bị của bạn không được phép thực hiện giao dịch mua trong ứng dụng.",
+    "paymentPending": "Giao dịch đang chờ xác nhận từ Cửa hàng ứng dụng hoặc người giám hộ.",
+    "proNotActive": "Quyền lợi EarlySigns Pro chưa được kích hoạt trên Cửa hàng ứng dụng. Vui lòng thử lại sau.",
+    "storeUnavailable": "Cổng thanh toán Store (Apple App Store / Google Play) chưa sẵn sàng hoặc chưa được cấu hình trên thiết bị này."
   },
   "profileExtra": {
     "screenTitle": "Hồ sơ cá nhân",
@@ -1494,5 +1506,24 @@
     "screeningTitle": "Bắt đầu bài kiểm tra sàng lọc",
     "screeningDesc": "Đánh giá toàn diện 44 âm để mở khóa điểm số",
     "screeningAction": "Làm bài test (3 phút)"
+  },
+  "pronunciationProfile": {
+    "title": "Hồ sơ phát âm 44 âm IPA",
+    "voiceUk": "Giọng mẫu Anh – Anh (UK)",
+    "voiceUs": "Giọng mẫu Anh – Mỹ (US)",
+    "coverage": "Độ bao phủ: {{count}}/44 âm",
+    "cardTitle": "Bảng đánh giá năng lực phát âm",
+    "cardDesc": "Chi tiết độ chuẩn xác và số lượt luyện của bạn cho từng âm tiết trong hệ thống ngữ âm quốc tế.",
+    "tested": "Đã đánh giá",
+    "mastered": "Thành thạo",
+    "weak": "Cần cải thiện",
+    "filterAll": "Tất cả ({{count}})",
+    "filterWeak": "Cần cải thiện ({{count}})",
+    "filterMastered": "Đã thành thạo ({{count}})",
+    "filterVowels": "Nguyên âm ({{count}})",
+    "filterConsonants": "Phụ âm ({{count}})",
+    "example": "Ví dụ:",
+    "notPracticed": "Chưa học",
+    "practice": "Luyện"
   }
 }

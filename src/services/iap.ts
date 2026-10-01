@@ -2,9 +2,11 @@ import { Linking, Platform } from "react-native";
 import Purchases, {
   LOG_LEVEL,
   PURCHASES_ERROR_CODE,
+  type PurchasesPackage,
   type CustomerInfo,
   type CustomerInfoUpdateListener,
 } from "react-native-purchases";
+import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 import { getItem, setItem, removeItem } from "./storage";
 import { seedBillingUsage, getCachedBillingUsage } from "./sessionData";
 import { notifyBillingUsageChanged } from "./billingEvents";
@@ -17,7 +19,24 @@ import type { BillingUsage } from "@/types/domain";
 import i18n from "@/core/i18n";
 
 export const IAP_SUBSCRIPTION_KEY = "earlysigns_active_iap_subscription";
-export const PRO_ENTITLEMENT_ID = "pro";
+export const PRO_ENTITLEMENT_ID = "earlysigns_pro";
+export const LEGACY_PRO_ENTITLEMENT_ID = "pro";
+
+export function getActiveProEntitlement(customerInfo: CustomerInfo) {
+  if (!customerInfo || typeof customerInfo !== "object") return undefined;
+  return (
+    customerInfo.entitlements?.active?.[PRO_ENTITLEMENT_ID] ||
+    customerInfo.entitlements?.active?.[LEGACY_PRO_ENTITLEMENT_ID]
+  );
+}
+
+export function hasAnyProEntitlementHistory(customerInfo: CustomerInfo) {
+  if (!customerInfo || typeof customerInfo !== "object") return false;
+  return Boolean(
+    customerInfo.entitlements?.all?.[PRO_ENTITLEMENT_ID] ||
+    customerInfo.entitlements?.all?.[LEGACY_PRO_ENTITLEMENT_ID]
+  );
+}
 
 const isNativeMobile = Platform.OS === "android" || Platform.OS === "ios";
 
@@ -33,7 +52,7 @@ let customerInfoListener: CustomerInfoUpdateListener | null = null;
 export function handleCustomerInfoUpdate(customerInfo: CustomerInfo): void {
   if (!customerInfo || typeof customerInfo !== "object") return;
 
-  const proEntitlement = customerInfo.entitlements?.active?.[PRO_ENTITLEMENT_ID];
+  const proEntitlement = getActiveProEntitlement(customerInfo);
   const token = getItem(AUTH_TOKEN_KEY) || "";
 
   if (proEntitlement) {
@@ -68,7 +87,7 @@ export function handleCustomerInfoUpdate(customerInfo: CustomerInfo): void {
     // 2. Pro Entitlement is NOT active
     // Check if user previously held an IAP Store subscription that lapsed/refunded
     const hadStoreSubscription =
-      Boolean(customerInfo.entitlements?.all?.[PRO_ENTITLEMENT_ID]) ||
+      hasAnyProEntitlementHistory(customerInfo) ||
       Boolean(getItem(IAP_SUBSCRIPTION_KEY));
 
     if (hadStoreSubscription) {
@@ -215,6 +234,8 @@ export interface StoreProduct {
   priceVnd: number;
   originalPriceVnd: number;
   priceDisplay: string;
+  originalPriceDisplay?: string;
+  currencyCode?: string;
   periodLabel: string;
   monthlyEquivalent: string;
   popular?: boolean;
@@ -257,11 +278,125 @@ export function normalizeStoreProduct(apiPkg: any): StoreProduct {
     priceVnd,
     originalPriceVnd,
     priceDisplay: `${priceVnd.toLocaleString("vi-VN")} đ`,
+    originalPriceDisplay:
+      originalPriceVnd > priceVnd
+        ? `${originalPriceVnd.toLocaleString("vi-VN")} đ`
+        : undefined,
+    currencyCode: "VND",
     periodLabel: months === 12 ? "12 tháng" : `${months} tháng`,
     monthlyEquivalent: `${monthlyEquivalentNumber.toLocaleString("vi-VN")} đ/tháng`,
     popular: months === 12,
     savingsBadge: discountPercent > 0 ? `Tiết kiệm ${discountPercent}%` : undefined,
   };
+}
+
+/**
+ * Normalizes a RevenueCat PurchasesPackage into a StoreProduct for UI rendering
+ */
+export function normalizePurchasesPackage(pkg: PurchasesPackage): StoreProduct {
+  const pId = pkg.product.identifier;
+  const pType = (pkg.packageType || "").toLowerCase();
+
+  let months = 1;
+  if (
+    pId === "yearly" ||
+    pType.includes("annual") ||
+    pId.includes("12") ||
+    pId.includes("1y")
+  ) {
+    months = 12;
+  } else if (
+    pId === "Three_months" ||
+    pId.toLowerCase() === "three_months" ||
+    pType.includes("three_month") ||
+    pId.includes("3m")
+  ) {
+    months = 3;
+  } else {
+    months = 1;
+  }
+
+  const currencyCode = pkg.product.currencyCode || "USD";
+  const rawPrice = Number(pkg.product.price || 0);
+  const priceDisplay =
+    pkg.product.priceString ||
+    (currencyCode === "VND"
+      ? `${rawPrice.toLocaleString("vi-VN")} đ`
+      : `${rawPrice.toFixed(2)} ${currencyCode}`);
+  const monthlyEquivalentNumber = Math.round(rawPrice / months);
+  const monthlyEquivalent =
+    currencyCode === "VND"
+      ? `${monthlyEquivalentNumber.toLocaleString("vi-VN")} đ/tháng`
+      : `${(rawPrice / months).toFixed(2)} ${currencyCode}/tháng`;
+
+  const defaultName =
+    months === 12
+      ? "EarlySigns Pro 12 Tháng (1 Năm)"
+      : `EarlySigns Pro ${months} Tháng`;
+
+  const rawName = String(pkg.product.title || pkg.product.description || "").trim();
+  const name =
+    rawName &&
+    rawName.toLowerCase() !== `${months} month` &&
+    rawName.toLowerCase() !== `${months} months`
+      ? rawName.startsWith("EarlySigns")
+        ? rawName
+        : `EarlySigns Pro - ${rawName}`
+      : defaultName;
+
+  let originalPriceDisplay: string | undefined;
+  if (months === 12) {
+    if (currencyCode === "VND") {
+      originalPriceDisplay = `${(rawPrice * 2).toLocaleString("vi-VN")} đ`;
+    } else {
+      originalPriceDisplay = `${(rawPrice * 2).toFixed(2)} ${currencyCode}`;
+    }
+  }
+
+  return {
+    id: pkg.product.identifier,
+    months,
+    name,
+    priceVnd: rawPrice,
+    originalPriceVnd: months === 12 ? rawPrice * 2 : rawPrice,
+    priceDisplay,
+    originalPriceDisplay,
+    currencyCode,
+    periodLabel: months === 12 ? "12 tháng" : `${months} tháng`,
+    monthlyEquivalent,
+    popular: months === 12,
+    savingsBadge: months === 12 ? "Tiết kiệm 50%" : undefined,
+  };
+}
+
+/**
+ * Fetch available StoreProducts directly from RevenueCat Offerings.
+ * This guarantees prices, currencies, and taxes match Apple/Google Store sheets 100%.
+ */
+export async function getStoreOfferingsProducts(): Promise<StoreProduct[]> {
+  if (!isRevenueCatAvailable()) {
+    if (isNativeMobile) {
+      await initRevenueCat();
+    }
+    if (!isRevenueCatAvailable()) {
+      return [];
+    }
+  }
+  try {
+    const offerings = await Purchases.getOfferings();
+    const currentOffering = offerings.current;
+    const availablePackages = currentOffering?.availablePackages || [];
+
+    if (availablePackages.length === 0) {
+      return [];
+    }
+
+    const products = availablePackages.map(normalizePurchasesPackage);
+    return products.sort((a, b) => a.months - b.months);
+  } catch (err) {
+    console.warn("[IAP] Error fetching offerings from RevenueCat:", err);
+    return [];
+  }
 }
 
 export interface StoredSubscriptionData {
@@ -330,46 +465,24 @@ export async function purchaseStoreProduct(
     return {
       success: false,
       error:
-        i18n.t("upgrade.packageNotFound") ||
+        i18n.t("payment.packageNotFound") ||
         "Gói dịch vụ không tồn tại trên hệ thống.",
     };
   }
 
-  // 1. PRODUCTION ENFORCEMENT: Native StoreKit / Google Play Billing
+  // 1. Ensure RevenueCat SDK is initialized (handles both Test Store & Live Store seamlessly)
   if (!isRevenueCatAvailable()) {
-    // Development sandbox simulation mode: ONLY allowed when explicitly flagged in DEV
-    if (__DEV__ && process.env.EXPO_PUBLIC_MOCK_IAP === "true") {
-      console.warn("[IAP] Running in mock dev mode with simulated transaction.");
-      const now = new Date();
-      const expiry = new Date(now);
-      expiry.setMonth(expiry.getMonth() + product.months);
-      const expiresAt = expiry.toISOString();
-      const subData: StoredSubscriptionData = {
-        productId: product.id,
-        purchasedAt: now.toISOString(),
-        expiresAt,
-        platform: Platform.OS === "ios" ? "ios" : Platform.OS === "android" ? "android" : "other",
-        orderId: `mock_${Date.now()}`,
-      };
-      saveIapSubscription(subData);
-      if (options?.authToken) {
-        seedBillingUsage(options.authToken, {
-          has_active_subscription: true,
-          is_in_trial: false,
-          subscription_expires_at: expiresAt,
-          tier: "pro",
-          daily_remaining: 9999,
-        });
-      }
-      return { success: true, expiresAt };
+    if (isNativeMobile) {
+      await initRevenueCat();
     }
-
-    return {
-      success: false,
-      error:
-        i18n.t("upgrade.storeUnavailable") ||
-        "Cổng thanh toán Store (Apple App Store / Google Play) chưa sẵn sàng hoặc chưa được cấu hình trên thiết bị này. Vui lòng thử lại sau.",
-    };
+    if (!isRevenueCatAvailable()) {
+      return {
+        success: false,
+        error:
+          i18n.t("payment.storeUnavailable") ||
+          "Cổng thanh toán Store (Apple App Store / Google Play) chưa sẵn sàng hoặc chưa được cấu hình trên thiết bị này. Vui lòng thử lại sau.",
+      };
+    }
   }
 
   try {
@@ -382,20 +495,24 @@ export async function purchaseStoreProduct(
       (pkg) =>
         pkg.product.identifier === productId ||
         pkg.identifier === productId ||
-        pkg.packageType?.toLowerCase().includes(
-          product.months === 12
-            ? "annual"
-            : product.months === 3
-            ? "three_month"
-            : "monthly"
-        )
+        pkg.product.identifier.toLowerCase() === productId.toLowerCase() ||
+        (product.months === 12 &&
+          (pkg.product.identifier === "yearly" ||
+            pkg.packageType?.toLowerCase().includes("annual"))) ||
+        (product.months === 3 &&
+          (pkg.product.identifier === "Three_months" ||
+            pkg.product.identifier === "three_months" ||
+            pkg.packageType?.toLowerCase().includes("three_month"))) ||
+        (product.months === 1 &&
+          (pkg.product.identifier === "monthly" ||
+            pkg.packageType?.toLowerCase().includes("monthly")))
     );
 
     if (!targetPackage) {
       return {
         success: false,
         error:
-          i18n.t("upgrade.packageNotConfiguredInStore") ||
+          i18n.t("payment.packageNotConfiguredInStore") ||
           `Gói cước "${product.name}" chưa được cấu hình trên Cửa hàng ứng dụng (App Store / Google Play).`,
       };
     }
@@ -413,14 +530,14 @@ export async function purchaseStoreProduct(
       ) {
         return {
           success: false,
-          error: i18n.t("upgrade.cancelled") || "Đã hủy giao dịch thanh toán.",
+          error: i18n.t("payment.cancelled") || "Đã hủy giao dịch thanh toán.",
         };
       }
       if (rcError?.code === PURCHASES_ERROR_CODE.PRODUCT_ALREADY_PURCHASED_ERROR) {
         return {
           success: false,
           error:
-            i18n.t("upgrade.alreadyPurchased") ||
+            i18n.t("payment.alreadyPurchased") ||
             "Gói cước này đã được mua trước đó. Vui lòng bấm 'Khôi phục giao dịch'.",
         };
       }
@@ -428,7 +545,7 @@ export async function purchaseStoreProduct(
         return {
           success: false,
           error:
-            i18n.t("upgrade.notAllowed") ||
+            i18n.t("payment.notAllowed") ||
             "Thiết bị của bạn không được phép thực hiện giao dịch mua trong ứng dụng.",
         };
       }
@@ -436,7 +553,7 @@ export async function purchaseStoreProduct(
         return {
           success: false,
           error:
-            i18n.t("upgrade.paymentPending") ||
+            i18n.t("payment.paymentPending") ||
             "Giao dịch đang chờ xác nhận từ Cửa hàng ứng dụng hoặc người giám hộ.",
         };
       }
@@ -444,18 +561,18 @@ export async function purchaseStoreProduct(
         success: false,
         error:
           rcError?.message ||
-          i18n.t("upgrade.storeInterrupted") ||
+          i18n.t("payment.storeInterrupted") ||
           "Giao dịch Store bị gián đoạn. Vui lòng thử lại sau.",
       };
     }
 
     // 4. Verify Exact Pro Entitlement from Store:
-    const proEntitlement = customerInfo.entitlements.active[PRO_ENTITLEMENT_ID];
+    const proEntitlement = getActiveProEntitlement(customerInfo);
     if (!proEntitlement) {
       return {
         success: false,
         error:
-          i18n.t("upgrade.proNotActive") ||
+          i18n.t("payment.proNotActive") ||
           "Quyền lợi EarlySigns Pro chưa được kích hoạt trên Cửa hàng ứng dụng. Vui lòng bấm 'Khôi phục giao dịch' sau vài phút.",
       };
     }
@@ -480,7 +597,7 @@ export async function purchaseStoreProduct(
       success: false,
       error:
         err?.message ||
-        i18n.t("upgrade.storeInterrupted") ||
+        i18n.t("payment.storeInterrupted") ||
         "Giao dịch Store bị gián đoạn. Vui lòng thử lại sau.",
     };
   }
@@ -499,62 +616,33 @@ export async function restoreStorePurchases(options?: {
   authFetch?: (path: string, opts?: any) => Promise<Response>;
 }): Promise<{ restored: boolean; message: string; expiresAt?: string }> {
   try {
-    // 1. Production Native StoreKit / Google Play Billing restoration via RevenueCat
-    if (isRevenueCatAvailable()) {
-      try {
-        const customerInfo = await Purchases.restorePurchases();
-        handleCustomerInfoUpdate(customerInfo);
-        const proEntitlement = customerInfo.entitlements.active[PRO_ENTITLEMENT_ID];
-        if (proEntitlement) {
-          const expiry =
-            proEntitlement.expirationDate ||
-            new Date(Date.now() + 30 * 86400000).toISOString();
-          const usage: BillingUsage = {
-            has_active_subscription: true,
-            is_in_trial: false,
-            subscription_expires_at: expiry,
-            tier: "pro",
-            daily_remaining: 9999,
-          };
-          if (options?.authToken) {
-            seedBillingUsage(options.authToken, usage);
-          }
-          return {
-            restored: true,
-            message:
-              i18n.t("upgrade.restoreSuccessStore") ||
-              "Đã khôi phục thành công gói EarlySigns Pro qua cửa hàng ứng dụng.",
-            expiresAt: expiry,
-          };
-        }
-
-        // Entitlement is NOT active on this Store account (expired, refunded, or never bought)
-        return {
-          restored: false,
-          message:
-            i18n.t("upgrade.restoreNotFound") ||
-            "Không tìm thấy gói đăng ký nào đang hoạt động liên kết với tài khoản Apple ID / Google Play này.",
-        };
-      } catch (rcErr: any) {
-        console.warn("[IAP] RevenueCat restore error:", rcErr);
-        return {
-          restored: false,
-          message:
-            rcErr?.message ||
-            i18n.t("upgrade.storeConnectionFailed") ||
-            "Không thể kết nối đến máy chủ cửa hàng để khôi phục giao dịch.",
-        };
+    if (!isRevenueCatAvailable()) {
+      if (isNativeMobile) {
+        await initRevenueCat();
       }
     }
 
-    // 2. Development Sandbox Mock Mode (Only active when EXPO_PUBLIC_MOCK_IAP is explicitly enabled in DEV)
-    if (__DEV__ && process.env.EXPO_PUBLIC_MOCK_IAP === "true") {
-      const existing = getStoredIapSubscription();
-      if (existing) {
+    if (!isRevenueCatAvailable()) {
+      return {
+        restored: false,
+        message:
+          i18n.t("payment.storeUnavailable") ||
+          "Cổng thanh toán Store (Apple App Store / Google Play) chưa sẵn sàng hoặc chưa được cấu hình trên thiết bị này.",
+      };
+    }
+
+    try {
+      const customerInfo = await Purchases.restorePurchases();
+      handleCustomerInfoUpdate(customerInfo);
+      const proEntitlement = getActiveProEntitlement(customerInfo);
+      if (proEntitlement) {
+        const expiry =
+          proEntitlement.expirationDate ||
+          new Date(Date.now() + 30 * 86400000).toISOString();
         const usage: BillingUsage = {
           has_active_subscription: true,
           is_in_trial: false,
-          subscription_expires_at: existing.expiresAt,
+          subscription_expires_at: expiry,
           tier: "pro",
           daily_remaining: 9999,
         };
@@ -564,26 +652,84 @@ export async function restoreStorePurchases(options?: {
         return {
           restored: true,
           message:
-            i18n.t("upgrade.restoreSuccessDevice") ||
-            "Đã khôi phục thành công gói EarlySigns Pro từ biên nhận thiết bị.",
-          expiresAt: existing.expiresAt,
+            i18n.t("payment.restoreSuccessStore") ||
+            "Đã khôi phục thành công gói EarlySigns Pro qua cửa hàng ứng dụng.",
+          expiresAt: expiry,
         };
       }
-    }
 
-    return {
-      restored: false,
-      message:
-        i18n.t("upgrade.storeUnavailable") ||
-        "Cổng thanh toán Store (Apple App Store / Google Play) chưa sẵn sàng hoặc chưa được cấu hình trên thiết bị này.",
-    };
+      // Entitlement is NOT active on this Store account (expired, refunded, or never bought)
+      return {
+        restored: false,
+        message:
+          i18n.t("payment.restoreNotFound") ||
+          "Không tìm thấy gói đăng ký nào đang hoạt động liên kết với tài khoản Apple ID / Google Play này.",
+      };
+    } catch (rcErr: any) {
+      console.warn("[IAP] RevenueCat restore error:", rcErr);
+      return {
+        restored: false,
+        message:
+          rcErr?.message ||
+          i18n.t("payment.storeConnectionFailed") ||
+          "Không thể kết nối đến máy chủ cửa hàng để khôi phục giao dịch.",
+      };
+    }
   } catch (err: any) {
     return {
       restored: false,
       message:
         err?.message ||
-        i18n.t("upgrade.storeConnectionFailed") ||
+        i18n.t("payment.storeConnectionFailed") ||
         "Không thể kết nối đến máy chủ cửa hàng để khôi phục giao dịch.",
     };
+  }
+}
+
+/**
+ * Present RevenueCat native Paywall (RevenueCatUI)
+ * Automatically presents the configured Offering Paywall and handles purchase.
+ */
+export async function presentRevenueCatPaywall(options?: {
+  offering?: any;
+  requiredEntitlementIdentifier?: string;
+}): Promise<PAYWALL_RESULT> {
+  if (!isRevenueCatAvailable()) {
+    return PAYWALL_RESULT.NOT_PRESENTED;
+  }
+  try {
+    const requiredEntitlement =
+      options?.requiredEntitlementIdentifier || PRO_ENTITLEMENT_ID;
+    const result = await RevenueCatUI.presentPaywallIfNeeded({
+      requiredEntitlementIdentifier: requiredEntitlement,
+      offering: options?.offering,
+    });
+    if (
+      result === PAYWALL_RESULT.PURCHASED ||
+      result === PAYWALL_RESULT.RESTORED
+    ) {
+      const customerInfo = await Purchases.getCustomerInfo();
+      handleCustomerInfoUpdate(customerInfo);
+    }
+    return result;
+  } catch (err) {
+    console.warn("[IAP] Error presenting RevenueCat Paywall:", err);
+    return PAYWALL_RESULT.ERROR;
+  }
+}
+
+/**
+ * Present RevenueCat Customer Center (Self-service subscription management, cancellation, feedback)
+ */
+export async function presentRevenueCatCustomerCenter(): Promise<void> {
+  if (!isRevenueCatAvailable()) {
+    await openManageSubscriptions();
+    return;
+  }
+  try {
+    await RevenueCatUI.presentCustomerCenter();
+  } catch (err) {
+    console.warn("[IAP] Error presenting Customer Center, falling back to Store:", err);
+    await openManageSubscriptions();
   }
 }

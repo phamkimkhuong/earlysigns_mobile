@@ -1,15 +1,39 @@
 import { httpClient } from "./client";
 import { API_ENDPOINTS } from "@/core/config";
 import { useBillingStore } from "@/store/useBillingStore";
+import { getStoredIapSubscription } from "@/services/iap";
 import type { BillingUsage } from "@/types/domain";
 
 export const billingApi = {
   /**
-   * Fetch current billing usage and sync directly into Zustand store
+   * Fetch current billing usage and sync directly into Zustand store.
+   * Seamlessly reconciles with active RevenueCat StoreKit / Google Play subscription
+   * to eliminate race condition when BE webhook has not yet arrived.
    */
   async getUsage(): Promise<BillingUsage | null> {
     const data = await httpClient.get<{ usage: BillingUsage }>(API_ENDPOINTS.BILLING.USAGE);
-    const usage = data?.usage || null;
+    let usage = data?.usage || null;
+
+    const storedIap = getStoredIapSubscription();
+    if (storedIap && (!usage || !usage.has_active_subscription)) {
+      usage = {
+        ...(usage || {
+          tier: "pro",
+          daily_remaining: 9999,
+          daily_quota: 9999,
+          today_practice_count: 0,
+          is_in_trial: false,
+          referral_count: 0,
+          trial_days_remaining: 0,
+        }),
+        has_active_subscription: true,
+        is_in_trial: false,
+        subscription_expires_at: storedIap.expiresAt,
+        tier: "pro",
+        daily_remaining: 9999,
+      };
+    }
+
     useBillingStore.getState().setUsage(usage);
     return usage;
   },

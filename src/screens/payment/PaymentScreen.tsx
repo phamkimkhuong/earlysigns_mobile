@@ -33,13 +33,13 @@ import { billingApi } from "@/api";
 import { useBillingStore } from "@/store/useBillingStore";
 import { resolveUserTier } from "@/services/usageLimits";
 import {
-  normalizeStoreProduct,
   openManageSubscriptions,
   purchaseStoreProduct,
   restoreStorePurchases,
+  getStoreOfferingsProducts,
+  presentRevenueCatCustomerCenter,
   type StoreProduct,
 } from "@/services/iap";
-import { usePackagesQuery } from "@/hooks/queries/useBillingQueries";
 import { getFriendlyErrorMessage } from "@/core/errorManager";
 import type { RootStackParamList } from "@/types/navigation";
 
@@ -60,16 +60,25 @@ export default function PaymentScreen({ navigation, route }: Props) {
     [t]
   );
 
-  // 1. Fetch dynamic packages strictly from GET /api/billing/packages
-  const { data: apiPackages = [], isLoading: isLoadingPackages, refetch: refetchPackages } = usePackagesQuery();
+  // Exclusively fetch dynamic packages directly from RevenueCat Offerings (100% accurate localized Store prices)
+  const [products, setProducts] = useState<StoreProduct[]>([]);
+  const [isLoadingStore, setIsLoadingStore] = useState(true);
 
-  // Normalize dynamic API packages
-  const products: StoreProduct[] = useMemo(() => {
-    if (Array.isArray(apiPackages) && apiPackages.length > 0) {
-      return apiPackages.map(normalizeStoreProduct);
+  const loadStorePackages = useCallback(async () => {
+    setIsLoadingStore(true);
+    try {
+      const prods = await getStoreOfferingsProducts();
+      setProducts(prods);
+    } catch {
+      /* ignore */
+    } finally {
+      setIsLoadingStore(false);
     }
-    return [];
-  }, [apiPackages]);
+  }, []);
+
+  useEffect(() => {
+    loadStorePackages();
+  }, [loadStorePackages]);
 
   const [selectedProductId, setSelectedProductId] = useState<string>(
     route?.params?.packageId || ""
@@ -494,7 +503,7 @@ export default function PaymentScreen({ navigation, route }: Props) {
               <Text className="text-[15px] font-extrabold text-slate-900">
                 {t("payment.selectPackageTitle") || "Chọn gói đăng ký phù hợp"}
               </Text>
-              {isLoadingPackages ? (
+              {isLoadingStore && products.length > 0 ? (
                 <View className="flex-row items-center gap-1.5">
                   <ActivityIndicator size="small" color="#0284c7" />
                   <Text className="text-[13px] text-slate-400">
@@ -504,14 +513,14 @@ export default function PaymentScreen({ navigation, route }: Props) {
               ) : null}
             </View>
 
-            {isLoadingPackages && products.length === 0 ? (
+            {isLoadingStore && products.length === 0 ? (
               <View
                 style={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0" }}
                 className="py-8 items-center justify-center rounded-3xl border shadow-sm"
               >
                 <ActivityIndicator size="small" color="#0284c7" />
                 <Text className="text-[14px] font-medium text-slate-500 mt-2">
-                  {t("payment.loadingPackages") || "Đang tải danh sách gói từ hệ thống..."}
+                  {t("payment.loadingPackages") || "Đang tải danh sách gói từ Cửa hàng..."}
                 </Text>
               </View>
             ) : products.length === 0 ? (
@@ -523,7 +532,7 @@ export default function PaymentScreen({ navigation, route }: Props) {
                   {t("payment.noPackagesAvailable") || "Không tìm thấy gói cước nào khả dụng lúc này."}
                 </Text>
                 <TouchableOpacity
-                  onPress={() => refetchPackages()}
+                  onPress={loadStorePackages}
                   className="mt-3 px-5 py-2.5 bg-slate-100 rounded-xl active:bg-slate-200"
                 >
                   <Text className="text-sm font-bold text-slate-700">
@@ -610,9 +619,9 @@ export default function PaymentScreen({ navigation, route }: Props) {
                         >
                           {prod.priceDisplay}
                         </Text>
-                        {prod.originalPriceVnd > prod.priceVnd ? (
+                        {prod.originalPriceDisplay ? (
                           <Text className="text-[13px] text-slate-400 line-through mt-0.5">
-                            {prod.originalPriceVnd.toLocaleString("vi-VN")} đ
+                            {prod.originalPriceDisplay}
                           </Text>
                         ) : null}
                       </View>
@@ -671,7 +680,7 @@ export default function PaymentScreen({ navigation, route }: Props) {
               <Text className="text-slate-300 font-bold">·</Text>
 
               <TouchableOpacity
-                onPress={openManageSubscriptions}
+                onPress={presentRevenueCatCustomerCenter}
                 className="flex-row items-center gap-1.5 py-1 px-1"
                 activeOpacity={0.7}
               >
@@ -683,112 +692,114 @@ export default function PaymentScreen({ navigation, route }: Props) {
             </View>
           </View>
 
-          {/* D. ACTIVATION CODE / GIFT CODE ACCORDION */}
-          <View
-            onLayout={(e) => {
-              activationCardYRef.current = e.nativeEvent.layout.y;
-            }}
-            style={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0" }}
-            className="rounded-3xl border overflow-hidden shadow-sm"
-          >
-            <TouchableOpacity
-              className="p-4 flex-row items-center justify-between"
-              onPress={() => {
-                const nextState = !showActivation;
-                setShowActivation(nextState);
-                if (activationError) setActivationError("");
-                if (nextState) {
-                  setTimeout(() => {
-                    if (activationCardYRef.current > 0) {
-                      scrollViewRef.current?.scrollTo({
-                        y: Math.max(0, activationCardYRef.current - 16),
-                        animated: true,
-                      });
-                    }
-                  }, 100);
-                }
+          {/* D. ACTIVATION CODE / GIFT CODE ACCORDION (Android/Web only to comply with Apple Guideline 3.1.1) */}
+          {Platform.OS !== "ios" && (
+            <View
+              onLayout={(e) => {
+                activationCardYRef.current = e.nativeEvent.layout.y;
               }}
+              style={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0" }}
+              className="rounded-3xl border overflow-hidden shadow-sm"
             >
-              <View className="flex-row items-center gap-2.5">
-                <View
-                  style={{ backgroundColor: "#fef3c7" }}
-                  className="w-8 h-8 rounded-xl items-center justify-center"
-                >
-                  <Gift size={16} color="#d97706" />
+              <TouchableOpacity
+                className="p-4 flex-row items-center justify-between"
+                onPress={() => {
+                  const nextState = !showActivation;
+                  setShowActivation(nextState);
+                  if (activationError) setActivationError("");
+                  if (nextState) {
+                    setTimeout(() => {
+                      if (activationCardYRef.current > 0) {
+                        scrollViewRef.current?.scrollTo({
+                          y: Math.max(0, activationCardYRef.current - 16),
+                          animated: true,
+                        });
+                      }
+                    }, 100);
+                  }
+                }}
+              >
+                <View className="flex-row items-center gap-2.5">
+                  <View
+                    style={{ backgroundColor: "#fef3c7" }}
+                    className="w-8 h-8 rounded-xl items-center justify-center"
+                  >
+                    <Gift size={16} color="#d97706" />
+                  </View>
+                  <Text className="text-[15px] font-bold text-slate-900">
+                    {t("payment.giftCodeTitle") || "Bạn có mã quà tặng hoặc mã kích hoạt?"}
+                  </Text>
                 </View>
-                <Text className="text-[15px] font-bold text-slate-900">
-                  {t("payment.giftCodeTitle") || "Bạn có mã quà tặng hoặc mã kích hoạt?"}
-                </Text>
-              </View>
+                {showActivation ? (
+                  <ChevronUp size={16} color="#94a3b8" />
+                ) : (
+                  <ChevronDown size={16} color="#94a3b8" />
+                )}
+              </TouchableOpacity>
+
               {showActivation ? (
-                <ChevronUp size={16} color="#94a3b8" />
-              ) : (
-                <ChevronDown size={16} color="#94a3b8" />
-              )}
-            </TouchableOpacity>
+                <View className="p-4 pt-0 gap-3 border-t border-slate-100">
+                  {/* 1 ROW: INPUT + BUTTON ÁP DỤNG */}
+                  <View className="flex-row items-center gap-2 mt-1">
+                    <TextInput
+                      style={{ backgroundColor: "#f8fafc", borderColor: "#cbd5e1" }}
+                      className="flex-1 h-12 px-3.5 border rounded-2xl text-slate-900 text-[15px] uppercase font-bold"
+                      value={activationCode}
+                      onFocus={handleInputFocus}
+                      onChangeText={(val) => {
+                        setActivationCode(val);
+                        if (activationError) setActivationError("");
+                      }}
+                      placeholder={t("payment.giftCodePlaceholder") || "Nhập mã kích hoạt (VD: PRO2026)"}
+                      placeholderTextColor="#94a3b8"
+                      autoCapitalize="characters"
+                    />
+                    <TouchableOpacity
+                      activeOpacity={0.85}
+                      disabled={activating || !activationCode.trim()}
+                      onPress={handleActivateCode}
+                      style={{
+                        backgroundColor: !activationCode.trim() ? "#e2e8f0" : "#0284c7",
+                      }}
+                      className="h-12 px-5 rounded-2xl items-center justify-center flex-row gap-1.5 shadow-xs"
+                    >
+                      {activating ? (
+                        <ActivityIndicator size="small" color="#ffffff" />
+                      ) : (
+                        <Text
+                          style={{ color: !activationCode.trim() ? "#94a3b8" : "#ffffff" }}
+                          className="text-sm font-extrabold"
+                        >
+                          {t("payment.apply") || "Áp dụng"}
+                        </Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
 
-            {showActivation ? (
-              <View className="p-4 pt-0 gap-3 border-t border-slate-100">
-                {/* 1 ROW: INPUT + BUTTON ÁP DỤNG */}
-                <View className="flex-row items-center gap-2 mt-1">
-                  <TextInput
-                    style={{ backgroundColor: "#f8fafc", borderColor: "#cbd5e1" }}
-                    className="flex-1 h-12 px-3.5 border rounded-2xl text-slate-900 text-[15px] uppercase font-bold"
-                    value={activationCode}
-                    onFocus={handleInputFocus}
-                    onChangeText={(val) => {
-                      setActivationCode(val);
-                      if (activationError) setActivationError("");
-                    }}
-                    placeholder={t("payment.giftCodePlaceholder") || "Nhập mã kích hoạt (VD: PRO2026)"}
-                    placeholderTextColor="#94a3b8"
-                    autoCapitalize="characters"
-                  />
-                  <TouchableOpacity
-                    activeOpacity={0.85}
-                    disabled={activating || !activationCode.trim()}
-                    onPress={handleActivateCode}
-                    style={{
-                      backgroundColor: !activationCode.trim() ? "#e2e8f0" : "#0284c7",
-                    }}
-                    className="h-12 px-5 rounded-2xl items-center justify-center flex-row gap-1.5 shadow-xs"
-                  >
-                    {activating ? (
-                      <ActivityIndicator size="small" color="#ffffff" />
-                    ) : (
-                      <Text
-                        style={{ color: !activationCode.trim() ? "#94a3b8" : "#ffffff" }}
-                        className="text-sm font-extrabold"
-                      >
-                        {t("payment.apply") || "Áp dụng"}
+                  {activationError ? (
+                    <View
+                      style={{ backgroundColor: "#fef2f2", borderColor: "#fecaca" }}
+                      className="p-3 border rounded-xl"
+                    >
+                      <Text className="text-[13.5px] text-rose-600 leading-relaxed font-medium">
+                        {activationError}
                       </Text>
-                    )}
-                  </TouchableOpacity>
+                    </View>
+                  ) : null}
+                  {activationSuccess ? (
+                    <View
+                      style={{ backgroundColor: "#ecfdf5", borderColor: "#a7f3d0" }}
+                      className="p-3 border rounded-xl"
+                    >
+                      <Text className="text-[13.5px] text-emerald-700 leading-relaxed font-medium">
+                        {activationSuccess}
+                      </Text>
+                    </View>
+                  ) : null}
                 </View>
-
-                {activationError ? (
-                  <View
-                    style={{ backgroundColor: "#fef2f2", borderColor: "#fecaca" }}
-                    className="p-3 border rounded-xl"
-                  >
-                    <Text className="text-[13.5px] text-rose-600 leading-relaxed font-medium">
-                      {activationError}
-                    </Text>
-                  </View>
-                ) : null}
-                {activationSuccess ? (
-                  <View
-                    style={{ backgroundColor: "#ecfdf5", borderColor: "#a7f3d0" }}
-                    className="p-3 border rounded-xl"
-                  >
-                    <Text className="text-[13.5px] text-emerald-700 leading-relaxed font-medium">
-                      {activationSuccess}
-                    </Text>
-                  </View>
-                ) : null}
-              </View>
-            ) : null}
-          </View>
+              ) : null}
+            </View>
+          )}
 
           {/* E. LEGAL & STORE COMPLIANCE (Apple Guideline 3.1.2) */}
           <View className="gap-2 pt-2 px-1">

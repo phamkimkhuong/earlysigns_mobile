@@ -1396,7 +1396,19 @@
     "restoreNotFound": "No purchases found to restore for this Apple ID / Google Play account.",
     "packageNotFound": "Subscription package does not exist on system.",
     "storeInterrupted": "Store transaction was interrupted. Please try again later.",
-    "storeConnectionFailed": "Could not connect to store server to restore purchases."
+    "storeConnectionFailed": "Could not connect to store server to restore purchases.",
+    "restoreSuccessTitle": "Restore Successful!",
+    "restoreSuccessMsg": "Your EarlySigns Pro subscription has been successfully restored.",
+    "restoreNoneTitle": "No Purchases Found",
+    "restoreNoneMsg": "No active subscriptions found associated with your store account.",
+    "restoreErrorTitle": "Restore Failed",
+    "restoreErrorMsg": "Unable to restore purchases at this time. Please try again later.",
+    "packageNotConfiguredInStore": "This package is not configured in the App Store / Google Play.",
+    "alreadyPurchased": "This item has already been purchased. Please tap 'Restore Purchases'.",
+    "notAllowed": "In-app purchases are not allowed on this device.",
+    "paymentPending": "Payment is pending authorization from the Store or guardian.",
+    "proNotActive": "EarlySigns Pro entitlement is not active. Please try again later.",
+    "storeUnavailable": "Store payment services are currently unavailable on this device."
   },
   "profileExtra": {
     "screenTitle": "User Profile",
@@ -1496,5 +1508,24 @@
     "screeningTitle": "Start Initial Screening Test",
     "screeningDesc": "Comprehensive 44-phoneme assessment to unlock clarity score",
     "screeningAction": "Take test (3 mins)"
+  },
+  "pronunciationProfile": {
+    "title": "44 IPA Pronunciation Profile",
+    "voiceUk": "British Accent (UK)",
+    "voiceUs": "American Accent (US)",
+    "coverage": "Coverage: {{count}}/44 sounds",
+    "cardTitle": "Pronunciation Assessment",
+    "cardDesc": "Detailed accuracy and practice history for every phoneme in the International Phonetic Alphabet.",
+    "tested": "Evaluated",
+    "mastered": "Mastered",
+    "weak": "Needs improvement",
+    "filterAll": "All ({{count}})",
+    "filterWeak": "Needs improvement ({{count}})",
+    "filterMastered": "Mastered ({{count}})",
+    "filterVowels": "Vowels ({{count}})",
+    "filterConsonants": "Consonants ({{count}})",
+    "example": "Example:",
+    "notPracticed": "Not practiced",
+    "practice": "Practise"
   }
 }

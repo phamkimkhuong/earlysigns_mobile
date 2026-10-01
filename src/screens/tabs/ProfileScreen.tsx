@@ -937,41 +937,78 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                       const sound = String(it.sound || "").replace(/^\/+|\/+$/g, "");
                       const acc = Math.round(Number(it.accuracy || 0) * 100);
                       const meta = getIpaSoundMeta(sound);
+                      const cleanSound = sound || meta.sound || "—";
 
                       return (
                         <TouchableOpacity
-                          key={sound}
+                          key={cleanSound}
                           activeOpacity={0.85}
                           onPress={() => handleNavigate("Phonemes")}
-                          style={{ backgroundColor: "#f8fafc", borderColor: "#e2e8f0" }}
-                          className="rounded-2xl p-3.5 border flex-row items-center justify-between"
+                          style={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0" }}
+                          className="rounded-2xl p-3.5 border flex-row items-center justify-between shadow-xs"
                         >
-                          <View className="flex-row items-center gap-3">
+                          <View className="flex-row items-center gap-3 flex-1 min-w-0 mr-3">
                             <View
-                              style={{ backgroundColor: "#fee2e2" }}
-                              className="w-10 h-10 rounded-xl items-center justify-center"
+                              className="shrink-0"
+                              style={{
+                                minWidth: 56,
+                                height: 46,
+                                paddingHorizontal: 8,
+                                borderRadius: 16,
+                                alignItems: "center",
+                                justifyContent: "center",
+                                borderWidth: 1,
+                                backgroundColor: acc >= 70 ? "#ecfdf5" : acc >= 50 ? "#fffbeb" : "#fee2e2",
+                                borderColor: acc >= 70 ? "#a7f3d0" : acc >= 50 ? "#fde68a" : "#fecaca",
+                              }}
                             >
-                              <Text className="text-base font-black text-rose-600">/{sound}/</Text>
-                            </View>
-                            <View>
-                              <Text className="text-sm font-extrabold text-[#0f172a]">
-                                {i18n.language.startsWith("vi") ? meta.categoryLabelVi : meta.categoryLabelEn}
+                              <Text
+                                numberOfLines={1}
+                                textBreakStrategy="simple"
+                                style={{
+                                  fontSize: 16,
+                                  fontWeight: "800",
+                                  color: acc >= 70 ? "#059669" : acc >= 50 ? "#d97706" : "#dc2626",
+                                  includeFontPadding: false,
+                                  textAlign: "center",
+                                }}
+                              >
+                                {`/${cleanSound}/`}
                               </Text>
-                              <Text className="text-xs text-slate-500">{meta.example}</Text>
+                            </View>
+                            <View className="flex-1 min-w-0 gap-1.5">
+                              <View className="flex-row items-center justify-between">
+                                <Text numberOfLines={1} className="text-xs text-slate-500 font-medium flex-1 mr-2">
+                                  Ví dụ: <Text className="text-slate-700 font-semibold">{meta.example}</Text>
+                                </Text>
+                                <Text
+                                  className="text-xs font-black shrink-0"
+                                  style={{ color: acc >= 70 ? "#059669" : acc >= 50 ? "#d97706" : "#dc2626" }}
+                                >
+                                  {acc}%
+                                </Text>
+                              </View>
+                              {/* Thanh tiến trình hàng ngang */}
+                              <View className="w-full h-1.5 rounded-full bg-slate-200 overflow-hidden">
+                                <View
+                                  className="h-full rounded-full"
+                                  style={{
+                                    width: `${Math.max(5, Math.min(100, acc))}%`,
+                                    backgroundColor: acc >= 70 ? "#10b981" : acc >= 50 ? "#f59e0b" : "#ef4444",
+                                  }}
+                                />
+                              </View>
                             </View>
                           </View>
 
-                          <View className="flex-row items-center gap-2">
-                            <Text className="text-base font-black text-rose-500">{acc}%</Text>
-                            <View
-                              style={{ backgroundColor: "#0c2340" }}
-                              className="px-2.5 py-1 rounded-xl flex-row items-center gap-1"
-                            >
-                              <Mic size={11} color="#ffffff" />
-                              <Text className="text-xs font-extrabold text-white">
-                                {t("profile.practiceBtn") || "Luyện"}
-                              </Text>
-                            </View>
+                          <View
+                            style={{ backgroundColor: "#0c2340" }}
+                            className="px-3 py-2 rounded-xl flex-row items-center gap-1 shrink-0"
+                          >
+                            <Mic size={12} color="#ffffff" />
+                            <Text className="text-xs font-extrabold text-white">
+                              {t("profile.practiceBtn") || "Luyện"}
+                            </Text>
                           </View>
                         </TouchableOpacity>
                       );
