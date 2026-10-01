@@ -63,12 +63,12 @@ function Action({
     ...(secondary
       ? {}
       : {
-          shadowColor: "#0284c7",
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.22,
-          shadowRadius: 8,
-          elevation: 3,
-        }),
+        shadowColor: "#0284c7",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.22,
+        shadowRadius: 8,
+        elevation: 3,
+      }),
   };
 
   return (
@@ -452,84 +452,84 @@ export default function PhonemesHome(props: Props) {
             className="flex-row flex-wrap gap-3 pt-1"
             testID={hasWeakSounds ? "phonemes-weak-sounds" : "phonemes-explore-sounds"}
           >
-          {sounds.map(sound => {
-            const cleanSound = String(sound || "").replace(/^\/+|\/+$/g, "").trim();
-            const meta = getIpaSoundMeta(cleanSound);
-            const exampleWord = meta.example ? meta.example.split(" /", 1)[0].trim() : "";
-            const accPct = soundAccuracyMap.get(cleanSound);
-            const hasScore = accPct != null;
+            {sounds.map(sound => {
+              const cleanSound = String(sound || "").replace(/^\/+|\/+$/g, "").trim();
+              const meta = getIpaSoundMeta(cleanSound);
+              const exampleWord = meta.example ? meta.example.split(" /", 1)[0].trim() : "";
+              const accPct = soundAccuracyMap.get(cleanSound);
+              const hasScore = accPct != null;
 
-            return (
-              <Pressable
-                key={sound}
-                accessibilityRole="button"
-                accessibilityLabel={t("phonemesHome.practiceSound", { sound: cleanSound })}
-                onPress={() => props.onPhoneme(cleanSound)}
-                className="active:opacity-80"
-                style={{
-                  minWidth: 92,
-                  minHeight: 80,
-                  paddingHorizontal: 12,
-                  paddingVertical: 10,
-                  borderRadius: 18,
-                  backgroundColor: "#ffffff",
-                  borderWidth: 1.5,
-                  borderColor: hasScore ? (accPct < 50 ? "#fecaca" : "#fed7aa") : "#e2eaf2",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 3,
-                  shadowColor: "#0c2340",
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.04,
-                  shadowRadius: 6,
-                  elevation: 1,
-                  opacity: busy ? 0.6 : 1,
-                }}
-              >
-                {phonemeLoading === sound ? (
-                  <ActivityIndicator color={primaryBlue} />
-                ) : (
-                  <>
-                    <Text
-                      numberOfLines={1}
-                      className="text-[#0c2340] text-lg font-extrabold text-center"
-                      style={{ includeFontPadding: false, textAlign: "center" }}
-                    >
-                      {`/${cleanSound}/`}
-                    </Text>
-                    {exampleWord ? (
+              return (
+                <Pressable
+                  key={sound}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("phonemesHome.practiceSound", { sound: cleanSound })}
+                  onPress={() => props.onPhoneme(cleanSound)}
+                  className="active:opacity-80"
+                  style={{
+                    minWidth: 92,
+                    minHeight: 80,
+                    paddingHorizontal: 12,
+                    paddingVertical: 10,
+                    borderRadius: 18,
+                    backgroundColor: "#ffffff",
+                    borderWidth: 1.5,
+                    borderColor: hasScore ? (accPct < 50 ? "#fecaca" : "#fed7aa") : "#e2eaf2",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 3,
+                    shadowColor: "#0c2340",
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.04,
+                    shadowRadius: 6,
+                    elevation: 1,
+                    opacity: busy ? 0.6 : 1,
+                  }}
+                >
+                  {phonemeLoading === sound ? (
+                    <ActivityIndicator color={primaryBlue} />
+                  ) : (
+                    <>
                       <Text
                         numberOfLines={1}
-                        className="text-[#64748b] text-xs text-center font-medium"
+                        className="text-[#0c2340] text-lg font-extrabold text-center"
+                        style={{ includeFontPadding: false, textAlign: "center" }}
                       >
-                        {exampleWord}
+                        {`/${cleanSound}/`}
                       </Text>
-                    ) : null}
-                    {hasScore ? (
-                      <View
-                        className="px-2 py-0.5 rounded-full mt-0.5"
-                        style={{
-                          backgroundColor: accPct < 50 ? "#fee2e2" : "#ffedd5",
-                          borderWidth: 1,
-                          borderColor: accPct < 50 ? "#fca5a5" : "#fdba74",
-                        }}
-                      >
+                      {exampleWord ? (
                         <Text
                           numberOfLines={1}
-                          className="text-xs font-bold text-center"
-                          style={{ color: accPct < 50 ? "#dc2626" : "#c2410c" }}
+                          className="text-[#64748b] text-xs text-center font-medium"
                         >
-                          {`${accPct}%`}
+                          {exampleWord}
                         </Text>
-                      </View>
-                    ) : null}
-                  </>
-                )}
-              </Pressable>
-            );
-          })}
-        </View>
-      ) : null}
+                      ) : null}
+                      {hasScore ? (
+                        <View
+                          className="px-2 py-0.5 rounded-full mt-0.5"
+                          style={{
+                            backgroundColor: accPct < 50 ? "#fee2e2" : "#ffedd5",
+                            borderWidth: 1,
+                            borderColor: accPct < 50 ? "#fca5a5" : "#fdba74",
+                          }}
+                        >
+                          <Text
+                            numberOfLines={1}
+                            className="text-xs font-bold text-center"
+                            style={{ color: accPct < 50 ? "#dc2626" : "#c2410c" }}
+                          >
+                            {`${accPct}%`}
+                          </Text>
+                        </View>
+                      ) : null}
+                    </>
+                  )}
+                </Pressable>
+              );
+            })}
+          </View>
+        ) : null}
       </View>
     </ScrollView>
   );
