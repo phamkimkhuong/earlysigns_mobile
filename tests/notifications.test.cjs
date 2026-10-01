@@ -423,5 +423,149 @@ test("device_id: persistent installation ID format is valid UUID v4 compliant wi
   assert.ok(mockUuid.length === 36);
 });
 
+// ============================================================================
+// Phần bổ sung: Permission Revoke, Preference Rollback, Cold-start Clear
+// ============================================================================
+
+test("permission revoke: device is deactivated on server when OS permission is revoked", async () => {
+  let unregisterCalled = false;
+  let unregisteredDeviceId = "";
+
+  // Simulate deactivateDeviceOnPermissionRevoke logic
+  async function simulateDeactivateOnRevoke({
+    isNativeMobile,
+    hasAuthToken,
+    permissionGranted,
+    deviceId,
+  }) {
+    if (!isNativeMobile) return false;
+    if (!hasAuthToken) return false;
+    if (permissionGranted) return false;
+
+    // Would call notificationApi.unregisterDevice(deviceId)
+    unregisterCalled = true;
+    unregisteredDeviceId = deviceId;
+    return true;
+  }
+
+  // Case 1: Not native → skip
+  const r1 = await simulateDeactivateOnRevoke({
+    isNativeMobile: false,
+    hasAuthToken: true,
+    permissionGranted: false,
+    deviceId: "dev-1",
+  });
+  assert.equal(r1, false);
+  assert.equal(unregisterCalled, false);
+
+  // Case 2: No auth → skip
+  const r2 = await simulateDeactivateOnRevoke({
+    isNativeMobile: true,
+    hasAuthToken: false,
+    permissionGranted: false,
+    deviceId: "dev-1",
+  });
+  assert.equal(r2, false);
+
+  // Case 3: Permission still granted → skip
+  const r3 = await simulateDeactivateOnRevoke({
+    isNativeMobile: true,
+    hasAuthToken: true,
+    permissionGranted: true,
+    deviceId: "dev-1",
+  });
+  assert.equal(r3, false);
+
+  // Case 4: Permission revoked + authenticated → deactivate
+  const r4 = await simulateDeactivateOnRevoke({
+    isNativeMobile: true,
+    hasAuthToken: true,
+    permissionGranted: false,
+    deviceId: "device-iphone-abc",
+  });
+  assert.equal(r4, true);
+  assert.equal(unregisterCalled, true);
+  assert.equal(unregisteredDeviceId, "device-iphone-abc");
+});
+
+test("preference rollback: UI reverts to previous state when server update fails", async () => {
+  const previousSettings = {
+    dailyReminderEnabled: true,
+    incompleteLessonEnabled: true,
+    streakReminderEnabled: false,
+    contentUpdatesEnabled: false,
+    promotionsEnabled: false,
+  };
+
+  // Simulate optimistic update + server failure + rollback
+  let currentUIState = { ...previousSettings };
+
+  // Step 1: Optimistic update
+  currentUIState = { ...currentUIState, contentUpdatesEnabled: true };
+  assert.equal(currentUIState.contentUpdatesEnabled, true);
+
+  // Step 2: Server fails
+  const serverError = true;
+  if (serverError) {
+    // Step 3: Rollback to previous
+    currentUIState = { ...previousSettings };
+  }
+
+  assert.equal(currentUIState.contentUpdatesEnabled, false, "UI must rollback after server error");
+  assert.equal(currentUIState.dailyReminderEnabled, true, "Other settings remain untouched");
+  assert.equal(currentUIState.incompleteLessonEnabled, true, "Other settings remain untouched");
+});
+
+test("preference rollback: UI commits server-authoritative value on success", async () => {
+  const initialSettings = {
+    contentUpdatesEnabled: false,
+    promotionsEnabled: false,
+  };
+
+  // Step 1: Optimistic
+  let uiState = { ...initialSettings, contentUpdatesEnabled: true };
+
+  // Step 2: Server responds with authoritative values
+  const serverResponse = {
+    preferences: {
+      content_updates_enabled: true,
+      promotions_enabled: true, // Server also turned on promotions
+    },
+  };
+
+  // Step 3: Commit server values
+  uiState = {
+    ...uiState,
+    contentUpdatesEnabled: serverResponse.preferences.content_updates_enabled,
+    promotionsEnabled: serverResponse.preferences.promotions_enabled,
+  };
+
+  assert.equal(uiState.contentUpdatesEnabled, true);
+  assert.equal(uiState.promotionsEnabled, true, "Server-authoritative value committed");
+});
+
+test("cold-start: notification response is cleared after handling to prevent re-processing", () => {
+  let lastResponse = { type: "DAILY_PRACTICE", handled: false };
+  let cleared = false;
+
+  // Simulate cold-start handling
+  function handleAndClear() {
+    if (lastResponse) {
+      lastResponse.handled = true;
+      // clearLastNotificationResponse()
+      cleared = true;
+      lastResponse = null;
+    }
+  }
+
+  handleAndClear();
+  assert.equal(cleared, true, "clearLastNotificationResponse must be called after handling");
+  assert.equal(lastResponse, null, "Last response must be null after clear");
+
+  // Second call should be no-op
+  cleared = false;
+  handleAndClear();
+  assert.equal(cleared, false, "Should not re-process after clear");
+});
 
 

@@ -23,6 +23,7 @@ import {
   Tag,
 } from "lucide-react-native";
 import {
+  deactivateDeviceOnPermissionRevoke,
   getNotificationPermissionStatus,
   getStoredNotificationSettings,
   openNotificationSettings,
@@ -77,6 +78,8 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
           setSettings(synced);
           await saveNotificationSettings(synced);
         }
+        // Thông báo server ngưng gửi push cho thiết bị đã tắt quyền
+        await deactivateDeviceOnPermissionRevoke();
       } else if (useAuthStore.getState().isAuthenticated) {
         // Đồng bộ preferences từ server nếu đã đăng nhập và có quyền
         try {
@@ -227,16 +230,44 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
       const allowed = await ensureNotificationPermission();
       if (!allowed) return;
     }
+
+    // Optimistic UI: cập nhật giao diện trước, rollback nếu server lỗi
+    const previous = settings;
     const next: NotificationSettings = { ...settings, contentUpdatesEnabled: val };
     setSettings(next);
     await saveNotificationSettings(next);
 
     if (useAuthStore.getState().isAuthenticated) {
-      notificationApi.updatePreferences({ content_updates_enabled: val }).catch(() => { });
-      if (val) {
-        syncPushTokenWithBackend().catch(() => { });
+      try {
+        const res = await notificationApi.updatePreferences({ content_updates_enabled: val });
+        // Server-authoritative: commit giá trị server trả về
+        if (res?.preferences) {
+          const committed: NotificationSettings = {
+            ...next,
+            contentUpdatesEnabled: res.preferences.content_updates_enabled,
+            promotionsEnabled: res.preferences.promotions_enabled,
+          };
+          setSettings(committed);
+          await saveNotificationSettings(committed);
+        }
+        if (val) {
+          syncPushTokenWithBackend().catch(() => { });
+        }
+      } catch {
+        // Rollback UI về trạng thái trước khi bật/tắt
+        setSettings(previous);
+        await saveNotificationSettings(previous);
+        showToast.error(
+          t("notifications.syncError", "Lỗi đồng bộ. Vui lòng thử lại.")
+        );
+        return;
       }
     }
+    showToast.success(
+      val
+        ? t("notifications.contentUpdatesEnabled", "Đã bật thông báo nội dung mới")
+        : t("notifications.contentUpdatesDisabled", "Đã tắt thông báo nội dung mới")
+    );
   }
 
   async function handleTogglePromotions(val: boolean) {
@@ -244,16 +275,44 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
       const allowed = await ensureNotificationPermission();
       if (!allowed) return;
     }
+
+    // Optimistic UI: cập nhật giao diện trước, rollback nếu server lỗi
+    const previous = settings;
     const next: NotificationSettings = { ...settings, promotionsEnabled: val };
     setSettings(next);
     await saveNotificationSettings(next);
 
     if (useAuthStore.getState().isAuthenticated) {
-      notificationApi.updatePreferences({ promotions_enabled: val }).catch(() => { });
-      if (val) {
-        syncPushTokenWithBackend().catch(() => { });
+      try {
+        const res = await notificationApi.updatePreferences({ promotions_enabled: val });
+        // Server-authoritative: commit giá trị server trả về
+        if (res?.preferences) {
+          const committed: NotificationSettings = {
+            ...next,
+            contentUpdatesEnabled: res.preferences.content_updates_enabled,
+            promotionsEnabled: res.preferences.promotions_enabled,
+          };
+          setSettings(committed);
+          await saveNotificationSettings(committed);
+        }
+        if (val) {
+          syncPushTokenWithBackend().catch(() => { });
+        }
+      } catch {
+        // Rollback UI về trạng thái trước khi bật/tắt
+        setSettings(previous);
+        await saveNotificationSettings(previous);
+        showToast.error(
+          t("notifications.syncError", "Lỗi đồng bộ. Vui lòng thử lại.")
+        );
+        return;
       }
     }
+    showToast.success(
+      val
+        ? t("notifications.promotionsEnabled", "Đã bật thông báo khuyến mại")
+        : t("notifications.promotionsDisabled", "Đã tắt thông báo khuyến mại")
+    );
   }
 
   return (

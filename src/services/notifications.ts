@@ -16,6 +16,7 @@ import { cancelScheduledNotificationAsync } from "expo-notifications/build/cance
 import {
   addNotificationResponseReceivedListener,
   getLastNotificationResponse,
+  clearLastNotificationResponse,
 } from "expo-notifications/build/NotificationsEmitter";
 import {
   NotificationResponse,
@@ -273,6 +274,38 @@ export async function syncPushTokenWithBackend(): Promise<{
 }
 
 /**
+ * Kiểm tra quyền thông báo hiện tại và nếu quyền đã bị thu hồi (revoked)
+ * trong cài đặt hệ điều hành, tự động gọi server để hủy kích hoạt thiết bị.
+ *
+ * Flow: User vào Settings → tắt Notifications → app resume → hàm này phát hiện
+ * → gọi DELETE /api/notifications/devices/:device_id để ngưng gửi push.
+ *
+ * Đảm bảo server không gửi push vô ích vào thiết bị đã tắt quyền.
+ */
+export async function deactivateDeviceOnPermissionRevoke(): Promise<void> {
+  if (!isNativeMobile) return;
+
+  const authToken = getItem(AUTH_TOKEN_KEY);
+  if (!authToken) return;
+
+  const perm = await getNotificationPermissionStatus();
+  if (perm.granted) return;
+
+  try {
+    const { notificationApi } = await import("@/api/notificationApi");
+    const { getOrCreateDeviceId } = await import("@/utils/deviceId");
+    const deviceId = getOrCreateDeviceId();
+    await notificationApi.unregisterDevice(deviceId);
+    logger.info(
+      "Notifications",
+      `Đã hủy kích hoạt thiết bị ${deviceId} do quyền thông báo bị thu hồi.`
+    );
+  } catch (err) {
+    logger.warn("Notifications", "Lỗi khi hủy kích hoạt thiết bị sau thu hồi quyền:", err);
+  }
+}
+
+/**
  * Get current system notification permission status
  */
 export async function getNotificationPermissionStatus(): Promise<{
@@ -316,7 +349,7 @@ export async function requestNotificationPermission(): Promise<{
       status: perm.status,
     };
   } catch (err) {
-    console.warn("Failed to request notification permission:", err);
+    logger.warn("Notifications", "Failed to request notification permission:", err);
     return {
       granted: false,
       status: PermissionStatus.DENIED,
@@ -745,6 +778,12 @@ export function setupNotificationResponseListener(): () => void {
     if (lastResponse) {
       setTimeout(() => {
         handleNotificationResponse(lastResponse);
+        // Xóa notification response đã xử lý để tránh re-processing khi app re-mount
+        try {
+          clearLastNotificationResponse();
+        } catch {
+          /* best-effort: một số platform có thể chưa hỗ trợ */
+        }
       }, 600);
     }
   } catch (err) {
