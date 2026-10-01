@@ -343,7 +343,7 @@ Khi bạn bấm nút "Mua gói", thư viện Google Play Billing trên điện t
      - Tải tệp `.aab` lên mục **Internal testing (Kiểm thử nội bộ)** trên Google Play Console.
      - Lấy link chia sẻ bản thử nghiệm mở trên điện thoại và bấm **Tải về / Cập nhật**.
    - **Cách 2 (Cài nhanh file APK trực tiếp có Package `net.earlysigns.android`):**
-     - Chạy lệnh: `eas build --platform android --profile preview-store`
+     - Chạy lệnh: `eas build --platform android --profile preview`
      - Lệnh này sẽ xuất ra file `.apk` cài trực tiếp nhưng mang đúng Package Name **`net.earlysigns.android`**, giúp bạn cài thẳng vào máy qua cáp USB hoặc link download để test Google Play Billing ngay mà không cần chờ duyệt kênh Internal.
 5. Mở app trên điện thoại và bấm Mua gói:
    - Google Play sẽ hiển thị hộp thoại thanh toán chính thức kèm dòng chữ xanh: **"Test Card, always approves" (Thẻ thử nghiệm, luôn chấp thuận)**.
@@ -377,7 +377,7 @@ Khi bạn bấm nút "Mua gói", thư viện Google Play Billing trên điện t
   3. Google Play cần từ 2 đến 12 tiếng để đồng bộ In-App Products mới tạo trên máy chủ.
 - **Cách khắc phục:**
   - **Nếu đang phát triển tính năng / test UI:** Sử dụng API Key Test (`test_...`) của RevenueCat trong file `.env`. RevenueCat SDK sẽ tự động mô phỏng giao dịch mua thành công và cấp quyền Pro mà không bị Google chặn.
-  - **Nếu muốn test thanh toán thật:** Hãy cài bản build có Package Name `net.earlysigns.android` (thông qua link Google Play Internal Testing hoặc build bằng lệnh `eas build --platform android --profile preview-store`). Đồng thời đảm bảo email Google trên điện thoại đã nằm trong danh sách **License testers**.
+  - **Nếu muốn test thanh toán thật:** Hãy cài bản build có Package Name `net.earlysigns.android` (thông qua link Google Play Internal Testing hoặc build bằng lệnh `eas build --platform android --profile preview`). Đồng thời đảm bảo email Google trên điện thoại đã nằm trong danh sách **License testers**.
 
 #### Q2: Bấm mua trên iOS bị đứng hoặc báo lỗi "StoreKit Unavailable"?
 - **Nguyên nhân:** Khóa `.p8` chưa được cấu hình đúng trên RevenueCat Dashboard hoặc thiết bị chạy trên Simulator iOS cũ không hỗ trợ StoreKit 2. Hãy test trên thiết bị thật hoặc TestFlight.

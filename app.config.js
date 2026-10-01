@@ -1,9 +1,11 @@
+const fs = require("fs");
+const path = require("path");
+
 module.exports = ({ config }) => {
   const variant = process.env.APP_VARIANT || "production";
   const owner = process.env.EXPO_OWNER || config.owner || undefined;
 
   const isDev = variant === "development";
-  const isPreview = variant === "preview";
 
   let name = "EarlySigns";
   let bundleIdentifier = "net.earlysigns.android";
@@ -15,16 +17,17 @@ module.exports = ({ config }) => {
     bundleIdentifier = "net.earlysigns.android.dev";
     packageName = "net.earlysigns.android.dev";
     scheme = "earlysigns-dev";
-  } else if (isPreview) {
-    name = "EarlySigns (Prev)";
-    bundleIdentifier = "net.earlysigns.android.preview";
-    packageName = "net.earlysigns.android.preview";
-    scheme = "earlysigns-preview";
   }
 
   const projectId =
     process.env.EAS_PROJECT_ID ||
     config.extra?.eas?.projectId;
+
+  const googleServicesFile =
+    process.env.GOOGLE_SERVICES_JSON ||
+    (fs.existsSync(path.resolve(__dirname, "google-services.json"))
+      ? "./google-services.json"
+      : undefined);
 
   return {
     ...config,
@@ -44,6 +47,7 @@ module.exports = ({ config }) => {
     android: {
       ...config.android,
       package: packageName,
+      ...(googleServicesFile ? { googleServicesFile } : {}),
     },
     extra: {
       ...config.extra,

@@ -28,16 +28,6 @@
     },
     "preview": {
       "distribution": "internal",
-      "channel": "preview",
-      "env": {
-        "APP_VARIANT": "preview"
-      },
-      "android": {
-        "buildType": "apk"
-      }
-    },
-    "preview-store": {
-      "distribution": "internal",
       "channel": "production",
       "env": {
         "APP_VARIANT": "production"
