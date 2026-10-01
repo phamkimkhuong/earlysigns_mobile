@@ -8,7 +8,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/core/queryClient";
 import Toast from "react-native-toast-message";
 
-import { LogBox } from "react-native";
+import { AppState, LogBox } from "react-native";
 import { configureReanimatedLogger, ReanimatedLogLevel } from "react-native-reanimated";
 import { setupProductionConsoleGuard } from "@/core/logger";
 import { AuthProvider } from "@/services/Auth";
@@ -19,6 +19,7 @@ import {
   setupNotificationResponseListener,
   setupPushTokenRefreshListener,
   syncPushTokenWithBackend,
+  deactivateDeviceOnPermissionRevoke,
 } from "@/services/notifications";
 import { initRevenueCat } from "@/services/iap";
 import { NavigationContainer } from "@react-navigation/native";
@@ -73,10 +74,18 @@ export default function App() {
         }
       }
     })();
+    const appStateSub = AppState.addEventListener("change", (state) => {
+      if (state === "active") {
+        deactivateDeviceOnPermissionRevoke().catch(() => {});
+        syncPushTokenWithBackend().catch(() => {});
+      }
+    });
+
     return () => {
       cancelled = true;
       cleanupNotifListener();
       cleanupRefreshListener();
+      appStateSub.remove();
     };
   }, []);
 

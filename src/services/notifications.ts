@@ -6,24 +6,18 @@ import {
   AndroidImportance,
   getExpoPushTokenAsync,
   addPushTokenListener,
-} from "expo-notifications";
-import {
   getPermissionsAsync,
   requestPermissionsAsync,
-} from "expo-notifications/build/NotificationPermissions";
-import { scheduleNotificationAsync } from "expo-notifications/build/scheduleNotificationAsync";
-import { cancelScheduledNotificationAsync } from "expo-notifications/build/cancelScheduledNotificationAsync";
-import {
+  scheduleNotificationAsync,
+  cancelScheduledNotificationAsync,
   addNotificationResponseReceivedListener,
   getLastNotificationResponse,
   clearLastNotificationResponse,
-} from "expo-notifications/build/NotificationsEmitter";
-import {
   NotificationResponse,
   NotificationTriggerInput,
   PermissionStatus,
   SchedulableTriggerInputTypes,
-} from "expo-notifications/build/Notifications.types";
+} from "expo-notifications";
 import { getItem, setItem } from "./storage";
 import { navigationRef, safeNavigate } from "@/navigation/nav";
 import { useAuthStore, AUTH_TOKEN_KEY } from "@/store/useAuthStore";

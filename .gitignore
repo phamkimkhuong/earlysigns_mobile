@@ -43,6 +43,5 @@ yarn-error.*
 /ios
 /android
 
-# Firebase
-google-services.json
+# Firebase Secrets (Service Account JSON keys must NEVER be committed)
 *-firebase-adminsdk-*.json

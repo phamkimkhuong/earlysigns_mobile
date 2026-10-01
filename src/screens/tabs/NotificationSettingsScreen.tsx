@@ -85,15 +85,14 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
         try {
           const res = await notificationApi.getPreferences();
           if (res?.preferences) {
-            setSettings((prev) => {
-              const updated: NotificationSettings = {
-                ...prev,
-                contentUpdatesEnabled: res.preferences.content_updates_enabled,
-                promotionsEnabled: res.preferences.promotions_enabled,
-              };
-              saveNotificationSettings(updated);
-              return updated;
-            });
+            const current = getStoredNotificationSettings();
+            const updated: NotificationSettings = {
+              ...current,
+              contentUpdatesEnabled: res.preferences.content_updates_enabled,
+              promotionsEnabled: res.preferences.promotions_enabled,
+            };
+            setSettings(updated);
+            await saveNotificationSettings(updated);
           }
         } catch {
           // Bỏ qua lỗi mạng khi lấy preferences remote
@@ -166,6 +165,9 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
     // Người dùng đồng ý -> Kích hoạt yêu cầu quyền của hệ điều hành
     const requested = await requestNotificationPermission();
     setPermissionGranted(requested.granted);
+    if (requested.granted && useAuthStore.getState().isAuthenticated) {
+      syncPushTokenWithBackend().catch(() => {});
+    }
     return requested.granted;
   }, [t]);
 

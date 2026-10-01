@@ -367,10 +367,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const handleLogout = useCallback(async (): Promise<void> => {
     try {
-      if (deviceId) {
-        import("@/api/notificationApi")
-          .then(({ notificationApi }) => notificationApi.unregisterDevice(deviceId))
-          .catch(() => {});
+      if (deviceId && authToken) {
+        try {
+          const { notificationApi } = await import("@/api/notificationApi");
+          await notificationApi.unregisterDevice(deviceId);
+        } catch {
+          /* ignore network error when unregistering push device */
+        }
       }
       if (authToken) {
         await appAuthFetch(API_ENDPOINTS.AUTH.LOGOUT, { method: "POST" });

@@ -107,9 +107,7 @@ export const notificationApi = {
     const id = deviceId || getOrCreateDeviceId();
     return httpClient.get<NotificationPreferencesResponse>(
       API_ENDPOINTS.NOTIFICATIONS.PREFERENCES,
-      {
-        params: { device_id: id },
-      }
+      { device_id: id }
     );
   },
 

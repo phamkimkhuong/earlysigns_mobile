@@ -554,7 +554,7 @@ Thêm `googleServicesFile` vào block `android`:
 
 ### Bước 5: Cấu Hình FCM V1 trên Expo Dashboard (BẮT BUỘC)
 
-Expo Push Service cần **FCM V1 Server Key** để gửi push đến Android qua FCM.
+Expo Push Service cần **Google Service Account Key for FCM V1** (thay thế chuẩn mới cho legacy FCM Server Key đã bị Google khai tử) để gửi push đến Android qua FCM.
 
 #### 5.1: Tạo Service Account Key từ Google Cloud
 
@@ -572,7 +572,7 @@ Expo Push Service cần **FCM V1 Server Key** để gửi push đến Android qu
 
 1. Truy cập [Expo Dashboard](https://expo.dev/) → Login
 2. Vào project **EarlySigns** → **Credentials** → **Android**
-3. Tìm mục **"FCM V1 Service Account Key"**
+3. Tìm mục **"FCM V1 Service Account Key"** (hoặc "Google Service Account Key for Push Notifications (FCM V1)")
 4. Click **"Upload"** → Chọn file JSON vừa tải ở bước 5.1
 5. Expo sẽ tự động dùng key này khi gửi push qua `exp.host/--/api/v2/push/send`
 

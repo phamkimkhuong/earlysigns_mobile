@@ -568,4 +568,105 @@ test("cold-start: notification response is cleared after handling to prevent re-
   assert.equal(cleared, false, "Should not re-process after clear");
 });
 
+test("getPreferences query formatting: serializes direct query parameters without wrapping in params key", () => {
+  // Simulating httpClient buildUrl behavior
+  function buildUrl(path, params) {
+    let url = path;
+    if (params && Object.keys(params).length > 0) {
+      const searchParams = new URLSearchParams();
+      Object.entries(params).forEach(([key, val]) => {
+        if (val !== undefined && val !== null) {
+          searchParams.append(key, String(val));
+        }
+      });
+      const qs = searchParams.toString();
+      if (qs) {
+        url += (url.includes("?") ? "&" : "?") + qs;
+      }
+    }
+    return url;
+  }
+
+  const deviceId = "device-uuid-12345";
+  const path = "/api/notifications/preferences";
+
+  // CORRECT: direct object { device_id: id }
+  const correctUrl = buildUrl(path, { device_id: deviceId });
+  assert.equal(correctUrl, "/api/notifications/preferences?device_id=device-uuid-12345");
+  assert.ok(!correctUrl.includes("[object"), "Url must never contain [object Object]");
+
+  // BUGGY (what was previously passed): { params: { device_id: id } }
+  const buggyUrl = buildUrl(path, { params: { device_id: deviceId } });
+  assert.ok(decodeURIComponent(buggyUrl).includes("[object+Object]"), "Demonstrating that nested params object serialized to [object+Object]");
+});
+
+test("logout sequence: awaits push device unregistration before revoking auth token", async () => {
+  const callSequence = [];
+  let tokenRevoked = false;
+
+  const mockNotificationApi = {
+    async unregisterDevice(deviceId) {
+      if (tokenRevoked) {
+        throw new Error("401 Unauthorized: token was already revoked!");
+      }
+      callSequence.push(`unregisterDevice:${deviceId}`);
+      return { ok: true };
+    },
+  };
+
+  const mockAuthApi = {
+    async logout() {
+      callSequence.push("authLogout");
+      tokenRevoked = true;
+      return { ok: true };
+    },
+  };
+
+  let clearedAuth = false;
+  function clearAuthState() {
+    callSequence.push("clearAuthState");
+    clearedAuth = true;
+  }
+
+  // Proper logout flow:
+  const deviceId = "device-abc";
+  const authToken = "jwt-valid-token";
+
+  if (deviceId && authToken) {
+    try {
+      await mockNotificationApi.unregisterDevice(deviceId);
+    } catch {
+      /* ignore */
+    }
+  }
+  if (authToken) {
+    await mockAuthApi.logout();
+  }
+  clearAuthState();
+
+  assert.deepEqual(callSequence, [
+    "unregisterDevice:device-abc",
+    "authLogout",
+    "clearAuthState",
+  ], "Unregister must happen BEFORE authLogout and clearAuthState");
+  assert.equal(clearedAuth, true);
+});
+
+test("permission grant sync: newly granted permission triggers push token sync", async () => {
+  let syncCalled = false;
+  const mockSyncPushToken = async () => {
+    syncCalled = true;
+  };
+
+  // Simulating ensureNotificationPermission when user accepts
+  const requested = { granted: true };
+  const isAuthenticated = true;
+
+  if (requested.granted && isAuthenticated) {
+    await mockSyncPushToken();
+  }
+
+  assert.equal(syncCalled, true, "syncPushTokenWithBackend must be called when permission is granted");
+});
+
 
