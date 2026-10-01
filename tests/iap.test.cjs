@@ -308,7 +308,7 @@ test("customerInfoUpdate: activates Pro tier and stores receipt when 'pro' entit
   assert.equal(latestSeededUsage.subscription_expires_at, "2026-10-29T12:00:00Z");
 });
 
-test("customerInfoUpdate: cleanly downgrades to Free tier and purges receipt when entitlement expires or is revoked", () => {
+test("customerInfoUpdate: purges store receipt and delegates to backend reconciliation without crushing non-store Pro entitlements", async () => {
   const PRO_ENTITLEMENT_ID = "pro";
   const storage = new Map();
   // Existing subscription before expiration
@@ -320,35 +320,28 @@ test("customerInfoUpdate: cleanly downgrades to Free tier and purges receipt whe
   let cachedUsage = {
     has_active_subscription: true,
     is_in_trial: false,
-    subscription_expires_at: "2026-09-29T00:00:00Z",
+    subscription_expires_at: "2026-12-31T00:00:00Z",
     tier: "pro",
     daily_remaining: 9999,
+    source: "promo_code",
   };
+  let backendReconcileCalled = false;
 
-  function mockHandleCustomerInfoUpdate(customerInfo, token) {
+  async function mockHandleCustomerInfoUpdate(customerInfo, token, onReconcileBackend) {
     const pro = customerInfo?.entitlements?.active?.[PRO_ENTITLEMENT_ID];
     if (!pro) {
-      const hadStoreSub =
-        Boolean(customerInfo?.entitlements?.all?.[PRO_ENTITLEMENT_ID]) ||
-        storage.has("earlysigns_active_iap_subscription");
-
-      if (hadStoreSub) {
+      const hadLocalStoreReceipt = storage.has("earlysigns_active_iap_subscription");
+      if (hadLocalStoreReceipt) {
         storage.delete("earlysigns_active_iap_subscription");
-        if (cachedUsage.has_active_subscription || cachedUsage.tier === "pro") {
-          cachedUsage = {
-            ...cachedUsage,
-            has_active_subscription: false,
-            is_in_trial: false,
-            tier: "free",
-            subscription_expires_at: undefined,
-            daily_remaining: 5,
-          };
-        }
+      }
+      if (token && (hadLocalStoreReceipt || Boolean(customerInfo?.entitlements?.all?.[PRO_ENTITLEMENT_ID]))) {
+        backendReconcileCalled = true;
+        if (onReconcileBackend) await onReconcileBackend();
       }
     }
   }
 
-  // CustomerInfo after expiration/refund: active is empty, but all still lists past entitlement
+  // CustomerInfo after Store expiration: active is empty, but all still lists past entitlement
   const expiredCustomerInfo = {
     entitlements: {
       active: {},
@@ -362,15 +355,38 @@ test("customerInfoUpdate: cleanly downgrades to Free tier and purges receipt whe
     },
   };
 
-  mockHandleCustomerInfoUpdate(expiredCustomerInfo, "test_token_123");
+  // Scenario 1: User still has valid Promo Code on backend -> Pro is PRESERVED
+  await mockHandleCustomerInfoUpdate(expiredCustomerInfo, "test_token_123", async () => {
+    cachedUsage = {
+      ...cachedUsage,
+      has_active_subscription: true,
+      tier: "pro",
+      daily_remaining: 9999,
+      source: "promo_code",
+    };
+  });
 
   // Receipt in storage should be deleted
   assert.equal(storage.has("earlysigns_active_iap_subscription"), false);
+  // Backend reconciliation was requested
+  assert.equal(backendReconcileCalled, true);
+  // Billing state is NOT crushed to free; promo code Pro is intact!
+  assert.equal(cachedUsage.tier, "pro");
+  assert.equal(cachedUsage.has_active_subscription, true);
+  assert.equal(cachedUsage.daily_remaining, 9999);
 
-  // Billing state should be downgraded to free
+  // Scenario 2: User has NO other sources on backend -> Backend returns Free
+  await mockHandleCustomerInfoUpdate(expiredCustomerInfo, "test_token_123", async () => {
+    cachedUsage = {
+      has_active_subscription: false,
+      is_in_trial: false,
+      tier: "free",
+      daily_remaining: 5,
+    };
+  });
+
   assert.equal(cachedUsage.tier, "free");
   assert.equal(cachedUsage.has_active_subscription, false);
-  assert.equal(cachedUsage.subscription_expires_at, undefined);
   assert.equal(cachedUsage.daily_remaining, 5);
 });
 
@@ -504,6 +520,66 @@ test("entitlement: correctly recognizes 'earlysigns_pro' primary entitlement and
   assert.ok(clientProducts.includes("yearly"));
   assert.ok(clientProducts.includes("monthly"));
 });
+
+test("security boundary: local storage cannot override backend to grant Pro status; only verified CustomerInfo can", async () => {
+  // Replicate secure billing reconcile logic:
+  async function reconcileUsage(backendUsage, getVerifiedProFn) {
+    let usage = backendUsage;
+    if (!usage || !usage.has_active_subscription) {
+      const verifiedPro = await getVerifiedProFn();
+      if (verifiedPro && verifiedPro.active) {
+        usage = {
+          ...(usage || {
+            tier: "pro",
+            daily_remaining: 9999,
+            daily_quota: 9999,
+            today_practice_count: 0,
+            is_in_trial: false,
+            referral_count: 0,
+            trial_days_remaining: 0,
+          }),
+          has_active_subscription: true,
+          is_in_trial: false,
+          subscription_expires_at: verifiedPro.expiresAt,
+          tier: "pro",
+          daily_remaining: 9999,
+        };
+      }
+    }
+    return usage;
+  }
+
+  // Scenario 1: Attacker forged JSON in local storage, but RevenueCat CustomerInfo has no active entitlement
+  const backendFreeUsage = {
+    tier: "free",
+    has_active_subscription: false,
+    daily_remaining: 5,
+  };
+  // RevenueCat says no active entitlement
+  const mockUnverifiedPro = async () => null;
+
+  const result1 = await reconcileUsage(backendFreeUsage, mockUnverifiedPro);
+  // Must remain Free! Spoofing blocked!
+  assert.equal(result1.tier, "free");
+  assert.equal(result1.has_active_subscription, false);
+  assert.equal(result1.daily_remaining, 5);
+
+  // Scenario 2: User genuinely bought from Store, RevenueCat CustomerInfo has active entitlement,
+  // but BE webhook hasn't arrived yet (returns free)
+  const mockVerifiedPro = async () => ({
+    active: true,
+    expiresAt: "2027-01-01T00:00:00Z",
+    productId: "yearly",
+  });
+
+  const result2 = await reconcileUsage(backendFreeUsage, mockVerifiedPro);
+  // Optimistically unlocked via cryptographically verified StoreKit receipt
+  assert.equal(result2.tier, "pro");
+  assert.equal(result2.has_active_subscription, true);
+  assert.equal(result2.daily_remaining, 9999);
+  assert.equal(result2.subscription_expires_at, "2027-01-01T00:00:00Z");
+});
+
 
 
 

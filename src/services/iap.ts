@@ -8,7 +8,7 @@ import Purchases, {
 } from "react-native-purchases";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 import { getItem, setItem, removeItem } from "./storage";
-import { seedBillingUsage, getCachedBillingUsage } from "./sessionData";
+import { seedBillingUsage } from "./sessionData";
 import { notifyBillingUsageChanged } from "./billingEvents";
 import { AUTH_TOKEN_KEY } from "@/store/useAuthStore";
 import {
@@ -84,39 +84,29 @@ export function handleCustomerInfoUpdate(customerInfo: CustomerInfo): void {
       notifyBillingUsageChanged(usage);
     }
   } else {
-    // 2. Pro Entitlement is NOT active
-    // Check if user previously held an IAP Store subscription that lapsed/refunded
-    const hadStoreSubscription =
-      hasAnyProEntitlementHistory(customerInfo) ||
-      Boolean(getItem(IAP_SUBSCRIPTION_KEY));
-
-    if (hadStoreSubscription) {
+    // 2. Pro Entitlement is NOT active on the Store (expired, cancelled, refunded, or never purchased)
+    // Clean up local store subscription receipt cache
+    const hadLocalStoreReceipt = Boolean(getItem(IAP_SUBSCRIPTION_KEY));
+    if (hadLocalStoreReceipt) {
       removeItem(IAP_SUBSCRIPTION_KEY);
+    }
 
-      if (token) {
-        const cached = getCachedBillingUsage(token);
-        if (cached?.has_active_subscription || cached?.tier === "pro") {
-          const downgraded: BillingUsage = {
-            ...cached,
-            has_active_subscription: false,
-            is_in_trial: false,
-            tier: "free",
-            subscription_expires_at: undefined,
-            daily_remaining:
-              typeof cached.daily_remaining === "number"
-                ? Math.min(cached.daily_remaining, 5)
-                : 5,
-          };
-          seedBillingUsage(token, downgraded);
-        }
-      } else {
-        notifyBillingUsageChanged({
-          has_active_subscription: false,
-          is_in_trial: false,
-          tier: "free",
-          daily_remaining: 5,
-        });
-      }
+    // MULTI-ENTITLEMENT ARCHITECTURAL SEPARATION:
+    // RevenueCat only governs Store In-App Purchases (StoreKit / Google Play).
+    // An expired or lapsed Store entitlement MUST NOT unilaterally force global tier = "free",
+    // because the user might have active Pro access granted via:
+    // - Web payment (PayOS / Stripe / VNPay)
+    // - Promo code / Gift code redemption (billingApi.activateCode)
+    // - Referral rewards
+    // - Admin manual grant
+    //
+    // Instead of crushing the user's tier to "free" locally, we trigger an authoritative
+    // re-fetch from the Backend (billingApi.getUsage()), allowing the backend to composite
+    // all entitlement sources and determine the true effective status.
+    if (token && (hadLocalStoreReceipt || hasAnyProEntitlementHistory(customerInfo))) {
+      import("@/api/billingApi")
+        .then(({ billingApi }) => billingApi.getUsage())
+        .catch(() => {});
     }
   }
 }
@@ -291,31 +281,49 @@ export function normalizeStoreProduct(apiPkg: any): StoreProduct {
 }
 
 /**
- * Normalizes a RevenueCat PurchasesPackage into a StoreProduct for UI rendering
+ * Helper to determine subscription duration in months from package ID / type
  */
-export function normalizePurchasesPackage(pkg: PurchasesPackage): StoreProduct {
+export function getPackageMonths(pkg: PurchasesPackage): number {
   const pId = pkg.product.identifier;
   const pType = (pkg.packageType || "").toLowerCase();
 
-  let months = 1;
   if (
     pId === "yearly" ||
     pType.includes("annual") ||
     pId.includes("12") ||
     pId.includes("1y")
   ) {
-    months = 12;
-  } else if (
+    return 12;
+  }
+  if (
     pId === "Three_months" ||
     pId.toLowerCase() === "three_months" ||
     pType.includes("three_month") ||
     pId.includes("3m")
   ) {
-    months = 3;
-  } else {
-    months = 1;
+    return 3;
   }
+  if (pId.includes("6m") || pType.includes("six_month")) {
+    return 6;
+  }
+  return 1;
+}
 
+/**
+ * Normalizes a RevenueCat PurchasesPackage into a StoreProduct for UI rendering.
+ *
+ * Benchmark & Strikethrough Pricing:
+ * App Store & Google Play subscriptions do not have a native "strikethrough" price field.
+ * In accordance with standard App Store practices (e.g. Duolingo, Calm), the benchmark
+ * comparison price is dynamically computed against the 1-month base plan (monthlyPrice * months).
+ * Alternatively, custom overrides can be provided via RevenueCat Offering Metadata.
+ */
+export function normalizePurchasesPackage(
+  pkg: PurchasesPackage,
+  monthlyBasePrice?: number,
+  offeringMetadata?: Record<string, unknown>
+): StoreProduct {
+  const months = getPackageMonths(pkg);
   const currencyCode = pkg.product.currencyCode || "USD";
   const rawPrice = Number(pkg.product.price || 0);
   const priceDisplay =
@@ -345,11 +353,40 @@ export function normalizePurchasesPackage(pkg: PurchasesPackage): StoreProduct {
       : defaultName;
 
   let originalPriceDisplay: string | undefined;
-  if (months === 12) {
-    if (currencyCode === "VND") {
-      originalPriceDisplay = `${(rawPrice * 2).toLocaleString("vi-VN")} đ`;
-    } else {
-      originalPriceDisplay = `${(rawPrice * 2).toFixed(2)} ${currencyCode}`;
+  let originalPriceVnd = rawPrice;
+  let savingsBadge: string | undefined;
+
+  // 1. Check for custom overrides from RevenueCat Offering Metadata
+  const metaOriginalDisplay =
+    typeof offeringMetadata?.[`${pkg.identifier}_original_price`] === "string"
+      ? (offeringMetadata[`${pkg.identifier}_original_price`] as string)
+      : typeof offeringMetadata?.[`${pkg.product.identifier}_original_price`] === "string"
+        ? (offeringMetadata[`${pkg.product.identifier}_original_price`] as string)
+        : undefined;
+
+  const metaSavingsBadge =
+    typeof offeringMetadata?.[`${pkg.identifier}_savings_badge`] === "string"
+      ? (offeringMetadata[`${pkg.identifier}_savings_badge`] as string)
+      : typeof offeringMetadata?.[`${pkg.product.identifier}_savings_badge`] === "string"
+        ? (offeringMetadata[`${pkg.product.identifier}_savings_badge`] as string)
+        : undefined;
+
+  if (metaOriginalDisplay) {
+    originalPriceDisplay = metaOriginalDisplay;
+    savingsBadge = metaSavingsBadge;
+  } else if (monthlyBasePrice && monthlyBasePrice > 0 && months > 1) {
+    // 2. Industry standard benchmark: Calculate against 1-month base plan (monthlyPrice * months)
+    const benchmarkTotal = monthlyBasePrice * months;
+    if (benchmarkTotal > rawPrice) {
+      originalPriceVnd = benchmarkTotal;
+      const discountPercent = Math.round(((benchmarkTotal - rawPrice) / benchmarkTotal) * 100);
+      if (discountPercent > 0) {
+        savingsBadge = metaSavingsBadge || `Tiết kiệm ${discountPercent}%`;
+        originalPriceDisplay =
+          currencyCode === "VND"
+            ? `${Math.round(benchmarkTotal).toLocaleString("vi-VN")} đ`
+            : `${benchmarkTotal.toFixed(2)} ${currencyCode}`;
+      }
     }
   }
 
@@ -358,14 +395,14 @@ export function normalizePurchasesPackage(pkg: PurchasesPackage): StoreProduct {
     months,
     name,
     priceVnd: rawPrice,
-    originalPriceVnd: months === 12 ? rawPrice * 2 : rawPrice,
+    originalPriceVnd,
     priceDisplay,
     originalPriceDisplay,
     currencyCode,
     periodLabel: months === 12 ? "12 tháng" : `${months} tháng`,
     monthlyEquivalent,
     popular: months === 12,
-    savingsBadge: months === 12 ? "Tiết kiệm 50%" : undefined,
+    savingsBadge,
   };
 }
 
@@ -391,7 +428,15 @@ export async function getStoreOfferingsProducts(): Promise<StoreProduct[]> {
       return [];
     }
 
-    const products = availablePackages.map(normalizePurchasesPackage);
+    const monthlyPkg = availablePackages.find(
+      (pkg) => getPackageMonths(pkg) === 1
+    );
+    const monthlyBasePrice = Number(monthlyPkg?.product.price || 0);
+    const offeringMetadata = (currentOffering?.metadata as Record<string, unknown>) || {};
+
+    const products = availablePackages.map((pkg) =>
+      normalizePurchasesPackage(pkg, monthlyBasePrice, offeringMetadata)
+    );
     return products.sort((a, b) => a.months - b.months);
   } catch (err) {
     console.warn("[IAP] Error fetching offerings from RevenueCat:", err);
@@ -423,6 +468,36 @@ export function getStoredIapSubscription(): StoredSubscriptionData | null {
 
 export function saveIapSubscription(data: StoredSubscriptionData): void {
   setItem(IAP_SUBSCRIPTION_KEY, JSON.stringify(data));
+}
+
+/**
+ * Safely checks if RevenueCat / StoreKit has a cryptographically verified active Pro entitlement.
+ * This MUST be used instead of AsyncStorage when reconciling webhook latency,
+ * ensuring local storage cannot be spoofed on rooted/debugged devices to gain unauthorized Pro access.
+ */
+export async function getVerifiedActiveProEntitlement(): Promise<{
+  active: boolean;
+  expiresAt?: string;
+  productId?: string;
+} | null> {
+  if (!isRevenueCatAvailable()) {
+    return null;
+  }
+  try {
+    const customerInfo = await Purchases.getCustomerInfo();
+    const pro = getActiveProEntitlement(customerInfo);
+    if (pro) {
+      return {
+        active: true,
+        expiresAt: pro.expirationDate || undefined,
+        productId: pro.productIdentifier,
+      };
+    }
+    return null;
+  } catch (err) {
+    console.warn("[IAP] Error checking verified active entitlement:", err);
+    return null;
+  }
 }
 
 /**

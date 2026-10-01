@@ -564,7 +564,7 @@ export default function PaymentScreen({ navigation, route }: Props) {
                       >
                         <Crown size={11} color="#ffffff" strokeWidth={2.5} />
                         <Text className="text-xs font-black text-white uppercase tracking-wider">
-                          {t("payment.badgeBestValue") || "Tiết kiệm nhất"}
+                          {prod.savingsBadge || t("payment.badgeBestValue") || "Tiết kiệm nhất"}
                         </Text>
                       </View>
                     ) : null}
@@ -631,6 +631,13 @@ export default function PaymentScreen({ navigation, route }: Props) {
               })
             )}
           </View>
+
+          {/* Transparent Google Play / Apple Guidelines Benchmark Footnote */}
+          {products.some((p) => Boolean(p.savingsBadge)) ? (
+            <Text className="text-xs text-slate-400 text-center -mt-1 mb-1 px-2 font-medium">
+              {t("payment.savingsComparisonNote") || "* Mức tiết kiệm tính trên chi phí so với việc gia hạn gói 1 tháng"}
+            </Text>
+          ) : null}
 
           {/* Error Message */}
           {purchaseError ? (

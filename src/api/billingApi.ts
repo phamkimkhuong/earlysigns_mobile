@@ -1,7 +1,7 @@
 import { httpClient } from "./client";
 import { API_ENDPOINTS } from "@/core/config";
 import { useBillingStore } from "@/store/useBillingStore";
-import { getStoredIapSubscription } from "@/services/iap";
+import { getVerifiedActiveProEntitlement } from "@/services/iap";
 import type { BillingUsage } from "@/types/domain";
 
 export const billingApi = {
@@ -9,29 +9,39 @@ export const billingApi = {
    * Fetch current billing usage and sync directly into Zustand store.
    * Seamlessly reconciles with active RevenueCat StoreKit / Google Play subscription
    * to eliminate race condition when BE webhook has not yet arrived.
+   *
+   * SECURITY ENFORCEMENT:
+   * Local storage (AsyncStorage) is NEVER used as an authority to grant Pro status.
+   * Only cryptographically verified CustomerInfo from StoreKit / RevenueCat can grant optimistic Pro.
    */
   async getUsage(): Promise<BillingUsage | null> {
     const data = await httpClient.get<{ usage: BillingUsage }>(API_ENDPOINTS.BILLING.USAGE);
     let usage = data?.usage || null;
 
-    const storedIap = getStoredIapSubscription();
-    if (storedIap && (!usage || !usage.has_active_subscription)) {
-      usage = {
-        ...(usage || {
-          tier: "pro",
-          daily_remaining: 9999,
-          daily_quota: 9999,
-          today_practice_count: 0,
-          is_in_trial: false,
-          referral_count: 0,
-          trial_days_remaining: 0,
-        }),
-        has_active_subscription: true,
-        is_in_trial: false,
-        subscription_expires_at: storedIap.expiresAt,
-        tier: "pro",
-        daily_remaining: 9999,
-      };
+    if (!usage || !usage.has_active_subscription) {
+      try {
+        const verifiedPro = await getVerifiedActiveProEntitlement();
+        if (verifiedPro && verifiedPro.active) {
+          usage = {
+            ...(usage || {
+              tier: "pro",
+              daily_remaining: 9999,
+              daily_quota: 9999,
+              today_practice_count: 0,
+              is_in_trial: false,
+              referral_count: 0,
+              trial_days_remaining: 0,
+            }),
+            has_active_subscription: true,
+            is_in_trial: false,
+            subscription_expires_at: verifiedPro.expiresAt,
+            tier: "pro",
+            daily_remaining: 9999,
+          };
+        }
+      } catch {
+        /* Ignore store check errors, rely on backend usage */
+      }
     }
 
     useBillingStore.getState().setUsage(usage);

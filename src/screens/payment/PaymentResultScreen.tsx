@@ -23,7 +23,7 @@ import {
 import { useAuth } from "@/services/Auth";
 import { formatExpiryDate } from "@/utils/errors";
 import { billingApi } from "@/api/billingApi";
-import { getStoredIapSubscription } from "@/services/iap";
+import { getVerifiedActiveProEntitlement } from "@/services/iap";
 import { navigateToTab } from "@/navigation/nav";
 import type { RootStackParamList } from "@/types/navigation";
 
@@ -76,10 +76,10 @@ export default function PaymentResultScreen({ navigation, route }: Props) {
     }
 
     // If no orderCode (e.g., Native IAP or direct return)
-    // Priority 1: Check active Store IAP subscription (instant confirmation, zero webhook latency)
-    const storedIap = getStoredIapSubscription();
-    if (storedIap) {
-      setSubscriptionExpiresAt(storedIap.expiresAt);
+    // Priority 1: Check verified active Store IAP subscription (RevenueCat CustomerInfo)
+    const verifiedPro = await getVerifiedActiveProEntitlement();
+    if (verifiedPro && verifiedPro.active) {
+      setSubscriptionExpiresAt(verifiedPro.expiresAt || null);
       setStatus("confirmed");
       return;
     }

@@ -1350,6 +1350,7 @@
     "billedMonthly": "Billed monthly",
     "billedMonths": "Billed every {{months}} months",
     "savePercent": "Save {{percent}}%",
+    "savingsComparisonNote": "* Savings calculated compared to consecutive 1-month renewals",
     "badgeBestValue": "Best Value",
     "badgePopular": "Most Popular",
     "standardMonthly": "Billed monthly",

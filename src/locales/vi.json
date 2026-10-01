@@ -1348,6 +1348,7 @@
     "billedMonthly": "Thanh toán từng tháng",
     "billedMonths": "Thanh toán {{months}} tháng",
     "savePercent": "Tiết kiệm {{percent}}%",
+    "savingsComparisonNote": "* Mức tiết kiệm tính trên chi phí so với việc gia hạn gói 1 tháng",
     "badgeBestValue": "Tiết kiệm nhất",
     "badgePopular": "Phổ biến nhất",
     "standardMonthly": "Thanh toán từng tháng",
