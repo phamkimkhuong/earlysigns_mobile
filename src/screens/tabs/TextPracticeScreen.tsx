@@ -318,6 +318,8 @@ export default function TextPracticeScreen({ navigation, route }: NativeStackScr
                       </Text>
                     </View>
                     <TouchableOpacity
+                      accessibilityRole="button"
+                      accessibilityLabel={t("common.cancel", "Huỷ")}
                       activeOpacity={0.7}
                       onPress={() => setShowSaveForm(false)}
                     >
@@ -328,6 +330,7 @@ export default function TextPracticeScreen({ navigation, route }: NativeStackScr
                   </View>
                   <View className="flex-row gap-2">
                     <TextInput
+                      accessibilityLabel={t("textPractice.saveTitlePlaceholder", "Tiêu đề lưu đoạn văn")}
                       className="flex-1 border border-slate-200 rounded-2xl px-4 py-2.5 text-slate-900 bg-slate-50 text-sm font-medium"
                       value={saveTitle}
                       onChangeText={setSaveTitle}

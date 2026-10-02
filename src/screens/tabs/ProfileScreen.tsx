@@ -141,6 +141,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
   } = useAuth();
 
   const [isRestoring, setIsRestoring] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [languageModalVisible, setLanguageModalVisible] = useState(false);
   const currentLang = String(i18n.resolvedLanguage || i18n.language || "vi").startsWith("vi") ? "vi" : "en";
 
@@ -178,7 +179,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
       }
     } catch (err: any) {
       showToast.error(
-        "Lỗi",
+        t("common.error") || "Lỗi",
         err?.message || t("profile.restoreErrorMessage") || "Không thể khôi phục giao dịch lúc này. Vui lòng thử lại sau."
       );
     } finally {
@@ -381,9 +382,21 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
           text: t("auth.logout") || "Đăng xuất",
           style: "destructive",
           onPress: async () => {
-            await handleLogout();
-            queryClient.clear();
-            showToast.success(t("profile.loggedOut") || "Đã đăng xuất thành công");
+            setIsLoggingOut(true);
+            try {
+              await handleLogout();
+              queryClient.clear();
+              showToast.success(t("profile.loggedOut") || "Đã đăng xuất thành công");
+              handleNavigate("Login", { next: "Main" });
+            } catch (err) {
+              console.warn("Logout error:", err);
+              showToast.error(
+                t("common.error") || "Lỗi",
+                t("profile.logoutError") || "Không thể hoàn tất đăng xuất. Vui lòng thử lại."
+              );
+            } finally {
+              setIsLoggingOut(false);
+            }
           },
         },
       ]
@@ -401,17 +414,40 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
           text: t("common.delete", "Xóa vĩnh viễn"),
           style: "destructive",
           onPress: async () => {
+            setIsLoggingOut(true);
             try {
               await authApi.deleteAccount();
               await handleLogout();
               queryClient.clear();
               showToast.info(t("profile.accountDeletedSuccess") || "Tài khoản của bạn đã được xóa thành công.");
+              handleNavigate("Login", { next: "Main" });
             } catch {
-              showToast.error(t("profile.accountDeleteError") || "Không thể xóa tài khoản. Vui lòng thử lại sau.");
+              showToast.error(
+                t("common.error") || "Lỗi",
+                t("profile.accountDeleteError") || "Không thể xóa tài khoản. Vui lòng thử lại sau."
+              );
+            } finally {
+              setIsLoggingOut(false);
             }
           },
         },
       ]
+    );
+  }
+
+  if (isLoggingOut) {
+    return (
+      <SafeAreaView edges={["top"]} className="flex-1 bg-[#f8fafc] items-center justify-center p-6">
+        <View
+          style={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0" }}
+          className="rounded-3xl p-7 items-center justify-center gap-4 border shadow-xl min-w-[220px]"
+        >
+          <ActivityIndicator size="large" color="#4f46e5" />
+          <Text className="text-[15px] font-bold text-[#0f172a]">
+            {t("auth.loggingOut") || "Đang đăng xuất..."}
+          </Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
@@ -610,6 +646,8 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                       {t("profile.screeningTitle") || "Hồ sơ phát âm"}
                     </Text>
                     <TouchableOpacity
+                      accessibilityRole="button"
+                      accessibilityLabel={t("profile.screeningHelpTitle", "Trợ giúp hồ sơ phát âm")}
                       activeOpacity={0.7}
                       onPress={() =>
                         customAlert.info(
@@ -694,6 +732,12 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
 
                 {/* Primary Button */}
                 <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    completedScreeningCount > 0
+                      ? (t("profile.screeningContinue") || "Tiếp tục kiểm tra sàng lọc")
+                      : (t("profile.screeningStart") || "Bắt đầu kiểm tra sàng lọc")
+                  }
                   activeOpacity={0.85}
                   onPress={() => handleNavigate("Screening")}
                   style={{
@@ -714,9 +758,8 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                 </TouchableOpacity>
               </View>
 
-              {/* 2. CHUỖI LUYỆN TẬP (STREAK CARD CHUẨN DESIGN) */}
-              <TouchableOpacity
-                activeOpacity={0.9}
+              {/* 2. CHUỖI LUYỆN TẬP (STREAK CARD THÔNG TIN) */}
+              <View
                 style={{
                   backgroundColor: "#ffffff",
                   borderWidth: 0.5,
@@ -730,40 +773,36 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                 className="rounded-3xl p-5 gap-4"
               >
                 {/* Header Row */}
-                <View className="flex-row items-center justify-between">
-                  <View className="flex-row items-center gap-3">
-                    <View
-                      style={{
-                        width: 44,
-                        height: 44,
-                        borderRadius: 20,
-                        backgroundColor: "#fff7ed",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <Image
-                        source={require("@assets/fire.png")}
-                        style={{ width: 26, height: 26 }}
-                        resizeMode="contain"
-                      />
-                    </View>
-                    <View className="flex-row items-baseline gap-2">
-                      <Text className="text-base font-black text-[#0f172a]">
-                        {t("profile.streakTitle") || "Chuỗi luyện tập"}
+                <View className="flex-row items-center gap-3">
+                  <View
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: 20,
+                      backgroundColor: "#fff7ed",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Image
+                      source={require("@assets/fire.png")}
+                      style={{ width: 26, height: 26 }}
+                      resizeMode="contain"
+                    />
+                  </View>
+                  <View className="flex-row items-baseline gap-2">
+                    <Text className="text-base font-black text-[#0f172a]">
+                      {t("profile.streakTitle") || "Chuỗi luyện tập"}
+                    </Text>
+                    <View className="flex-row items-baseline gap-1">
+                      <Text style={{ color: "#0066ff" }} className="text-xl font-black">
+                        {streakDays}
                       </Text>
-                      <View className="flex-row items-baseline gap-1">
-                        <Text style={{ color: "#0066ff" }} className="text-xl font-black">
-                          {streakDays}
-                        </Text>
-                        <Text className="text-sm font-bold text-slate-600">
-                          {t("profile.streakDaysUnit") || "ngày"}
-                        </Text>
-                      </View>
+                      <Text className="text-sm font-bold text-slate-600">
+                        {t("profile.streakDaysUnit") || "ngày"}
+                      </Text>
                     </View>
                   </View>
-
-                  <ChevronRight size={18} color="#94a3b8" />
                 </View>
 
                 {/* 7 Days Row */}
@@ -815,7 +854,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                     );
                   })}
                 </View>
-              </TouchableOpacity>
+              </View>
             </View>
           ) : (
             /* ------------------------------------------------------------- */
@@ -929,6 +968,8 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                       {t("profile.weakSoundsTitle") || "Âm ưu tiên cải thiện"}
                     </Text>
                     <TouchableOpacity
+                      accessibilityRole="button"
+                      accessibilityLabel={t("profile.viewAllSounds") || "Xem tất cả âm"}
                       activeOpacity={0.75}
                       onPress={() => handleNavigate("PhonemeCatalog")}
                       className="flex-row items-center gap-0.5 shrink-0"
@@ -960,6 +1001,8 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                       return (
                         <TouchableOpacity
                           key={cleanSound}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Luyện tập âm ${cleanSound}, độ chính xác ${acc}%`}
                           activeOpacity={0.85}
                           onPress={() => handleNavigate("PhonemePractice", { phoneme: cleanSound })}
                           style={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0" }}
@@ -1079,6 +1122,8 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
 
                 {/* Row 2: Ngôn ngữ */}
                 <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel={`${t("language.label") || "Ngôn ngữ"}: ${currentLang === "vi" ? (t("language.vi") || "Tiếng Việt") : (t("language.en") || "English")}`}
                   activeOpacity={0.7}
                   onPress={() => setLanguageModalVisible(true)}
                   className="flex-row items-center justify-between p-3.5 border-b border-slate-100"
@@ -1164,6 +1209,8 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
 
                   {/* Row 2: Manage Subscription on Store */}
                   <TouchableOpacity
+                    accessibilityRole="button"
+                    accessibilityLabel={t("profile.manageStoreTitle") || "Quản lý gói cước"}
                     activeOpacity={0.75}
                     onPress={openManageSubscriptions}
                     className="px-4 py-3.5 flex-row items-center justify-between border-b border-slate-100 active:bg-slate-50"
@@ -1184,6 +1231,8 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
 
                   {/* Row 3: Restore Purchases */}
                   <TouchableOpacity
+                    accessibilityRole="button"
+                    accessibilityLabel={t("profile.restorePurchasesTitle") || "Khôi phục giao dịch"}
                     activeOpacity={0.75}
                     onPress={handleRestorePurchases}
                     disabled={isRestoring}
@@ -1212,6 +1261,8 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                 <View>
                   {/* Row 1: Plan Status with AI Quota -> Upgrade Pro */}
                   <TouchableOpacity
+                    accessibilityRole="button"
+                    accessibilityLabel={`${t("profile.freePlan") || "Gói miễn phí"}, ${t("profile.upgradePro") || "Nâng cấp Pro"}`}
                     activeOpacity={0.75}
                     onPress={() => handleNavigate("Payment")}
                     className="flex-row items-center justify-between px-4 py-3.5 border-b border-slate-100"
@@ -1229,16 +1280,33 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                         </Text>
                       </View>
                     </View>
-                    <View className="flex-row items-center gap-1">
-                      <Text style={{ color: "#0c2340" }} className="text-sm font-bold">
+                    <View
+                      className="flex-row items-center gap-1.5 px-3 py-1.5 rounded-full shrink-0"
+                      style={{
+                        backgroundColor: "#f59e0b",
+                        shadowColor: "#f59e0b",
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.25,
+                        shadowRadius: 4,
+                        elevation: 2,
+                      }}
+                    >
+                      <Crown size={12} color="#ffffff" fill="#ffffff" />
+                      <Text
+                        numberOfLines={1}
+                        className="text-xs font-black text-white uppercase tracking-wider"
+                        style={{ includeFontPadding: false }}
+                      >
                         {t("profile.upgradePro") || "Nâng cấp Pro"}
                       </Text>
-                      <ChevronRight size={14} color="#94a3b8" />
+                      <ChevronRight size={13} color="#ffffff" strokeWidth={2.5} />
                     </View>
                   </TouchableOpacity>
 
                   {/* Row 2: Restore Purchases */}
                   <TouchableOpacity
+                    accessibilityRole="button"
+                    accessibilityLabel={t("profile.restorePurchasesTitle") || "Khôi phục giao dịch"}
                     activeOpacity={0.75}
                     onPress={handleRestorePurchases}
                     disabled={isRestoring}
@@ -1274,6 +1342,8 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
               </View>
 
               <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={t("profile.notifSettingsTitle") || "Cài đặt thông báo & giờ nhắc học"}
                 activeOpacity={0.75}
                 onPress={() => handleNavigate("NotificationSettings")}
                 className="flex-row items-center justify-between px-4 py-3.5"
@@ -1298,6 +1368,8 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
 
               {/* Referral */}
               <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={t("profile.referralTitle") || "Chương trình giới thiệu"}
                 activeOpacity={0.75}
                 onPress={() => handleNavigate("Referral")}
                 className="flex-row items-center justify-between px-4 py-3.5 border-b border-slate-100"
@@ -1311,6 +1383,8 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
 
               {/* Contact Support */}
               <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={t("profile.contactSupport") || "Liên hệ hỗ trợ"}
                 activeOpacity={0.75}
                 onPress={() => Linking.openURL("mailto:support@earlysigns.app?subject=Support%20Request")}
                 className="flex-row items-center justify-between px-4 py-3.5 border-b border-slate-100"
@@ -1324,6 +1398,8 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
 
               {/* About */}
               <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={t("profile.aboutApp") || "Về EarlySigns"}
                 activeOpacity={0.75}
                 onPress={() => handleNavigate("About")}
                 className="flex-row items-center justify-between px-4 py-3.5 border-b border-slate-100"
@@ -1337,6 +1413,8 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
 
               {/* Terms Screen */}
               <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={t("profile.termsOfUse") || "Điều khoản sử dụng"}
                 activeOpacity={0.75}
                 onPress={() => handleNavigate("Terms")}
                 className="flex-row items-center justify-between px-4 py-3.5 border-b border-slate-100"
@@ -1350,6 +1428,8 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
 
               {/* Privacy Screen (Tách biệt độc lập) */}
               <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={t("profile.privacyPolicy") || "Chính sách bảo mật"}
                 activeOpacity={0.75}
                 onPress={() => handleNavigate("Privacy")}
                 className="flex-row items-center justify-between px-4 py-3.5"
@@ -1362,33 +1442,47 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
               </TouchableOpacity>
             </View>
 
-            {/* GROUP 5: VÙNG NGUY HIỂM (LOGOUT & DELETE ACCOUNT) */}
+            {/* GROUP 5: ĐĂNG XUẤT (CARD ĐỘC LẬP) */}
             {authToken ? (
-              <View style={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0" }} className="rounded-2xl border overflow-hidden">
-                {/* Logout Button */}
+              <View
+                style={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0" }}
+                className="rounded-2xl border overflow-hidden shadow-xs"
+              >
                 <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel={t("auth.logout") || "Đăng xuất"}
                   activeOpacity={0.75}
                   onPress={confirmLogout}
-                  className="flex-row items-center justify-between px-4 py-3.5 border-b border-slate-100"
+                  disabled={isLoggingOut}
+                  className="flex-row items-center justify-between px-4 py-3.5 active:bg-rose-50"
                 >
                   <View className="flex-row items-center gap-2.5">
                     <LogOut size={18} color="#e11d48" />
-                    <Text className="text-[15px] font-bold text-rose-600">{t("auth.logout") || "Đăng xuất"}</Text>
+                    <Text className="text-[15px] font-bold text-rose-600">
+                      {t("auth.logout") || "Đăng xuất"}
+                    </Text>
                   </View>
                   <ChevronRight size={14} color="#94a3b8" />
                 </TouchableOpacity>
+              </View>
+            ) : null}
 
-                {/* Delete Account Button */}
+            {/* GROUP 6: XÓA TÀI KHOẢN (TÁCH BIỆT DƯỚI ĐÁY ĐỂ TRÁNH BẤM NHẦM) */}
+            {authToken ? (
+              <View className="items-center justify-center pt-2 pb-6">
                 <TouchableOpacity
-                  activeOpacity={0.75}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("profile.deleteAccount") || "Xóa tài khoản và dữ liệu"}
+                  activeOpacity={0.7}
                   onPress={confirmDeleteAccount}
-                  className="flex-row items-center justify-between px-4 py-3.5"
+                  disabled={isLoggingOut}
+                  hitSlop={{ top: 10, bottom: 10, left: 14, right: 14 }}
+                  className="flex-row items-center gap-1.5 py-2 px-3 rounded-xl active:bg-slate-100"
                 >
-                  <View className="flex-row items-center gap-2.5">
-                    <Trash2 size={18} color="#94a3b8" />
-                    <Text className="text-[15px] font-medium text-slate-400">{t("profile.deleteAccount") || "Xóa tài khoản"}</Text>
-                  </View>
-                  <ChevronRight size={14} color="#94a3b8" />
+                  <Trash2 size={15} color="#94a3b8" />
+                  <Text className="text-[13px] font-medium text-slate-400">
+                    {t("profile.deleteAccount") || "Xóa tài khoản và dữ liệu"}
+                  </Text>
                 </TouchableOpacity>
               </View>
             ) : null}
@@ -1419,6 +1513,8 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                 {t("profile.chooseLanguage") || "Chọn ngôn ngữ hiển thị"}
               </Text>
               <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={t("common.close", "Đóng")}
                 onPress={() => setLanguageModalVisible(false)}
                 className="w-8 h-8 rounded-full bg-slate-100 items-center justify-center"
               >
@@ -1428,6 +1524,9 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
 
             {/* Option 1: Tiếng Việt */}
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={t("language.vi") || "Tiếng Việt"}
+              accessibilityState={{ selected: currentLang === "vi" }}
               activeOpacity={0.8}
               onPress={() => handleSelectLanguage("vi")}
               style={{
@@ -1450,6 +1549,9 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
 
             {/* Option 2: English */}
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={t("language.en") || "English"}
+              accessibilityState={{ selected: currentLang === "en" }}
               activeOpacity={0.8}
               onPress={() => handleSelectLanguage("en")}
               style={{

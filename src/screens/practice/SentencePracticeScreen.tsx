@@ -1,4 +1,6 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { releaseAudioPlayer } from "@/utils/audioPlayer";
+import { useIsFocused } from "@react-navigation/native";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ScrollView,
   Text,
@@ -17,7 +19,6 @@ import type { RootStackParamList } from "@/types/navigation";
 import { usePronunciationCheck } from "@/hooks/usePronunciationCheck";
 import { buildSoundAnalysisRows } from "@/utils/pronunciationAnalysis";
 import {
-  isQuotaExhausted,
   resolveUserKey,
   resolveUserTier,
 } from "@/services/usageLimits";
@@ -49,6 +50,7 @@ function extractPendingDisplayWords(text?: string | null): any[] {
 }
 
 export default function SentencePracticeScreen({ navigation, route }: Props) {
+  const isFocused = useIsFocused();
   const insets = useSafeAreaInsets();
   const { t, i18n } = useTranslation();
   const sentences = route.params?.sentences || [];
@@ -83,6 +85,8 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
   const [isCompletedAll, setIsCompletedAll] = useState(false);
 
   const sampleSoundRef = useRef<any>(null);
+  const sampleGeneration = useRef(0);
+  const sampleMounted = useRef(false);
   const sampleAudioUrlsRef = useRef<Record<number, string>>({});
   const scrollViewRef = useRef<ScrollView>(null);
 
@@ -108,6 +112,7 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
     replayRecording,
     clearResult,
   } = usePronunciationCheck({
+    enabled: isFocused,
     language: i18n.resolvedLanguage || i18n.language || "vi",
     onUsageUpdated: (u) => useBillingStore.getState().setUsage(u),
     onDailyLimitReached: () => {
@@ -118,19 +123,23 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
     userKey,
   });
 
-  // Cleanup audio player on unmount
-  useEffect(() => {
-    return () => {
-      if (sampleSoundRef.current) {
-        try {
-          sampleSoundRef.current.remove();
-        } catch {
-          /* ignore */
-        }
-        sampleSoundRef.current = null;
-      }
-    };
+  const stopSample = useCallback(() => {
+    ++sampleGeneration.current;
+    releaseAudioPlayer(sampleSoundRef.current);
+    sampleSoundRef.current = null;
+    if (sampleMounted.current) setSamplePlaying(false);
   }, []);
+  useEffect(() => {
+    sampleMounted.current = true;
+    return () => {
+      sampleMounted.current = false;
+      stopSample();
+    };
+  }, [stopSample]);
+  useEffect(() => {
+    stopSample();
+  }, [isFocused, currentIndex, isRecording, isStarting, checking, stopSample]);
+
 
   // Save result when check finishes
   useEffect(() => {
@@ -189,7 +198,9 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
 
   // Handle Play Sample Audio
   async function handleSampleAudio() {
-    if (!currentSentence) return;
+    if (!currentSentence || isRecording || isStarting || checking) return;
+    stopSample();
+    const sampleId = sampleGeneration.current;
     if (!hasPreloadedAudio && !isProOrTrial) {
       hapticFeedback.warning();
       setUpgradeFeatureKey("sampleAudio");
@@ -207,6 +218,7 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
         }
       }
 
+      if (sampleId !== sampleGeneration.current || !sampleMounted.current) return;
       if (!url) {
         setSamplePlaying(false);
         return;
@@ -214,7 +226,7 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
 
       if (sampleSoundRef.current) {
         try {
-          sampleSoundRef.current.remove();
+          releaseAudioPlayer(sampleSoundRef.current);
         } catch {
           /* ignore */
         }
@@ -227,7 +239,7 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
         if (status?.didJustFinish) {
           setSamplePlaying(false);
           try {
-            player.remove();
+            releaseAudioPlayer(player);
           } catch {
             /* ignore */
           }
@@ -236,13 +248,14 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
       });
       player.play();
     } catch {
-      setSamplePlaying(false);
+      if (sampleId === sampleGeneration.current && sampleMounted.current) setSamplePlaying(false);
     }
   }
 
   // Handle Replay User Voice
   async function handleReplay() {
     if (replayPlaying) return;
+    stopSample();
     try {
       setReplayPlaying(true);
       await replayRecording();
@@ -256,35 +269,26 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
   // Handle Record Toggle
   async function handleRecordToggle() {
     hapticFeedback.light();
-    if (isQuotaExhausted({ userTier, userKey, usageStatus })) {
-      hapticFeedback.warning();
-      setUpgradeFeatureKey("dailyLimit");
-      setShowUpgradeModal(true);
-      return;
-    }
-
-    if (isRecording || isStarting) {
+    if (isStarting || checking) return;
+    if (isRecording) {
       await stopRecording({ check: true });
       return;
     }
 
     if (!currentSentenceText) return;
-    await startRecording({ text: currentSentenceText, dialect });
+    stopSample();
+    try {
+      await startRecording({ text: currentSentenceText, dialect });
+    } catch {
+      // Handled internally in usePronunciationCheck
+    }
   }
 
   // Navigation between sentences
   function goToSentence(index: number) {
     if (index < 0 || index >= totalSentences) return;
     hapticFeedback.light();
-    if (sampleSoundRef.current) {
-      try {
-        sampleSoundRef.current.remove();
-      } catch {
-        /* ignore */
-      }
-      sampleSoundRef.current = null;
-    }
-    setSamplePlaying(false);
+    stopSample();
     clearResult();
     setCurrentIndex(index);
     scrollViewRef.current?.scrollTo({ y: 0, animated: true });
@@ -337,6 +341,8 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
 
           <View className="w-full gap-3 mt-3">
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={t("common.back", "Quay lại")}
               activeOpacity={0.85}
               onPress={() => navigation.goBack()}
               className="w-full py-4 rounded-2xl bg-[#0a2644] items-center justify-center active:opacity-90 shadow-sm"
@@ -417,6 +423,12 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
               return (
                 <TouchableOpacity
                   key={i}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("sentence.goToSentence", {
+                    defaultValue: `Chuyển tới câu ${i + 1}`,
+                    index: i + 1,
+                  })}
+                  accessibilityState={{ selected: isCurrent }}
                   activeOpacity={0.7}
                   onPress={() => goToSentence(i)}
                   className={`h-2 rounded-full ${isCurrent ? "w-6 bg-[#0284c7]" : isDone ? "w-2 bg-emerald-500" : "w-2 bg-slate-300"

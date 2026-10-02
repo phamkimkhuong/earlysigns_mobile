@@ -26,6 +26,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { navigationRef } from "@/navigation/nav";
 import RootNavigator, { navTheme } from "@/navigation/RootNavigator";
 import CustomAlertModal from "@/components/ui/CustomAlertModal";
+import { toastConfig } from "@/components/ui/CustomToast";
 
 // Neutralize noisy console outputs in production while keeping error trackers intact
 setupProductionConsoleGuard();
@@ -101,7 +102,7 @@ export default function App() {
             <StatusBar style="dark" />
             <RootNavigator />
             <CustomAlertModal />
-            <Toast />
+            <Toast config={toastConfig} topOffset={54} />
           </NavigationContainer>
         </AuthProvider>
       </SafeAreaProvider>

@@ -84,7 +84,7 @@ export const showToast = {
       text1: title,
       text2: body,
       position: "top",
-      visibilityTime: 3500,
+      visibilityTime: 4200,
     });
   },
 
@@ -109,7 +109,7 @@ export const showToast = {
       text1: title,
       text2: body,
       position: "top",
-      visibilityTime: 3000,
+      visibilityTime: 3200,
     });
   },
 
@@ -129,7 +129,7 @@ export const showToast = {
       text1: title,
       text2: friendlyMsg,
       position: "top",
-      visibilityTime: 3500,
+      visibilityTime: 4200,
     });
   },
 
@@ -138,4 +138,5 @@ export const showToast = {
   },
 };
 
+export { toastConfig } from "@/components/ui/CustomToast";
 export default Toast;

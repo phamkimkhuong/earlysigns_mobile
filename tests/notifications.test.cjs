@@ -1,5 +1,194 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
+const vm = require("node:vm");
+const ts = require("typescript");
+
+// Execute the production service and App resume effect. Native permission
+// requests may pause/resume the Activity even when the permission is granted.
+function notificationHarness(options = {}) {
+  let permission = options.permission || { granted: true, canAskAgain: true, status: "granted" };
+  const calls = { permission: 0, reads: 0, token: 0, register: 0, unregister: 0, cycles: 0, microphone: 0, prepare: 0, record: 0 };
+  const listeners = new Set(), effects = [], cleanups = [], cache = {};
+  const recordingRuntime = { owner: null, queue: Promise.resolve() };
+  const app = {
+    currentState: "active",
+    addEventListener(type, callback) {
+      const subscription = { type, callback };
+      listeners.add(subscription);
+      return { remove() { listeners.delete(subscription); } };
+    },
+  };
+  const emit = state => { app.currentState = state; [...listeners].filter(s => s.type === "change").forEach(s => s.callback(state)); };
+  const focus = focused => [...listeners].filter(s => s.type === (focused ? "focus" : "blur")).forEach(s => s.callback());
+  const storage = new Map(options.signedOut ? [] : [["auth", "test-auth"]]);
+  const noop = () => {};
+  const mocks = {
+    "react": { useState: () => [false, noop], useEffect: callback => effects.push(callback) },
+    "react/jsx-runtime": { jsx: noop, jsxs: noop },
+    "react-native": { AppState: app, Platform: { OS: options.platform || "android" }, Linking: { openSettings: async () => {} }, LogBox: { ignoreLogs: noop } },
+    "expo-constants": { __esModule: true, default: { easConfig: { projectId: "test-project" } } },
+    "expo-notifications": {
+      PermissionStatus: { GRANTED: "granted", DENIED: "denied", UNDETERMINED: "undetermined" },
+      AndroidImportance: { MAX: 5 }, SchedulableTriggerInputTypes: {},
+      setNotificationHandler: noop, setNotificationChannelAsync: async () => {},
+      getPermissionsAsync: async () => { calls.reads++; return typeof options.readPermission === "function" ? options.readPermission(calls.reads) : permission; },
+      requestPermissionsAsync: async () => {
+        calls.permission++;
+        // Bound a reproduced feedback loop so a failing regression cannot hang.
+        if (options.permissionLifecycle && calls.cycles < 4) {
+          calls.cycles++; emit("background"); emit("active");
+        }
+        permission = options.requestResult || permission;
+        return permission;
+      },
+      getExpoPushTokenAsync: async () => { calls.token++; await options.getToken?.(); return { data: "ExponentPushToken[test]" }; },
+      addPushTokenListener: () => ({ remove: noop }),
+      getLastNotificationResponse: () => null,
+      clearLastNotificationResponse: noop,
+      addNotificationResponseReceivedListener: () => ({ remove: noop }),
+    },
+    "./storage": { getItem: key => storage.get(key), setItem: (key, value) => storage.set(key, value) },
+    "@/services/storage": { hydrateStorage: async () => {}, getItem: key => storage.get(key) },
+    "@/navigation/nav": { navigationRef: { isReady: () => false }, safeNavigate: noop },
+    "@/store/useAuthStore": { AUTH_TOKEN_KEY: "auth", useAuthStore: { getState: () => ({}) } },
+    "@/utils/toast": { showToast: noop },
+    "@/utils/customAlert": { customAlert: { alert: noop } },
+    "@/core/logger": { logger: { debug: noop, info: noop, warn: noop }, setupProductionConsoleGuard: noop },
+    "@/core/i18n": { __esModule: true, default: { t: key => key }, getStoredLanguage: async () => "vi", initI18n: async () => {} },
+    "@/api/notificationApi": { notificationApi: {
+      registerDevice: async () => { calls.register++; return { device_id: "test-device" }; },
+      unregisterDevice: async () => { calls.unregister++; },
+    } },
+    "@/utils/deviceId": { getOrCreateDeviceId: () => "test-device" },
+    "expo-splash-screen": { preventAutoHideAsync: async () => {}, hideAsync: async () => {} },
+    "react-native-reanimated": { configureReanimatedLogger: noop, ReanimatedLogLevel: { warn: 1 } },
+    "@/services/iap": { initRevenueCat: async () => true },
+    "expo-audio": {
+      AudioQuality: { HIGH: 1 }, IOSOutputFormat: { LINEARPCM: "lpcm" },
+      AudioModule: { AudioRecorder: class {
+        isRecording = false;
+        async prepareToRecordAsync() { calls.prepare++; }
+        record() { calls.record++; this.isRecording = true; }
+        getStatus() { return { isRecording: this.isRecording }; }
+        async stop() { this.isRecording = false; }
+        release() {}
+        addListener() { return { remove: noop }; }
+      } },
+      getRecordingPermissionsAsync: async () => ({ granted: false, canAskAgain: true }),
+      requestRecordingPermissionsAsync: async () => {
+        calls.microphone++; emit("background"); focus(false);
+        emit("active"); focus(true);
+        return { granted: true, canAskAgain: true };
+      },
+      setAudioModeAsync: async () => {},
+    },
+  };
+  for (const name of ["react-native-gesture-handler", "./global.css", "expo-status-bar", "react-native-safe-area-context", "@tanstack/react-query", "@/core/queryClient", "react-native-toast-message", "@/services/Auth", "@react-navigation/native", "@/navigation/RootNavigator", "@/components/ui/CustomAlertModal", "@/components/ui/CustomToast"]) mocks[name] = {};
+  function load(file) {
+    if (cache[file]) return cache[file];
+    const filename = path.resolve(__dirname, "..", file), module = { exports: {} };
+    const source = ts.transpileModule(fs.readFileSync(filename, "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX } }).outputText;
+    vm.runInNewContext(source, {
+      module, exports: module.exports, console, process: { env: {} }, setTimeout, clearTimeout,
+      __earlySignsRecording: recordingRuntime,
+      require(name) {
+        if (name in mocks) return mocks[name];
+        if (name === "@/services/notifications") return load("src/services/notifications.ts");
+        throw Error("Unmocked production dependency: " + name);
+      },
+    }, { filename });
+    return cache[file] = module.exports;
+  }
+  const service = load("src/services/notifications.ts");
+  return {
+    calls, service, emit,
+    RecordingSession: load("src/services/recordingSession.ts").RecordingSession,
+    mountApp() { load("App.tsx").default(); effects.splice(0).forEach(callback => cleanups.push(callback())); },
+    unmountApp() { cleanups.forEach(cleanup => cleanup?.()); },
+    setPermission(value) { permission = value; },
+  };
+}
+
+async function drainNotifications() { for (let i = 0; i < 100; i++) await Promise.resolve(); }
+
+test("production push registration with granted permission never opens another system request", async () => {
+  const h = notificationHarness();
+  assert.equal(await h.service.registerForPushNotificationsAsync(), "ExponentPushToken[test]");
+  assert.equal(h.calls.permission, 0);
+  assert.equal(h.calls.token, 1);
+});
+
+test("production App resume cannot create a notification permission Activity feedback loop", async () => {
+  const h = notificationHarness({ permissionLifecycle: true });
+  h.mountApp(); await drainNotifications();
+  h.emit("background"); h.emit("active"); await drainNotifications();
+  assert.equal(h.calls.permission, 0, "Boot/resume sync must only query permission");
+  assert.equal(h.calls.cycles, 0, "Push sync must not launch another permission Activity");
+  assert.equal(h.calls.register, 2, "Boot and one real resume each sync an authorized device");
+  h.unmountApp();
+});
+
+test("production microphone grant resumes App once and starts recording without a competing notification request", async () => {
+  const h = notificationHarness({ permissionLifecycle: true });
+  h.mountApp(); await drainNotifications();
+  const errors = [];
+  const session = new h.RecordingSession(() => {}, error => errors.push(error), () => {});
+  assert.equal(await session.start(), true);
+  await drainNotifications();
+  assert.equal(h.calls.microphone, 1);
+  assert.equal(h.calls.permission, 0);
+  assert.equal(h.calls.cycles, 0);
+  assert.equal(h.calls.register, 2);
+  assert.equal(h.calls.prepare, 1);
+  assert.equal(h.calls.record, 1);
+  assert.equal(session.phase, "recording");
+  assert.deepEqual(errors, []);
+  session.dispose(); h.unmountApp(); await drainNotifications();
+});
+
+for (const platform of ["android", "ios"]) test(platform + " production token registration with denied permission does not prompt or fetch a token", async () => {
+  const h = notificationHarness({ platform, permission: { granted: false, canAskAgain: true, status: "undetermined" } });
+  assert.equal(await h.service.registerForPushNotificationsAsync(), null);
+  h.mountApp(); await drainNotifications();
+  h.emit("background"); h.emit("active"); await drainNotifications();
+  assert.equal(h.calls.permission, 0);
+  assert.equal(h.calls.token, 0);
+  assert.equal(h.calls.register, 0);
+  h.unmountApp();
+});
+
+test("production explicit notification opt-in requests once, then sync and repeated requests reuse the grant", async () => {
+  const h = notificationHarness({
+    permission: { granted: false, canAskAgain: true, status: "undetermined" },
+    requestResult: { granted: true, canAskAgain: true, status: "granted" },
+  });
+  assert.equal((await h.service.requestNotificationPermission()).granted, true);
+  assert.equal((await h.service.syncPushTokenWithBackend()).success, true);
+  assert.equal((await h.service.requestNotificationPermission()).granted, true);
+  assert.equal(h.calls.permission, 1);
+  assert.equal(h.calls.register, 1);
+});
+
+test("production push permission revoked between sync query and registration is never requested automatically", async () => {
+  const h = notificationHarness({ readPermission: read => ({ granted: read === 1, canAskAgain: true, status: read === 1 ? "granted" : "denied" }) });
+  assert.equal((await h.service.syncPushTokenWithBackend()).success, false);
+  assert.equal(h.calls.permission, 0);
+  assert.equal(h.calls.token, 0);
+  assert.equal(h.calls.register, 0);
+});
+
+test("production App resume with Firebase unavailable cannot restart the permission lifecycle", async () => {
+  const h = notificationHarness({ permissionLifecycle: true, getToken: async () => { throw Error("FirebaseApp is not initialized"); } });
+  h.mountApp(); await drainNotifications();
+  h.emit("background"); h.emit("active"); await drainNotifications();
+  assert.equal(h.calls.permission, 0);
+  assert.equal(h.calls.cycles, 0);
+  assert.equal(h.calls.token, 2);
+  assert.equal(h.calls.register, 0);
+  h.unmountApp();
+});
 
 // Mocking logic from handleNotificationResponse
 function simulateNotificationRouting({

@@ -121,6 +121,7 @@ export interface LessonSession {
 export interface MicError {
   type: "denied" | "notFound" | "generic";
   raw: string;
+  canAskAgain?: boolean;
 }
 
 export interface VideoSegment {

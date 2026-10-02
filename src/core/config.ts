@@ -7,10 +7,12 @@ interface ExtraConfig {
 
 const extra: ExtraConfig = (Constants.expoConfig?.extra as ExtraConfig) || {};
 
+const DEFAULT_API_BASE = __DEV__ ? "http://localhost:8000" : "https://api-vps.earlysigns.net";
+
 export const API_BASE: string =
   process.env.EXPO_PUBLIC_API_BASE ||
   extra.apiBase ||
-  "http://localhost:8000";
+  DEFAULT_API_BASE;
 
 export const MOBILE_APP_CLIENT: string = "mobile-free";
 export const GOOGLE_CLIENT_ID: string =
@@ -37,6 +39,11 @@ export const REVENUECAT_GOOGLE_KEY: string =
 export const FACEBOOK_APP_ID: string =
   process.env.EXPO_PUBLIC_FACEBOOK_APP_ID ||
   extra.facebookAppId ||
+  "";
+
+export const FACEBOOK_CLIENT_TOKEN: string =
+  process.env.EXPO_PUBLIC_FACEBOOK_CLIENT_TOKEN ||
+  extra.facebookClientToken ||
   "";
 
 export { API_ENDPOINTS } from "./apiEndpoints";

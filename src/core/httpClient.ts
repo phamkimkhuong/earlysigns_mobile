@@ -14,6 +14,7 @@ export interface RequestOptions {
   body?: any;
   params?: Record<string, any>;
   timeoutMs?: number;
+  signal?: AbortSignal;
   skipAuth?: boolean;
 }
 
@@ -61,6 +62,7 @@ export async function httpRequest<T = any>(
     params,
     timeoutMs = 30_000,
     skipAuth = false,
+    signal,
   } = options;
 
   const url = buildUrl(path, params);
@@ -91,6 +93,9 @@ export async function httpRequest<T = any>(
   // Timeout controller
   const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
   const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
+  const abort = () => controller?.abort();
+  if (signal?.aborted) abort();
+  signal?.addEventListener("abort", abort, { once: true });
 
   // Start timing & log outgoing request
   const startTime = Date.now();
@@ -159,6 +164,9 @@ export async function httpRequest<T = any>(
     const msg = isAbort ? "Yêu cầu mạng quá thời gian (Timeout)" : err?.message || "Lỗi kết nối mạng";
     logger.httpErr(method, url, 0, durationMs, msg);
     throw new AppHttpError(0, msg, err);
+  } finally {
+    if (timer) clearTimeout(timer);
+    signal?.removeEventListener("abort", abort);
   }
 }
 

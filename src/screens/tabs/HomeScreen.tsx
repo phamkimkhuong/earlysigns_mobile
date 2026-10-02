@@ -91,6 +91,8 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
             <EarlySignsBrandLogo />
             {authToken ? (
               <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`${t("homeDesign.greeting", { name: userName || "bạn" })}, ${t("nav.profile", "Trang cá nhân")}`}
                 testID="home-account"
                 onPress={() => navigation.navigate("Profile", { tab: "account" })}
                 className="py-1 active:opacity-75"
@@ -155,9 +157,9 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
             {authToken ? (
               <View className="flex-row flex-wrap items-center gap-2 mt-1.5">
                 {streakDays != null && streakDays > 0 ? (
-                  <View className="flex-row items-center gap-1 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
+                  <View className="flex-row items-center gap-1 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200 shrink-0">
                     <Flame size={13} color="#b45309" />
-                    <Text className="text-2xs font-bold text-amber-800">
+                    <Text numberOfLines={1} className="text-xs font-bold text-amber-800">
                       {t("homeDesign.streak", { count: streakDays })}
                     </Text>
                   </View>
@@ -165,7 +167,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
 
                 {/* Account Status Badge */}
                 <View
-                  className={`px-2.5 py-1 rounded-full border ${userTier === "pro"
+                  className={`px-2.5 py-1 rounded-full border shrink-0 ${userTier === "pro"
                     ? "bg-indigo-50 border-indigo-200"
                     : userTier === "trial"
                       ? "bg-amber-50 border-amber-200"
@@ -173,7 +175,8 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
                     }`}
                 >
                   <Text
-                    className={`text-2xs font-bold ${userTier === "pro"
+                    numberOfLines={1}
+                    className={`text-xs font-bold ${userTier === "pro"
                       ? "text-indigo-700"
                       : userTier === "trial"
                         ? "text-amber-700"
@@ -190,12 +193,15 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
 
                 {/* Clarity Score Badge */}
                 {clarityPct != null ? (
-                  <Text
-                    testID="home-clarity"
-                    className="text-2xs font-bold text-teal-800 bg-teal-50 border border-teal-200 px-2.5 py-1 rounded-full"
-                  >
-                    {t("homeDesign.clarity", { percent: clarityPct })}
-                  </Text>
+                  <View className="bg-teal-50 border border-teal-200 px-2.5 py-1 rounded-full shrink-0">
+                    <Text
+                      testID="home-clarity"
+                      numberOfLines={1}
+                      className="text-xs font-bold text-teal-800"
+                    >
+                      {t("homeDesign.clarity", { percent: clarityPct })}
+                    </Text>
+                  </View>
                 ) : null}
               </View>
             ) : null}

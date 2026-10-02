@@ -1,6 +1,7 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   AppState,
+  Modal,
   ScrollView,
   Switch,
   Text,
@@ -13,14 +14,18 @@ import {
   Bell,
   BookOpen,
   CheckCircle2,
+  ChevronDown,
   ChevronLeft,
+  ChevronUp,
   Clock,
   ExternalLink,
   Flame,
   PlayCircle,
   ShieldAlert,
   ShieldCheck,
+  SlidersHorizontal,
   Tag,
+  X,
 } from "lucide-react-native";
 import {
   deactivateDeviceOnPermissionRevoke,
@@ -50,6 +55,23 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
   const { t } = useTranslation();
   const [settings, setSettings] = useState<NotificationSettings>(getStoredNotificationSettings());
   const [permissionGranted, setPermissionGranted] = useState(false);
+  const [customTimeModalVisible, setCustomTimeModalVisible] = useState(false);
+  const [tempHour, setTempHour] = useState(settings.dailyReminderHour ?? 20);
+  const [tempMinute, setTempMinute] = useState(settings.dailyReminderMinute ?? 0);
+
+  const isCustomTimeSelected = useMemo(() => {
+    return !PRESET_REMINDER_TIMES.some(
+      (preset) =>
+        settings.dailyReminderHour === preset.hour &&
+        settings.dailyReminderMinute === preset.minute
+    );
+  }, [settings.dailyReminderHour, settings.dailyReminderMinute]);
+
+  const formattedCustomTime = useMemo(() => {
+    const h = String(settings.dailyReminderHour).padStart(2, "0");
+    const m = String(settings.dailyReminderMinute).padStart(2, "0");
+    return `${h}:${m}`;
+  }, [settings.dailyReminderHour, settings.dailyReminderMinute]);
 
   // Sync real device permission on mount and when app resumes from background (e.g. from Settings)
   useEffect(() => {
@@ -373,6 +395,7 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
               style={{ backgroundColor: "#0f172a" }}
               className="flex-row items-center gap-1.5 px-3 py-1.5 rounded-full active:opacity-80"
               accessibilityRole="button"
+              accessibilityLabel={t("notifications.openSettings", "Mở Cài đặt")}
             >
               <Text className="text-xs font-bold text-white">
                 {t("notifications.openSettings", "Mở Cài đặt")}
@@ -427,6 +450,7 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
               <View className="flex-row flex-wrap gap-2">
                 {PRESET_REMINDER_TIMES.map((preset) => {
                   const isSelected =
+                    !isCustomTimeSelected &&
                     settings.dailyReminderHour === preset.hour &&
                     settings.dailyReminderMinute === preset.minute;
                   return (
@@ -439,6 +463,8 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
                       }}
                       className="px-3.5 py-1.5 rounded-full border active:opacity-80"
                       accessibilityRole="button"
+                      accessibilityLabel={preset.label}
+                      accessibilityState={{ selected: isSelected }}
                     >
                       <Text
                         style={{ color: isSelected ? "#ffffff" : "#475569" }}
@@ -449,6 +475,36 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
                     </TouchableOpacity>
                   );
                 })}
+
+                {/* Nút Tùy chỉnh giờ gửi thông báo */}
+                <TouchableOpacity
+                  onPress={() => {
+                    setTempHour(settings.dailyReminderHour);
+                    setTempMinute(settings.dailyReminderMinute);
+                    setCustomTimeModalVisible(true);
+                  }}
+                  style={{
+                    backgroundColor: isCustomTimeSelected ? "#0284c7" : "#f1f5f9",
+                    borderColor: isCustomTimeSelected ? "#0284c7" : "#e2e8f0",
+                  }}
+                  className="flex-row items-center gap-1.5 px-3.5 py-1.5 rounded-full border active:opacity-80"
+                  accessibilityRole="button"
+                  accessibilityLabel={t("notifications.customReminderTime", "Tùy chỉnh giờ nhắc")}
+                  accessibilityState={{ selected: isCustomTimeSelected }}
+                >
+                  <SlidersHorizontal
+                    size={13}
+                    color={isCustomTimeSelected ? "#ffffff" : "#475569"}
+                  />
+                  <Text
+                    style={{ color: isCustomTimeSelected ? "#ffffff" : "#475569" }}
+                    className="text-sm font-bold"
+                  >
+                    {isCustomTimeSelected
+                      ? `${t("notifications.custom", "Tùy chỉnh")}: ${formattedCustomTime}`
+                      : t("notifications.custom", "Tùy chỉnh...")}
+                  </Text>
+                </TouchableOpacity>
               </View>
             </View>
           ) : null}
@@ -603,6 +659,200 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
           </Text>
         </View>
       </ScrollView>
+
+      {/* MODAL TÙY CHỈNH GIỜ NHẮC NHỞ */}
+      <Modal
+        visible={customTimeModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setCustomTimeModalVisible(false)}
+      >
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={() => setCustomTimeModalVisible(false)}
+          style={{ backgroundColor: "rgba(15, 23, 42, 0.55)" }}
+          className="flex-1 justify-end"
+        >
+          <TouchableOpacity
+            activeOpacity={1}
+            style={{ backgroundColor: "#ffffff" }}
+            className="rounded-t-[32px] p-6 pb-9 gap-5"
+          >
+            {/* Modal Header */}
+            <View className="flex-row items-center justify-between pb-3 border-b border-slate-100">
+              <View className="flex-row items-center gap-2.5">
+                <View
+                  style={{ backgroundColor: "#e0f2fe" }}
+                  className="w-9 h-9 rounded-xl items-center justify-center"
+                >
+                  <Clock size={18} color="#0284c7" />
+                </View>
+                <View>
+                  <Text className="text-base font-black text-[#0f172a]">
+                    {t("notifications.customTimeModalTitle", "Tùy chỉnh giờ nhắc")}
+                  </Text>
+                  <Text className="text-xs text-slate-500">
+                    {t("notifications.customTimeModalSubtitle", "Chọn giờ gửi thông báo hằng ngày cho bạn")}
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={t("common.close", "Đóng")}
+                onPress={() => setCustomTimeModalVisible(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 items-center justify-center"
+              >
+                <X size={16} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Stepper Digital Clock Display */}
+            <View className="items-center py-2">
+              <View className="flex-row items-center justify-center gap-4">
+                {/* Hour Column */}
+                <View className="items-center gap-2">
+                  <TouchableOpacity
+                    accessibilityRole="button"
+                    accessibilityLabel="Tăng 1 giờ"
+                    onPress={() => setTempHour((prev) => (prev + 1) % 24)}
+                    className="w-12 h-10 rounded-xl bg-slate-100 items-center justify-center active:bg-slate-200"
+                  >
+                    <ChevronUp size={20} color="#0f172a" />
+                  </TouchableOpacity>
+
+                  <View
+                    style={{ backgroundColor: "#f8fafc", borderColor: "#cbd5e1" }}
+                    className="w-20 h-20 rounded-2xl border items-center justify-center shadow-xs"
+                  >
+                    <Text className="text-3xl font-black text-[#0c2340]">
+                      {String(tempHour).padStart(2, "0")}
+                    </Text>
+                    <Text className="text-2xs font-bold text-slate-400 uppercase mt-0.5">
+                      {t("notifications.hourUnit", "Giờ")}
+                    </Text>
+                  </View>
+
+                  <TouchableOpacity
+                    accessibilityRole="button"
+                    accessibilityLabel="Giảm 1 giờ"
+                    onPress={() => setTempHour((prev) => (prev - 1 + 24) % 24)}
+                    className="w-12 h-10 rounded-xl bg-slate-100 items-center justify-center active:bg-slate-200"
+                  >
+                    <ChevronDown size={20} color="#0f172a" />
+                  </TouchableOpacity>
+                </View>
+
+                {/* Separator Colon */}
+                <Text className="text-4xl font-black text-slate-400 pb-8">:</Text>
+
+                {/* Minute Column */}
+                <View className="items-center gap-2">
+                  <TouchableOpacity
+                    accessibilityRole="button"
+                    accessibilityLabel="Tăng 5 phút"
+                    onPress={() => setTempMinute((prev) => (prev + 5) % 60)}
+                    className="w-12 h-10 rounded-xl bg-slate-100 items-center justify-center active:bg-slate-200"
+                  >
+                    <ChevronUp size={20} color="#0f172a" />
+                  </TouchableOpacity>
+
+                  <View
+                    style={{ backgroundColor: "#f8fafc", borderColor: "#cbd5e1" }}
+                    className="w-20 h-20 rounded-2xl border items-center justify-center shadow-xs"
+                  >
+                    <Text className="text-3xl font-black text-[#0c2340]">
+                      {String(tempMinute).padStart(2, "0")}
+                    </Text>
+                    <Text className="text-2xs font-bold text-slate-400 uppercase mt-0.5">
+                      {t("notifications.minuteUnit", "Phút")}
+                    </Text>
+                  </View>
+
+                  <TouchableOpacity
+                    accessibilityRole="button"
+                    accessibilityLabel="Giảm 5 phút"
+                    onPress={() => setTempMinute((prev) => (prev - 5 + 60) % 60)}
+                    className="w-12 h-10 rounded-xl bg-slate-100 items-center justify-center active:bg-slate-200"
+                  >
+                    <ChevronDown size={20} color="#0f172a" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+
+            {/* Quick Suggestions Chips */}
+            <View className="gap-2">
+              <Text className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                {t("notifications.quickSuggestions", "Gợi ý khung giờ vàng:")}
+              </Text>
+              <View className="flex-row flex-wrap gap-2">
+                {[
+                  { label: "06:30 (Sáng sớm)", h: 6, m: 30 },
+                  { label: "07:30 (Ăn sáng)", h: 7, m: 30 },
+                  { label: "18:30 (Tan làm)", h: 18, m: 30 },
+                  { label: "22:00 (Trước khi ngủ)", h: 22, m: 0 },
+                ].map((item) => (
+                  <TouchableOpacity
+                    key={item.label}
+                    accessibilityRole="button"
+                    accessibilityLabel={item.label}
+                    accessibilityState={{ selected: tempHour === item.h && tempMinute === item.m }}
+                    onPress={() => {
+                      setTempHour(item.h);
+                      setTempMinute(item.m);
+                    }}
+                    style={{
+                      backgroundColor:
+                        tempHour === item.h && tempMinute === item.m ? "#eff6ff" : "#f8fafc",
+                      borderColor:
+                        tempHour === item.h && tempMinute === item.m ? "#0284c7" : "#e2e8f0",
+                    }}
+                    className="px-3 py-1.5 rounded-full border active:opacity-80"
+                  >
+                    <Text
+                      style={{
+                        color:
+                          tempHour === item.h && tempMinute === item.m ? "#0284c7" : "#475569",
+                      }}
+                      className="text-xs font-semibold"
+                    >
+                      {item.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            {/* Modal Actions */}
+            <View className="flex-row items-center gap-3 pt-2">
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={t("common.cancel", "Hủy")}
+                onPress={() => setCustomTimeModalVisible(false)}
+                className="flex-1 py-3.5 rounded-2xl items-center justify-center bg-slate-100 active:bg-slate-200"
+              >
+                <Text className="text-sm font-bold text-slate-600">
+                  {t("common.cancel", "Hủy")}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={t("notifications.applyTime", "Lưu giờ nhắc")}
+                onPress={() => {
+                  handleSelectTime(tempHour, tempMinute);
+                  setCustomTimeModalVisible(false);
+                }}
+                style={{ backgroundColor: "#0284c7" }}
+                className="flex-1 py-3.5 rounded-2xl items-center justify-center shadow-sm active:opacity-90"
+              >
+                <Text className="text-sm font-extrabold text-white">
+                  {t("notifications.applyTime", "Lưu giờ nhắc")}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }
