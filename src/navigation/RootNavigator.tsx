@@ -144,7 +144,7 @@ export default function RootNavigator() {
       <Stack.Screen name="Privacy" component={PrivacyScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Referral" component={ReferralScreen} options={{ headerShown: false }} />
       <Stack.Screen name="About" component={AboutScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="Login" component={LoginScreen} options={{ title: t("login.title") }} />
+      <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Payment" component={PaymentScreen} options={{ headerShown: false }} />
       <Stack.Screen name="PaymentWebView" component={PaymentWebViewScreen} options={{ title: t("package.planName") }} />
       <Stack.Screen name="PaymentResult" component={PaymentResultScreen} options={{ title: t("package.planName") }} />

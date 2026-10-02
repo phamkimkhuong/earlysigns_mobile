@@ -133,13 +133,13 @@ export default function CustomAlertModal() {
           {renderIcon(type)}
 
           {/* Title */}
-          <Text className="text-base font-extrabold text-[#0f172a] text-center mt-3.5">
+          <Text className="text-[17px] font-black text-[#0f172a] text-center mt-3.5">
             {title}
           </Text>
 
           {/* Message */}
           {message ? (
-            <Text className="text-xs text-slate-600 text-center leading-5 mt-2 px-1">
+            <Text className="text-[15px] text-slate-600 text-center leading-6 mt-2.5 px-1">
               {message}
             </Text>
           ) : null}
@@ -164,12 +164,13 @@ export default function CustomAlertModal() {
                       key={idx}
                       onPress={() => handlePress(btn)}
                       style={{ backgroundColor: btnBg }}
-                      className="flex-1 h-11 rounded-xl items-center justify-center active:opacity-80"
+                      className="flex-1 min-h-[46px] py-2.5 rounded-2xl items-center justify-center active:opacity-80"
                       accessibilityRole="button"
+                      accessibilityLabel={getButtonLabel(btn)}
                     >
                       <Text
-                        style={{ color: textColor }}
-                        className="text-xs font-bold"
+                        style={{ color: textColor, includeFontPadding: false }}
+                        className="text-[15px] font-bold"
                       >
                         {getButtonLabel(btn)}
                       </Text>
@@ -195,12 +196,13 @@ export default function CustomAlertModal() {
                       key={idx}
                       onPress={() => handlePress(btn)}
                       style={{ backgroundColor: btnBg }}
-                      className="w-full h-11 rounded-xl items-center justify-center active:opacity-80"
+                      className="w-full min-h-[46px] py-2.5 rounded-2xl items-center justify-center active:opacity-80"
                       accessibilityRole="button"
+                      accessibilityLabel={getButtonLabel(btn)}
                     >
                       <Text
-                        style={{ color: textColor }}
-                        className="text-xs font-bold"
+                        style={{ color: textColor, includeFontPadding: false }}
+                        className="text-[15px] font-bold"
                       >
                         {getButtonLabel(btn)}
                       </Text>

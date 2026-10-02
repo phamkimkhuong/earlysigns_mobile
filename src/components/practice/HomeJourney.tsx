@@ -143,6 +143,65 @@ function NodeCircle({
   );
 }
 
+export interface JourneyPathItemProps {
+  item: any;
+  onStartLesson?: () => void;
+  lessonLoading?: boolean;
+  t: (key: string, opts?: any) => string;
+}
+
+export const JourneyPathItem = React.memo(function JourneyPathItem({
+  item,
+  onStartLesson,
+  lessonLoading,
+  t,
+}: JourneyPathItemProps) {
+  if (item.type === "milestone") {
+    return (
+      <View
+        style={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0" }}
+        className="rounded-2xl p-4 border shadow-sm my-1 flex-row items-center justify-between"
+      >
+        <View className="flex-1 pr-3">
+          <View className="flex-row items-center gap-1.5 mb-1">
+            <Flag size={13} color="#4f46e5" />
+            <Text style={{ color: "#4f46e5" }} className="text-xs font-extrabold uppercase tracking-wider">
+              {t("home.journey.milestone", { n: item.index })}
+            </Text>
+          </View>
+          <Text className="text-base font-extrabold text-[#0f172a]">
+            {milestoneDisplayName(item.index, t)}
+          </Text>
+        </View>
+        <View
+          style={{ backgroundColor: "#eef2ff" }}
+          className="w-10 h-10 rounded-xl items-center justify-center border border-indigo-100"
+        >
+          <Trophy size={18} color="#4f46e5" />
+        </View>
+      </View>
+    );
+  }
+
+  const isLeft = item.side === "left";
+  return (
+    <View
+      style={{
+        width: "100%",
+        alignItems: isLeft ? "flex-start" : "flex-end",
+        paddingHorizontal: 24,
+      }}
+    >
+      <NodeCircle
+        mod={item}
+        onStartLesson={onStartLesson}
+        lessonLoading={lessonLoading}
+        t={t}
+      />
+    </View>
+  );
+});
+
 export function WindingPath({
   items,
   onStartLesson,
@@ -156,54 +215,15 @@ export function WindingPath({
 }) {
   return (
     <View className="gap-3 py-2 relative">
-      {items.map((item, index) => {
-        if (item.type === "milestone") {
-          return (
-            <View
-              key={`ms-${item.index}`}
-              style={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0" }}
-              className="rounded-2xl p-4 border shadow-sm my-1 flex-row items-center justify-between"
-            >
-              <View className="flex-1 pr-3">
-                <View className="flex-row items-center gap-1.5 mb-1">
-                  <Flag size={13} color="#4f46e5" />
-                  <Text style={{ color: "#4f46e5" }} className="text-xs font-extrabold uppercase tracking-wider">
-                    {t("home.journey.milestone", { n: item.index })}
-                  </Text>
-                </View>
-                <Text className="text-base font-extrabold text-[#0f172a]">
-                  {milestoneDisplayName(item.index, t)}
-                </Text>
-              </View>
-              <View
-                style={{ backgroundColor: "#eef2ff" }}
-                className="w-10 h-10 rounded-xl items-center justify-center border border-indigo-100"
-              >
-                <Trophy size={18} color="#4f46e5" />
-              </View>
-            </View>
-          );
-        }
-
-        const isLeft = item.side === "left";
-        return (
-          <View
-            key={`node-${item.index}-${index}`}
-            style={{
-              width: "100%",
-              alignItems: isLeft ? "flex-start" : "flex-end",
-              paddingHorizontal: 24,
-            }}
-          >
-            <NodeCircle
-              mod={item}
-              onStartLesson={onStartLesson}
-              lessonLoading={lessonLoading}
-              t={t}
-            />
-          </View>
-        );
-      })}
+      {items.map((item, index) => (
+        <JourneyPathItem
+          key={item.type === "milestone" ? `ms-${item.index}` : `node-${item.index}-${index}`}
+          item={item}
+          onStartLesson={onStartLesson}
+          lessonLoading={lessonLoading}
+          t={t}
+        />
+      ))}
     </View>
   );
 }

@@ -168,12 +168,12 @@ export default function PaymentResultScreen({ navigation, route }: Props) {
 
           <Text className="text-xs text-slate-300 text-center mt-1.5 px-4 leading-relaxed font-medium">
             {isSuccess
-              ? "Tài khoản của bạn đã được nâng cấp lên gói EarlySigns Pro. Tất cả đặc quyền và hạn mức không giới hạn đã sẵn sàng!"
+              ? (t("paymentResult.successDesc") || "Tài khoản của bạn đã được nâng cấp lên gói EarlySigns Pro. Tất cả đặc quyền và hạn mức không giới hạn đã sẵn sàng!")
               : isPending
-                ? "Hệ thống đang đồng bộ kết quả với cổng thanh toán. Quá trình này có thể mất vài phút."
+                ? (t("paymentResult.pendingDesc") || "Hệ thống đang đồng bộ kết quả với cổng thanh toán. Quá trình này có thể mất vài phút.")
                 : isCancelled
-                  ? "Bạn đã hủy quá trình thanh toán. Không có khoản tiền nào bị trừ khỏi tài khoản của bạn."
-                  : "Vui lòng giữ kết nối mạng trong giây lát khi hệ thống xác thực đơn hàng..."}
+                  ? (t("paymentResult.cancelledDesc") || "Bạn đã hủy quá trình thanh toán. Không có khoản tiền nào bị trừ khỏi tài khoản của bạn.")
+                  : (t("paymentResult.verifyingDesc") || "Vui lòng giữ kết nối mạng trong giây lát khi hệ thống xác thực đơn hàng...")}
           </Text>
         </View>
 
@@ -185,7 +185,7 @@ export default function PaymentResultScreen({ navigation, route }: Props) {
               <View className="flex-row items-center gap-2">
                 <Sparkles size={16} color="#4f46e5" />
                 <Text className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  Thông tin gói dịch vụ
+                  {t("paymentResult.packageInfo", "Thông tin gói dịch vụ")}
                 </Text>
               </View>
               <View
@@ -200,27 +200,39 @@ export default function PaymentResultScreen({ navigation, route }: Props) {
                   }}
                   className="text-[11px] font-black"
                 >
-                  {isSuccess ? "ĐÃ KÍCH HOẠT" : isCancelled ? "ĐÃ HỦY" : "CHỜ XỬ LÝ"}
+                  {isSuccess
+                    ? (t("paymentResult.statusActivated", "ĐÃ KÍCH HOẠT"))
+                    : isCancelled
+                      ? (t("paymentResult.statusCancelled", "ĐÃ HỦY"))
+                      : (t("paymentResult.statusPending", "CHỜ XỬ LÝ"))}
                 </Text>
               </View>
             </View>
 
             <View className="gap-2.5">
               <View className="flex-row justify-between items-center">
-                <Text className="text-xs text-slate-500">Gói đăng ký</Text>
-                <Text className="text-xs font-extrabold text-slate-900">EarlySigns Pro</Text>
+                <Text className="text-xs text-slate-500">
+                  {t("paymentResult.subscriptionPackage", "Gói đăng ký")}
+                </Text>
+                <Text className="text-xs font-extrabold text-slate-900">
+                  {t("paymentResult.planName", "EarlySigns Pro")}
+                </Text>
               </View>
 
               {orderCode ? (
                 <View className="flex-row justify-between items-center">
-                  <Text className="text-xs text-slate-500">Mã đơn hàng</Text>
+                  <Text className="text-xs text-slate-500">
+                    {t("paymentResult.orderCode", "Mã đơn hàng")}
+                  </Text>
                   <Text className="text-xs font-mono font-bold text-indigo-600">#{orderCode}</Text>
                 </View>
               ) : null}
 
               {subscriptionExpiresAt ? (
                 <View className="flex-row justify-between items-center">
-                  <Text className="text-xs text-slate-500">Thời hạn sử dụng</Text>
+                  <Text className="text-xs text-slate-500">
+                    {t("paymentResult.expiryDate", "Thời hạn sử dụng")}
+                  </Text>
                   <Text className="text-xs font-extrabold text-emerald-600">
                     {formatExpiryDate(subscriptionExpiresAt, i18n.language)}
                   </Text>
@@ -228,8 +240,12 @@ export default function PaymentResultScreen({ navigation, route }: Props) {
               ) : null}
 
               <View className="flex-row justify-between items-center">
-                <Text className="text-xs text-slate-500">Hạn mức AI</Text>
-                <Text className="text-xs font-extrabold text-slate-900">Không giới hạn</Text>
+                <Text className="text-xs text-slate-500">
+                  {t("paymentResult.aiQuota", "Hạn mức AI")}
+                </Text>
+                <Text className="text-xs font-extrabold text-slate-900">
+                  {t("paymentResult.unlimited", "Không giới hạn")}
+                </Text>
               </View>
             </View>
 
@@ -237,7 +253,7 @@ export default function PaymentResultScreen({ navigation, route }: Props) {
               <View className="mt-2 bg-emerald-50 rounded-2xl p-3 border border-emerald-100 flex-row items-center gap-2">
                 <ShieldCheck size={18} color="#059669" />
                 <Text className="flex-1 text-[11px] text-emerald-800 leading-snug font-medium">
-                  Toàn bộ 44 âm IPA, bài tập sàng lọc chuyên sâu và chẩn đoán dạng sóng âm học đã được mở khóa!
+                  {t("paymentResult.featuresUnlocked", "Toàn bộ 44 âm IPA, bài tập sàng lọc chuyên sâu và chẩn đoán dạng sóng âm học đã được mở khóa!")}
                 </Text>
               </View>
             )}
@@ -254,17 +270,21 @@ export default function PaymentResultScreen({ navigation, route }: Props) {
             {isSuccess ? (
               <>
                 <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel={t("paymentResult.startPracticeNow", "Bắt đầu luyện tập ngay")}
                   activeOpacity={0.8}
                   onPress={() => navigation.navigate("Phonemes")}
                   className="w-full py-4 px-5 rounded-2xl bg-indigo-600 flex-row items-center justify-center gap-2 shadow-sm"
                 >
                   <Text className="text-sm font-bold text-white">
-                    Bắt đầu luyện tập ngay
+                    {t("paymentResult.startPracticeNow", "Bắt đầu luyện tập ngay")}
                   </Text>
                   <ArrowRight size={18} color="#ffffff" />
                 </TouchableOpacity>
 
                 <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel={t("paymentResult.goToProfile") || "Xem Trang cá nhân & Hạn mức"}
                   activeOpacity={0.8}
                   onPress={() => navigateToTab(navigation, "Profile")}
                   className="w-full py-3.5 px-5 rounded-2xl bg-white border border-slate-200 flex-row items-center justify-center gap-2"
@@ -278,30 +298,34 @@ export default function PaymentResultScreen({ navigation, route }: Props) {
             ) : isVerifying ? (
               <View className="items-center py-4">
                 <Text className="text-xs text-slate-500">
-                  Đang đồng bộ dữ liệu giao dịch...
+                  {t("paymentResult.syncingData", "Đang đồng bộ dữ liệu giao dịch...")}
                 </Text>
               </View>
             ) : (
               <>
                 <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel={t("paymentResult.retryPayment", "Thử lại thanh toán")}
                   activeOpacity={0.8}
                   onPress={() => navigation.replace("Payment")}
                   className="w-full py-4 px-5 rounded-2xl bg-indigo-600 flex-row items-center justify-center gap-2 shadow-sm"
                 >
                   <RefreshCw size={16} color="#ffffff" />
                   <Text className="text-sm font-bold text-white">
-                    Thử lại thanh toán
+                    {t("paymentResult.retryPayment", "Thử lại thanh toán")}
                   </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel={t("paymentResult.backToHome", "Về trang chủ")}
                   activeOpacity={0.8}
                   onPress={() => navigateToTab(navigation, "Home")}
                   className="w-full py-3.5 px-5 rounded-2xl bg-white border border-slate-200 flex-row items-center justify-center gap-2"
                 >
                   <Home size={16} color="#334155" />
                   <Text className="text-xs font-bold text-slate-700">
-                    Về trang chủ
+                    {t("paymentResult.backToHome", "Về trang chủ")}
                   </Text>
                 </TouchableOpacity>
               </>

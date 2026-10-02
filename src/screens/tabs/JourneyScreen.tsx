@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useCallback, useMemo } from "react";
 import {
+  FlatList,
   RefreshControl,
-  ScrollView,
   Text,
   TouchableOpacity,
   View,
@@ -15,7 +15,7 @@ import {
   TrendingUp,
   Trophy,
 } from "lucide-react-native";
-import { WindingPath } from "@/components/practice/HomeJourney";
+import { JourneyPathItem } from "@/components/practice/HomeJourney";
 import { JourneyPathSkeleton } from "@/components/ui/Skeleton";
 import { useJourneyViewModel } from "@/hooks/useJourneyViewModel";
 
@@ -47,20 +47,31 @@ export default function JourneyScreen({ navigation }: { navigation?: any }) {
       ? Math.min(100, Math.round((currentModule / totalModules) * 100))
       : 0;
 
-  return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-[#0a2644]">
-      <ScrollView
-        className="flex-1 bg-[#f8fafc]"
-        contentContainerStyle={{ flexGrow: 1 }}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor="#f59e0b"
+  const renderJourneyItem = useCallback(
+    ({ item, index }: { item: any; index: number }) => {
+      const isFirst = index === 0;
+      const isLast = index === items.length - 1;
+      return (
+        <View
+          className={`mx-4 bg-white px-4 border-x border-slate-200 ${
+            isFirst ? "rounded-t-3xl border-t pt-3" : ""
+          } ${isLast ? "rounded-b-3xl border-b pb-4 shadow-sm mb-16" : ""}`}
+        >
+          <JourneyPathItem
+            item={item}
+            onStartLesson={startPersonalizedLesson}
+            lessonLoading={lessonLoading}
+            t={t}
           />
-        }
-      >
+        </View>
+      );
+    },
+    [items.length, lessonLoading, startPersonalizedLesson, t]
+  );
+
+  const renderHeader = useMemo(
+    () => (
+      <View className="bg-[#f8fafc]">
         {/* Top elastic overscroll filler */}
         <View
           style={{
@@ -101,14 +112,7 @@ export default function JourneyScreen({ navigation }: { navigation?: any }) {
               {t("journeyPage.title", "Lộ trình học tập")}
             </Text>
 
-            <View
-              className="rounded-full px-3 py-1 flex-row items-center border"
-              style={{
-                backgroundColor: "rgba(255, 255, 255, 0.12)",
-                borderColor: "rgba(255, 255, 255, 0.16)",
-              }}
-            >
-            </View>
+            <View className="w-10 h-10" />
           </View>
 
           {/* Hero Content */}
@@ -121,14 +125,17 @@ export default function JourneyScreen({ navigation }: { navigation?: any }) {
             </View>
             <View className="flex-1">
               <Text className="text-xs text-sky-200 mt-0.5 leading-relaxed font-medium">
-                {t("journeyPage.heroSubtitle", "Lộ trình thích ứng thông minh tự động tối ưu theo từng âm bạn cần cải thiện.")}
+                {t(
+                  "journeyPage.heroSubtitle",
+                  "Lộ trình thích ứng thông minh tự động tối ưu theo từng âm bạn cần cải thiện."
+                )}
               </Text>
             </View>
           </View>
         </View>
 
         {/* 2. LAYERED OVERLAPPING CANVAS SHEET */}
-        <View className="flex-1 bg-[#f8fafc] -mt-4 rounded-t-[32px] px-4 pt-5 pb-20 gap-4">
+        <View className="bg-[#f8fafc] -mt-4 rounded-t-[32px] px-4 pt-5 pb-3 gap-4">
           {/* Progress Overview Card */}
           {displayJourney ? (
             <View className="bg-white rounded-3xl p-5 border border-slate-200 gap-3.5 shadow-sm">
@@ -192,11 +199,15 @@ export default function JourneyScreen({ navigation }: { navigation?: any }) {
               >
                 <TrendingUp size={18} color="#0284c7" />
                 <Text className="flex-1 text-[13px] text-[#0c2340] leading-snug font-medium">
-                  {t("journeyPage.adaptiveNote", "Hệ thống sẽ cập nhật độ khó và thứ tự bài học tiếp theo dựa trên kết quả phát âm của bạn.")}
+                  {t(
+                    "journeyPage.adaptiveNote",
+                    "Hệ thống sẽ cập nhật độ khó và thứ tự bài học tiếp theo dựa trên kết quả phát âm của bạn."
+                  )}
                 </Text>
               </View>
             </View>
           ) : null}
+
           {/* Error Banner */}
           {error || lessonError ? (
             <View className="bg-rose-50 p-4 rounded-2xl border border-rose-200 flex-row items-center gap-2.5">
@@ -209,20 +220,46 @@ export default function JourneyScreen({ navigation }: { navigation?: any }) {
 
           {/* Loading Skeleton */}
           {loading && !displayJourney ? <JourneyPathSkeleton /> : null}
-
-          {/* Winding Quest Path */}
-          {displayJourney ? (
-            <View className="bg-white rounded-3xl p-4 border border-slate-200 shadow-sm">
-              <WindingPath
-                items={items}
-                onStartLesson={startPersonalizedLesson}
-                lessonLoading={lessonLoading}
-                t={t}
-              />
-            </View>
-          ) : null}
         </View>
-      </ScrollView>
+      </View>
+    ),
+    [
+      currentModule,
+      displayJourney,
+      error,
+      lessonError,
+      loading,
+      navigation,
+      progressPct,
+      streakDays,
+      t,
+      totalModules,
+    ]
+  );
+
+  return (
+    <SafeAreaView edges={["top"]} className="flex-1 bg-[#0a2644]">
+      <FlatList
+        data={displayJourney ? items : []}
+        keyExtractor={(item, index) =>
+          item.type === "milestone" ? `ms-${item.index}` : `node-${item.index}-${index}`
+        }
+        renderItem={renderJourneyItem}
+        initialNumToRender={8}
+        maxToRenderPerBatch={8}
+        windowSize={5}
+        ListHeaderComponent={renderHeader}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#f59e0b"
+          />
+        }
+        showsVerticalScrollIndicator={false}
+        className="flex-1 bg-[#f8fafc]"
+        contentContainerStyle={{ flexGrow: 1 }}
+      />
     </SafeAreaView>
   );
 }

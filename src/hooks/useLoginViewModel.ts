@@ -102,9 +102,12 @@ export function useLoginViewModel({
         });
         showToast.success("login.loginSuccess");
       } catch (err: any) {
-        const msg = getFriendlyErrorMessage(err, t("login.googleSignInFailed"));
-        setAuthError(msg);
-        showToast.error("login.googleSignInFailed", msg);
+        if (__DEV__) {
+          console.error("❌ [useLoginViewModel] Google backend auth failed:", err);
+        }
+        const friendlyMsg = getFriendlyErrorMessage(err, t("login.googleSignInFailed"));
+        setAuthError(friendlyMsg);
+        showToast.error(friendlyMsg);
       }
     },
     [deviceId, finishLogin, t]
@@ -113,9 +116,12 @@ export function useLoginViewModel({
   const { signIn: signInGoogle, loading: googleLoading } = useGoogleAuth({
     onSuccess: handleGoogleSuccess,
     onError: (err) => {
-      const msg = getFriendlyErrorMessage(err, t("login.googleSignInFailed"));
-      setAuthError(msg);
-      showToast.error("login.googleSignInFailed", msg);
+      if (__DEV__) {
+        console.error("❌ [useLoginViewModel] Google sign-in failed:", err);
+      }
+      const friendlyMsg = getFriendlyErrorMessage(err, t("login.googleSignInFailed"));
+      setAuthError(friendlyMsg);
+      showToast.error(friendlyMsg);
     },
   });
 
@@ -126,11 +132,23 @@ export function useLoginViewModel({
         if (!result.accessToken) {
           throw new Error(t("login.facebookMissingToken"));
         }
-        showToast.info(t("login.facebookTitle") || "Facebook", t("login.facebookAuthSuccess"));
+        const data = await authApi.loginFacebook({
+          accessToken: result.accessToken,
+          deviceId: useAuthStore.getState().deviceId,
+        });
+
+        if (data?.is_new_user) {
+          showToast.success(t("login.welcomeNewUser") || "Chào mừng bạn!");
+        } else {
+          showToast.success(t("login.welcomeBack") || "Đăng nhập thành công!");
+        }
       } catch (err: any) {
-        const msg = getFriendlyErrorMessage(err, t("login.facebookSignInFailed"));
-        setAuthError(msg);
-        showToast.error(t("login.loginFailed") || "Đăng nhập thất bại", msg);
+        if (__DEV__) {
+          console.error("❌ [useLoginViewModel] Facebook sign-in error:", err);
+        }
+        const friendlyMsg = getFriendlyErrorMessage(err, t("login.facebookSignInFailed"));
+        setAuthError(friendlyMsg);
+        showToast.error(friendlyMsg);
       }
     },
     [t]
@@ -139,9 +157,12 @@ export function useLoginViewModel({
   const { signIn: signInFacebook, loading: facebookLoading } = useFacebookAuth({
     onSuccess: handleFacebookSuccess,
     onError: (err) => {
-      const msg = getFriendlyErrorMessage(err, t("login.facebookSignInFailed"));
-      setAuthError(msg);
-      showToast.error(t("login.loginFailed") || "Đăng nhập thất bại", msg);
+      if (__DEV__) {
+        console.error("❌ [useLoginViewModel] Facebook auth failed:", err);
+      }
+      const friendlyMsg = getFriendlyErrorMessage(err, t("login.facebookSignInFailed"));
+      setAuthError(friendlyMsg);
+      showToast.error(friendlyMsg);
     },
   });
 
@@ -172,9 +193,12 @@ export function useLoginViewModel({
         });
         showToast.success("login.loginSuccess");
       } catch (err: any) {
-        const msg = getFriendlyErrorMessage(err, t("login.appleSignInFailed"));
-        setAuthError(msg);
-        showToast.error("login.appleSignInFailed", msg);
+        if (__DEV__) {
+          console.error("❌ [useLoginViewModel] Apple backend auth failed:", err);
+        }
+        const friendlyMsg = getFriendlyErrorMessage(err, t("login.appleSignInFailed"));
+        setAuthError(friendlyMsg);
+        showToast.error(friendlyMsg);
       }
     },
     [deviceId, finishLogin, t]
@@ -183,9 +207,12 @@ export function useLoginViewModel({
   const { signIn: signInApple, isAvailable: isAppleAvailable, loading: appleLoading } = useAppleAuth({
     onSuccess: handleAppleSuccess,
     onError: (err) => {
-      const msg = getFriendlyErrorMessage(err, t("login.appleSignInFailed"));
-      setAuthError(msg);
-      showToast.error("login.appleSignInFailed", msg);
+      if (__DEV__) {
+        console.error("❌ [useLoginViewModel] Apple auth failed:", err);
+      }
+      const friendlyMsg = getFriendlyErrorMessage(err, t("login.appleSignInFailed"));
+      setAuthError(friendlyMsg);
+      showToast.error(friendlyMsg);
     },
   });
 
@@ -211,9 +238,12 @@ export function useLoginViewModel({
           setEmailStep("otp");
         }
       } catch (e: any) {
+        if (__DEV__) {
+          console.error("❌ [useLoginViewModel] Request OTP failed:", e);
+        }
         const msg = getFriendlyErrorMessage(e, t("login.otpSendFailed") || "Lỗi gửi mã OTP");
         setAuthError(msg);
-        showToast.error("login.otpSendFailed", msg);
+        showToast.error(msg);
       } finally {
         setSendingOtp(false);
       }
@@ -237,19 +267,16 @@ export function useLoginViewModel({
       });
       showToast.success("login.loginSuccess");
     } catch (e: any) {
+      if (__DEV__) {
+        console.error("❌ [useLoginViewModel] Verify OTP failed:", e);
+      }
       const msg = getFriendlyErrorMessage(e, t("login.otpCodeInvalid") || "Mã xác thực không hợp lệ hoặc đã hết hạn.");
       setAuthError(msg);
-      showToast.error("login.otpVerifyFailed", msg);
+      showToast.error(msg);
     } finally {
       setVerifyingOtp(false);
     }
   }, [deviceId, emailInput, finishLogin, otpInput, t]);
-
-  const handleContinueAsGuest = useCallback(() => {
-    hapticFeedback.medium();
-    useAuthStore.getState().setIsGuest(true);
-    navigateAfterLogin(navigation, nextRoute, nextParams);
-  }, [navigation, nextRoute, nextParams]);
 
   const handleBackToEmail = useCallback(() => {
     hapticFeedback.selection();
@@ -289,7 +316,6 @@ export function useLoginViewModel({
     signInFacebook,
     handleRequestOtp,
     handleVerifyOtp,
-    handleContinueAsGuest,
     handleBackToEmail,
     clearEmail,
   };

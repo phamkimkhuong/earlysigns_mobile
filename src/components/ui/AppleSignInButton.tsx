@@ -24,8 +24,8 @@ export default function AppleSignInButton({ onPress, loading }: AppleSignInButto
       />
       {loading ? (
         <View
-          className="absolute inset-0 bg-black/60 items-center justify-center"
-          style={{ pointerEvents: "none" }}
+          className="absolute inset-0 items-center justify-center"
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.6)", pointerEvents: "none" }}
         >
           <ActivityIndicator color={colors.text} size="small" />
         </View>

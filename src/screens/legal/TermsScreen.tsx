@@ -23,6 +23,8 @@ export default function TermsScreen({ navigation }: { navigation?: any }) {
       {/* 1. TOP APP BAR with Title */}
       <View className="flex-row items-center justify-between px-4 py-3 bg-white border-b border-slate-100">
         <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel={t("common.back", "Quay lại")}
           activeOpacity={0.7}
           onPress={() => {
             if (navigation?.canGoBack?.()) {
@@ -33,8 +35,6 @@ export default function TermsScreen({ navigation }: { navigation?: any }) {
           }}
           style={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0" }}
           className="w-10 h-10 rounded-2xl items-center justify-center border shadow-xs"
-          accessibilityRole="button"
-          accessibilityLabel={t("common.back", "Quay lại")}
         >
           <ChevronLeft size={22} color="#0f172a" />
         </TouchableOpacity>

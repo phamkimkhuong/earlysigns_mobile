@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, Text, TouchableOpacity, View } from "react-native";
 import { Play, Square } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import { checkResultScoreColor } from "@/utils/checkResultScoreColor";
@@ -84,10 +84,10 @@ export default function PracticeFeedbackCard({
       style={{
         backgroundColor: "#ffffff",
         borderRadius: 24,
-        padding: 22,
+        paddingVertical: 16,
+        paddingHorizontal: 18,
         borderWidth: 1,
         borderColor: scoreColor + "30",
-        alignItems: "center",
         gap: 14,
         shadowColor: scoreColor,
         shadowOffset: { width: 0, height: 4 },
@@ -96,133 +96,154 @@ export default function PracticeFeedbackCard({
         elevation: 3,
       }}
     >
-      {/* 1. Score ring with score and % on the SAME row */}
+      {/* 1. TOP COMPACT FEEDBACK SUMMARY (Side-by-Side Dual Wings - */}
       <View
+        className="flex-row items-center w-full justify-between"
         style={{
-          width: 124,
-          height: 124,
-          borderRadius: 62,
-          borderWidth: 8,
-          borderColor: scoreColor + "25",
+          flexDirection: "row",
           alignItems: "center",
-          justifyContent: "center",
+          justifyContent: "space-between",
+          width: "100%",
+          gap: 16,
         }}
       >
+        {/* LEFT WING: Compact Score Ring (76x76px) */}
         <View
           style={{
-            width: 102,
-            height: 102,
-            borderRadius: 51,
-            backgroundColor: scoreColor + "12",
+            width: 76,
+            height: 76,
+            borderRadius: 38,
+            borderWidth: 5,
+            borderColor: scoreColor + "25",
             alignItems: "center",
             justifyContent: "center",
-            flexDirection: "row",
+            backgroundColor: scoreColor + "0a",
+            flexShrink: 0,
           }}
-        >
-          <Text
-            style={{
-              fontSize: 38,
-              fontWeight: "900",
-              color: scoreColor,
-              letterSpacing: -1,
-            }}
-          >
-            {scorePct}
-          </Text>
-          <Text
-            style={{
-              fontSize: 18,
-              fontWeight: "800",
-              color: scoreColor,
-              marginLeft: 2,
-              marginTop: -10,
-            }}
-          >
-            %
-          </Text>
-        </View>
-      </View>
-
-      {/* 2. Accented Vietnamese Score Band Badge */}
-      {scoreBandInfo ? (
-        <View
-          style={{
-            paddingHorizontal: 16,
-            paddingVertical: 6,
-            borderRadius: 20,
-            backgroundColor: scoreBandInfo.bg,
-            borderWidth: 1,
-            borderColor: scoreBandInfo.border,
-          }}
-        >
-          <Text
-            style={{
-              fontSize: 14,
-              fontWeight: "800",
-              color: scoreBandInfo.color,
-            }}
-          >
-            {scoreBandInfo.label}
-          </Text>
-        </View>
-      ) : null}
-
-      {/* 3. Senior Audio Player Pill Card for Replay */}
-      {onReplayVoice ? (
-        <Pressable
-          onPress={onReplayVoice}
-          accessible
-          accessibilityRole="button"
-          accessibilityLabel={t("sentence.listenToRecording", "Nghe lại bản ghi âm")}
-          style={({ pressed }) => ({
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 12,
-            paddingVertical: 10,
-            paddingHorizontal: 18,
-            borderRadius: 18,
-            backgroundColor: pressed ? "#f1f5f9" : "#f8fafc",
-            borderWidth: 1,
-            borderColor: replayPlaying ? "#38bdf8" : "#e2e8f0",
-          })}
         >
           <View
             style={{
-              width: 36,
-              height: 36,
-              borderRadius: 18,
-              backgroundColor: replayPlaying ? "#0284c7" : "#e0f2fe",
+              width: 62,
+              height: 62,
+              borderRadius: 31,
+              backgroundColor: scoreColor + "15",
               alignItems: "center",
               justifyContent: "center",
+              flexDirection: "row",
             }}
           >
-            {replayPlaying ? (
-              <Square size={14} color="#ffffff" fill="#ffffff" />
-            ) : (
-              <Play size={15} color="#0284c7" fill="#0284c7" style={{ marginLeft: 2 }} />
-            )}
-          </View>
-
-          <View>
             <Text
               style={{
-                fontSize: 14,
-                fontWeight: "700",
-                color: replayPlaying ? "#0284c7" : "#0f172a",
+                fontSize: 26,
+                fontWeight: "900",
+                color: scoreColor,
+                letterSpacing: -0.5,
               }}
             >
-              {replayPlaying
-                ? t("sentence.replaying", "Đang phát giọng bạn...")
-                : t("sentence.listenToRecording", "Nghe lại bản ghi âm")}
+              {scorePct}
             </Text>
-            <Text style={{ fontSize: 12, color: "#64748b", marginTop: 1 }}>
-              {replayPlaying
-                ? t("sentence.tapToStop", "Chạm để tạm dừng")
-                : t("sentence.voicePreview", "Giọng nói của bạn lúc làm bài")}
+            <Text
+              style={{
+                fontSize: 13,
+                fontWeight: "800",
+                color: scoreColor,
+                marginLeft: 1,
+                marginTop: -6,
+              }}
+            >
+              %
             </Text>
           </View>
-        </Pressable>
-      ) : null}
+        </View>
+
+        {/* RIGHT WING: Score Band Badge + Voice Replay Pill */}
+        <View style={{ flex: 1, gap: 10, justifyContent: "center" }}>
+          {/* Row 1: Accented Vietnamese Score Band Badge */}
+          {scoreBandInfo ? (
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <View
+                style={{
+                  paddingHorizontal: 12,
+                  paddingVertical: 4.5,
+                  borderRadius: 12,
+                  backgroundColor: scoreBandInfo.bg,
+                  borderWidth: 1,
+                  borderColor: scoreBandInfo.border,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 13,
+                    fontWeight: "800",
+                    color: scoreBandInfo.color,
+                  }}
+                  numberOfLines={1}
+                >
+                  {scoreBandInfo.label}
+                </Text>
+              </View>
+            </View>
+          ) : null}
+
+          {/* Row 2: Replay Voice Pill Card (Cùng 1 hàng, không bao giờ ngắt dòng) */}
+          {onReplayVoice ? (
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={onReplayVoice}
+              accessible
+              accessibilityRole="button"
+              accessibilityLabel={t("sentence.listenToRecording", "Nghe lại bản ghi âm")}
+              className="flex-row items-center"
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                flexWrap: "nowrap",
+                gap: 8,
+                paddingVertical: 7,
+                paddingHorizontal: 12,
+                borderRadius: 14,
+                backgroundColor: replayPlaying ? "#f0f9ff" : "#f8fafc",
+                borderWidth: 1,
+                borderColor: replayPlaying ? "#38bdf8" : "#e2e8f0",
+                width: "100%",
+              }}
+            >
+              <View
+                style={{
+                  width: 26,
+                  height: 26,
+                  borderRadius: 13,
+                  backgroundColor: replayPlaying ? "#0284c7" : "#e0f2fe",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                {replayPlaying ? (
+                  <Square size={11} color="#ffffff" fill="#ffffff" />
+                ) : (
+                  <Play size={11} color="#0284c7" fill="#0284c7" style={{ marginLeft: 1.5 }} />
+                )}
+              </View>
+
+              <Text
+                numberOfLines={1}
+                ellipsizeMode="tail"
+                style={{
+                  fontSize: 13,
+                  fontWeight: "700",
+                  color: replayPlaying ? "#0284c7" : "#0f172a",
+                  flexShrink: 1,
+                }}
+              >
+                {replayPlaying
+                  ? t("sentence.replaying", "Đang phát giọng bạn...")
+                  : t("sentence.listenToRecording", "Nghe lại bản ghi âm")}
+              </Text>
+            </TouchableOpacity>
+          ) : null}
+        </View>
+      </View>
 
       {/* 4. Detailed Sound Analysis */}
       {showDetails ? (

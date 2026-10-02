@@ -120,6 +120,8 @@ export default function AboutScreen({ navigation }: Props) {
             </View>
 
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={t("footer.termsOfUse", "Điều khoản sử dụng")}
               activeOpacity={0.7}
               onPress={() => navigation.navigate("Terms")}
               className="flex-row items-center justify-between px-5 py-3.5 border-t border-slate-100"
@@ -136,6 +138,8 @@ export default function AboutScreen({ navigation }: Props) {
             </TouchableOpacity>
 
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={t("footer.privacyPolicy", "Chính sách bảo mật")}
               activeOpacity={0.7}
               onPress={() => navigation.navigate("Privacy")}
               className="flex-row items-center justify-between px-5 py-3.5 border-t border-slate-100"
@@ -152,6 +156,8 @@ export default function AboutScreen({ navigation }: Props) {
             </TouchableOpacity>
 
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={t("referral.pageTitle", "Chương trình giới thiệu")}
               activeOpacity={0.7}
               onPress={() => navigation.navigate("Referral")}
               className="flex-row items-center justify-between px-5 py-3.5 border-t border-slate-100"
@@ -177,6 +183,8 @@ export default function AboutScreen({ navigation }: Props) {
             </View>
 
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={`${t("about.supportEmail", "Email hỗ trợ")}: ${EMAIL}`}
               activeOpacity={0.7}
               onPress={() => Linking.openURL(`mailto:${EMAIL}`)}
               className="flex-row items-center justify-between px-5 py-3.5 border-t border-slate-100"
@@ -196,6 +204,8 @@ export default function AboutScreen({ navigation }: Props) {
             </TouchableOpacity>
 
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={`${t("about.hotline", "Hotline")}: 0383 064 632`}
               activeOpacity={0.7}
               onPress={() => Linking.openURL(`tel:${PHONE}`)}
               className="flex-row items-center justify-between px-5 py-3.5 border-t border-slate-100"
@@ -215,6 +225,8 @@ export default function AboutScreen({ navigation }: Props) {
             </TouchableOpacity>
 
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={t("about.zaloConsult", "Zalo tư vấn")}
               activeOpacity={0.7}
               onPress={() => Linking.openURL(ZALO_URL)}
               className="flex-row items-center justify-between px-5 py-3.5 border-t border-slate-100"
@@ -234,6 +246,8 @@ export default function AboutScreen({ navigation }: Props) {
             </TouchableOpacity>
 
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={t("about.officialWebsite", "Website chính thức")}
               activeOpacity={0.7}
               onPress={() => Linking.openURL(WEBSITE_URL)}
               className="flex-row items-center justify-between px-5 py-3.5 border-t border-slate-100"

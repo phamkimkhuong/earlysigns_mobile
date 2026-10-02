@@ -341,13 +341,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!ready) return undefined;
     let cancelled = false;
+    let timerId: ReturnType<typeof setTimeout> | null = null;
+
     async function validateToken() {
+      const minSplashPromise = new Promise((resolve) => {
+        timerId = setTimeout(resolve, 1200);
+      });
+
       if (!authToken) {
-        setAuthLoading(false);
+        await minSplashPromise;
+        if (!cancelled) setAuthLoading(false);
         return;
       }
       try {
-        const res = await appAuthFetch(API_ENDPOINTS.AUTH.ME);
+        const [res] = await Promise.all([
+          appAuthFetch(API_ENDPOINTS.AUTH.ME),
+          minSplashPromise,
+        ]);
         const data = await res.json();
         if (!res.ok) throw new Error(data.detail || "Authentication failed.");
         if (cancelled) return;
@@ -361,6 +371,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     validateToken();
     return () => {
       cancelled = true;
+      if (timerId) clearTimeout(timerId);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready]);

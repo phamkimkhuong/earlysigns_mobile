@@ -55,7 +55,7 @@ export default function OtpInputView({
           hasError
             ? "border-danger bg-dangerMuted"
             : isActive
-            ? "border-accent bg-accentMuted/20"
+            ? "border-[#0284c7] bg-[#f0f9ff]"
             : char
             ? "border-appBorderStrong bg-appElevated"
             : "border-appBorder bg-appMuted"
@@ -69,7 +69,7 @@ export default function OtpInputView({
           {char}
         </Text>
         {isActive && !char && (
-          <View className="absolute bottom-3 w-4 h-[2px] bg-accent rounded-full" />
+          <View className="absolute bottom-3 w-4 h-[2px] bg-[#0284c7] rounded-full" />
         )}
       </View>
     );

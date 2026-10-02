@@ -292,6 +292,8 @@ export default function PaymentScreen({ navigation, route }: Props) {
       {/* 1. TOP NAVIGATION BAR */}
       <View className="flex-row items-center justify-between px-4 py-3 bg-[#0a2644]">
         <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel={t("common.back", "Quay lại")}
           onPress={() => {
             if (navigation.canGoBack()) {
               navigation.goBack();
@@ -414,6 +416,8 @@ export default function PaymentScreen({ navigation, route }: Props) {
                 </View>
 
                 <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel={t("payment.manageSubscriptions") || "Quản lý gói cước trên Cửa hàng ứng dụng"}
                   onPress={openManageSubscriptions}
                   style={{ backgroundColor: "#0f172a" }}
                   className="flex-row items-center justify-center gap-2 py-3.5 rounded-2xl active:opacity-85 shadow-sm"
@@ -532,6 +536,8 @@ export default function PaymentScreen({ navigation, route }: Props) {
                   {t("payment.noPackagesAvailable") || "Không tìm thấy gói cước nào khả dụng lúc này."}
                 </Text>
                 <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel={t("payment.reload") || "Tải lại"}
                   onPress={loadStorePackages}
                   className="mt-3 px-5 py-2.5 bg-slate-100 rounded-xl active:bg-slate-200"
                 >
@@ -547,6 +553,9 @@ export default function PaymentScreen({ navigation, route }: Props) {
                 return (
                   <TouchableOpacity
                     key={prod.id}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${prod.name || "Gói Pro"}, ${prod.priceDisplay}`}
+                    accessibilityState={{ selected: isSelected }}
                     activeOpacity={0.85}
                     onPress={() => setSelectedProductId(prod.id)}
                     style={{
@@ -667,6 +676,8 @@ export default function PaymentScreen({ navigation, route }: Props) {
             {/* Store Compliance Utilities (Apple Guideline 3.1.2: Restore & Manage) */}
             <View className="flex-row justify-center items-center gap-4 px-1 pt-1.5 flex-wrap">
               <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={t("payment.restorePurchases") || "Khôi phục giao dịch"}
                 onPress={handleRestorePurchases}
                 disabled={restoring || purchasing}
                 className="flex-row items-center gap-1.5 py-1 px-1"
@@ -687,6 +698,8 @@ export default function PaymentScreen({ navigation, route }: Props) {
               <Text className="text-slate-300 font-bold">·</Text>
 
               <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={t("payment.manageSubscriptions") || "Quản lý gói cước"}
                 onPress={presentRevenueCatCustomerCenter}
                 className="flex-row items-center gap-1.5 py-1 px-1"
                 activeOpacity={0.7}
@@ -709,6 +722,9 @@ export default function PaymentScreen({ navigation, route }: Props) {
               className="rounded-3xl border overflow-hidden shadow-sm"
             >
               <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={t("payment.giftCodeTitle") || "Bạn có mã quà tặng hoặc mã kích hoạt?"}
+                accessibilityState={{ expanded: showActivation }}
                 className="p-4 flex-row items-center justify-between"
                 onPress={() => {
                   const nextState = !showActivation;
@@ -749,6 +765,7 @@ export default function PaymentScreen({ navigation, route }: Props) {
                   {/* 1 ROW: INPUT + BUTTON ÁP DỤNG */}
                   <View className="flex-row items-center gap-2 mt-1">
                     <TextInput
+                      accessibilityLabel={t("payment.giftCodePlaceholder") || "Nhập mã kích hoạt"}
                       style={{ backgroundColor: "#f8fafc", borderColor: "#cbd5e1" }}
                       className="flex-1 h-12 px-3.5 border rounded-2xl text-slate-900 text-[15px] uppercase font-bold"
                       value={activationCode}
@@ -762,6 +779,8 @@ export default function PaymentScreen({ navigation, route }: Props) {
                       autoCapitalize="characters"
                     />
                     <TouchableOpacity
+                      accessibilityRole="button"
+                      accessibilityLabel={t("payment.applyCode", "Áp dụng")}
                       activeOpacity={0.85}
                       disabled={activating || !activationCode.trim()}
                       onPress={handleActivateCode}
@@ -821,13 +840,21 @@ export default function PaymentScreen({ navigation, route }: Props) {
             </Text>
 
             <View className="flex-row justify-center gap-4 pt-1">
-              <TouchableOpacity onPress={() => navigation.navigate("Terms")}>
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={t("payment.eula") || "Điều khoản sử dụng"}
+                onPress={() => navigation.navigate("Terms")}
+              >
                 <Text style={{ color: "#0284c7" }} className="text-[13.5px] underline font-semibold">
                   {t("payment.eula") || "Điều khoản sử dụng"}
                 </Text>
               </TouchableOpacity>
               <Text className="text-[13.5px] text-slate-300">·</Text>
-              <TouchableOpacity onPress={() => navigation.navigate("Privacy")}>
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={t("payment.privacyPolicy") || "Chính sách bảo mật"}
+                onPress={() => navigation.navigate("Privacy")}
+              >
                 <Text style={{ color: "#0284c7" }} className="text-[13.5px] underline font-semibold">
                   {t("payment.privacyPolicy") || "Chính sách bảo mật"}
                 </Text>

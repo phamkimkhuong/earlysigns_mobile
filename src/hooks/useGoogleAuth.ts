@@ -29,7 +29,7 @@ function ensureGoogleSigninConfigured() {
 
 export interface UseGoogleAuthOptions {
   onSuccess: (tokens: { idToken?: string; accessToken?: string }) => Promise<void> | void;
-  onError?: (error: string) => void;
+  onError?: (error: unknown) => void;
 }
 
 export function useGoogleAuth({ onSuccess, onError }: UseGoogleAuthOptions) {
@@ -38,11 +38,17 @@ export function useGoogleAuth({ onSuccess, onError }: UseGoogleAuthOptions) {
 
   const signIn = async () => {
     if (!isNativeMobile) {
+      if (__DEV__) {
+        console.warn("⚠️ [GoogleSignIn (DEV)] Google sign-in is only available on native mobile platforms.");
+      }
       onError?.(t("login.googleSignInFailed"));
       return;
     }
 
     if (!GOOGLE_CLIENT_ID) {
+      if (__DEV__) {
+        console.error("❌ [GoogleSignIn Error (DEV)] GOOGLE_CLIENT_ID is not configured in environment.");
+      }
       showToast.error(
         t("login.missingConfig"),
         t("login.googleMissingClientId")
@@ -74,7 +80,14 @@ export function useGoogleAuth({ onSuccess, onError }: UseGoogleAuthOptions) {
           return;
         }
       }
-      onError?.(err?.message || t("login.googleSignInFailed"));
+      if (__DEV__) {
+        console.error("❌ [GoogleSignIn Error (DEV)]", {
+          code: err?.code,
+          message: err?.message,
+          error: err,
+        });
+      }
+      onError?.(err);
     } finally {
       setLoading(false);
     }

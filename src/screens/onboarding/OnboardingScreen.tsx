@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   FlatList,
   Image,
@@ -57,12 +57,22 @@ export default function OnboardingScreen({ navigation }: Props) {
   const { completeOnboarding, updateUserLanguage } = useAuth();
 
   // Step state: "language" (Wireframe A02) -> "intro" (Wireframe A03)
-  const [step, setStep] = useState<"language" | "intro">("intro");
+  const [step, setStep] = useState<"language" | "intro">("language");
   const [selectedLanguage, setSelectedLanguage] = useState<"vi" | "en">(
     i18n.language?.startsWith("en") ? "en" : "vi"
   );
   const [activeSlide, setActiveSlide] = useState(0);
   const flatListRef = useRef<FlatList>(null);
+  const isProgrammaticScrollRef = useRef(false);
+  const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (scrollTimerRef.current) {
+        clearTimeout(scrollTimerRef.current);
+      }
+    };
+  }, []);
 
   const isEn = selectedLanguage === "en";
 
@@ -174,15 +184,35 @@ export default function OnboardingScreen({ navigation }: Props) {
   const handleNextSlide = () => {
     if (activeSlide < introSlides.length - 1) {
       const nextIndex = activeSlide + 1;
-      flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
+      isProgrammaticScrollRef.current = true;
       setActiveSlide(nextIndex);
+      flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
       hapticFeedback.selection();
+      if (scrollTimerRef.current) {
+        clearTimeout(scrollTimerRef.current);
+      }
+      scrollTimerRef.current = setTimeout(() => {
+        isProgrammaticScrollRef.current = false;
+      }, 400);
     } else {
       handleFinish();
     }
   };
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    if (isProgrammaticScrollRef.current) return;
+    const offsetX = event.nativeEvent.contentOffset.x;
+    const index = Math.round(offsetX / screenWidth);
+    if (index !== activeSlide && index >= 0 && index < introSlides.length) {
+      setActiveSlide(index);
+    }
+  };
+
+  const handleMomentumScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    isProgrammaticScrollRef.current = false;
+    if (scrollTimerRef.current) {
+      clearTimeout(scrollTimerRef.current);
+    }
     const offsetX = event.nativeEvent.contentOffset.x;
     const index = Math.round(offsetX / screenWidth);
     if (index !== activeSlide && index >= 0 && index < introSlides.length) {
@@ -233,6 +263,9 @@ export default function OnboardingScreen({ navigation }: Props) {
           <View className="gap-3.5 my-8">
             {/* Option 1: Tiếng Việt */}
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={`${t("onboarding.langViName", "Tiếng Việt")}, ${t("onboarding.langViDesc", "Giao diện tiếng Việt")}`}
+              accessibilityState={{ selected: selectedLanguage === "vi" }}
               activeOpacity={0.8}
               onPress={() => handleSelectLanguage("vi")}
               style={{
@@ -251,9 +284,11 @@ export default function OnboardingScreen({ navigation }: Props) {
                   <Text className="text-2xl">🇻🇳</Text>
                 </View>
                 <View className="flex-1">
-                  <Text className="text-base font-bold text-slate-900">Tiếng Việt</Text>
+                  <Text className="text-base font-bold text-slate-900">
+                    {t("onboarding.langViName", "Tiếng Việt")}
+                  </Text>
                   <Text className="text-xs text-slate-500 mt-0.5">
-                    Giao diện tiếng Việt
+                    {t("onboarding.langViDesc", "Giao diện tiếng Việt")}
                   </Text>
                 </View>
               </View>
@@ -269,6 +304,9 @@ export default function OnboardingScreen({ navigation }: Props) {
 
             {/* Option 2: English */}
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={`${t("onboarding.langEnName", "English")}, ${t("onboarding.langEnDesc", "UK English Interface")}`}
+              accessibilityState={{ selected: selectedLanguage === "en" }}
               activeOpacity={0.8}
               onPress={() => handleSelectLanguage("en")}
               style={{
@@ -287,9 +325,11 @@ export default function OnboardingScreen({ navigation }: Props) {
                   <Text className="text-2xl">🇬🇧</Text>
                 </View>
                 <View className="flex-1">
-                  <Text className="text-base font-bold text-slate-900">English</Text>
+                  <Text className="text-base font-bold text-slate-900">
+                    {t("onboarding.langEnName", "English")}
+                  </Text>
                   <Text className="text-xs text-slate-500 mt-0.5">
-                    UK English Interface
+                    {t("onboarding.langEnDesc", "UK English Interface")}
                   </Text>
                 </View>
               </View>
@@ -307,6 +347,8 @@ export default function OnboardingScreen({ navigation }: Props) {
           {/* Bottom Continue CTA */}
           <View className="mb-4">
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={t("onboarding.continue") || "Tiếp tục"}
               activeOpacity={0.88}
               onPress={handleContinueFromLanguage}
               style={{
@@ -380,6 +422,8 @@ export default function OnboardingScreen({ navigation }: Props) {
             className="flex-row items-center justify-between"
           >
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={t("common.back", "Quay lại")}
               activeOpacity={0.7}
               onPress={() => {
                 hapticFeedback.light();
@@ -392,6 +436,8 @@ export default function OnboardingScreen({ navigation }: Props) {
             </TouchableOpacity>
 
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={t("onboarding.skip") || "Bỏ qua"}
               activeOpacity={0.7}
               onPress={handleFinish}
               hitSlop={16}
@@ -413,8 +459,14 @@ export default function OnboardingScreen({ navigation }: Props) {
               bounces={false}
               showsHorizontalScrollIndicator={false}
               onScroll={handleScroll}
-              onMomentumScrollEnd={handleScroll}
+              onMomentumScrollEnd={handleMomentumScrollEnd}
               scrollEventThrottle={16}
+              onScrollToIndexFailed={(info) => {
+                flatListRef.current?.scrollToOffset({
+                  offset: info.index * screenWidth,
+                  animated: true,
+                });
+              }}
               keyExtractor={(item) => String(item.id)}
               getItemLayout={(_, index) => ({
                 length: screenWidth,
@@ -535,12 +587,19 @@ export default function OnboardingScreen({ navigation }: Props) {
                     key={s.id}
                     hitSlop={10}
                     onPress={() => {
+                      isProgrammaticScrollRef.current = true;
+                      setActiveSlide(idx);
                       flatListRef.current?.scrollToIndex({
                         index: idx,
                         animated: true,
                       });
-                      setActiveSlide(idx);
                       hapticFeedback.selection();
+                      if (scrollTimerRef.current) {
+                        clearTimeout(scrollTimerRef.current);
+                      }
+                      scrollTimerRef.current = setTimeout(() => {
+                        isProgrammaticScrollRef.current = false;
+                      }, 400);
                     }}
                     style={{
                       height: 8,
@@ -549,7 +608,7 @@ export default function OnboardingScreen({ navigation }: Props) {
                       backgroundColor: isActive ? "#0084ff" : "#e2e8f0",
                     }}
                     accessibilityRole="button"
-                    accessibilityLabel={`Slide ${idx + 1}`}
+                    accessibilityLabel={t("onboarding.slideLabel", { number: idx + 1, defaultValue: `Slide ${idx + 1}` })}
                     accessibilityState={{ selected: isActive }}
                   />
                 );
@@ -558,6 +617,8 @@ export default function OnboardingScreen({ navigation }: Props) {
 
             {/* Heavyweight Gradient Full-width CTA Button */}
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={activeSlide === introSlides.length - 1 ? (t("onboarding.startPractice") || "Bắt đầu luyện") : (t("onboarding.continue") || "Tiếp tục")}
               activeOpacity={0.88}
               onPress={handleNextSlide}
               style={{

@@ -346,6 +346,22 @@ export function getFriendlyErrorMessage(
     const norm = normalizeString(err);
     if (RAW_STRING_MAP[norm]) return RAW_STRING_MAP[norm][lang];
     if (ERROR_CODE_MAP[err.toUpperCase()]) return ERROR_CODE_MAP[err.toUpperCase()][lang];
+
+    // Filter out technical error strings (e.g. "ApiException", "DEVELOPER_ERROR", "Error:", stack traces)
+    const isTechnical =
+      err.includes("ApiException") ||
+      err.includes("DEVELOPER_ERROR") ||
+      err.includes("statusCodes") ||
+      err.includes("Error:") ||
+      err.includes("Exception") ||
+      err.includes("native") ||
+      err.includes("NetworkError") ||
+      err.includes("at ");
+
+    if (isTechnical) {
+      return fallback || (lang === "en" ? "An error occurred. Please try again." : "Có lỗi xảy ra. Vui lòng thử lại.");
+    }
+
     return err;
   }
 

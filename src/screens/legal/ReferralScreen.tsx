@@ -255,6 +255,8 @@ export default function ReferralScreen({ navigation }: Props) {
       {/* 1. TOP APP BAR */}
       <View className="flex-row items-center justify-between px-4 py-2.5 bg-[#f8fafc]">
         <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel={tr("common.back", "Quay lại")}
           activeOpacity={0.7}
           onPress={() => {
             if (navigation.canGoBack()) {
@@ -423,6 +425,8 @@ export default function ReferralScreen({ navigation }: Props) {
                       )}
                     </Text>
                     <TouchableOpacity
+                      accessibilityRole="button"
+                      accessibilityLabel={tr("referral.ctaCreate", "Tạo mã giới thiệu ngay")}
                       activeOpacity={0.85}
                       disabled={isGeneratingCode}
                       onPress={handleGenerateCode}
@@ -472,6 +476,8 @@ export default function ReferralScreen({ navigation }: Props) {
                     {/* Nút Sao chép & Chia sẻ */}
                     <View className="flex-row gap-2 mt-0.5">
                       <TouchableOpacity
+                        accessibilityRole="button"
+                        accessibilityLabel={tr("referral.copyCode", "Sao chép mã giới thiệu")}
                         activeOpacity={0.85}
                         onPress={handleCopyCode}
                         style={{ backgroundColor: copied ? "#059669" : "#4338ca" }}
@@ -495,6 +501,8 @@ export default function ReferralScreen({ navigation }: Props) {
                       </TouchableOpacity>
 
                       <TouchableOpacity
+                        accessibilityRole="button"
+                        accessibilityLabel={tr("referral.shareNow", "Chia sẻ mã giới thiệu")}
                         activeOpacity={0.85}
                         onPress={handleShare}
                         style={{ backgroundColor: "#ffffff", borderColor: "#cbd5e1" }}
@@ -521,6 +529,8 @@ export default function ReferralScreen({ navigation }: Props) {
                     )}
                   </Text>
                   <TouchableOpacity
+                    accessibilityRole="button"
+                    accessibilityLabel={tr("referral.ctaLogin", "Đăng nhập ngay")}
                     activeOpacity={0.85}
                     onPress={() => navigation.navigate("Login")}
                     style={{ backgroundColor: "#0c2340" }}
@@ -609,6 +619,7 @@ export default function ReferralScreen({ navigation }: Props) {
 
                   <View className="flex-row gap-2 mt-0.5">
                     <TextInput
+                      accessibilityLabel={tr("referral.placeholder", "Nhập mã giới thiệu")}
                       value={inputCode}
                       onFocus={handleInputFocus}
                       onChangeText={(text) => {
@@ -625,6 +636,8 @@ export default function ReferralScreen({ navigation }: Props) {
                       className="flex-1 h-12 px-4 rounded-2xl border text-sm font-bold text-slate-900"
                     />
                     <TouchableOpacity
+                      accessibilityRole="button"
+                      accessibilityLabel={tr("referral.ctaRedeem", "Áp dụng")}
                       activeOpacity={0.8}
                       disabled={isRedeeming || !inputCode.trim()}
                       onPress={handleRedeem}
