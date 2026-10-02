@@ -24,6 +24,8 @@ export const API_ENDPOINTS = {
     GOOGLE: "/api/auth/google",
     /** [POST] Đăng nhập/Đăng ký nhanh bằng Apple ID trên thiết bị iOS (identityToken) */
     APPLE: "/api/auth/apple",
+    /** [POST] Đăng nhập/Đăng ký nhanh bằng tài khoản Facebook (accessToken) */
+    FACEBOOK: "/api/auth/facebook",
     /** [POST] Đăng xuất tài khoản, thu hồi token trên hệ thống */
     LOGOUT: "/api/auth/logout",
     /** [POST] Lưu cài đặt cá nhân (giọng phát âm uk/us, ngôn ngữ hiển thị vi/en, nhắc nhở...) */

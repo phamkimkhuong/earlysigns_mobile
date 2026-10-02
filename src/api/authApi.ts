@@ -106,6 +106,36 @@ export const authApi = {
   },
 
   /**
+   * Sign in with Facebook
+   */
+  async loginFacebook(params: {
+    token?: string;
+    accessToken?: string;
+    deviceId?: string;
+  }): Promise<any> {
+    const data = await httpClient.post(
+      API_ENDPOINTS.AUTH.FACEBOOK,
+      {
+        token: params.token || params.accessToken,
+        access_token: params.accessToken || params.token,
+        device_id: params.deviceId || useAuthStore.getState().deviceId,
+      },
+      { skipAuth: true }
+    );
+    if (data?.token || data?.access_token) {
+      useAuthStore.getState().setAuth({
+        token: data.token || data.access_token,
+        email: data.email,
+        userId: data.user_id,
+      });
+      import("@/services/notifications")
+        .then(({ syncPushTokenWithBackend }) => syncPushTokenWithBackend())
+        .catch(() => {});
+    }
+    return data;
+  },
+
+  /**
    * Update user preferences (dialect, language, etc.) - Backend expects PATCH
    */
   async updatePreferences(preferences: Record<string, any>): Promise<any> {

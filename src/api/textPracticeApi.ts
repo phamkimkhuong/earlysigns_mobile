@@ -48,14 +48,26 @@ export const textPracticeApi = {
   },
 
   /**
-   * Generate native British/American RP audio sample for sentence
+   * Fetch pre-recorded audio sample or generate native AI audio sample
+   * @param text Sentence or word text
+   * @param dialect Dialect ('uk' | 'us')
+   * @param generate Whether to dynamically generate TTS audio if not pre-recorded.
+   *                 Set to false for lesson/phoneme practice with predetermined words to use free static S3 audio without requiring Pro.
    */
-  async generateAudio(text: string, dialect?: Dialect | string): Promise<string | null> {
+  async generateAudio(
+    text: string,
+    dialect?: Dialect | string,
+    generate?: boolean
+  ): Promise<string | null> {
     const d = dialect || useAuthStore.getState().dialect || "uk";
-    const data = await httpClient.post(API_ENDPOINTS.TEXT_PRACTICE.AUDIO, {
+    const payload: { text: string; dialect: string; generate?: boolean } = {
       text,
       dialect: d,
-    });
+    };
+    if (typeof generate === "boolean") {
+      payload.generate = generate;
+    }
+    const data = await httpClient.post(API_ENDPOINTS.TEXT_PRACTICE.AUDIO, payload);
     return String(data?.audio_url || "").trim() || null;
   },
 

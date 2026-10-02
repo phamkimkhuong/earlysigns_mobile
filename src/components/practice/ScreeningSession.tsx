@@ -1,7 +1,10 @@
+import { releaseAudioPlayer } from "@/utils/audioPlayer";
+import { useIsFocused } from "@react-navigation/native";
 import React, { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { AppState, Modal } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { createAudioPlayer, setAudioModeAsync } from "expo-audio";
+import { createAudioPlayer } from "expo-audio";
+import { prepareAudioPlayback } from "@/services/recordingSession";
 import { useTranslation } from "react-i18next";
 import { usePronunciationCheck } from "@/hooks/usePronunciationCheck";
 import { getFriendlyErrorMessage } from "@/utils/localizedError";
@@ -21,6 +24,7 @@ export interface ScreeningSessionProps {
 }
 
 export default function ScreeningSession({ sentences, dialect, userTier, userKey, onClose, onComplete, isModal = false }: ScreeningSessionProps) {
+  const isFocused = useIsFocused();
   const { t, i18n } = useTranslation();
   const [progress, dispatch] = useReducer(screeningReducer, { current: 0, results: {} });
   const [seconds, setSeconds] = useState(0);
@@ -37,8 +41,7 @@ export default function ScreeningSession({ sentences, dialect, userTier, userKey
   const mounted = useRef(true);
   const playerRef = useRef<ReturnType<typeof createAudioPlayer> | null>(null);
   const playbackId = useRef(0);
-  const primaryRef = useRef<() => Promise<void>>(async () => {});
-  const audio = usePronunciationCheck({ language: i18n.language, userTier, userKey, isScreening: true, autoStopOnSilence: false });
+  const audio = usePronunciationCheck({ enabled: isFocused, language: i18n.language, userTier, userKey, isScreening: true, autoStopOnSilence: false });
   const sentence = sentences[progress.current];
   const recorded = screeningAccuracy(progress.results[progress.current]) !== null;
   const phase: ScreeningPhase = saving ? "saving" : audio.isRecording ? "recording" : audio.checking || transition === "checking" ? "checking" : audio.isStarting || transition === "starting" ? "starting" : recorded ? "recorded" : "ready";
@@ -46,10 +49,7 @@ export default function ScreeningSession({ sentences, dialect, userTier, userKey
 
   const stopPlayback = useCallback(() => {
     playbackId.current += 1;
-    try {
-      playerRef.current?.pause?.();
-      playerRef.current?.remove?.();
-    } catch { /* Player already released. */ }
+    releaseAudioPlayer(playerRef.current);
     playerRef.current = null;
     if (mounted.current) setPlaying(null);
   }, []);
@@ -58,6 +58,7 @@ export default function ScreeningSession({ sentences, dialect, userTier, userKey
     mounted.current = true;
     return () => { mounted.current = false; stopPlayback(); };
   }, [stopPlayback]);
+  useEffect(() => { if (!isFocused) stopPlayback(); }, [isFocused, stopPlayback]);
 
   useEffect(() => {
     if (!audio.isRecording) {
@@ -66,16 +67,9 @@ export default function ScreeningSession({ sentences, dialect, userTier, userKey
     }
     const started = Date.now();
     setSeconds(0);
-    let autoStopped = false;
     const timer = setInterval(() => {
       const elapsed = Math.floor((Date.now() - started) / 1000);
       setSeconds(elapsed);
-      if (elapsed >= 25 && !autoStopped) {
-        autoStopped = true;
-        clearInterval(timer);
-        hapticFeedback.warning();
-        void primaryRef.current();
-      }
     }, 250);
     return () => clearInterval(timer);
   }, [audio.isRecording]);
@@ -163,7 +157,6 @@ export default function ScreeningSession({ sentences, dialect, userTier, userKey
     finally { actionLocked.current = false; if (mounted.current) setSaving(false); }
   }
 
-  primaryRef.current = primary;
 
   function move(direction: "previous" | "next") {
     if (busy || actionLocked.current) return;
@@ -184,7 +177,7 @@ export default function ScreeningSession({ sentences, dialect, userTier, userKey
     if (typeof uri !== "string" || !uri) return;
     const id = playbackId.current;
     try {
-      await setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true });
+      if (!await prepareAudioPlayback()) return;
       if (!mounted.current || id !== playbackId.current) return;
       const player = createAudioPlayer({ uri });
       playerRef.current = player;
