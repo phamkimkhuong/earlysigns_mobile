@@ -130,7 +130,7 @@ export default function ScreeningScreen({ navigation, route }: Props) {
   // Loading State
   if (loading) {
     return (
-      <SafeAreaView edges={["top"]} className="flex-1 bg-[#0a2644]">
+      <SafeAreaView edges={["top"]} className="flex-1 bg-practiceHeader">
         <ScreeningPracticeSkeleton onClose={() => navigation.goBack()} />
       </SafeAreaView>
     );
@@ -139,8 +139,8 @@ export default function ScreeningScreen({ navigation, route }: Props) {
   // Error State
   if (error || !sentences.length) {
     return (
-      <SafeAreaView edges={["top"]} className="flex-1 bg-[#0a2644]">
-        <View className="bg-[#0a2644] pt-2 pb-6 px-5 flex-row items-center justify-between">
+      <SafeAreaView edges={["top"]} className="flex-1 bg-practiceHeader">
+        <View className="bg-practiceHeader pt-2 pb-6 px-5 flex-row items-center justify-between">
           <TouchableOpacity
             accessibilityRole="button"
             accessibilityLabel={t("common.back", "Quay lại")}
@@ -175,7 +175,7 @@ export default function ScreeningScreen({ navigation, route }: Props) {
             accessibilityRole="button"
             onPress={() => void fetchSentences()}
             activeOpacity={0.8}
-            className="min-h-[48px] px-6 py-3 rounded-2xl bg-[#0c2340] flex-row items-center gap-2"
+            className="min-h-[48px] px-6 py-3 rounded-2xl bg-[#2383E2] flex-row items-center gap-2"
           >
             <RotateCcw size={18} color="#ffffff" />
             <Text className="text-sm font-bold text-white">
@@ -188,7 +188,7 @@ export default function ScreeningScreen({ navigation, route }: Props) {
   }
 
   return (
-    <View className="flex-1 bg-[#0a2644]">
+    <View className="flex-1 bg-practiceHeader">
       <ScreeningSession
         sentences={sentences}
         dialect={dialect}

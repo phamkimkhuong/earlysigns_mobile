@@ -131,7 +131,7 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
   if (!isNativeMobile) return null;
   initNotifications();
   try {
-    const perm = await requestNotificationPermission();
+    const perm = await getNotificationPermissionStatus();
     if (!perm.granted) return null;
 
     const projectId = getEasProjectId();
@@ -331,6 +331,13 @@ export async function requestNotificationPermission(): Promise<{
   status: PermissionStatus;
 }> {
   try {
+    const current = await getNotificationPermissionStatus();
+    if (current.granted) {
+      return {
+        granted: true,
+        status: current.status,
+      };
+    }
     const perm = await requestPermissionsAsync({
       ios: {
         allowAlert: true,

@@ -23,6 +23,7 @@ import {
   Trash2,
 } from "lucide-react-native";
 import PrimaryButton from "@/components/ui/PrimaryButton";
+import { colors } from "@/core/theme";
 import { PassageListSkeleton } from "@/components/ui/Skeleton";
 import { useTextPracticeViewModel } from "@/hooks/useTextPracticeViewModel";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -135,7 +136,7 @@ export default function TextPracticeScreen({ navigation, route }: NativeStackScr
 
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-[#0a2644]">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-practiceHeader">
       <ScrollView
         ref={scrollViewRef}
         className="flex-1 bg-appBg"
@@ -152,12 +153,12 @@ export default function TextPracticeScreen({ navigation, route }: NativeStackScr
             left: 0,
             right: 0,
             height: 1000,
-            backgroundColor: "#0a2644",
+            backgroundColor: colors.practiceHeader,
           }}
         />
 
-        {/* 1. LUXURY NAVY HEADER (Unified with Home Video Card) */}
-        <View className="bg-[#0a2644] pt-2 pb-6 px-5">
+        {/* 1. HERO HEADER */}
+        <View className="bg-practiceHeader pt-2 pb-6 px-5">
           {/* Top Nav Bar */}
           <View className="flex-row items-center justify-between mb-3">
             <TouchableOpacity
@@ -174,8 +175,8 @@ export default function TextPracticeScreen({ navigation, route }: NativeStackScr
               }}
               className="w-10 h-10 rounded-2xl items-center justify-center border"
               style={{
-                backgroundColor: "rgba(255, 255, 255, 0.12)",
-                borderColor: "rgba(255, 255, 255, 0.16)",
+                backgroundColor: "rgba(255, 255, 255, 0.16)",
+                borderColor: "rgba(255, 255, 255, 0.25)",
               }}
             >
               <ChevronLeft size={22} color="#ffffff" />
@@ -191,8 +192,8 @@ export default function TextPracticeScreen({ navigation, route }: NativeStackScr
 
           {/* Clean Subtitle Bar */}
           <View className="flex-row items-center gap-2 px-1">
-            <BookOpen size={16} color="#38bdf8" />
-            <Text className="flex-1 text-[13px] text-sky-100 leading-relaxed">
+            <BookOpen size={16} color="#ffffff" />
+            <Text className="flex-1 text-[13px] text-sky-50 leading-relaxed font-medium">
               {t("textPractice.subtitle")}
             </Text>
           </View>

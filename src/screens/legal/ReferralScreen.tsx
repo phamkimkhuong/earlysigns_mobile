@@ -533,7 +533,7 @@ export default function ReferralScreen({ navigation }: Props) {
                     accessibilityLabel={tr("referral.ctaLogin", "Đăng nhập ngay")}
                     activeOpacity={0.85}
                     onPress={() => navigation.navigate("Login")}
-                    style={{ backgroundColor: "#0c2340" }}
+                    style={{ backgroundColor: "#2383E2" }}
                     className="flex-row items-center gap-2 py-2.5 px-6 rounded-full"
                   >
                     <LogIn size={14} color="#ffffff" />

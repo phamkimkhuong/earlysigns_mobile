@@ -60,9 +60,9 @@ export default function PhonemesScreen({ navigation, route }: NativeStackScreenP
   const openCatalog = () => navigation.navigate("PhonemeCatalog", { dialect });
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-[#0a2644]">
-      {/* 1. LUXURY NAVY HEADER (Unified with Text Practice & Video) */}
-      <View className="bg-[#0a2644] pt-2 pb-6 px-5">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-practiceHeader">
+      {/* 1. HERO HEADER */}
+      <View className="bg-practiceHeader pt-2 pb-6 px-5">
         {/* Top Nav Bar */}
         <View className="flex-row items-center justify-between mb-3">
           <TouchableOpacity
@@ -79,8 +79,8 @@ export default function PhonemesScreen({ navigation, route }: NativeStackScreenP
             }}
             className="w-10 h-10 rounded-2xl items-center justify-center border"
             style={{
-              backgroundColor: "rgba(255, 255, 255, 0.12)",
-              borderColor: "rgba(255, 255, 255, 0.16)",
+              backgroundColor: "rgba(255, 255, 255, 0.16)",
+              borderColor: "rgba(255, 255, 255, 0.25)",
             }}
           >
             <ChevronLeft size={22} color="#ffffff" />

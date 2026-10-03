@@ -17,6 +17,7 @@ import {
 } from "lucide-react-native";
 import { JourneyPathItem } from "@/components/practice/HomeJourney";
 import { JourneyPathSkeleton } from "@/components/ui/Skeleton";
+import { colors } from "@/core/theme";
 import { useJourneyViewModel } from "@/hooks/useJourneyViewModel";
 
 export default function JourneyScreen({ navigation }: { navigation?: any }) {
@@ -80,12 +81,12 @@ export default function JourneyScreen({ navigation }: { navigation?: any }) {
             left: 0,
             right: 0,
             height: 1000,
-            backgroundColor: "#0a2644",
+            backgroundColor: colors.practiceHeader,
           }}
         />
 
-        {/* 1. LUXURY NAVY HERO HEADER */}
-        <View className="bg-[#0a2644] pt-2 pb-6 px-5">
+        {/* 1. HERO HEADER */}
+        <View className="bg-practiceHeader pt-2 pb-6 px-5">
           {/* Top Bar */}
           <View className="flex-row items-center justify-between mb-3">
             <TouchableOpacity
@@ -101,8 +102,8 @@ export default function JourneyScreen({ navigation }: { navigation?: any }) {
               }}
               className="w-10 h-10 rounded-2xl items-center justify-center border"
               style={{
-                backgroundColor: "rgba(255, 255, 255, 0.12)",
-                borderColor: "rgba(255, 255, 255, 0.16)",
+                backgroundColor: "rgba(255, 255, 255, 0.16)",
+                borderColor: "rgba(255, 255, 255, 0.25)",
               }}
             >
               <ChevronLeft size={22} color="#ffffff" />
@@ -119,12 +120,12 @@ export default function JourneyScreen({ navigation }: { navigation?: any }) {
           <View className="flex-row items-center gap-3.5 mt-1">
             <View
               className="w-12 h-12 rounded-2xl items-center justify-center shadow-sm"
-              style={{ backgroundColor: "#0284c7" }}
+              style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
             >
               <Compass size={24} color="#ffffff" />
             </View>
             <View className="flex-1">
-              <Text className="text-xs text-sky-200 mt-0.5 leading-relaxed font-medium">
+              <Text className="text-xs text-sky-50 mt-0.5 leading-relaxed font-medium">
                 {t(
                   "journeyPage.heroSubtitle",
                   "Lộ trình thích ứng thông minh tự động tối ưu theo từng âm bạn cần cải thiện."
@@ -238,7 +239,7 @@ export default function JourneyScreen({ navigation }: { navigation?: any }) {
   );
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-[#0a2644]">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-practiceHeader">
       <FlatList
         data={displayJourney ? items : []}
         keyExtractor={(item, index) =>

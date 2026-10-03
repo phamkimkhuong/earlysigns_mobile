@@ -76,7 +76,7 @@ const VideoPlayerFrame = forwardRef<YoutubeIframeRef, Props>(function VideoPlaye
                   onReset(); setReady(false); setStarted(false); setFailed(false); setAttempt(value => value + 1);
                 } else onPlay();
               }}
-              style={{ minHeight: 48, minWidth: 48, padding: 12, borderRadius: 28, backgroundColor: "#4f46e5", alignItems: "center", justifyContent: "center" }}
+              style={{ minHeight: 48, minWidth: 48, padding: 12, borderRadius: 28, backgroundColor: "#2383E2", alignItems: "center", justifyContent: "center" }}
             >
               {failed ? <RotateCcw size={24} color="#fff" /> : waiting ? <ActivityIndicator color="#fff" /> : <Play size={24} color="#fff" fill="#fff" />}
             </TouchableOpacity>

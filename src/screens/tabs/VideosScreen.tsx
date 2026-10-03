@@ -22,6 +22,7 @@ import {
 import { useAuth } from "@/services/Auth";
 import { formatDuration, topicLabel, videoThumbnail } from "@/utils/errors";
 import { useQueryClient } from "@tanstack/react-query";
+import { colors } from "@/core/theme";
 import { VideoCatalogSkeleton } from "@/components/ui/Skeleton";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import {
@@ -459,7 +460,7 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
   const levels = useMemo(() => ["A1", "A2", "B1", "B2", "C1", "C2"], []);
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-[#1e2538]">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-practiceHeader">
       <ScrollView
         ref={scrollViewRef}
         className="flex-1 bg-appBg"
@@ -483,12 +484,12 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
             left: 0,
             right: 0,
             height: 1000,
-            backgroundColor: "#1e2538",
+            backgroundColor: colors.practiceHeader,
           }}
         />
 
-        {/* 1. LUXURY NAVY HERO HEADER */}
-        <View className="bg-[#1e2538] pt-3 pb-6 px-5">
+        {/* 1. HERO HEADER */}
+        <View className="bg-practiceHeader pt-3 pb-6 px-5">
           {/* Top Nav Bar */}
           <View className="flex-row items-center justify-between mb-1">
             <TouchableOpacity
@@ -502,7 +503,11 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
                   navigation.navigate("Main");
                 }
               }}
-              className="w-10 h-10 rounded-2xl bg-slate-800 items-center justify-center border border-slate-700"
+              className="w-10 h-10 rounded-2xl items-center justify-center border"
+              style={{
+                backgroundColor: "rgba(255, 255, 255, 0.16)",
+                borderColor: "rgba(255, 255, 255, 0.25)",
+              }}
             >
               <ChevronLeft size={22} color="#ffffff" />
             </TouchableOpacity>

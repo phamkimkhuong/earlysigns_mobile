@@ -45,6 +45,7 @@ function harness({ frame = false, stored, initialIndex, segments, playedCount = 
     '@/hooks/queries/useVideoQueries': { useVideoDetailQuery: () => ({ data }) },
     '@/services/notifications': { cancelIncompleteLessonReminder: async () => {}, scheduleIncompleteLessonReminder: async () => {} },
     '@/services/storage': { getItem: key => store.get(key), setItem: (key, value) => store.set(key, value) },
+    '@/core/theme': { colors: { practiceHeader: '#1a5f91' } },
     './YoutubePlayer': { __esModule: true, default: 'YoutubePlayer' },
   };
   for (const name of ['VideoPlayerFrame', 'IPAChecking', 'ScoreWords', 'VideoRecordingHub']) mocks['@/components/practice/' + name] = { __esModule: true, default: name };

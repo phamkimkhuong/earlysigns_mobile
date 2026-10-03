@@ -109,7 +109,7 @@ export function handleCustomerInfoUpdate(customerInfo: CustomerInfo): void {
       ) {
         import("@/api/billingApi")
           .then(({ billingApi }) => billingApi.getUsage())
-          .catch(() => {});
+          .catch(() => { });
       }
     }
   } catch (err) {
@@ -123,14 +123,14 @@ export function handleCustomerInfoUpdate(customerInfo: CustomerInfo): void {
  */
 export function setupCustomerInfoListener(): () => void {
   if (!isNativeMobile) {
-    return () => {};
+    return () => { };
   }
 
   // Idempotently clean up any stale listener reference first to prevent memory leak
   if (customerInfoListener) {
     try {
       Purchases.removeCustomerInfoUpdateListener(customerInfoListener);
-    } catch {}
+    } catch { }
     customerInfoListener = null;
   }
 
@@ -152,7 +152,7 @@ export function setupCustomerInfoListener(): () => void {
     if (customerInfoListener) {
       try {
         Purchases.removeCustomerInfoUpdateListener(customerInfoListener);
-      } catch {}
+      } catch { }
       customerInfoListener = null;
     }
   };
@@ -293,8 +293,8 @@ export function normalizeStoreProduct(apiPkg: any): StoreProduct {
   const rawName = String(apiPkg.name || "").trim();
   const name =
     rawName &&
-    rawName.toLowerCase() !== `${months} month` &&
-    rawName.toLowerCase() !== `${months} months`
+      rawName.toLowerCase() !== `${months} month` &&
+      rawName.toLowerCase() !== `${months} months`
       ? rawName.startsWith("EarlySigns")
         ? rawName
         : `EarlySigns Pro - ${rawName}`
@@ -384,8 +384,8 @@ export function normalizePurchasesPackage(
   const rawName = String(pkg.product.title || pkg.product.description || "").trim();
   const name =
     rawName &&
-    rawName.toLowerCase() !== `${months} month` &&
-    rawName.toLowerCase() !== `${months} months`
+      rawName.toLowerCase() !== `${months} month` &&
+      rawName.toLowerCase() !== `${months} months`
       ? rawName.startsWith("EarlySigns")
         ? rawName
         : `EarlySigns Pro - ${rawName}`

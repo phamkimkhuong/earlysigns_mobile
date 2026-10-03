@@ -359,9 +359,9 @@ export function PracticeScreenSkeleton() {
  */
 export function ScreeningPracticeSkeleton({ onClose }: { onClose?: () => void } = {}) {
   return (
-    <View className="flex-1 bg-[#0a2644]">
-      {/* 1. Luxury Navy Header Placeholder */}
-      <View className="bg-[#0a2644] pt-2 pb-5 px-5">
+    <View className="flex-1 bg-practiceHeader">
+      {/* 1. Header Placeholder */}
+      <View className="bg-practiceHeader pt-2 pb-5 px-5">
         <View className="flex-row items-center justify-between mb-3.5">
           {onClose ? (
             <TouchableOpacity

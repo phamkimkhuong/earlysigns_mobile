@@ -247,9 +247,9 @@ export default function PhonemeCatalogScreen({ navigation, route }: Props) {
   );
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-[#0a2644]">
-      {/* 1. LUXURY NAVY HEADER */}
-      <View className="bg-[#0a2644] pt-2 pb-5 px-5">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-practiceHeader">
+      {/* 1. HERO HEADER */}
+      <View className="bg-practiceHeader pt-2 pb-5 px-5">
         <View className="flex-row items-center justify-between mb-2.5">
           <TouchableOpacity
             accessibilityRole="button"
@@ -258,8 +258,8 @@ export default function PhonemeCatalogScreen({ navigation, route }: Props) {
             onPress={() => navigation.goBack()}
             className="w-10 h-10 rounded-2xl items-center justify-center border"
             style={{
-              backgroundColor: "rgba(255, 255, 255, 0.12)",
-              borderColor: "rgba(255, 255, 255, 0.16)",
+              backgroundColor: "rgba(255, 255, 255, 0.16)",
+              borderColor: "rgba(255, 255, 255, 0.25)",
             }}
           >
             <ChevronLeft size={22} color="#ffffff" />
@@ -272,11 +272,11 @@ export default function PhonemeCatalogScreen({ navigation, route }: Props) {
           <View
             className="px-2 py-0.5 rounded-xl border"
             style={{
-              backgroundColor: "rgba(56, 189, 248, 0.16)",
-              borderColor: "rgba(56, 189, 248, 0.35)",
+              backgroundColor: "rgba(255, 255, 255, 0.2)",
+              borderColor: "rgba(255, 255, 255, 0.35)",
             }}
           >
-            <Text className="text-[11px] font-bold text-[#7dd3fc]">
+            <Text className="text-[11px] font-extrabold text-white">
               {dialect.toUpperCase()} {dialect.toLowerCase() === "uk" ? "🇬🇧" : "🇺🇸"}
             </Text>
           </View>

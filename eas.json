@@ -15,7 +15,12 @@
         "EXPO_PUBLIC_REVENUECAT_GOOGLE_KEY": "goog_JOvacJjxjtJXNcJVhYnaITfLRsg",
         "EXPO_PUBLIC_REVENUECAT_APPLE_KEY": "appl_oSGkCisjyRYObuzvYclaXcSnHwu",
         "EXPO_PUBLIC_FACEBOOK_APP_ID": "3449875161816700",
-        "EXPO_PUBLIC_FACEBOOK_CLIENT_TOKEN": "3b06af5e74cce33bf553cdb922894bcd"
+        "EXPO_PUBLIC_FACEBOOK_CLIENT_TOKEN": "3b06af5e74cce33bf553cdb922894bcd",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "earlysigns-679f9",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:674439311811:android:b64eda5e99ce0b9effcd76",
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyC4JMUV2NH_PT7OHBp5X8Em6wku9SRbmdM",
+        "EXPO_PUBLIC_STORE_URL_ANDROID": "https://play.google.com/store/apps/details?id=net.earlysigns.app",
+        "EXPO_PUBLIC_STORE_URL_IOS": "https://apps.apple.com/app/id6744393118"
       },
       "android": {
         "buildType": "apk"
@@ -32,7 +37,12 @@
         "EXPO_PUBLIC_REVENUECAT_GOOGLE_KEY": "goog_JOvacJjxjtJXNcJVhYnaITfLRsg",
         "EXPO_PUBLIC_REVENUECAT_APPLE_KEY": "appl_oSGkCisjyRYObuzvYclaXcSnHwu",
         "EXPO_PUBLIC_FACEBOOK_APP_ID": "3449875161816700",
-        "EXPO_PUBLIC_FACEBOOK_CLIENT_TOKEN": "3b06af5e74cce33bf553cdb922894bcd"
+        "EXPO_PUBLIC_FACEBOOK_CLIENT_TOKEN": "3b06af5e74cce33bf553cdb922894bcd",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "earlysigns-679f9",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:674439311811:android:b64eda5e99ce0b9effcd76",
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyC4JMUV2NH_PT7OHBp5X8Em6wku9SRbmdM",
+        "EXPO_PUBLIC_STORE_URL_ANDROID": "https://play.google.com/store/apps/details?id=net.earlysigns.app",
+        "EXPO_PUBLIC_STORE_URL_IOS": "https://apps.apple.com/app/id6744393118"
       },
       "ios": {
         "simulator": true
@@ -48,7 +58,12 @@
         "EXPO_PUBLIC_REVENUECAT_GOOGLE_KEY": "goog_JOvacJjxjtJXNcJVhYnaITfLRsg",
         "EXPO_PUBLIC_REVENUECAT_APPLE_KEY": "appl_oSGkCisjyRYObuzvYclaXcSnHwu",
         "EXPO_PUBLIC_FACEBOOK_APP_ID": "3449875161816700",
-        "EXPO_PUBLIC_FACEBOOK_CLIENT_TOKEN": "3b06af5e74cce33bf553cdb922894bcd"
+        "EXPO_PUBLIC_FACEBOOK_CLIENT_TOKEN": "3b06af5e74cce33bf553cdb922894bcd",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "earlysigns-679f9",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:674439311811:android:b64eda5e99ce0b9effcd76",
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyC4JMUV2NH_PT7OHBp5X8Em6wku9SRbmdM",
+        "EXPO_PUBLIC_STORE_URL_ANDROID": "https://play.google.com/store/apps/details?id=net.earlysigns.app",
+        "EXPO_PUBLIC_STORE_URL_IOS": "https://apps.apple.com/app/id6744393118"
       },
       "android": {
         "buildType": "apk"

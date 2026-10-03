@@ -110,7 +110,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
                 accessibilityLabel={t("homeDesign.login", "Đăng nhập")}
                 testID="home-account"
                 onPress={() => navigation.navigate("Login", { next: "Home" })}
-                className="bg-[#0c2340] px-4 py-2 rounded-full active:opacity-85 shadow-xs"
+                className="bg-[#2383E2] px-4 py-2 rounded-full active:opacity-85 shadow-xs"
               >
                 <Text className="text-white text-xs font-bold">
                   {t("homeDesign.login", "Đăng nhập")}

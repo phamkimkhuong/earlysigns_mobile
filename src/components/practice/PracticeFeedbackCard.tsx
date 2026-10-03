@@ -267,7 +267,7 @@ export default function PracticeFeedbackCard({
           })}
         >
           <Text style={{ fontSize: 13, fontWeight: "700", color: "#475569" }}>
-            {t("result.soundAnalysis.viewDetails", "Xem phân tích chi tiết âm vị")}
+            {t("result.soundAnalysis.viewDetails", "Xem phân tích chi tiết")}
           </Text>
         </Pressable>
       ) : null}

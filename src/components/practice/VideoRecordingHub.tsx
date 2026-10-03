@@ -336,9 +336,12 @@ export default function VideoRecordingHub({
         </View>
       ) : checking ? (
         <View className="items-center">
-          <View className="flex-row items-center gap-1.5 px-3.5 py-1 rounded-full bg-indigo-50 border border-indigo-200">
-            <ActivityIndicator size={11} color="#4f46e5" />
-            <Text className="text-xs font-bold text-indigo-700">
+          <View
+            className="flex-row items-center gap-1.5 px-3.5 py-1 rounded-full border"
+            style={{ backgroundColor: "#eff6ff", borderColor: "#bfdbfe" }}
+          >
+            <ActivityIndicator size={11} color="#2383e2" />
+            <Text className="text-xs font-bold text-blue-800">
               {t("sentence.checking")}
             </Text>
           </View>
@@ -356,9 +359,9 @@ export default function VideoRecordingHub({
                 width: 82,
                 height: 82,
                 borderRadius: 41,
-                backgroundColor: "rgba(35, 131, 226, 0.2)",
+                backgroundColor: "rgba(224, 62, 62, 0.2)",
                 borderWidth: 1.5,
-                borderColor: "rgba(35, 131, 226, 0.4)",
+                borderColor: "rgba(224, 62, 62, 0.4)",
                 transform: [{ scale: wave1 }],
                 opacity: waveOpacity1,
               }}
@@ -369,9 +372,9 @@ export default function VideoRecordingHub({
                 width: 82,
                 height: 82,
                 borderRadius: 41,
-                backgroundColor: "rgba(35, 131, 226, 0.15)",
+                backgroundColor: "rgba(224, 62, 62, 0.15)",
                 borderWidth: 1.5,
-                borderColor: "rgba(35, 131, 226, 0.3)",
+                borderColor: "rgba(224, 62, 62, 0.3)",
                 transform: [{ scale: wave2 }],
                 opacity: waveOpacity2,
               }}
@@ -382,9 +385,9 @@ export default function VideoRecordingHub({
                 width: 82,
                 height: 82,
                 borderRadius: 41,
-                backgroundColor: "rgba(35, 131, 226, 0.1)",
+                backgroundColor: "rgba(224, 62, 62, 0.1)",
                 borderWidth: 1,
-                borderColor: "rgba(35, 131, 226, 0.2)",
+                borderColor: "rgba(224, 62, 62, 0.2)",
                 transform: [{ scale: wave3 }],
                 opacity: waveOpacity3,
               }}
@@ -439,10 +442,10 @@ export default function VideoRecordingHub({
             shadowOpacity: 0.35,
             shadowRadius: 10,
             borderWidth: 3,
-            borderColor: isRecording ? "#93c5fd" : isStarting ? "#93c5fd" : checking ? "#93c5fd" : "#60a5fa",
-            backgroundColor: checking ? "#1d4ed8" : "#2383E2",
+            borderColor: isRecording ? "#fca5a5" : isStarting ? "#93c5fd" : checking ? "#93c5fd" : "#60a5fa",
+            backgroundColor: isRecording ? "#E03E3E" : checking ? "#1d4ed8" : "#2383E2",
             opacity: isStarting ? 0.65 : 1,
-            shadowColor: "#2383E2",
+            shadowColor: isRecording ? "#E03E3E" : "#2383E2",
           }}
         >
           {isStarting ? (
@@ -458,11 +461,11 @@ export default function VideoRecordingHub({
       {/* 3. DANCING VOICE WAVEFORM BARS (During Recording) */}
       {isRecording ? (
         <View className="flex-row items-center justify-center gap-1.5 h-8 -mt-1">
-          <Animated.View style={{ width: 4, height: bar1, backgroundColor: "#2383E2", borderRadius: 2 }} />
-          <Animated.View style={{ width: 4, height: bar2, backgroundColor: "#2383E2", borderRadius: 2 }} />
-          <Animated.View style={{ width: 4, height: bar3, backgroundColor: "#1d4ed8", borderRadius: 2 }} />
-          <Animated.View style={{ width: 4, height: bar4, backgroundColor: "#2383E2", borderRadius: 2 }} />
-          <Animated.View style={{ width: 4, height: bar5, backgroundColor: "#2383E2", borderRadius: 2 }} />
+          <Animated.View style={{ width: 4, height: bar1, backgroundColor: "#E03E3E", borderRadius: 2 }} />
+          <Animated.View style={{ width: 4, height: bar2, backgroundColor: "#E03E3E", borderRadius: 2 }} />
+          <Animated.View style={{ width: 4, height: bar3, backgroundColor: "#c53030", borderRadius: 2 }} />
+          <Animated.View style={{ width: 4, height: bar4, backgroundColor: "#E03E3E", borderRadius: 2 }} />
+          <Animated.View style={{ width: 4, height: bar5, backgroundColor: "#E03E3E", borderRadius: 2 }} />
         </View>
       ) : null}
 
@@ -538,7 +541,7 @@ export default function VideoRecordingHub({
                 shadowRadius: 2,
               }}
             >
-              <Volume2 size={16} color="#4f46e5" />
+              <Volume2 size={16} color="#2383E2" />
               <Text className="text-xs font-bold text-slate-800">
                 {t("videos.practice.listenMyVoice")}
               </Text>
@@ -548,11 +551,12 @@ export default function VideoRecordingHub({
             <TouchableOpacity
               accessible={true}
               accessibilityRole="button"
-              accessibilityLabel={t("videos.practice.accessibilityViewPhonemes") || t("videos.practice.viewPhonemeDetails") || "Phân tích âm vị"}
+              accessibilityLabel={t("videos.practice.accessibilityViewPhonemes") || t("videos.practice.viewPhonemeDetails") || "Phân tích chi tiết"}
               accessibilityState={{ expanded: showDetails }}
               activeOpacity={0.8}
               onPress={handleToggleDetails}
-              className="flex-1 py-2.5 bg-indigo-600 rounded-xl items-center justify-center flex-row gap-1.5 shadow-sm active:bg-indigo-700"
+              className="flex-1 py-2.5 rounded-xl items-center justify-center flex-row gap-1.5 shadow-sm active:opacity-85"
+              style={{ backgroundColor: "#2383E2" }}
             >
               <AudioLines size={16} color="#ffffff" />
               <Text className="text-xs font-bold text-white">

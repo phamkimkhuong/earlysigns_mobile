@@ -327,9 +327,12 @@ export default function SpeechRecordingDock({
           </Text>
         </View>
       ) : checking ? (
-        <View className="flex-row items-center gap-1.5 px-3.5 py-1 rounded-full bg-indigo-50 border border-indigo-200">
-          <ActivityIndicator size={11} color="#4f46e5" />
-          <Text className="text-xs font-bold text-indigo-700">
+        <View
+          className="flex-row items-center gap-1.5 px-3.5 py-1 rounded-full border"
+          style={{ backgroundColor: "#eff6ff", borderColor: "#bfdbfe" }}
+        >
+          <ActivityIndicator size={11} color="#2383e2" />
+          <Text className="text-xs font-bold text-blue-800">
             {t("sentence.checking", "Đang phân tích...")}
           </Text>
         </View>
@@ -391,7 +394,7 @@ export default function SpeechRecordingDock({
                   width: 90,
                   height: 90,
                   borderRadius: 45,
-                  backgroundColor: "rgba(35, 131, 226, 0.25)",
+                  backgroundColor: "rgba(224, 62, 62, 0.25)",
                   transform: [{ scale: wave1 }],
                   opacity: waveOpacity1,
                 }}
@@ -403,7 +406,7 @@ export default function SpeechRecordingDock({
                   width: 90,
                   height: 90,
                   borderRadius: 45,
-                  backgroundColor: "rgba(35, 131, 226, 0.18)",
+                  backgroundColor: "rgba(224, 62, 62, 0.18)",
                   transform: [{ scale: wave2 }],
                   opacity: waveOpacity2,
                 }}
@@ -415,7 +418,7 @@ export default function SpeechRecordingDock({
                   width: 90,
                   height: 90,
                   borderRadius: 45,
-                  backgroundColor: "rgba(35, 131, 226, 0.12)",
+                  backgroundColor: "rgba(224, 62, 62, 0.12)",
                   transform: [{ scale: wave3 }],
                   opacity: waveOpacity3,
                 }}
@@ -453,12 +456,12 @@ export default function SpeechRecordingDock({
               width: 72,
               height: 72,
               borderRadius: 36,
-              backgroundColor: checking ? "#1d4ed8" : "#2383E2",
+              backgroundColor: isRecording ? "#E03E3E" : checking ? "#1d4ed8" : "#2383E2",
               borderWidth: 2.5,
-              borderColor: isRecording ? "#93c5fd" : isStarting ? "#93c5fd" : checking ? "#93c5fd" : "#60a5fa",
+              borderColor: isRecording ? "#fca5a5" : isStarting ? "#93c5fd" : checking ? "#93c5fd" : "#60a5fa",
               alignItems: "center",
               justifyContent: "center",
-              shadowColor: "#2383E2",
+              shadowColor: isRecording ? "#E03E3E" : "#2383E2",
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.35,
               shadowRadius: 10,

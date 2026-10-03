@@ -47,14 +47,14 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
     Array.isArray(p.sentence.words) ? p.sentence.words.map((word: any) => word.ipa || "").filter(Boolean).join(" ") : "";
 
   return (
-    <View className="flex-1 min-h-0 bg-[#0a2644]">
+    <View className="flex-1 min-h-0 bg-practiceHeader">
       <View
         className="flex-1 min-h-0"
         accessibilityElementsHidden={p.confirmExit}
         importantForAccessibility={p.confirmExit ? "no-hide-descendants" : "auto"}
       >
-        {/* 1. LUXURY NAVY HEADER */}
-        <View className="bg-[#0a2644] pt-2 pb-5 px-5">
+        {/* 1. HERO HEADER */}
+        <View className="bg-practiceHeader pt-2 pb-5 px-5">
           {/* Top navigation bar */}
           <View className="flex-row items-center justify-between mb-3.5">
             <Pressable
@@ -65,8 +65,8 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
               disabled={phase === "saving"}
               className="w-10 h-10 items-center justify-center rounded-2xl border active:opacity-80"
               style={{
-                backgroundColor: "rgba(255, 255, 255, 0.12)",
-                borderColor: "rgba(255, 255, 255, 0.16)",
+                backgroundColor: "rgba(255, 255, 255, 0.16)",
+                borderColor: "rgba(255, 255, 255, 0.25)",
               }}
             >
               <ChevronLeft size={22} color="#ffffff" />
@@ -80,8 +80,8 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
             <View
               className="px-3 py-1.5 rounded-full border items-center justify-center"
               style={{
-                backgroundColor: "rgba(255, 255, 255, 0.12)",
-                borderColor: "rgba(255, 255, 255, 0.16)",
+                backgroundColor: "rgba(255, 255, 255, 0.16)",
+                borderColor: "rgba(255, 255, 255, 0.25)",
               }}
             >
               <Text className="text-xs font-bold text-white shrink-0" numberOfLines={1}>
@@ -341,7 +341,7 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
               style={{
                 backgroundColor:
                   phase === "recording"
-                    ? "#2383E2"
+                    ? "#E03E3E"
                     : phase === "recorded"
                     ? last
                       ? "#059669"

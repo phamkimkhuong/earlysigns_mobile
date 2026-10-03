@@ -15,6 +15,7 @@ export interface Colors {
   success: string;
   warning: string;
   overlay: string;
+  practiceHeader: string;
 }
 
 export const colors: Colors = {
@@ -34,6 +35,7 @@ export const colors: Colors = {
   success: "#10b981",
   warning: "#f59e0b",
   overlay: "rgba(15, 23, 42, 0.5)",
+  practiceHeader: "#1a5f91",
 };
 
 export const radius = {

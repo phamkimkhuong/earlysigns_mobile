@@ -18,6 +18,7 @@ import {
 import VideoPlayerFrame from "@/components/practice/VideoPlayerFrame";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/services/Auth";
+import { colors } from "@/core/theme";
 import { usePronunciationCheck } from "@/hooks/usePronunciationCheck";
 import { useSegmentIpa } from "@/hooks/useSegmentIpa";
 import { buildSoundAnalysisRows } from "@/utils/pronunciationAnalysis";
@@ -486,7 +487,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
   );
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-[#1e2538]">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-practiceHeader">
       <ScrollView
         className="flex-1 bg-appBg"
         contentContainerStyle={{ flexGrow: 1 }}
@@ -500,12 +501,12 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
             left: 0,
             right: 0,
             height: 1000,
-            backgroundColor: "#1e2538",
+            backgroundColor: colors.practiceHeader,
           }}
         />
 
         {/* 1. LUXURY TOP NAVIGATION BAR */}
-        <View className="bg-[#1e2538] px-4 pt-3 pb-6 gap-3.5">
+        <View className="bg-practiceHeader px-4 pt-3 pb-6 gap-3.5">
           <View className="flex-row items-center justify-between">
             {/* Back Button */}
             <TouchableOpacity
@@ -520,7 +521,11 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                   navigation?.navigate?.("Videos");
                 }
               }}
-              className="w-10 h-10 rounded-2xl bg-slate-800 items-center justify-center border border-slate-700"
+              className="w-10 h-10 rounded-2xl items-center justify-center border"
+              style={{
+                backgroundColor: "rgba(255, 255, 255, 0.16)",
+                borderColor: "rgba(255, 255, 255, 0.25)",
+              }}
             >
               <ChevronLeft size={22} color="#ffffff" />
             </TouchableOpacity>
@@ -528,7 +533,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
             {/* Video Title / Topic Header */}
             <View className="flex-1 px-3 items-center">
               <Text
-                className="text-[10px] font-black text-indigo-400 uppercase tracking-widest"
+                className="text-xs font-bold text-sky-200 uppercase tracking-wider"
                 numberOfLines={1}
               >
                 {video ? topicLabel(video.topic, t) : t("videos.breadcrumb.videos")}
@@ -562,19 +567,22 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
           {video && segments.length > 0 ? (
             <View className="gap-1.5 pt-1">
               <View className="flex-row items-center justify-between px-1">
-                <Text className="text-xs font-bold text-slate-300">
+                <Text className="text-xs font-bold text-sky-100">
                   {t("videos.practice.sentenceProgress", {
                     current: activeIndex + 1,
                     total: segments.length || 1,
                   })}
                 </Text>
-                <Text className="text-xs font-extrabold text-indigo-300">
+                <Text className="text-xs font-extrabold text-white">
                   {progressPercent}%
                 </Text>
               </View>
-              <View className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+              <View
+                className="h-1.5 rounded-full overflow-hidden"
+                style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
+              >
                 <View
-                  className="h-full bg-indigo-500 rounded-full"
+                  className="h-full bg-white rounded-full"
                   style={{ width: `${progressPercent}%` }}
                 />
               </View>
@@ -817,10 +825,11 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                       endRoll: false,
                     })
                   }
-                  className="flex-[1.25] py-3.5 rounded-2xl bg-indigo-600 active:bg-indigo-700 items-center justify-center flex-row gap-2"
+                  className="flex-[1.25] py-3.5 rounded-2xl items-center justify-center flex-row gap-2"
                   style={{
+                    backgroundColor: "#2383E2",
                     elevation: 3,
-                    shadowColor: "#4f46e5",
+                    shadowColor: "#2383E2",
                     shadowOffset: { width: 0, height: 3 },
                     shadowOpacity: 0.25,
                     shadowRadius: 6,

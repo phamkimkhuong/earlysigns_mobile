@@ -24,6 +24,7 @@ module.exports = {
         success: "#10b981",
         warning: "#f59e0b",
         overlay: "rgba(15, 23, 42, 0.5)",
+        practiceHeader: "#1a5f91",
       },
       fontSize: {
         // Mobile Typography Scale (Chuẩn tỉ lệ hiển thị trên di động)
