@@ -156,7 +156,7 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
               {/* IPA Transcript directly under sentence */}
               {ipa ? (
                 <Text className="text-[16px] leading-6 font-medium text-[#64748b] mb-3">
-                  /{ipa}/
+                  {`/${ipa}/`}
                 </Text>
               ) : null}
 

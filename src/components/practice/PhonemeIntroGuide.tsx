@@ -217,7 +217,7 @@ export default function PhonemeIntroGuide({
                         includeFontPadding: false,
                       }}
                     >
-                      /{cleanPhoneme}/
+                      {`/${cleanPhoneme}/`}
                     </Text>
                   </View>
 

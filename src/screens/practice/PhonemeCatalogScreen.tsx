@@ -104,7 +104,7 @@ export default function PhonemeCatalogScreen({ navigation, route }: Props) {
               style={{ includeFontPadding: false }}
               numberOfLines={1}
             >
-              /{item.sound}/
+              {`/${item.sound}/`}
             </Text>
             <Text
               numberOfLines={1}
