@@ -25,6 +25,7 @@ import {
   X,
 } from "lucide-react-native";
 import { setStoredLanguage } from "@/core/i18n";
+import { colors } from "@/core/theme";
 import { useAuth } from "@/services/Auth";
 
 interface GuestProfileViewProps {
@@ -86,9 +87,9 @@ export default function GuestProfileView({ navigation }: GuestProfileViewProps) 
           className="rounded-3xl p-4 border flex-row items-center justify-between"
         >
           <View className="flex-row items-center gap-3.5 flex-1 pr-2">
-            {/* Brand Navy Avatar Circle */}
+            {/* Brand Avatar Circle */}
             <View
-              style={{ backgroundColor: "#092440" }}
+              style={{ backgroundColor: colors.practiceHeader }}
               className="w-12 h-12 rounded-full items-center justify-center"
             >
               <User size={22} color="#ffffff" strokeWidth={2.4} />
@@ -124,22 +125,22 @@ export default function GuestProfileView({ navigation }: GuestProfileViewProps) 
             borderRadius: 24,
             overflow: "hidden",
             position: "relative",
-            shadowColor: "#092440",
+            shadowColor: colors.practiceHeader,
             shadowOffset: { width: 0, height: 6 },
             shadowOpacity: 0.22,
             shadowRadius: 14,
             elevation: 6,
           }}
-          className="p-5 border border-[#1e4e79]"
+          className="p-5 border border-[#154d77]"
         >
           {/* Background Gradient */}
           <View pointerEvents="none" className="absolute inset-0">
             <Svg width="100%" height="100%">
               <Defs>
                 <LinearGradient id="hero-auth-grad" x1="0%" y1="0%" x2="100%" y2="85%">
-                  <Stop offset="0%" stopColor="#092440" />
-                  <Stop offset="45%" stopColor="#0f3e68" />
-                  <Stop offset="100%" stopColor="#1a6296" />
+                  <Stop offset="0%" stopColor="#154d77" />
+                  <Stop offset="45%" stopColor={colors.practiceHeader} />
+                  <Stop offset="100%" stopColor="#2575b0" />
                 </LinearGradient>
               </Defs>
               <Rect width="100%" height="100%" fill="url(#hero-auth-grad)" />
@@ -200,7 +201,7 @@ export default function GuestProfileView({ navigation }: GuestProfileViewProps) 
               style={{ backgroundColor: "#ffffff" }}
               className="flex-1 py-3 rounded-full items-center justify-center shadow-xs"
             >
-              <Text style={{ color: "#092440" }} className="text-sm font-extrabold">
+              <Text style={{ color: colors.practiceHeader }} className="text-sm font-extrabold">
                 {t("profile.loginBtn") || t("auth.login") || "Đăng nhập"}
               </Text>
             </TouchableOpacity>

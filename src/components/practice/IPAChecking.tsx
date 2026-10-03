@@ -115,7 +115,7 @@ export default function IPAChecking({
   const { t, i18n } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [resultsByIndex, setResultsByIndex] = useState<Record<number, SentenceCheckResult>>({});
-  const [showDetails, setShowDetails] = useState(false);
+  const [showDetails, setShowDetails] = useState(true);
   const [instructionsDismissed, setInstructionsDismissed] = useState(false);
   const [nextLessonLoading, setNextLessonLoading] = useState(false);
   const [practicePhonemeLoading] = useState("");
@@ -177,7 +177,7 @@ export default function IPAChecking({
   useEffect(() => {
     setCurrentIndex(0);
     setResultsByIndex({});
-    setShowDetails(false);
+    setShowDetails(true);
     setInstructionsDismissed(!instructionsHtml);
     setReplayPlaying(false);
     halfFiredRef.current = false;
@@ -207,6 +207,7 @@ export default function IPAChecking({
   useEffect(() => {
     if (result) {
       setResultsByIndex((prev) => ({ ...prev, [currentIndex]: result }));
+      setShowDetails(true);
       const score = Number(result.accuracy ?? result.overall_score ?? 0);
       if (score >= 0.8) hapticFeedback.success();
       else if (score < 0.4) hapticFeedback.warning();

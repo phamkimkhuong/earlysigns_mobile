@@ -26,7 +26,7 @@ export default function PracticeFeedbackCard({
   checking = false,
   replayPlaying = false,
   onReplayVoice,
-  showDetails = false,
+  showDetails = true,
   onToggleDetails,
   soundRows = [],
   words = [],

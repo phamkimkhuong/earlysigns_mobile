@@ -89,7 +89,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
   const [playerReady, setPlayerReady] = useState(false);
   const [hideTranscript, setHideTranscript] = useState(false);
   const [showTranslation, setShowTranslation] = useState(false);
-  const [detailsExpandedFor, setDetailsExpandedFor] = useState<string | null>(null);
+  const [detailsCollapsedFor, setDetailsCollapsedFor] = useState<string | null>(null);
   const [phonemeLesson, setPhonemeLesson] = useState<any>(null);
   const [userSelectedDialect, setUserSelectedDialect] = useState<Dialect | null>(null);
   const practiceDialect: Dialect = userSelectedDialect || detailData?.dialect || userDialect || "uk";
@@ -421,7 +421,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
   );
 
   const currentResultKey = `${activeIndex}_${result?.overallScore ?? ""}_${result?.accuracy ?? ""}`;
-  const showDetails = detailsExpandedFor === currentResultKey;
+  const showDetails = Boolean(result) && detailsCollapsedFor !== currentResultKey;
 
   const handleRecordToggle = useCallback(async () => {
     if (isStarting || checking) return;
@@ -892,7 +892,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                 showDetails={showDetails}
                 replayRecording={replayRecording}
                 onToggleDetails={() =>
-                  setDetailsExpandedFor((prev) =>
+                  setDetailsCollapsedFor((prev) =>
                     prev === currentResultKey ? null : currentResultKey
                   )
                 }

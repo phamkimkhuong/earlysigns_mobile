@@ -73,21 +73,53 @@ export function formatVnd(amount: number | string | null | undefined, language: 
   return `${value.toLocaleString(locale)} VNĐ`;
 }
 
-export function formatExpiryDate(ts: number | string | null | undefined, language?: string): string {
-  const seconds = Number(ts || 0);
-  if (!Number.isFinite(seconds) || seconds <= 0) return "";
-  const locale = String(language || "vi").toLowerCase().startsWith("vi") ? "vi-VN" : "en-US";
-  try {
-    return new Date(seconds * 1000).toLocaleString(locale, {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  } catch {
-    return new Date(seconds * 1000).toISOString();
+export function formatExpiryDate(
+  ts: number | string | null | undefined,
+  language?: string,
+  includeTime: boolean = false
+): string {
+  if (ts == null || ts === "") return "";
+
+  let ms: number | null = null;
+
+  if (typeof ts === "number") {
+    if (!Number.isFinite(ts) || ts <= 0) return "";
+    ms = ts < 1e11 ? ts * 1000 : ts;
+  } else if (typeof ts === "string") {
+    const trimmed = ts.trim();
+    if (!trimmed) return "";
+
+    if (/^\d+$/.test(trimmed)) {
+      const num = Number(trimmed);
+      if (!Number.isFinite(num) || num <= 0) return "";
+      ms = num < 1e11 ? num * 1000 : num;
+    } else {
+      const parsed = Date.parse(trimmed);
+      if (Number.isFinite(parsed) && parsed > 0) {
+        ms = parsed;
+      }
+    }
   }
+
+  if (ms == null || !Number.isFinite(ms) || ms <= 0) return "";
+
+  const date = new Date(ms);
+  if (isNaN(date.getTime())) return "";
+
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+
+  const isEn = String(language || "").toLowerCase().startsWith("en");
+  const dateStr = isEn ? `${month}/${day}/${year}` : `${day}/${month}/${year}`;
+
+  if (includeTime) {
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    return `${hours}:${minutes} ${dateStr}`;
+  }
+
+  return dateStr;
 }
 
 export function topicLabel(topic: string | undefined, t: (key: string) => string): string {

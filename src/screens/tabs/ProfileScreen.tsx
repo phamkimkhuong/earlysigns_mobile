@@ -55,6 +55,7 @@ import { useBillingStore } from "@/store/useBillingStore";
 import { accuracyBandColor } from "@/utils/checkResultScoreColor";
 import { authApi } from "@/api";
 import { showToast } from "@/utils/toast";
+import { formatExpiryDate } from "@/utils/errors";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import { ProfileProgressSkeleton } from "@/components/ui/Skeleton";
 import { GuestProfileView } from "@/components";
@@ -62,6 +63,7 @@ import { getIpaSoundMeta } from "@/utils/ipaData";
 import { resolveUserTier } from "@/services/usageLimits";
 import { getItem } from "@/services/storage";
 import { setStoredLanguage } from "@/core/i18n";
+import { colors } from "@/core/theme";
 import { restoreStorePurchases, openManageSubscriptions } from "@/services/iap";
 import { useAppUpdateStore } from "@/store/useAppUpdateStore";
 import { getCurrentAppVersion } from "@/services/appUpdate";
@@ -501,9 +503,9 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
         {/* 1. PROFILE HEADER: USER IDENTITY SURFACE */}
         <View
           style={{
-            backgroundColor: "#0a2644",
-            borderColor: "#1e3a8a",
-            shadowColor: "#0a2644",
+            backgroundColor: colors.practiceHeader,
+            borderColor: "#154d77",
+            shadowColor: colors.practiceHeader,
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.15,
             shadowRadius: 10,
@@ -515,7 +517,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
             <View className="flex-row items-center gap-3.5 flex-1 pr-2">
               {/* User Avatar Circle */}
               <View
-                style={{ backgroundColor: "rgba(255, 255, 255, 0.12)", borderColor: "rgba(255, 255, 255, 0.25)" }}
+                style={{ backgroundColor: "rgba(255, 255, 255, 0.16)", borderColor: "rgba(255, 255, 255, 0.25)" }}
                 className="w-14 h-14 rounded-2xl items-center justify-center border"
               >
                 <Text className="text-xl font-black text-white">
@@ -533,12 +535,12 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                   {authToken ? (
                     <View
                       style={{
-                        backgroundColor: isPro ? "#f59e0b" : "rgba(255, 255, 255, 0.15)",
+                        backgroundColor: isPro ? "#f59e0b" : "rgba(255, 255, 255, 0.2)",
                       }}
                       className="px-2.5 py-0.5 rounded-full"
                     >
                       <Text
-                        style={{ color: isPro ? "#0f172a" : "#38bdf8" }}
+                        style={{ color: isPro ? "#0f172a" : "#ffffff" }}
                         className="text-xs font-black uppercase tracking-wider"
                       >
                         {isPro ? "PRO" : "FREE"}
@@ -547,7 +549,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                   ) : null}
                 </View>
 
-                <Text numberOfLines={1} className="text-[13px] text-slate-300">
+                <Text numberOfLines={1} className="text-[13px] text-sky-100">
                   {authToken
                     ? (isPro ? t("profile.proMember") || "Thành viên EarlySigns Pro" : t("profile.freeAccount") || "Tài khoản học miễn phí")
                     : t("profile.notLoggedIn") || "Chưa đăng nhập tài khoản"}
@@ -1212,9 +1214,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                           {t("profile.proPlan") || "EarlySigns Pro"}
                         </Text>
                         <Text className="text-[13px] text-slate-500 mt-0.5">
-                          {t("profile.planExpiryDate") || "Hạn dùng"}: {usage?.subscription_expires_at
-                            ? String(usage.subscription_expires_at).slice(0, 10)
-                            : t("profile.autoRenew") || "Tự động gia hạn"}
+                          {t("profile.planExpiryDate") || "Hạn dùng"}: {formatExpiryDate(usage?.subscription_expires_at, currentLang) || t("profile.autoRenew") || "Tự động gia hạn"}
                         </Text>
                       </View>
                     </View>

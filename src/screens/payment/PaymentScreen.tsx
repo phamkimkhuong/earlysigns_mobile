@@ -28,6 +28,7 @@ import {
 import { useAuth } from "@/services/Auth";
 import { showToast } from "@/utils/toast";
 import { customAlert } from "@/utils/customAlert";
+import { formatExpiryDate } from "@/utils/errors";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import { billingApi } from "@/api";
 import { useBillingStore } from "@/store/useBillingStore";
@@ -46,7 +47,7 @@ import type { RootStackParamList } from "@/types/navigation";
 type Props = NativeStackScreenProps<RootStackParamList, "Payment">;
 
 export default function PaymentScreen({ navigation, route }: Props) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { authToken } = useAuth();
   const usage = useBillingStore((s) => s.usage);
 
@@ -409,9 +410,7 @@ export default function PaymentScreen({ navigation, route }: Props) {
                     </Text>
                   </View>
                   <Text className="text-[14px] font-bold text-[#0f172a]">
-                    {usage?.subscription_expires_at
-                      ? String(usage.subscription_expires_at).slice(0, 10)
-                      : (t("payment.autoRenew") || "Tự động gia hạn")}
+                    {formatExpiryDate(usage?.subscription_expires_at, i18n.language) || (t("payment.autoRenew") || "Tự động gia hạn")}
                   </Text>
                 </View>
 

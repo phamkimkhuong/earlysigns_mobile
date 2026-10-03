@@ -49,7 +49,8 @@ export interface BillingUsage {
   daily_remaining?: number;
   has_active_subscription?: boolean;
   is_in_trial?: boolean;
-  subscription_expires_at?: string;
+  subscription_expires_at?: string | number;
+  trial_expires_at?: string | number;
   payos_configured?: boolean;
   [key: string]: any;
 }

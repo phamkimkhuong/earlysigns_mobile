@@ -162,3 +162,33 @@ test("parseApiError returns complete structured metadata", () => {
   assert.equal(parsed.retryable, false);
   assert.equal(parsed.userMessage, "Mã giới thiệu không đúng định dạng. Mã gồm 6 ký tự.");
 });
+
+const { formatExpiryDate } = loadSource("src/utils/errors.ts");
+
+test("formatExpiryDate accurately formats Unix timestamp in seconds (numeric & string)", () => {
+  // 1793638800 is 2026-11-02T17:00:00Z -> in UTC+7 it is 03/11/2026
+  assert.match(formatExpiryDate(1793638800, "vi"), /^(02|03)\/11\/2026$/);
+  assert.match(formatExpiryDate("1793638800", "vi"), /^(02|03)\/11\/2026$/);
+});
+
+test("formatExpiryDate accurately formats Unix timestamp in milliseconds", () => {
+  assert.match(formatExpiryDate(1793638800000, "vi"), /^(02|03)\/11\/2026$/);
+});
+
+test("formatExpiryDate accurately formats ISO string dates", () => {
+  assert.match(formatExpiryDate("2026-11-02T17:00:00.000Z", "vi"), /^(02|03)\/11\/2026$/);
+  assert.equal(formatExpiryDate("2026-12-31", "vi"), "31/12/2026");
+});
+
+test("formatExpiryDate formats English locale as MM/DD/YYYY", () => {
+  assert.match(formatExpiryDate(1793638800, "en"), /^11\/(02|03)\/2026$/);
+});
+
+test("formatExpiryDate handles empty, zero, null, undefined, and invalid inputs gracefully", () => {
+  assert.equal(formatExpiryDate(null), "");
+  assert.equal(formatExpiryDate(undefined), "");
+  assert.equal(formatExpiryDate(""), "");
+  assert.equal(formatExpiryDate(0), "");
+  assert.equal(formatExpiryDate("invalid"), "");
+});
+

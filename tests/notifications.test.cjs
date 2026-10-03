@@ -107,12 +107,96 @@ function notificationHarness(options = {}) {
     calls, service, emit,
     RecordingSession: load("src/services/recordingSession.ts").RecordingSession,
     mountApp() { load("App.tsx").default(); effects.splice(0).forEach(callback => cleanups.push(callback())); },
+    mountSettings() {
+      const jsx = (type, props) => ({ type, props });
+      Object.assign(mocks.react, {
+        useState: initial => [initial, noop], useCallback: fn => fn, useMemo: fn => fn(),
+      });
+      Object.assign(mocks["react/jsx-runtime"], { jsx, jsxs: jsx });
+      mocks["react-native"].Switch = "Switch";
+      mocks["react-i18next"] = { useTranslation: () => ({ t: key => key }) };
+      mocks["lucide-react-native"] = {};
+      Object.assign(mocks["expo-notifications"], {
+        scheduleNotificationAsync: async () => "test-reminder", cancelScheduledNotificationAsync: async () => {},
+      });
+      mocks["@/utils/toast"].showToast = { success: noop, error: noop };
+      const alerts = [];
+      let softAsks = 0;
+      Object.assign(mocks["@/utils/customAlert"].customAlert, {
+        alert: (...args) => alerts.push(args),
+        promptConfirm: async () => { softAsks++; return false; },
+      });
+      const tree = load("src/screens/tabs/NotificationSettingsScreen.tsx").default({ navigation: {} });
+      const switches = [];
+      function visit(node) {
+        if (Array.isArray(node)) return node.forEach(visit);
+        if (!node || typeof node !== "object") return;
+        if (node.type === "Switch") switches.push(node);
+        visit(node.props?.children);
+      }
+      visit(tree);
+      assert.equal(switches.length, 5);
+      effects.splice(0).forEach(callback => cleanups.push(callback()));
+      return { alerts, get softAsks() { return softAsks; }, toggle: (index, value) => switches[index].props.onValueChange(value) };
+    },
     unmountApp() { cleanups.forEach(cleanup => cleanup?.()); },
     setPermission(value) { permission = value; },
   };
 }
 
 async function drainNotifications() { for (let i = 0; i < 100; i++) await Promise.resolve(); }
+
+for (let index = 0; index < 5; index++) test(`production notification toggle ${index} requests denied but still requestable permission`, async () => {
+  const h = notificationHarness({
+    permission: { granted: false, canAskAgain: true, status: "denied" },
+    requestResult: { granted: true, canAskAgain: true, status: "granted" },
+  });
+  const screen = h.mountSettings(); await drainNotifications();
+  assert.equal(h.calls.permission, 0, "Opening the screen must not request permission");
+  await screen.toggle(index, true);
+  assert.equal(h.calls.permission, 1, "The user opt-in must reach the native permission request");
+  assert.equal(screen.softAsks, 0, "The toggle must request system permission without a custom confirmation");
+  assert.equal(screen.alerts.length, 0, "A requestable denial must not be treated as blocked");
+  const setting = ["dailyReminderEnabled", "incompleteLessonEnabled", "streakReminderEnabled", "contentUpdatesEnabled", "promotionsEnabled"][index];
+  assert.equal(h.service.getStoredNotificationSettings()[setting], true);
+  h.unmountApp();
+});
+
+for (const platform of ["android", "ios"]) test(`${platform} production notification toggle directs blocked permission to Settings`, async () => {
+  const h = notificationHarness({ platform, permission: { granted: false, canAskAgain: false, status: "denied" } });
+  const screen = h.mountSettings(); await drainNotifications();
+  await screen.toggle(0, true);
+  assert.equal(h.calls.permission, 0);
+  assert.equal(screen.softAsks, 0);
+  assert.equal(screen.alerts.length, 1);
+  assert.equal(screen.alerts[0][2][1].text, "notifications.openSettings");
+  assert.equal(h.service.getStoredNotificationSettings().dailyReminderEnabled, false);
+  h.unmountApp();
+});
+
+test("production notification opt-in respects native denial without a custom confirmation", async () => {
+  for (const status of ["undetermined", "denied"]) {
+    const h = notificationHarness({ permission: { granted: false, canAskAgain: true, status } });
+    const screen = h.mountSettings(); await drainNotifications();
+    await screen.toggle(0, true);
+    assert.equal(screen.softAsks, 0);
+    assert.equal(h.calls.permission, 1);
+    assert.equal(screen.alerts.length, 0);
+    assert.equal(h.service.getStoredNotificationSettings().dailyReminderEnabled, false);
+    h.unmountApp();
+  }
+});
+
+test("production notification toggle with granted permission enables without asking again", async () => {
+  const h = notificationHarness();
+  const screen = h.mountSettings(); await drainNotifications();
+  await screen.toggle(0, true);
+  assert.equal(screen.softAsks, 0);
+  assert.equal(h.calls.permission, 0);
+  assert.equal(screen.alerts.length, 0);
+  assert.equal(h.service.getStoredNotificationSettings().dailyReminderEnabled, true);
+  h.unmountApp();
+});
 
 test("production push registration with granted permission never opens another system request", async () => {
   const h = notificationHarness();
@@ -419,32 +503,20 @@ test("granular toggles: user can disable streak reminder independently", () => {
   assert.equal(canScheduleStreak({ streakReminderEnabled: true, permissionGranted: true }), true);
 });
 
-test("permission flow: undetermined status requires soft-ask before system prompt", async () => {
-  let softAsked = false;
-  let osRequested = false;
-
-  async function ensurePermission(userChoice) {
-    const status = { granted: false, canAskAgain: true, status: "undetermined" };
-    if (status.granted) return true;
-
-    // Soft ask
-    softAsked = true;
-    if (userChoice === "later") {
-      return false;
-    }
-
-    osRequested = true;
-    return true;
-  }
-
-  const resultLater = await ensurePermission("later");
-  assert.equal(softAsked, true);
-  assert.equal(osRequested, false);
-  assert.equal(resultLater, false);
-
-  const resultContinue = await ensurePermission("continue");
-  assert.equal(osRequested, true);
-  assert.equal(resultContinue, true);
+test("production iOS first notification opt-in calls the system directly and enables after grant", async () => {
+  const h = notificationHarness({
+    platform: "ios",
+    permission: { granted: false, canAskAgain: true, status: "undetermined" },
+    requestResult: { granted: true, canAskAgain: true, status: "granted" },
+  });
+  const screen = h.mountSettings(); await drainNotifications();
+  assert.equal(h.calls.permission, 0);
+  await screen.toggle(0, true);
+  assert.equal(h.calls.permission, 1);
+  assert.equal(screen.softAsks, 0);
+  assert.equal(screen.alerts.length, 0);
+  assert.equal(h.service.getStoredNotificationSettings().dailyReminderEnabled, true);
+  h.unmountApp();
 });
 
 // Logic from calculateIncompleteLessonTriggerDate

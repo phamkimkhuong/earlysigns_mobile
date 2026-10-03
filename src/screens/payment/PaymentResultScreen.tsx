@@ -43,7 +43,7 @@ export default function PaymentResultScreen({ navigation, route }: Props) {
     variant === "cancel" ? "cancelled" : "verifying"
   );
   const [errorMessage, setErrorMessage] = useState("");
-  const [subscriptionExpiresAt, setSubscriptionExpiresAt] = useState<string | null>(null);
+  const [subscriptionExpiresAt, setSubscriptionExpiresAt] = useState<string | number | null>(null);
   const cancelledRef = useRef(false);
 
   const runVerify = useCallback(async () => {

@@ -141,7 +141,11 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
     }
 
     const tokenResult = await getExpoPushTokenAsync({ projectId });
-    return tokenResult?.data || null;
+    const token = tokenResult?.data || null;
+    if (token) {
+      logger.info("Notifications", `✅ Expo Push Token: ${token}`);
+    }
+    return token;
   } catch (err) {
     logger.warn("Notifications", "Error getting push token:", err);
     return null;

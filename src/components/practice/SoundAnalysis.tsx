@@ -39,15 +39,24 @@ export default function SoundAnalysis({
   // Group phoneme rows by word index, filtering technical delimiters (. and ˈ) from error counts
   const wordsWithPhonemes = useMemo(() => {
     if (!words || !words.length) return [];
+    const hasWordIndexes = (rows || []).some((r) => typeof r.wordIndex === "number");
     return words.map((w, index) => {
-      const phonemes = (rows || []).filter((r) => r.wordIndex === index);
-      // Real phonemes excluding syllable dots and standalone stress marks
-      const realPhonemes = phonemes.filter(
-        (r) => r.expected !== "." && r.expected !== "ˈ"
+      const phonemes = (rows || []).filter((r) =>
+        hasWordIndexes ? r.wordIndex === index : words.length === 1 || index === 0
       );
-      const errorPhonemes = realPhonemes.filter(
-        (r) => r.status === "replaced" || r.status === "deleted" || r.status === "inserted"
-      );
+      // Real phonemes excluding syllable dots and standalone stress marks, spaces, delimiters
+      const realPhonemes = phonemes.filter((r) => {
+        const exp = (r.expected || "").trim();
+        return exp !== "" && exp !== "." && exp !== "ˈ" && exp !== "ˌ" && exp !== "+";
+      });
+      const errorPhonemes = realPhonemes.filter((r) => {
+        if (r.status === "correct") return false;
+        if (r.status === "inserted") {
+          const sound = (r.pronounced || r.expected || "").replace(/^\+/, "").trim();
+          return sound !== "" && sound !== "." && sound !== "ˈ" && sound !== "ˌ";
+        }
+        return r.status === "replaced" || r.status === "deleted";
+      });
       const correctPhonemes = realPhonemes.filter((r) => r.status === "correct");
       const hasErrors = errorPhonemes.length > 0;
       const isPerfect = realPhonemes.length > 0 && !hasErrors;
@@ -96,12 +105,20 @@ export default function SoundAnalysis({
 
   // If no word grouping data is available, fall back to flat list view (errors only)
   if (!hasWordGrouping) {
-    const errorRows = (rows || []).filter(
-      (r) =>
-        (r.status === "replaced" || r.status === "deleted" || r.status === "inserted") &&
-        r.expected !== "." &&
-        r.expected !== "ˈ"
-    );
+    const errorRows = (rows || []).filter((r) => {
+      const isError =
+        r.status === "replaced" || r.status === "deleted" || r.status === "inserted";
+      if (!isError) return false;
+      const expected = (r.expected || "").trim();
+      if (!expected || expected === "." || expected === "ˈ" || expected === "ˌ" || expected === "+") {
+        return false;
+      }
+      if (r.status === "inserted") {
+        const sound = (r.pronounced || r.expected || "").replace(/^\+/, "").trim();
+        return sound !== "" && sound !== "." && sound !== "ˈ" && sound !== "ˌ";
+      }
+      return true;
+    });
 
     return (
       <View className="mt-3 gap-2.5 w-full">
@@ -125,15 +142,17 @@ export default function SoundAnalysis({
         ) : (
           errorRows.map((row) => {
             const isInserted = row.status === "inserted";
+            const cleanExpected = (row.expected || "").trim() || "?";
+            const cleanPronounced = (row.pronounced || row.expected || "").replace(/^\+/, "").trim();
             const explanation =
               row.status === "deleted"
                 ? t("result.soundAnalysis.missed")
                 : isInserted
                   ? t("result.soundAnalysis.inserted", {
-                    pronounced: row.pronounced || row.expected,
+                    pronounced: cleanPronounced || cleanExpected,
                   })
                   : t("result.soundAnalysis.replaced", {
-                    pronounced: row.pronounced || "",
+                    pronounced: cleanPronounced || cleanExpected,
                   });
             const tipText = row.tipText;
             const statusColor =
@@ -142,6 +161,9 @@ export default function SoundAnalysis({
                 : isInserted
                   ? "#64748b"
                   : colors.warning;
+            const phonemeDisplay = isInserted
+              ? `+/${cleanPronounced || cleanExpected}/`
+              : `/${cleanExpected}/`;
             return (
               <View
                 key={row.id}
@@ -149,7 +171,7 @@ export default function SoundAnalysis({
                 style={{ borderLeftColor: statusColor }}
               >
                 <Text className="font-bold text-slate-900">
-                  {isInserted ? `+/${row.pronounced || row.expected}/` : `/${row.expected}/`}
+                  {phonemeDisplay}
                 </Text>
                 <Text className="text-slate-600 text-xs">{explanation}</Text>
                 {!isInserted && tipText ? (
@@ -160,15 +182,15 @@ export default function SoundAnalysis({
                 {!isInserted && onPracticePhoneme ? (
                   <PrimaryButton
                     title={
-                      practicePhonemeLoading === row.expected
+                      practicePhonemeLoading === cleanExpected
                         ? t("result.soundAnalysis.learnLoading")
                         : t("result.soundAnalysis.learnPhoneme", {
-                          phoneme: row.expected,
+                          phoneme: cleanExpected,
                         })
                     }
                     variant="ghost"
                     disabled={disabled || Boolean(practicePhonemeLoading)}
-                    onPress={() => onPracticePhoneme(row.expected)}
+                    onPress={() => onPracticePhoneme(cleanExpected)}
                   />
                 ) : null}
               </View>
@@ -182,47 +204,6 @@ export default function SoundAnalysis({
   // Active word details
   const activeWord =
     wordsWithPhonemes[selectedWordIndex] || wordsWithPhonemes[0];
-
-  // Visual phoneme chips: attach stress mark ˈ to the following sound, omit .
-  const phonemeChips = (() => {
-    if (!activeWord?.phonemes?.length) return [];
-    const chips: {
-      id: string;
-      display: string;
-      expected: string;
-      status: string;
-      isError: boolean;
-    }[] = [];
-
-    let pendingStress = false;
-    for (const row of activeWord.phonemes) {
-      if (row.expected === "ˈ") {
-        pendingStress = true;
-        continue;
-      }
-      if (row.expected === ".") {
-        continue;
-      }
-      const rawText = pendingStress ? `ˈ${row.expected}` : row.expected;
-      pendingStress = false;
-      const isError =
-        row.status === "replaced" || row.status === "deleted" || row.status === "inserted";
-      const display =
-        row.status === "inserted"
-          ? rawText.startsWith("+")
-            ? rawText
-            : `+${row.pronounced || rawText}`
-          : rawText;
-      chips.push({
-        id: row.id,
-        display,
-        expected: row.expected,
-        status: row.status,
-        isError,
-      });
-    }
-    return chips;
-  })();
 
   return (
     <View className="mt-2 gap-3 w-full">
@@ -365,115 +346,59 @@ export default function SoundAnalysis({
           </View>
 
           {/* Color-Coded IPA directly under word, matching Web experience */}
-          <View className="flex-row items-center flex-wrap gap-0.5">
-            <Text className="text-base font-bold text-slate-400">/</Text>
-            {activeWord.phonemes.length > 0 ? (
-              activeWord.phonemes.map((p, pIdx) => {
-                if (p.expected === ".") {
-                  return (
-                    <Text key={`ipa-dot-${pIdx}`} className="text-base font-bold text-slate-300">
-                      .
-                    </Text>
-                  );
-                }
-                if (p.expected === "ˈ") {
-                  return (
-                    <Text key={`ipa-stress-${pIdx}`} className="text-base font-black text-slate-700">
-                      ˈ
-                    </Text>
-                  );
-                }
-                const color =
-                  p.status === "correct"
-                    ? "#16a34a"
-                    : p.status === "replaced"
-                      ? "#d97706"
-                      : p.status === "deleted"
-                        ? "#dc2626"
-                        : "#64748b";
-                return (
-                  <Text
-                    key={`ipa-char-${pIdx}-${p.expected}`}
-                    style={{
-                      color,
-                      fontSize: 15,
-                      fontWeight: "800",
-                      textDecorationLine: p.status === "deleted" ? "line-through" : "none",
-                    }}
-                  >
-                    {p.status === "inserted"
+          {activeWord.phonemes.length > 0 || (activeWord.ipa && activeWord.ipa.trim().replace(/^\/+|\/+$/g, "")) ? (
+            <View className="flex-row items-center flex-wrap pt-0.5">
+              <Text className="text-base font-bold text-slate-400">{"/"}</Text>
+              {activeWord.phonemes.length > 0 ? (
+                activeWord.phonemes.map((p, pIdx) => {
+                  if (p.expected === ".") {
+                    return (
+                      <Text key={`ipa-dot-${pIdx}`} className="text-base font-bold text-slate-300">
+                        {"."}
+                      </Text>
+                    );
+                  }
+                  if (p.expected === "ˈ") {
+                    return (
+                      <Text key={`ipa-stress-${pIdx}`} className="text-base font-black text-slate-700">
+                        {"ˈ"}
+                      </Text>
+                    );
+                  }
+                  const color =
+                    p.status === "correct"
+                      ? "#16a34a"
+                      : p.status === "replaced"
+                        ? "#d97706"
+                        : p.status === "deleted"
+                          ? "#dc2626"
+                          : "#64748b";
+                  const charText =
+                    p.status === "inserted"
                       ? (p.pronounced || p.expected).startsWith("+")
                         ? (p.pronounced || p.expected)
                         : `+${p.pronounced || p.expected}`
-                      : p.expected}
-                  </Text>
-                );
-              })
-            ) : activeWord.ipa ? (
-              <Text className="text-base font-bold text-indigo-600">
-                {activeWord.ipa}
-              </Text>
-            ) : null}
-            <Text className="text-base font-bold text-slate-400">/</Text>
-          </View>
-
-          {/* Dải Chip âm vị trực quan (Interactive Phoneme Chips) */}
-          {phonemeChips.length > 0 ? (
-            <View className="flex-row flex-wrap items-center gap-1.5 pt-1">
-              {phonemeChips.map((chip) => {
-                const isCorrect = chip.status === "correct";
-                const isInserted = chip.status === "inserted";
-                const isDeleted = chip.status === "deleted";
-
-                const chipBg = isCorrect
-                  ? "#f0fdf4"
-                  : isInserted
-                    ? "#f8fafc"
-                    : isDeleted
-                      ? "#fef2f2"
-                      : "#fffbeb";
-
-                const chipBorder = isCorrect
-                  ? "#bbf7d0"
-                  : isInserted
-                    ? "#cbd5e1"
-                    : isDeleted
-                      ? "#fca5a5"
-                      : "#fde68a";
-
-                const chipText = isCorrect
-                  ? "#166534"
-                  : isInserted
-                    ? "#475569"
-                    : isDeleted
-                      ? "#b91c1c"
-                      : "#78350f";
-
-                return (
-                  <View
-                    key={`chip-${chip.id}`}
-                    className="flex-row items-center gap-1 px-2.5 py-1.5 rounded-xl"
-                    style={{
-                      backgroundColor: chipBg,
-                      borderColor: chipBorder,
-                      borderWidth: 1.5,
-                    }}
-                  >
+                      : p.expected;
+                  return (
                     <Text
-                      className="text-sm font-black"
+                      key={`ipa-char-${pIdx}-${p.expected}`}
                       style={{
-                        color: chipText,
-                        textDecorationLine: isDeleted ? "line-through" : "none",
+                        color,
+                        fontSize: 15,
+                        fontWeight: "800",
+                        textDecorationLine: p.status === "deleted" ? "line-through" : "none",
                       }}
                     >
-                      {chip.display}
+                      {charText}
                     </Text>
-                    {isCorrect ? (
-                      <Check size={12} color="#16a34a" strokeWidth={3} />
-                    ) : null}
-                  </View>
-                );
-              })}
+                  );
+                })
+              ) : (
+                <Text className="text-base font-bold text-indigo-600">
+                  {activeWord.ipa.trim().replace(/^\/+|\/+$/g, "")}
+                </Text>
+              )}
+              <Text className="text-base font-bold text-slate-400">{"/"}</Text>
             </View>
           ) : null}
         </View>
@@ -506,15 +431,18 @@ export default function SoundAnalysis({
                 const isInserted = row.status === "inserted";
                 const isDeleted = row.status === "deleted";
 
+                const cleanExpected = (row.expected || "").trim() || "?";
+                const cleanPronounced = (row.pronounced || row.expected || "").replace(/^\+/, "").trim();
+
                 const explanation =
                   isDeleted
                     ? t("result.soundAnalysis.missed")
                     : isInserted
                       ? t("result.soundAnalysis.inserted", {
-                        pronounced: row.pronounced || row.expected,
+                        pronounced: cleanPronounced || cleanExpected,
                       })
                       : t("result.soundAnalysis.replaced", {
-                        pronounced: row.pronounced || "",
+                        pronounced: cleanPronounced || cleanExpected,
                       });
                 const tipText = row.tipText;
 
@@ -567,10 +495,8 @@ export default function SoundAnalysis({
                     : t("result.soundAnalysis.needsImprovement", "Cần sửa");
 
                 const phonemeDisplay = isInserted
-                  ? (row.pronounced || row.expected).startsWith("+")
-                    ? `/${row.pronounced || row.expected}/`
-                    : `+/${row.pronounced || row.expected}/`
-                  : `/${row.expected}/`;
+                  ? `+/${cleanPronounced || cleanExpected}/`
+                  : `/${cleanExpected}/`;
 
                 return (
                   <View
@@ -651,30 +577,30 @@ export default function SoundAnalysis({
                         accessibilityRole="button"
                         accessibilityLabel={t(
                           "result.soundAnalysis.learnPhoneme",
-                          { phoneme: row.expected }
+                          { phoneme: cleanExpected }
                         )}
                         activeOpacity={0.8}
                         disabled={disabled || Boolean(practicePhonemeLoading)}
                         onPress={() => {
                           hapticFeedback.light();
-                          onPracticePhoneme(row.expected);
+                          onPracticePhoneme(cleanExpected);
                         }}
                         className="self-start px-3.5 py-2 rounded-xl flex-row items-center gap-1.5 mt-0.5"
                         style={{
                           backgroundColor:
-                            practicePhonemeLoading === row.expected
+                            practicePhonemeLoading === cleanExpected
                               ? "#93c5fd"
                               : "#2383E2",
                         }}
                       >
-                        {practicePhonemeLoading === row.expected ? (
+                        {practicePhonemeLoading === cleanExpected ? (
                           <ActivityIndicator size={12} color="#ffffff" />
                         ) : null}
                         <Text className="text-xs font-bold text-white">
-                          {practicePhonemeLoading === row.expected
+                          {practicePhonemeLoading === cleanExpected
                             ? t("result.soundAnalysis.learnLoading")
                             : t("result.soundAnalysis.learnPhoneme", {
-                              phoneme: row.expected,
+                              phoneme: cleanExpected,
                             })}
                         </Text>
                       </TouchableOpacity>

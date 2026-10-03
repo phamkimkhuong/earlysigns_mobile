@@ -35,7 +35,6 @@ import {
   requestNotificationPermission,
   saveNotificationSettings,
   syncPushTokenWithBackend,
-  PermissionStatus,
   type NotificationSettings,
 } from "@/services/notifications";
 import { notificationApi } from "@/api/notificationApi";
@@ -138,9 +137,8 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
   /**
    * Section 16.2: Quy trình cấp quyền thông báo chuẩn đặc tả
    * 1. Kiểm tra trạng thái quyền hiện tại.
-   * 2. Nếu đã từng từ chối (Denied / canAskAgain = false) -> Hướng dẫn mở Cài đặt thiết bị (không hỏi lại vô ích).
-   * 3. Nếu chưa từng hỏi (Undetermined) -> Giải thích lợi ích trước khi gọi popup hệ điều hành.
-   * 4. Cho phép người dùng chọn "Để sau" để bỏ qua mà không bị làm phiền.
+   * 2. Nếu hệ điều hành không cho hỏi lại (canAskAgain = false) -> Hướng dẫn mở Cài đặt thiết bị.
+   * 3. Nếu còn được hỏi -> Gọi trực tiếp popup hệ điều hành từ thao tác bật công tắc.
    */
   const ensureNotificationPermission = useCallback(async (): Promise<boolean> => {
     const perm = await getNotificationPermissionStatus();
@@ -149,8 +147,9 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
       return true;
     }
 
-    // Trường hợp 1: Người dùng đã từ chối trước đó trong OS -> Hướng dẫn mở Cài đặt
-    if (!perm.canAskAgain || perm.status === PermissionStatus.DENIED) {
+    // Android có thể trả denied ngay khi chưa từng hỏi; chỉ canAskAgain
+    // mới phân biệt quyền chưa cấp với quyền không thể yêu cầu lại.
+    if (!perm.canAskAgain) {
       customAlert.alert(
         t("notifications.permissionTitle", "Cần cấp quyền thông báo"),
         t(
@@ -168,23 +167,7 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
       return false;
     }
 
-    // Trường hợp 2: Chưa từng hỏi quyền -> Hiển thị giải thích lợi ích trước khi mở popup hệ thống
-    const userAgreed = await customAlert.promptConfirm({
-      title: t("notifications.softAskTitle", "Bật thông báo từ EarlySigns"),
-      message: t(
-        "notifications.softAskMessage",
-        "EarlySigns cần quyền gửi thông báo để nhắc bạn luyện phát âm hằng ngày đúng giờ, duy trì chuỗi ngày streak và cập nhật bài học mới. Bạn có muốn nhận thông báo không?"
-      ),
-      confirmText: t("notifications.softAskConfirm", "Tiếp tục"),
-      cancelText: t("notifications.softAskCancel", "Để sau"),
-    });
-
-    if (!userAgreed) {
-      // Người dùng bấm "Để sau" -> Tôn trọng lựa chọn, không ép buộc
-      return false;
-    }
-
-    // Người dùng đồng ý -> Kích hoạt yêu cầu quyền của hệ điều hành
+    // Thao tác bật công tắc đã thể hiện ý định xin quyền, không thêm modal xác nhận.
     const requested = await requestNotificationPermission();
     setPermissionGranted(requested.granted);
     if (requested.granted && useAuthStore.getState().isAuthenticated) {

@@ -57,22 +57,23 @@ export default function ScoreWords({
             ) : null}
             {showIpa ? (
               <View className="flex-row items-center flex-wrap justify-center mt-0.5">
-                <Text className="text-appTextSecondary text-[13px]">
-                  /
-                  {w.ipa
-                    ? phones.map((phone, phoneIndex) => (
-                        <Text
-                          key={`${w.word}-${i}-${phoneIndex}`}
-                          style={{ color: PHONE_COLORS[phone?.status || ""] || PHONE_COLORS.neutral }}
-                        >
-                          {phone?.char || ""}
-                        </Text>
-                      ))
-                    : loadingIpa
-                      ? "…"
-                      : "—"}
-                  /
-                </Text>
+                <Text className="text-appTextSecondary text-[13px]">{"/"}</Text>
+                {w.ipa ? (
+                  phones.map((phone, phoneIndex) => (
+                    <Text
+                      key={`${w.word}-${i}-${phoneIndex}`}
+                      style={{ color: PHONE_COLORS[phone?.status || ""] || PHONE_COLORS.neutral }}
+                      className="text-[13px]"
+                    >
+                      {phone?.char || ""}
+                    </Text>
+                  ))
+                ) : (
+                  <Text className="text-appTextSecondary text-[13px]">
+                    {loadingIpa ? "…" : "—"}
+                  </Text>
+                )}
+                <Text className="text-appTextSecondary text-[13px]">{"/"}</Text>
                 {showInserted && showResultDetails && insertedPhones.length > 0 ? (
                   <View className="flex-row items-center ml-1 gap-1">
                     {insertedPhones.map((ins, insIdx) => {
