@@ -300,9 +300,12 @@ export default function VideoRecordingHub({
       {/* 1. TOP DYNAMIC STATUS PILL (Only during active recording/starting/checking states) */}
       {isStarting ? (
         <View className="items-center">
-          <View className="flex-row items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-50 border border-amber-200">
-            <ActivityIndicator size={11} color="#d97706" />
-            <Text className="text-xs font-bold text-amber-800">
+          <View
+            className="flex-row items-center gap-1.5 px-3.5 py-1 rounded-full border"
+            style={{ backgroundColor: "#eff6ff", borderColor: "#bfdbfe" }}
+          >
+            <ActivityIndicator size={11} color="#2383e2" />
+            <Text className="text-xs font-bold text-blue-800">
               {t("videos.practice.startingMic")}
             </Text>
           </View>
@@ -353,9 +356,9 @@ export default function VideoRecordingHub({
                 width: 82,
                 height: 82,
                 borderRadius: 41,
-                backgroundColor: "rgba(244, 63, 94, 0.2)",
+                backgroundColor: "rgba(35, 131, 226, 0.2)",
                 borderWidth: 1.5,
-                borderColor: "rgba(244, 63, 94, 0.4)",
+                borderColor: "rgba(35, 131, 226, 0.4)",
                 transform: [{ scale: wave1 }],
                 opacity: waveOpacity1,
               }}
@@ -366,9 +369,9 @@ export default function VideoRecordingHub({
                 width: 82,
                 height: 82,
                 borderRadius: 41,
-                backgroundColor: "rgba(244, 63, 94, 0.15)",
+                backgroundColor: "rgba(35, 131, 226, 0.15)",
                 borderWidth: 1.5,
-                borderColor: "rgba(244, 63, 94, 0.3)",
+                borderColor: "rgba(35, 131, 226, 0.3)",
                 transform: [{ scale: wave2 }],
                 opacity: waveOpacity2,
               }}
@@ -379,9 +382,9 @@ export default function VideoRecordingHub({
                 width: 82,
                 height: 82,
                 borderRadius: 41,
-                backgroundColor: "rgba(244, 63, 94, 0.1)",
+                backgroundColor: "rgba(35, 131, 226, 0.1)",
                 borderWidth: 1,
-                borderColor: "rgba(244, 63, 94, 0.2)",
+                borderColor: "rgba(35, 131, 226, 0.2)",
                 transform: [{ scale: wave3 }],
                 opacity: waveOpacity3,
               }}
@@ -436,15 +439,10 @@ export default function VideoRecordingHub({
             shadowOpacity: 0.35,
             shadowRadius: 10,
             borderWidth: 3,
-            borderColor: isRecording ? "#fecdd3" : isStarting ? "#fde68a" : checking ? "#93c5fd" : "#60a5fa",
-            backgroundColor: isRecording
-              ? "#f43f5e"
-              : isStarting
-              ? "#f59e0b"
-              : checking
-              ? "#1d4ed8"
-              : "#2383E2",
-            shadowColor: isRecording ? "#f43f5e" : "#2383E2",
+            borderColor: isRecording ? "#93c5fd" : isStarting ? "#93c5fd" : checking ? "#93c5fd" : "#60a5fa",
+            backgroundColor: checking ? "#1d4ed8" : "#2383E2",
+            opacity: isStarting ? 0.65 : 1,
+            shadowColor: "#2383E2",
           }}
         >
           {isStarting ? (
@@ -460,11 +458,11 @@ export default function VideoRecordingHub({
       {/* 3. DANCING VOICE WAVEFORM BARS (During Recording) */}
       {isRecording ? (
         <View className="flex-row items-center justify-center gap-1.5 h-8 -mt-1">
-          <Animated.View style={{ width: 4, height: bar1, backgroundColor: "#f43f5e", borderRadius: 2 }} />
-          <Animated.View style={{ width: 4, height: bar2, backgroundColor: "#f43f5e", borderRadius: 2 }} />
-          <Animated.View style={{ width: 4, height: bar3, backgroundColor: "#e11d48", borderRadius: 2 }} />
-          <Animated.View style={{ width: 4, height: bar4, backgroundColor: "#f43f5e", borderRadius: 2 }} />
-          <Animated.View style={{ width: 4, height: bar5, backgroundColor: "#f43f5e", borderRadius: 2 }} />
+          <Animated.View style={{ width: 4, height: bar1, backgroundColor: "#2383E2", borderRadius: 2 }} />
+          <Animated.View style={{ width: 4, height: bar2, backgroundColor: "#2383E2", borderRadius: 2 }} />
+          <Animated.View style={{ width: 4, height: bar3, backgroundColor: "#1d4ed8", borderRadius: 2 }} />
+          <Animated.View style={{ width: 4, height: bar4, backgroundColor: "#2383E2", borderRadius: 2 }} />
+          <Animated.View style={{ width: 4, height: bar5, backgroundColor: "#2383E2", borderRadius: 2 }} />
         </View>
       ) : null}
 

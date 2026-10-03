@@ -46,4 +46,19 @@ export const FACEBOOK_CLIENT_TOKEN: string =
   extra.facebookClientToken ||
   "";
 
+export const FIREBASE_PROJECT_ID: string =
+  process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID ||
+  extra.firebaseProjectId ||
+  "earlysigns-679f9";
+
+export const FIREBASE_API_KEY: string =
+  process.env.EXPO_PUBLIC_FIREBASE_API_KEY ||
+  extra.firebaseApiKey ||
+  "AIzaSyC4JMUV2NH_PT7OHBp5X8Em6wku9SRbmdM";
+
+export const FIREBASE_APP_ID: string =
+  process.env.EXPO_PUBLIC_FIREBASE_APP_ID ||
+  extra.firebaseAppId ||
+  "1:674439311811:android:b64eda5e99ce0b9effcd76";
+
 export { API_ENDPOINTS } from "./apiEndpoints";

@@ -3,14 +3,15 @@
     "name": "EarlySigns",
     "slug": "earlysigns",
     "owner": "phamkhuong436",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "scheme": "earlysigns",
     "ios": {
-      "bundleIdentifier": "net.earlysigns.android",
+      "bundleIdentifier": "net.earlysigns.app",
       "supportsTablet": true,
+      "usesAppleSignIn": true,
       "infoPlist": {
         "NSMicrophoneUsageDescription": "EarlySigns records your voice to check English pronunciation.",
         "NSCameraUsageDescription": "EarlySigns uses the camera to scan text for pronunciation practice.",
@@ -21,7 +22,8 @@
       }
     },
     "android": {
-      "package": "net.earlysigns.android",
+      "package": "net.earlysigns.app",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#e0f4fd",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -73,10 +75,10 @@
       [
         "react-native-fbsdk-next",
         {
-          "appID": "000000000000000",
-          "clientToken": "00000000000000000000000000000000",
+          "appID": "3449875161816700",
+          "clientToken": "3b06af5e74cce33bf553cdb922894bcd",
           "displayName": "EarlySigns",
-          "scheme": "fb000000000000000"
+          "scheme": "fb3449875161816700"
         }
       ]
     ],

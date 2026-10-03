@@ -12,7 +12,20 @@
           "package_name": "net.earlysigns.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "674439311811-k090jfk4tsv7ggrg8mun33qd65uuasr0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "net.earlysigns.app",
+            "certificate_hash": "d7150e81c28cb07a1ef5efb2f36a74f03dc43eed"
+          }
+        },
+        {
+          "client_id": "674439311811-q179uhg79mbngj2sj2c5f6i6to4augnc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyC4JMUV2NH_PT7OHBp5X8Em6wku9SRbmdM"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "674439311811-q179uhg79mbngj2sj2c5f6i6to4augnc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     },
@@ -31,7 +49,20 @@
           "package_name": "net.earlysigns.app.dev"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "674439311811-rbrjm3f028lfqbfenpk2ca94u853rgml.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "net.earlysigns.app.dev",
+            "certificate_hash": "eea075598b2efc695bef11acf5c4139a38bbc9aa"
+          }
+        },
+        {
+          "client_id": "674439311811-q179uhg79mbngj2sj2c5f6i6to4augnc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyC4JMUV2NH_PT7OHBp5X8Em6wku9SRbmdM"
@@ -39,7 +70,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "674439311811-q179uhg79mbngj2sj2c5f6i6to4augnc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

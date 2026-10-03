@@ -9,7 +9,13 @@
       "distribution": "internal",
       "channel": "development",
       "env": {
-        "APP_VARIANT": "development"
+        "APP_VARIANT": "development",
+        "EXPO_PUBLIC_API_BASE": "https://api-vps.earlysigns.net",
+        "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "674439311811-q179uhg79mbngj2sj2c5f6i6to4augnc.apps.googleusercontent.com",
+        "EXPO_PUBLIC_REVENUECAT_GOOGLE_KEY": "goog_JOvacJjxjtJXNcJVhYnaITfLRsg",
+        "EXPO_PUBLIC_REVENUECAT_APPLE_KEY": "appl_oSGkCisjyRYObuzvYclaXcSnHwu",
+        "EXPO_PUBLIC_FACEBOOK_APP_ID": "3449875161816700",
+        "EXPO_PUBLIC_FACEBOOK_CLIENT_TOKEN": "3b06af5e74cce33bf553cdb922894bcd"
       },
       "android": {
         "buildType": "apk"
@@ -20,7 +26,13 @@
       "distribution": "internal",
       "channel": "development",
       "env": {
-        "APP_VARIANT": "development"
+        "APP_VARIANT": "development",
+        "EXPO_PUBLIC_API_BASE": "https://api-vps.earlysigns.net",
+        "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "674439311811-q179uhg79mbngj2sj2c5f6i6to4augnc.apps.googleusercontent.com",
+        "EXPO_PUBLIC_REVENUECAT_GOOGLE_KEY": "goog_JOvacJjxjtJXNcJVhYnaITfLRsg",
+        "EXPO_PUBLIC_REVENUECAT_APPLE_KEY": "appl_oSGkCisjyRYObuzvYclaXcSnHwu",
+        "EXPO_PUBLIC_FACEBOOK_APP_ID": "3449875161816700",
+        "EXPO_PUBLIC_FACEBOOK_CLIENT_TOKEN": "3b06af5e74cce33bf553cdb922894bcd"
       },
       "ios": {
         "simulator": true
@@ -30,7 +42,13 @@
       "distribution": "internal",
       "channel": "production",
       "env": {
-        "APP_VARIANT": "production"
+        "APP_VARIANT": "production",
+        "EXPO_PUBLIC_API_BASE": "https://api-vps.earlysigns.net",
+        "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "674439311811-q179uhg79mbngj2sj2c5f6i6to4augnc.apps.googleusercontent.com",
+        "EXPO_PUBLIC_REVENUECAT_GOOGLE_KEY": "goog_JOvacJjxjtJXNcJVhYnaITfLRsg",
+        "EXPO_PUBLIC_REVENUECAT_APPLE_KEY": "appl_oSGkCisjyRYObuzvYclaXcSnHwu",
+        "EXPO_PUBLIC_FACEBOOK_APP_ID": "3449875161816700",
+        "EXPO_PUBLIC_FACEBOOK_CLIENT_TOKEN": "3b06af5e74cce33bf553cdb922894bcd"
       },
       "android": {
         "buildType": "apk"
@@ -41,7 +59,13 @@
       "channel": "production",
       "autoIncrement": true,
       "env": {
-        "APP_VARIANT": "production"
+        "APP_VARIANT": "production",
+        "EXPO_PUBLIC_API_BASE": "https://api-vps.earlysigns.net",
+        "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "674439311811-q179uhg79mbngj2sj2c5f6i6to4augnc.apps.googleusercontent.com",
+        "EXPO_PUBLIC_REVENUECAT_GOOGLE_KEY": "goog_JOvacJjxjtJXNcJVhYnaITfLRsg",
+        "EXPO_PUBLIC_REVENUECAT_APPLE_KEY": "appl_oSGkCisjyRYObuzvYclaXcSnHwu",
+        "EXPO_PUBLIC_FACEBOOK_APP_ID": "3449875161816700",
+        "EXPO_PUBLIC_FACEBOOK_CLIENT_TOKEN": "3b06af5e74cce33bf553cdb922894bcd"
       },
       "android": {
         "buildType": "app-bundle"

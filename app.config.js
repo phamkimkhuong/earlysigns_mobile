@@ -8,14 +8,14 @@ module.exports = ({ config }) => {
   const isDev = variant === "development";
 
   let name = "EarlySigns";
-  let bundleIdentifier = "net.earlysigns.android";
-  let packageName = "net.earlysigns.android";
+  let bundleIdentifier = "net.earlysigns.app";
+  let packageName = "net.earlysigns.app";
   let scheme = "earlysigns";
 
   if (isDev) {
     name = "EarlySigns (Dev)";
-    bundleIdentifier = "net.earlysigns.android.dev";
-    packageName = "net.earlysigns.android.dev";
+    bundleIdentifier = "net.earlysigns.app.dev";
+    packageName = "net.earlysigns.app.dev";
     scheme = "earlysigns-dev";
   }
 
@@ -23,17 +23,40 @@ module.exports = ({ config }) => {
     process.env.EAS_PROJECT_ID ||
     config.extra?.eas?.projectId;
 
+  const fbAppId = process.env.EXPO_PUBLIC_FACEBOOK_APP_ID;
+  const fbClientToken = process.env.EXPO_PUBLIC_FACEBOOK_CLIENT_TOKEN;
+
+  let plugins = config.plugins || [];
+  if (fbAppId || fbClientToken) {
+    plugins = plugins.map((plugin) => {
+      if (Array.isArray(plugin) && plugin[0] === "react-native-fbsdk-next") {
+        return [
+          "react-native-fbsdk-next",
+          {
+            ...plugin[1],
+            ...(fbAppId ? { appID: fbAppId, scheme: `fb${fbAppId}` } : {}),
+            ...(fbClientToken ? { clientToken: fbClientToken } : {}),
+          },
+        ];
+      }
+      return plugin;
+    });
+  }
+
   const googleServicesFile =
     process.env.GOOGLE_SERVICES_JSON ||
     (fs.existsSync(path.resolve(__dirname, "google-services.json"))
       ? "./google-services.json"
-      : undefined);
+      : (fs.existsSync(path.resolve(__dirname, "google-service", "google-services.json"))
+        ? "./google-service/google-services.json"
+        : undefined));
 
   return {
     ...config,
     ...(owner ? { owner } : {}),
     name,
     scheme,
+    plugins,
     updates: {
       url: `https://u.expo.dev/${projectId}`,
     },
@@ -43,6 +66,7 @@ module.exports = ({ config }) => {
     ios: {
       ...config.ios,
       bundleIdentifier,
+      usesAppleSignIn: true,
     },
     android: {
       ...config.android,
@@ -52,6 +76,8 @@ module.exports = ({ config }) => {
     extra: {
       ...config.extra,
       appVariant: variant,
+      ...(fbAppId ? { facebookAppId: fbAppId } : {}),
+      ...(fbClientToken ? { facebookClientToken: fbClientToken } : {}),
       eas: {
         ...(config.extra?.eas || {}),
         projectId,

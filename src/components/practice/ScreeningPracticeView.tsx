@@ -341,13 +341,13 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
               style={{
                 backgroundColor:
                   phase === "recording"
-                    ? "#dc2626"
+                    ? "#2383E2"
                     : phase === "recorded"
                     ? last
                       ? "#059669"
                       : "#2383E2"
                     : "#2383E2",
-                opacity: waiting ? 0.7 : 1,
+                opacity: waiting ? 0.65 : 1,
               }}
               className="min-h-[54px] rounded-2xl px-5 py-3.5 flex-row items-center justify-center gap-2.5"
             >
