@@ -233,6 +233,18 @@
     "missingConfig": "Missing configuration",
     "loginFailed": "Login failed"
   },
+  "appUpdate": {
+    "forceTitle": "App Update Required",
+    "softTitle": "New Update Available",
+    "forceMessage": "Your current version is no longer supported. Please update to the latest version to continue using EarlySigns.",
+    "softMessage": "A new version with enhancements and new features is available. Would you like to update now?",
+    "forceBadge": "Update Required",
+    "softBadge": "Recommended Update",
+    "updateNow": "Update Now",
+    "later": "Later",
+    "latestTitle": "App is Up to Date",
+    "latestMessage": "You are running the latest version {{version}}"
+  },
   "onboarding": {
     "brandName": "EarlySigns",
     "welcomeTitle": "Master English Pronunciation",

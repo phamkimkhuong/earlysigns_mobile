@@ -55,6 +55,8 @@ function VideoCard({
 
   return (
     <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityLabel={video.title || "Video"}
       activeOpacity={0.88}
       style={{ maxWidth: isGrid ? "48.5%" : undefined }}
       className={`${isGrid ? "flex-1 mb-3.5" : "w-[176px] mr-3 mb-1.5"
@@ -264,13 +266,23 @@ function TopicSectionRow({
           {topicLabel(topic, t)}
         </Text>
         {topicFilter ? (
-          <TouchableOpacity onPress={() => onSelectTopic("")} className="py-1">
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={t("videos.catalog.allTopics") || "Tất cả chủ đề"}
+            onPress={() => onSelectTopic("")}
+            className="py-1"
+          >
             <Text className="text-sm text-indigo-600 font-bold">
               {t("videos.catalog.allTopics") || "Tất cả"}
             </Text>
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity onPress={() => onSelectTopic(topic)} className="py-1">
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={t("videos.catalog.viewAll") || "Xem tất cả"}
+            onPress={() => onSelectTopic(topic)}
+            className="py-1"
+          >
             <Text className="text-sm text-indigo-600 font-bold">
               {t("videos.catalog.viewAll")}
             </Text>
@@ -480,6 +492,8 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
           {/* Top Nav Bar */}
           <View className="flex-row items-center justify-between mb-1">
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={t("common.back", "Quay lại")}
               activeOpacity={0.8}
               onPress={() => {
                 if (navigation.canGoBack()) {
@@ -510,16 +524,21 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-grow-0">
               <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={t("videos.catalog.allLevels") || "Tất cả cấp độ"}
+                accessibilityState={{ selected: !level }}
                 activeOpacity={0.8}
                 onPress={() => handleSelectLevel("")}
-                className={`px-3.5 py-1.5 rounded-full mr-2 border ${!level
+                className={`px-3.5 py-1.5 rounded-full mr-2 border shrink-0 items-center justify-center ${!level
                   ? "bg-indigo-600 border-indigo-600"
                   : "bg-white border-slate-200"
                   }`}
               >
                 <Text
+                  numberOfLines={1}
                   className={`text-sm font-bold ${!level ? "text-white" : "text-slate-700"
                     }`}
+                  style={{ includeFontPadding: false }}
                 >
                   {t("videos.catalog.allLevels")}
                 </Text>
@@ -529,16 +548,21 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
                 return (
                   <TouchableOpacity
                     key={lv}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Cấp độ ${lv}`}
+                    accessibilityState={{ selected: isSelected }}
                     activeOpacity={0.8}
                     onPress={() => handleSelectLevel(lv)}
-                    className={`px-3.5 py-1.5 rounded-full mr-2 border ${isSelected
+                    className={`px-3.5 py-1.5 rounded-full mr-2 border shrink-0 items-center justify-center ${isSelected
                       ? "bg-indigo-600 border-indigo-600"
                       : "bg-white border-slate-200"
                       }`}
                   >
                     <Text
+                      numberOfLines={1}
                       className={`text-sm font-bold ${isSelected ? "text-white" : "text-slate-700"
                         }`}
+                      style={{ includeFontPadding: false }}
                     >
                       {lv}
                     </Text>
@@ -562,17 +586,24 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
                       return (
                         <TouchableOpacity
                           key={tp || "all-topics"}
+                          accessibilityRole="button"
+                          accessibilityLabel={tp ? topicLabel(tp, t) : (t("videos.catalog.allTopics") || "Tất cả chủ đề")}
+                          accessibilityState={{ selected: isSelected }}
                           activeOpacity={0.8}
                           onPress={() => handleSelectTopic(tp)}
-                          className="px-3.5 py-1.5 rounded-full border"
+                          className="px-3.5 py-1.5 rounded-full border shrink-0 items-center justify-center"
                           style={{
                             backgroundColor: isSelected ? "#0f172a" : "#ffffff",
                             borderColor: isSelected ? "#0f172a" : "#e2e8f0",
                           }}
                         >
                           <Text
+                            numberOfLines={1}
                             className="text-sm font-bold"
-                            style={{ color: isSelected ? "#ffffff" : "#334155" }}
+                            style={{
+                              color: isSelected ? "#ffffff" : "#334155",
+                              includeFontPadding: false,
+                            }}
                           >
                             {tp ? topicLabel(tp, t) : t("videos.catalog.allTopics")}
                           </Text>

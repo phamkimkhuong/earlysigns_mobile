@@ -26,6 +26,8 @@ import { NavigationContainer } from "@react-navigation/native";
 import { navigationRef } from "@/navigation/nav";
 import RootNavigator, { navTheme } from "@/navigation/RootNavigator";
 import CustomAlertModal from "@/components/ui/CustomAlertModal";
+import AppUpdateModal from "@/components/ui/AppUpdateModal";
+import { useAppUpdateStore } from "@/store/useAppUpdateStore";
 import { toastConfig } from "@/components/ui/CustomToast";
 
 // Neutralize noisy console outputs in production while keeping error trackers intact
@@ -66,6 +68,7 @@ export default function App() {
         syncPushTokenWithBackend().catch(() => {});
         const savedUserId = getItem("earlysigns_auth_user_id") || undefined;
         initRevenueCat(savedUserId).catch(() => {});
+        useAppUpdateStore.getState().checkUpdate().catch(() => {});
       } catch {
         // proceed even if error occurs
       } finally {
@@ -79,6 +82,7 @@ export default function App() {
       if (state === "active") {
         deactivateDeviceOnPermissionRevoke().catch(() => {});
         syncPushTokenWithBackend().catch(() => {});
+        useAppUpdateStore.getState().checkUpdate().catch(() => {});
       }
     });
 
@@ -102,6 +106,7 @@ export default function App() {
             <StatusBar style="dark" />
             <RootNavigator />
             <CustomAlertModal />
+            <AppUpdateModal />
             <Toast config={toastConfig} topOffset={54} />
           </NavigationContainer>
         </AuthProvider>

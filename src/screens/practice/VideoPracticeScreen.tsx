@@ -1,3 +1,4 @@
+import { useIsFocused } from "@react-navigation/native";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ScrollView,
@@ -14,7 +15,7 @@ import {
   Film,
   RotateCcw,
 } from "lucide-react-native";
-import YoutubePlayer from "@/components/practice/YoutubePlayer";
+import VideoPlayerFrame from "@/components/practice/VideoPlayerFrame";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/services/Auth";
 import { usePronunciationCheck } from "@/hooks/usePronunciationCheck";
@@ -24,12 +25,12 @@ import { resolveUserKey, resolveUserTier } from "@/services/usageLimits";
 import { useBillingStore } from "@/store/useBillingStore";
 import { topicLabel } from "@/utils/errors";
 import DialectToggle from "@/components/ui/DialectToggle";
-import IPAChecking from "@/components/practice/IPAChecking";
+import IPAChecking, { type IPASentence } from "@/components/practice/IPAChecking";
 import ScoreWords from "@/components/practice/ScoreWords";
 import VideoRecordingHub from "@/components/practice/VideoRecordingHub";
 import UpgradeProModal from "@/components/ui/UpgradeProModal";
 import { VideoPracticeSkeleton } from "@/components/ui/Skeleton";
-import { videoApi, lessonApi, billingApi } from "@/api";
+import { videoApi, lessonApi, billingApi, textPracticeApi } from "@/api";
 import { useVideoDetailQuery } from "@/hooks/queries/useVideoQueries";
 import {
   scheduleIncompleteLessonReminder,
@@ -51,6 +52,7 @@ function segmentSeekSec(seg: VideoSegment, prevSeg?: VideoSegment | null): numbe
 
 export default function VideoPracticeScreen({ route, navigation }: { route: any; navigation: any }) {
   const youtubeId = decodeURIComponent(route.params?.youtubeId || "");
+  const isFocused = useIsFocused();
   const { t, i18n } = useTranslation();
   const {
     authToken,
@@ -69,6 +71,18 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
   const error = detailError ? String((detailError as any)?.message || t("videos.practice.notFound")) : "";
 
   const video = detailData;
+  const segments = useMemo(() => [...(detailData?.segments || [])].sort(
+    (a: VideoSegment, b: VideoSegment) => a.start_ms - b.start_ms,
+  ), [detailData?.segments]);
+  const initialPlayback = useMemo(() => {
+    const stored = getItem(`${STORAGE_KEY_LAST_PRACTICED_PREFIX}${youtubeId}`);
+    const playedCount = detailData?.played_count;
+    const candidates = [route.params?.initialIndex, stored == null ? NaN : parseInt(stored, 10),
+      typeof playedCount === "number" && playedCount < segments.length ? playedCount : 0, 0];
+    const selected = candidates.find(value => typeof value === "number" && Number.isFinite(value) && value >= 0) ?? 0;
+    const index = Math.max(0, Math.min(segments.length - 1, Math.floor(selected)));
+    return { index, seconds: segments[index] ? segmentSeekSec(segments[index], segments[index - 1]) : 0 };
+  }, [detailData?.played_count, route.params?.initialIndex, segments, youtubeId]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [playerReady, setPlayerReady] = useState(false);
@@ -110,23 +124,19 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
   }, [practiceDialect]);
 
   useEffect(() => {
-    playingRef.current = playing;
-  }, [playing]);
-
-  useEffect(() => {
     return () => {
       const hasSegments = segmentsRef.current.length > 0;
       const isFinished = hasSegments && activeIndexRef.current >= segmentsRef.current.length - 1;
 
       if (isFinished) {
-        cancelIncompleteLessonReminder().catch(() => {});
+        cancelIncompleteLessonReminder().catch(() => { });
       } else if (hasPracticedRef.current && hasSegments) {
         scheduleIncompleteLessonReminder({
           youtubeId,
           title: detailData?.title,
           delayHours: 3,
           initialIndex: activeIndexRef.current,
-        }).catch(() => {});
+        }).catch(() => { });
       }
     };
   }, [youtubeId, detailData?.title]);
@@ -156,6 +166,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
     clearResult,
     replayRecording,
   } = usePronunciationCheck({
+    enabled: isFocused && !phonemeLesson,
     language: i18n.resolvedLanguage || i18n.language || "vi",
     userTier,
     userKey,
@@ -260,32 +271,45 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
         endMs: targetEndMs,
         seekMs,
       };
+      playingRef.current = false;
 
-      if (seek === "preroll" && playerRef.current) {
+      if (seek === "preroll" && playerReady && playerRef.current) {
         seekTimeRef.current = Date.now();
         playerRef.current.seekTo?.(seekSec, true);
       }
 
       if (play) {
         pauseLockRef.current = false;
-        playingRef.current = true;
         setPlaying(true);
-
-        // Fallback safety timeout: guarantees the video pauses even if WebView bridge stalls
-        const maxDurationMs = Math.max(1200, targetEndMs - seekMs + 600);
-        fallbackTimerRef.current = setTimeout(() => {
-          if (playingRef.current && playTargetRef.current?.index === index) {
-            stopPlayback(index);
-          }
-        }, maxDurationMs);
       } else {
         pauseLockRef.current = true;
         playingRef.current = false;
         setPlaying(false);
       }
     },
-    [clearResult, stopPlayback, youtubeId]
+    [clearResult, playerReady, youtubeId]
   );
+
+  const resetPlayer = useCallback(() => {
+    setPlayerReady(false);
+    setPlaying(false);
+    playingRef.current = false;
+    pauseLockRef.current = true;
+    if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current);
+  }, []);
+
+  useEffect(() => {
+    resetPlayer();
+  }, [resetPlayer, youtubeId]);
+
+  useEffect(() => {
+    if (isFocused && !phonemeLesson) return;
+    pauseLockRef.current = true;
+    pauseTimestampRef.current = Date.now();
+    playingRef.current = false;
+    setPlaying(false);
+    if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current);
+  }, [isFocused, phonemeLesson]);
 
   const hasInitializedRef = useRef(false);
 
@@ -296,9 +320,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
   useEffect(() => {
     if (!detailData) return;
     videoRef.current = detailData;
-    const segs = (detailData?.segments || []).sort(
-      (a: VideoSegment, b: VideoSegment) => a.start_ms - b.start_ms
-    );
+    const segs = segments;
     segmentsRef.current = segs;
     videoDurationRef.current = Number(detailData?.duration_ms || Infinity);
     if (detailData?.dialect) {
@@ -306,32 +328,15 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
     }
     if (segs.length > 0 && !hasInitializedRef.current) {
       hasInitializedRef.current = true;
-      let targetIndex = 0;
-      const paramIndex = route.params?.initialIndex;
-      if (typeof paramIndex === "number" && Number.isFinite(paramIndex) && paramIndex >= 0) {
-        targetIndex = paramIndex;
-      } else {
-        const stored = getItem(`${STORAGE_KEY_LAST_PRACTICED_PREFIX}${youtubeId}`);
-        const parsed = stored != null ? parseInt(stored, 10) : NaN;
-        if (Number.isFinite(parsed) && parsed >= 0) {
-          targetIndex = parsed;
-        } else if (
-          typeof detailData?.played_count === "number" &&
-          Number.isFinite(detailData.played_count) &&
-          detailData.played_count > 0 &&
-          detailData.played_count < segs.length
-        ) {
-          targetIndex = detailData.played_count;
-        }
-      }
-
-      const clampedIndex = Math.max(0, Math.min(segs.length - 1, targetIndex));
+      const clampedIndex = initialPlayback.index;
       activeIndexRef.current = clampedIndex;
       setActiveIndex(clampedIndex);
       hasPracticedRef.current = false;
-      armSentence(clampedIndex, { play: false, seek: "preroll" });
+      // The iframe receives this position on its first mount. Seeking an
+      // unstarted YouTube player here can start playback without a user tap.
+      armSentence(clampedIndex, { play: false });
     }
-  }, [detailData, armSentence, route.params?.initialIndex, youtubeId]);
+  }, [detailData, armSentence, initialPlayback.index, segments]);
 
   useEffect(() => {
     pollRef.current = setInterval(async () => {
@@ -350,6 +355,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
             setTimeout(() => reject(new Error("time query timeout")), 350)
           ),
         ]);
+        if (playTargetRef.current !== target || !playingRef.current) return;
         const ms = Number(sec) * 1000;
 
         // Skip stale pre-seek time if seek was backward
@@ -382,7 +388,6 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
     }
   }, [result, notifySegmentPlayed]);
 
-  const segments = video?.segments || [];
   const current = segments[activeIndex] || null;
   const {
     words: segmentWords,
@@ -418,22 +423,63 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
   const showDetails = detailsExpandedFor === currentResultKey;
 
   const handleRecordToggle = useCallback(async () => {
-    if (isRecording || isStarting) {
+    if (isStarting || checking) return;
+    if (isRecording) {
       await stopRecording({ check: true });
       return;
     }
     if (!current?.text) return;
+    pauseLockRef.current = true;
+    pauseTimestampRef.current = Date.now();
+    playingRef.current = false;
     setPlaying(false);
     hasPracticedRef.current = true;
-    await startRecording({ text: current.text, dialect: practiceDialect });
+    try {
+      await startRecording({ text: current.text, dialect: practiceDialect });
+    } catch {
+      // Handled internally in usePronunciationCheck
+    }
   }, [
     isRecording,
     isStarting,
+    checking,
     stopRecording,
     startRecording,
     current,
     practiceDialect,
   ]);
+
+  const phonemeLessonDialect = phonemeLesson?.dialect || practiceDialect;
+
+  const requestPhonemeSentenceWords = useCallback(
+    async (sentence: IPASentence) => {
+      try {
+        return await textPracticeApi.getIpaWords(
+          sentence.text,
+          phonemeLessonDialect
+        );
+      } catch {
+        return [];
+      }
+    },
+    [phonemeLessonDialect]
+  );
+
+  const requestPhonemeSampleAudio = useCallback(
+    async (sentence: IPASentence) => {
+      try {
+        if (!sentence?.text) return null;
+        return await textPracticeApi.generateAudio(
+          sentence.text,
+          phonemeLessonDialect,
+          false
+        );
+      } catch {
+        return null;
+      }
+    },
+    [phonemeLessonDialect]
+  );
 
   const progressPercent = Math.round(
     ((activeIndex + 1) / Math.max(1, segments.length)) * 100
@@ -559,20 +605,22 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                   shadowRadius: 10,
                 }}
               >
-                <YoutubePlayer
+                <VideoPlayerFrame
+                  key={youtubeId}
                   ref={playerRef}
-                  height={205}
                   videoId={youtubeId}
+                  thumbnail={video.thumbnail_url}
+                  startSeconds={initialPlayback.seconds}
                   play={playing}
+                  onPlay={() => { void armSentence(activeIndexRef.current, { play: true, seek: "preroll" }); }}
+                  onReset={resetPlayer}
                   onReady={() => {
                     setPlayerReady(true);
-                    const segs = segmentsRef.current;
-                    const currentIdx = activeIndexRef.current;
-                    if (currentIdx > 0 && segs[currentIdx] && playerRef.current) {
-                      const prevSeg = segs[currentIdx - 1] || null;
-                      const seekSec = segmentSeekSec(segs[currentIdx], prevSeg);
+                    const target = playTargetRef.current;
+                    // A tap while loading is queued, including sentence zero.
+                    if (!pauseLockRef.current && target && playerRef.current) {
                       seekTimeRef.current = Date.now();
-                      playerRef.current.seekTo?.(seekSec, true);
+                      playerRef.current.seekTo?.(target.seekMs / 1000, true);
                     }
                   }}
                   onChangeState={(state: string) => {
@@ -587,10 +635,22 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                       notifyViewStart();
                       playingRef.current = true;
                       setPlaying(true);
+                      const target = playTargetRef.current;
+                      if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current);
+                      if (target) {
+                        fallbackTimerRef.current = setTimeout(() => {
+                          if (playingRef.current && playTargetRef.current === target) stopPlayback(target.index);
+                        }, Math.max(1200, target.endMs - target.seekMs + 600));
+                      }
+                    } else if (state === "buffering") {
+                      // Network loading time is not sentence playback time.
+                      playingRef.current = false;
+                      if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current);
                     } else if (state === "paused" || state === "ended") {
+                      if (!playingRef.current && !pauseLockRef.current && state === "paused") return;
                       playingRef.current = false;
                       setPlaying(false);
-                      playTargetRef.current = null;
+                      if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current);
                     }
                   }}
                 />
@@ -622,11 +682,14 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                     {/* Toggle Vietnamese Translation */}
                     {current?.translation_vi ? (
                       <TouchableOpacity
+                        accessibilityRole="button"
+                        accessibilityLabel={t("videos.practice.toggleTranslation")}
+                        accessibilityState={{ selected: showTranslation }}
                         activeOpacity={0.7}
                         onPress={() => setShowTranslation((v) => !v)}
                         className={`flex-row items-center gap-1 px-2.5 py-1 rounded-full border ${showTranslation
-                            ? "bg-indigo-50 border-indigo-200"
-                            : "bg-slate-50 border-slate-200"
+                          ? "bg-indigo-50 border-indigo-200"
+                          : "bg-slate-50 border-slate-200"
                           }`}
                       >
                         {showTranslation ? (
@@ -645,11 +708,14 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
 
                     {/* Toggle Hide/Show Transcript */}
                     <TouchableOpacity
+                      accessibilityRole="button"
+                      accessibilityLabel={hideTranscript ? (t("videos.practice.showSubtitles") || "Hiện phụ đề") : "Ẩn phụ đề"}
+                      accessibilityState={{ selected: hideTranscript }}
                       activeOpacity={0.7}
                       onPress={() => setHideTranscript((v) => !v)}
                       className={`p-1.5 rounded-full border ${hideTranscript
-                          ? "bg-indigo-50 border-indigo-200"
-                          : "bg-slate-50 border-slate-200"
+                        ? "bg-indigo-50 border-indigo-200"
+                        : "bg-slate-50 border-slate-200"
                         }`}
                     >
                       <Film size={14} color={hideTranscript ? "#4f46e5" : "#64748b"} />
@@ -664,6 +730,8 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                       {t("videos.practice.listeningModeActive")}
                     </Text>
                     <TouchableOpacity
+                      accessibilityRole="button"
+                      accessibilityLabel={t("videos.practice.showSubtitles")}
                       activeOpacity={0.7}
                       onPress={() => setHideTranscript(false)}
                       className="px-3 py-1 bg-slate-100 rounded-full"
@@ -716,8 +784,8 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                     })
                   }
                   className={`flex-1 py-3 rounded-2xl items-center justify-center flex-row gap-1 ${activeIndex === 0
-                      ? "bg-slate-100 opacity-40"
-                      : "bg-white active:bg-slate-50"
+                    ? "bg-slate-100 opacity-40"
+                    : "bg-white active:bg-slate-50"
                     }`}
                   style={{
                     borderWidth: 1,
@@ -739,9 +807,9 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                   accessible={true}
                   accessibilityRole="button"
                   accessibilityLabel={t("videos.practice.replaySentence", "Phát lại câu")}
-                  accessibilityState={{ disabled: !playerReady || !current }}
+                  accessibilityState={{ disabled: !current, busy: !playerReady && playing }}
                   activeOpacity={0.85}
-                  disabled={!playerReady || !current}
+                  disabled={!current}
                   onPress={() =>
                     armSentence(activeIndex, {
                       play: true,
@@ -780,8 +848,8 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                     })
                   }
                   className={`flex-1 py-3 rounded-2xl items-center justify-center flex-row gap-1 ${activeIndex >= segments.length - 1
-                      ? "bg-slate-100 opacity-40"
-                      : "bg-white active:bg-slate-50"
+                    ? "bg-slate-100 opacity-40"
+                    : "bg-white active:bg-slate-50"
                     }`}
                   style={{
                     borderWidth: 1,
@@ -847,7 +915,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
       </ScrollView>
 
       {/* Modal luyện âm IPA riêng lẻ từ SoundAnalysis */}
-      <IPAChecking
+      {phonemeLesson ? <IPAChecking
         open={Boolean(phonemeLesson)}
         onClose={() => setPhonemeLesson(null)}
         sentences={phonemeLesson?.sentences || []}
@@ -858,7 +926,9 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
         userTier={userTier}
         userKey={userKey}
         usageStatus={usageStatus}
-      />
+        onRequestSampleAudio={requestPhonemeSampleAudio}
+        onRequestSentenceWords={requestPhonemeSentenceWords}
+      /> : null}
 
       <UpgradeProModal
         open={showUpgradeModal}

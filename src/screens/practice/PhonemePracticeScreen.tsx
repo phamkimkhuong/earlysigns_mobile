@@ -14,7 +14,7 @@ import { lessonApi, textPracticeApi } from "@/api";
 import { lessonKeys } from "@/hooks/queries/useLessonQueries";
 import { progressKeys } from "@/hooks/queries/useProgressQueries";
 import { useBillingUsageQuery } from "@/hooks/queries/useBillingQueries";
-import IPAChecking from "@/components/practice/IPAChecking";
+import IPAChecking, { type IPASentence } from "@/components/practice/IPAChecking";
 import PhonemeIntroGuide from "@/components/practice/PhonemeIntroGuide";
 import { PracticeScreenSkeleton } from "@/components/ui/Skeleton";
 import { getIpaSoundMeta } from "@/utils/ipaData";
@@ -142,8 +142,24 @@ export default function PhonemePracticeScreen({ navigation, route }: Props) {
   }, [cleanPhoneme, dialect, queryClient]);
 
   const requestSentenceWords = useCallback(
-    async (sentence: any) => {
-      return textPracticeApi.getIpaWords(sentence.text, dialect);
+    async (sentence: IPASentence) => {
+      try {
+        return await textPracticeApi.getIpaWords(sentence.text, dialect);
+      } catch {
+        return [];
+      }
+    },
+    [dialect]
+  );
+
+  const requestSampleAudio = useCallback(
+    async (sentence: IPASentence) => {
+      try {
+        if (!sentence?.text) return null;
+        return await textPracticeApi.generateAudio(sentence.text, dialect, false);
+      } catch {
+        return null;
+      }
     },
     [dialect]
   );
@@ -274,6 +290,8 @@ export default function PhonemePracticeScreen({ navigation, route }: Props) {
 
           <View className="flex-row items-center gap-3 mt-2">
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={t("common.back", "Quay lại")}
               activeOpacity={0.8}
               onPress={() => navigation.goBack()}
               className="py-3 px-5 rounded-2xl border border-slate-300 bg-white"
@@ -284,6 +302,8 @@ export default function PhonemePracticeScreen({ navigation, route }: Props) {
             </TouchableOpacity>
 
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={t("common.retry", "Thử lại")}
               activeOpacity={0.8}
               onPress={fetchLesson}
               className="py-3 px-6 rounded-2xl flex-row items-center gap-2"
@@ -322,6 +342,7 @@ export default function PhonemePracticeScreen({ navigation, route }: Props) {
         usageStatus={usageStatus}
         loadNextLesson={loadNextLesson}
         onLessonAllCompleted={handleLessonAllCompleted}
+        onRequestSampleAudio={requestSampleAudio}
         onRequestSentenceWords={requestSentenceWords}
         onPracticePhoneme={handlePracticeAnotherPhoneme}
         onShowGuide={hasGuide ? () => setShowGuideModal(true) : undefined}

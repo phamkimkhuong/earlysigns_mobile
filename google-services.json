@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "674439311811",
+    "project_id": "earlysigns-679f9",
+    "storage_bucket": "earlysigns-679f9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:674439311811:android:b64eda5e99ce0b9effcd76",
+        "android_client_info": {
+          "package_name": "net.earlysigns.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC4JMUV2NH_PT7OHBp5X8Em6wku9SRbmdM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:674439311811:android:a9b821c81c8953d8ffcd76",
+        "android_client_info": {
+          "package_name": "net.earlysigns.app.dev"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC4JMUV2NH_PT7OHBp5X8Em6wku9SRbmdM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -48,6 +48,9 @@ export interface YoutubePlayerWebProps {
   play?: boolean;
   onReady?: () => void;
   onChangeState?: (state: string) => void;
+  initialPlayerParams?: { start?: number };
+  onError?: () => void;
+  webViewProps?: unknown;
 }
 
 export interface YoutubePlayerWebRef {
@@ -57,7 +60,7 @@ export interface YoutubePlayerWebRef {
 
 const YoutubePlayer = forwardRef<YoutubePlayerWebRef, YoutubePlayerWebProps>(
   function YoutubePlayer(
-    { height = 220, videoId, play = false, onReady, onChangeState },
+    { height = 220, videoId, play = false, onReady, onChangeState, initialPlayerParams, onError },
     ref
   ) {
     const hostId = `yt${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
@@ -65,9 +68,12 @@ const YoutubePlayer = forwardRef<YoutubePlayerWebRef, YoutubePlayerWebProps>(
     const playRef = useRef(play);
     const onReadyRef = useRef(onReady);
     const onChangeStateRef = useRef(onChangeState);
+    const onErrorRef = useRef(onError);
+    const initialStartRef = useRef(initialPlayerParams?.start || 0);
     playRef.current = play;
     onReadyRef.current = onReady;
     onChangeStateRef.current = onChangeState;
+    onErrorRef.current = onError;
 
     useImperativeHandle(ref, () => ({
       seekTo(seconds: number, allowSeekAhead = true) {
@@ -97,7 +103,7 @@ const YoutubePlayer = forwardRef<YoutubePlayerWebRef, YoutubePlayerWebProps>(
             videoId,
             height: String(height),
             width: "100%",
-            playerVars: { playsinline: 1, rel: 0, modestbranding: 1 },
+            playerVars: { playsinline: 1, rel: 0, start: initialStartRef.current },
             events: {
               onReady: () => {
                 playerRef.current = player;
@@ -107,11 +113,13 @@ const YoutubePlayer = forwardRef<YoutubePlayerWebRef, YoutubePlayerWebProps>(
               onStateChange: (event: any) => {
                 onChangeStateRef.current?.(STATE_MAP[String(event.data)] || "unstarted");
               },
+              onError: () => onErrorRef.current?.(),
+              onAutoplayBlocked: () => onErrorRef.current?.(),
             },
           });
           playerRef.current = player;
         })
-        .catch(() => {});
+        .catch(() => { if (!cancelled) onErrorRef.current?.(); });
       return () => {
         cancelled = true;
         try {

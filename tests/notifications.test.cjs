@@ -85,7 +85,8 @@ function notificationHarness(options = {}) {
       setAudioModeAsync: async () => {},
     },
   };
-  for (const name of ["react-native-gesture-handler", "./global.css", "expo-status-bar", "react-native-safe-area-context", "@tanstack/react-query", "@/core/queryClient", "react-native-toast-message", "@/services/Auth", "@react-navigation/native", "@/navigation/RootNavigator", "@/components/ui/CustomAlertModal", "@/components/ui/CustomToast"]) mocks[name] = {};
+  for (const name of ["react-native-gesture-handler", "./global.css", "expo-status-bar", "react-native-safe-area-context", "@tanstack/react-query", "@/core/queryClient", "react-native-toast-message", "@/services/Auth", "@react-navigation/native", "@/navigation/RootNavigator", "@/components/ui/CustomAlertModal", "@/components/ui/CustomToast", "@/components/ui/AppUpdateModal"]) mocks[name] = {};
+  mocks["@/store/useAppUpdateStore"] = { useAppUpdateStore: { getState: () => ({ checkUpdate: async () => {} }) } };
   function load(file) {
     if (cache[file]) return cache[file];
     const filename = path.resolve(__dirname, "..", file), module = { exports: {} };

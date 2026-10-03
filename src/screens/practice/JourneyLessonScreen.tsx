@@ -116,6 +116,18 @@ export default function JourneyLessonScreen({ navigation, route }: Props) {
     [dialect]
   );
 
+  const requestSampleAudio = useCallback(
+    async (sentence: IPASentence) => {
+      try {
+        if (!sentence?.text) return null;
+        return await textPracticeApi.generateAudio(sentence.text, dialect, false);
+      } catch {
+        return null;
+      }
+    },
+    [dialect]
+  );
+
   const lessonTitle = route.params?.lessonTitle;
   const phonemes = lessonSession?.phonemes;
   const displayTitle = useMemo(() => {
@@ -257,6 +269,8 @@ export default function JourneyLessonScreen({ navigation, route }: Props) {
 
           <View className="flex-row items-center gap-3 mt-2">
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={t("common.back", "Quay lại")}
               activeOpacity={0.8}
               onPress={() => navigation.goBack()}
               className="py-3 px-5 rounded-2xl border border-slate-300 bg-white"
@@ -267,6 +281,8 @@ export default function JourneyLessonScreen({ navigation, route }: Props) {
             </TouchableOpacity>
 
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={t("common.retry", "Thử lại")}
               activeOpacity={0.8}
               onPress={fetchLesson}
               className="py-3 px-6 rounded-2xl flex-row items-center gap-2"
@@ -300,6 +316,7 @@ export default function JourneyLessonScreen({ navigation, route }: Props) {
       loadNextLesson={loadNextLesson}
       onLessonAllCompleted={handleLessonAllCompleted}
       journeyData={lessonTitle ? undefined : storeHomeSummary?.journey}
+      onRequestSampleAudio={requestSampleAudio}
       onRequestSentenceWords={requestSentenceWords}
       onPracticePhoneme={handlePracticePhoneme}
     />

@@ -345,8 +345,8 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
                     : phase === "recorded"
                     ? last
                       ? "#059669"
-                      : "#0a2644"
-                    : "#0a2644",
+                      : "#2383E2"
+                    : "#2383E2",
                 opacity: waiting ? 0.7 : 1,
               }}
               className="min-h-[54px] rounded-2xl px-5 py-3.5 flex-row items-center justify-center gap-2.5"

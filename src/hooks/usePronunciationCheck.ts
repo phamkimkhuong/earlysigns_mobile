@@ -1,16 +1,13 @@
+import { releaseAudioPlayer } from "@/utils/audioPlayer";
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  AudioQuality,
-  IOSOutputFormat,
-  createAudioPlayer,
-  getRecordingPermissionsAsync,
-  requestRecordingPermissionsAsync,
-  setAudioModeAsync,
-  useAudioRecorder,
-} from "expo-audio";
+import { createAudioPlayer, type AudioPlayer } from "expo-audio";
+import { Linking } from "react-native";
 import { useTranslation } from "react-i18next";
 import { API_ENDPOINTS } from "@/core/config";
 import { isPronunciationQuotaExhausted } from "@/services/usageLimits";
+import { RecordingSession, MicrophonePermissionError, prepareAudioPlayback, type RecordingPhase } from "@/services/recordingSession";
+import { customAlert } from "@/utils/customAlert";
+import { micErrorBodyKey } from "@/utils/micError";
 import { parseErrorDetail } from "@/utils/errors";
 import { appendLocalFile } from "@/utils/formDataFile";
 import { progressApi } from "@/api";
@@ -19,88 +16,25 @@ import { httpClient, AppHttpError } from "@/core/httpClient";
 import type { SentenceCheckResult, UserTier, MicError, Dialect } from "@/types/domain";
 
 const DEFAULT_MAX_RECORDING_MS = 25_000;
-const SHORT_SILENCE_MS = 700;
-const CHECK_RETRY_DELAY_MS = 400;
 const CHECK_TIMEOUT_MS = 90_000;
 const LOW_SCORE_THRESHOLD = 0.4;
 
-const RECORDING_OPTIONS: any = {
-  isMeteringEnabled: true,
-  extension: ".wav",
-  sampleRate: 16000,
-  numberOfChannels: 1,
-  bitRate: 128000,
-  android: {
-    extension: ".wav",
-    outputFormat: "mpeg4",
-    audioEncoder: "aac",
-    sampleRate: 16000,
-  },
-  ios: {
-    extension: ".wav",
-    outputFormat: IOSOutputFormat.LINEARPCM,
-    audioQuality: AudioQuality.HIGH,
-    sampleRate: 16000,
-    linearPCMBitDepth: 16,
-    linearPCMIsBigEndian: false,
-    linearPCMIsFloat: false,
-  },
-};
-
-function releasePlayer(player: any) {
-  if (!player) return;
-  try {
-    player.remove();
-  } catch {
-    /* ignore */
+function classifyMicError(error: unknown): MicError {
+  if (error instanceof MicrophonePermissionError) {
+    return { type: "denied", raw: error.message, canAskAgain: error.canAskAgain };
   }
-}
-
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function isRetryableCheckError(e: any): boolean {
-  if (!e) return false;
-  if (e.code === "DAILY_LIMIT_REACHED") return false;
-  const status = Number(e.status);
-  if (Number.isFinite(status)) {
-    if (status === 408 || status === 429 || status === 502 || status === 503 || status === 504) {
-      return true;
-    }
-    if (status >= 400 && status < 500) return false;
-  }
-  if (e.name === "TypeError" || e.name === "AbortError") return true;
-  const msg = String(e.message || e || "");
-  return /failed to fetch|networkerror|load failed|network request failed|timed out|aborted/i.test(msg);
-}
-
-function classifyMicError(e: any): MicError {
-  const name = e?.name || "";
-  const message = String(e?.message || e || "");
-  if (/not.?allowed|denied|permission/i.test(name + message)) {
-    return { type: "denied", raw: message };
-  }
-  if (/not.?found|unavailable/i.test(name + message)) {
-    return { type: "notFound", raw: message };
-  }
-  return { type: "generic", raw: message };
-}
-
-function normalizeAccuracy(value: unknown): number | null {
-  const n = Number(value);
-  return Number.isFinite(n) ? n : null;
-}
-
-function nativeAudioPart() {
-  return { name: "speech.wav", type: "audio/wav" };
+  const message = String((error as Error)?.message || error || "");
+  return { type: /permission|denied/i.test(message) ? "denied" : /not.?found|unavailable/i.test(message) ? "notFound" : "generic", raw: message };
 }
 
 async function appendAudio(form: FormData, uri: string) {
-  await appendLocalFile(form, "audio", uri, nativeAudioPart().name, nativeAudioPart().type);
+  const ext = uri.split("?")[0].split(".").pop()?.toLowerCase();
+  const [name, type] = ext === "m4a" ? ["speech.m4a", "audio/mp4"] : ext === "webm" ? ["speech.webm", "audio/webm"] : ["speech.wav", "audio/wav"];
+  await appendLocalFile(form, "audio", uri, name, type);
 }
 
 export interface UsePronunciationCheckOptions {
+  enabled?: boolean;
   authFetch?: (input: string, init?: any) => Promise<Response>;
   language?: string;
   onUsageUpdated?: (usage: any) => void;
@@ -135,107 +69,108 @@ export interface UsePronunciationCheckResult {
 }
 
 export function usePronunciationCheck({
-  authFetch,
-  language = "vi",
-  onUsageUpdated,
-  onDailyLimitReached,
-  userTier = "free",
-  userKey = "",
-  onProgressLogged,
-  isScreening = false,
-  maxRecordingMs = DEFAULT_MAX_RECORDING_MS,
-  autoStopOnSilence = false,
+  enabled = true, authFetch, language = "vi", onUsageUpdated, onDailyLimitReached,
+  userTier = "free", userKey = "", onProgressLogged, isScreening = false,
+  maxRecordingMs = DEFAULT_MAX_RECORDING_MS, autoStopOnSilence = false,
 }: UsePronunciationCheckOptions): UsePronunciationCheckResult {
   const { t } = useTranslation();
-  const [isRecording, setIsRecording] = useState(false);
-  const [isStarting, setIsStarting] = useState(false);
+  const [phase, setPhase] = useState<RecordingPhase>("idle");
   const [checking, setChecking] = useState(false);
   const [result, setResult] = useState<SentenceCheckResult | null>(null);
   const [audioUri, setAudioUri] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [micError, setMicError] = useState<MicError | null>(null);
+  const mounted = useRef(false);
+  const session = useRef<RecordingSession | null>(null);
+  const attempt = useRef(0);
+  const busy = useRef(false);
+  const target = useRef<{ text: string; dialect?: Dialect | string } | null>(null);
+  const request = useRef<AbortController | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const meter = useRef<ReturnType<typeof setInterval> | null>(null);
+  const sound = useRef<AudioPlayer | null>(null);
+  const soundListener = useRef<{ remove(): void } | null>(null);
+  const replayId = useRef(0);
+  const callbacks = useRef({ onUsageUpdated, onDailyLimitReached, onProgressLogged, t });
+  useEffect(() => { callbacks.current = { onUsageUpdated, onDailyLimitReached, onProgressLogged, t }; }, [onUsageUpdated, onDailyLimitReached, onProgressLogged, t]);
 
-  const maxRecordingMsRef = useRef(maxRecordingMs);
-  const autoStopOnSilenceRef = useRef(autoStopOnSilence);
-
-  useEffect(() => {
-    maxRecordingMsRef.current = maxRecordingMs;
-    autoStopOnSilenceRef.current = autoStopOnSilence;
-  }, [maxRecordingMs, autoStopOnSilence]);
-
-  const recorder = useAudioRecorder(RECORDING_OPTIONS);
-  const recordingRef = useRef(false);
-  const sessionRef = useRef(0);
-  const targetRef = useRef<{ text: string; dialect: string } | null>(null);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const meterTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const speechSeenRef = useRef(false);
-  const soundRef = useRef<any>(null);
-
-  const stopRecordingRef = useRef<((options?: { check?: boolean }) => Promise<SentenceCheckResult | null>) | null>(null);
-  const recordingStartTimeRef = useRef<number>(0);
+  const stopPlayback = useCallback(() => {
+    ++replayId.current;
+    soundListener.current?.remove();
+    soundListener.current = null;
+    releaseAudioPlayer(sound.current);
+    sound.current = null;
+  }, []);
 
   const clearTimers = useCallback(() => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-    if (silenceTimerRef.current) {
-      clearTimeout(silenceTimerRef.current);
-      silenceTimerRef.current = null;
-    }
+    if (timer.current) clearTimeout(timer.current);
+    if (meter.current) clearInterval(meter.current);
+    timer.current = null;
+    meter.current = null;
   }, []);
 
-  const clearMeterTimer = useCallback(() => {
-    if (meterTimerRef.current) {
-      clearInterval(meterTimerRef.current);
-      meterTimerRef.current = null;
-    }
-  }, []);
+  const invalidate = useCallback(() => {
+    ++attempt.current;
+    request.current?.abort();
+    request.current = null;
+    busy.current = false;
+    clearTimers();
+    stopPlayback();
+    if (mounted.current) setChecking(false);
+  }, [clearTimers, stopPlayback]);
 
-  const stopRecorder = useCallback(async (): Promise<string | null> => {
-    clearMeterTimer();
-    if (!recordingRef.current) return null;
-    recordingRef.current = false;
+  useEffect(() => {
+    mounted.current = true;
+    const recorder = new RecordingSession(
+      state => { if (mounted.current) setPhase(state); },
+      failure => {
+        if (!mounted.current) return;
+        const classified = classifyMicError(failure);
+        if (classified.type !== "denied") console.warn("[Recording] Native operation failed:", failure);
+        setMicError(classified);
+        const translate = callbacks.current.t;
+        const message = translate(
+          micErrorBodyKey(classified),
+          classified.type === "denied" ? "Ứng dụng cần quyền micro để ghi âm phát âm của bạn." : "Không thể ghi âm. Vui lòng thử lại.",
+        );
+        setError(classified.type === "denied" ? "" : message);
+        if (classified.type === "denied") {
+          customAlert.alert(
+            translate("sentence.micError.denied.title"),
+            message,
+            classified.canAskAgain === false ? [
+              { text: translate("common.cancel"), style: "cancel" },
+              { text: translate("sentence.micError.openSettings"), onPress: () => { void Linking.openSettings().catch(() => {}); } },
+            ] : [{ text: translate("common.ok") }],
+          );
+        }
+      },
+      invalidate,
+    );
+    session.current = recorder;
+    return () => {
+      mounted.current = false;
+      invalidate();
+      session.current = null;
+      recorder.dispose();
+    };
+  }, [invalidate]);
 
-    const uriBeforeStop = recorder.uri || recorder.getStatus?.()?.url || null;
-    try {
-      await recorder.stop();
-    } catch {
-      /* ignore */
-    }
-    try {
-      await setAudioModeAsync({
-        allowsRecording: false,
-        playsInSilentMode: true,
-        interruptionMode: "mixWithOthers",
-      });
-    } catch {
-      /* ignore */
-    }
-    return uriBeforeStop || recorder.uri || recorder.getStatus?.()?.url || null;
-  }, [clearMeterTimer, recorder]);
+  const cancelRecording = useCallback(async () => {
+    invalidate();
+    await session.current?.cancel();
+  }, [invalidate]);
 
-  const logSoundProgress = useCallback(
-    async (charAlignment: any) => {
-      if (!Array.isArray(charAlignment) || charAlignment.length === 0) return null;
-      try {
-        const payload = await progressApi.logSoundProgress(charAlignment);
-        if (payload) onProgressLogged?.(payload);
-        return payload;
-      } catch {
-        return null;
-      }
-    },
-    [onProgressLogged]
-  );
+  useEffect(() => { if (!enabled) void cancelRecording(); }, [enabled, cancelRecording]);
+
+  const current = useCallback((id: number) => mounted.current && id === attempt.current, []);
 
   const postCheck = useCallback(
     async (
       uri: string,
       { text, dialect }: { text: string; dialect?: Dialect | string },
-      shouldCountUsage: boolean
+      shouldCountUsage: boolean,
+      signal: AbortSignal
     ) => {
       const form = new FormData();
       form.append("sentence", text);
@@ -244,8 +179,11 @@ export function usePronunciationCheck({
       form.append("count_usage", !isScreening && shouldCountUsage ? "true" : "false");
       if (isScreening) form.append("is_screening", "true");
       await appendAudio(form, uri);
+      if (signal.aborted) throw new Error("Recording attempt cancelled");
       if (authFetch) {
         const controller = new AbortController();
+        const abort = () => controller.abort();
+        signal.addEventListener("abort", abort, { once: true });
         const timeoutId = setTimeout(() => controller.abort(), CHECK_TIMEOUT_MS);
         let res: Response;
         try {
@@ -256,6 +194,7 @@ export function usePronunciationCheck({
           });
         } finally {
           clearTimeout(timeoutId);
+          signal.removeEventListener("abort", abort);
         }
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
@@ -272,6 +211,7 @@ export function usePronunciationCheck({
       try {
         const data = await httpClient.upload<SentenceCheckResult>(API_ENDPOINTS.CHECK, form, {
           timeoutMs: CHECK_TIMEOUT_MS,
+          signal,
         });
         return data;
       } catch (err: any) {
@@ -289,267 +229,127 @@ export function usePronunciationCheck({
     [authFetch, language, isScreening]
   );
 
-  const checkPronunciation = useCallback(
-    async (
-      uri: string,
-      { text, dialect }: { text: string; dialect?: Dialect | string },
-      { updateUi = true, countUsage }: { updateUi?: boolean; countUsage?: boolean } = {}
-    ): Promise<SentenceCheckResult | null> => {
-      if (!uri || !text) return null;
-      const shouldCountUsage = countUsage !== undefined ? Boolean(countUsage) : updateUi;
+  const checkPronunciation = useCallback(async (
+    uri: string, checkTarget: { text: string; dialect?: Dialect | string },
+    { updateUi = true, countUsage = updateUi }: { updateUi?: boolean; countUsage?: boolean } = {},
+  ): Promise<SentenceCheckResult | null> => {
+    if (!uri || !checkTarget.text || request.current || !mounted.current) return null;
+    const id = attempt.current;
+    const controller = new AbortController();
+    request.current = controller;
+    if (updateUi) { setChecking(true); setError(""); }
+    try {
+      // A retry without a server idempotency key can count the same attempt twice.
+      const data = await postCheck(uri, checkTarget, countUsage, controller.signal);
+      if (!current(id)) return null;
+      if (data.usage && !isScreening) {
+        useBillingStore.getState().setUsage(data.usage);
+        callbacks.current.onUsageUpdated?.(data.usage);
+      }
       if (updateUi) {
-        setChecking(true);
-        setError("");
+        setResult(data);
+        setAudioUri(uri);
+        if (Number(data.accuracy) >= LOW_SCORE_THRESHOLD && Array.isArray(data.char_alignment) && data.char_alignment.length) {
+          void progressApi.logSoundProgress(data.char_alignment).then(payload => {
+            if (current(id) && payload) callbacks.current.onProgressLogged?.(payload);
+          }).catch(() => {});
+        }
       }
-      try {
-        let data: SentenceCheckResult;
-        try {
-          data = await postCheck(uri, { text, dialect }, shouldCountUsage);
-        } catch (firstErr: any) {
-          if (!isRetryableCheckError(firstErr)) throw firstErr;
-          await sleep(CHECK_RETRY_DELAY_MS);
-          data = await postCheck(uri, { text, dialect }, shouldCountUsage);
+      return data;
+    } catch (failure: any) {
+      if (!current(id) || controller.signal.aborted) return null;
+      if (failure?.code === "DAILY_LIMIT_REACHED" && !isScreening) {
+        if (failure.usage) {
+          useBillingStore.getState().setUsage(failure.usage);
+          callbacks.current.onUsageUpdated?.(failure.usage);
         }
-        if (data.usage && !isScreening) {
-          useBillingStore.getState().setUsage(data.usage);
-          onUsageUpdated?.(data.usage);
-        }
-        if (updateUi) {
-          setResult(data);
-          setAudioUri(uri);
-          const accuracy = normalizeAccuracy(data?.accuracy);
-          if (accuracy != null && accuracy >= LOW_SCORE_THRESHOLD) {
-            await logSoundProgress(data.char_alignment);
-          }
-        }
-        return data;
-      } catch (e: any) {
-        if (e?.code === "DAILY_LIMIT_REACHED") {
-          if (!isScreening) {
-            if (e?.usage) {
-              useBillingStore.getState().setUsage(e.usage);
-              onUsageUpdated?.(e.usage);
-            }
-            onDailyLimitReached?.(userTier === "anonymous" ? "anonymous" : "free");
-            if (updateUi) setError("");
-            return null;
-          }
-        }
-        if (!updateUi) return null;
-        setError(
-          isRetryableCheckError(e)
-            ? t("sentence.serverError.checkFailed")
-            : String(e?.message || e)
-        );
-        return null;
-      } finally {
-        if (updateUi) setChecking(false);
+        callbacks.current.onDailyLimitReached?.(userTier === "anonymous" ? "anonymous" : "free");
+      } else if (updateUi) {
+        setError(failure?.status === 0 || failure?.name === "TypeError" || failure?.name === "AbortError"
+          ? t("sentence.serverError.checkFailed") : String(failure?.message || failure));
       }
-    },
-    [
-      isScreening,
-      logSoundProgress,
-      onDailyLimitReached,
-      onUsageUpdated,
-      postCheck,
-      t,
-      userTier,
-    ]
-  );
+      return null;
+    } finally {
+      if (request.current === controller) request.current = null;
+      if (current(id) && updateUi) setChecking(false);
+    }
+  }, [current, isScreening, postCheck, t, userTier]);
 
-  const stopRecording = useCallback(
-    async ({ check = true }: { check?: boolean } = {}): Promise<SentenceCheckResult | null> => {
-      const sessionId = sessionRef.current;
-      const target = targetRef.current;
-      clearTimers();
-      setIsRecording(false);
-      setIsStarting(false);
-      const uri = await stopRecorder();
-      if (!check || !target || sessionId !== sessionRef.current) return null;
-      if (!uri) {
-        setError("No speech detected. Try again.");
-        return null;
-      }
-      return checkPronunciation(uri, target, { updateUi: true, countUsage: !isScreening });
-    },
-    [checkPronunciation, clearTimers, isScreening, stopRecorder]
-  );
-
-  useEffect(() => {
-    stopRecordingRef.current = stopRecording;
-  }, [stopRecording]);
-
-  const startRecording = useCallback(
-    async ({ text, dialect }: { text: string; dialect?: Dialect | string }) => {
-      if (!text) return;
-      const currentUsage = useBillingStore.getState().usage;
-      if (!isScreening && isPronunciationQuotaExhausted({ userTier, userKey, usageStatus: currentUsage })) {
-        onDailyLimitReached?.(userTier === "anonymous" ? "anonymous" : "free");
-        return;
-      }
-      const sessionId = sessionRef.current + 1;
-      sessionRef.current = sessionId;
-      clearTimers();
-      targetRef.current = { text, dialect: dialect || "uk" };
-      speechSeenRef.current = false;
-      setResult(null);
-      setAudioUri(null);
-      setError("");
-      setMicError(null);
-      setIsStarting(true);
-      setIsRecording(false);
-      await stopRecorder();
-
-      try {
-        let permission = await getRecordingPermissionsAsync();
-        if (!permission.granted) {
-          permission = await requestRecordingPermissionsAsync();
-        }
-        if (!permission.granted) {
-          throw Object.assign(new Error("Microphone permission denied"), {
-            name: "NotAllowedError",
-          });
-        }
-        await setAudioModeAsync({
-          allowsRecording: true,
-          playsInSilentMode: true,
-          shouldPlayInBackground: false,
-          interruptionMode: "duckOthers",
-          shouldRouteThroughEarpiece: false,
-        });
-        if (sessionRef.current !== sessionId) return;
-
-        recordingStartTimeRef.current = Date.now();
-        await recorder.prepareToRecordAsync();
-        recorder.record();
-
-        if (autoStopOnSilenceRef.current) {
-          meterTimerRef.current = setInterval(() => {
-            if (sessionRef.current !== sessionId) return;
-            const status = recorder.getStatus();
-            if (!status?.isRecording) return;
-            const metering = Number(status.metering);
-            const isSpeech = Number.isFinite(metering) && metering > -32;
-            if (isSpeech) {
-              speechSeenRef.current = true;
-              if (silenceTimerRef.current) {
-                clearTimeout(silenceTimerRef.current);
-                silenceTimerRef.current = null;
-              }
-              return;
-            }
-            if (speechSeenRef.current && !silenceTimerRef.current) {
-              silenceTimerRef.current = setTimeout(() => {
-                silenceTimerRef.current = null;
-                if (sessionRef.current === sessionId) {
-                  void stopRecordingRef.current?.({ check: true });
-                }
-              }, SHORT_SILENCE_MS);
-            }
-          }, 80);
-        }
-
-        if (sessionRef.current !== sessionId) {
-          try {
-            await recorder.stop();
-          } catch {
-            /* ignore */
-          }
-          return;
-        }
-
-        recordingRef.current = true;
-        setIsRecording(true);
-        setIsStarting(false);
-        timeoutRef.current = setTimeout(() => {
-          if (sessionRef.current === sessionId) {
-            void stopRecordingRef.current?.({ check: true });
-          }
-        }, maxRecordingMsRef.current);
-      } catch (e: any) {
-        if (sessionRef.current !== sessionId) return;
-        setIsRecording(false);
-        setIsStarting(false);
-        const classified = classifyMicError(e);
-        setMicError(classified);
-        const errorMsg =
-          classified.type === "denied"
-            ? t("sentence.micError.denied.body", "Ứng dụng cần quyền micro để ghi âm phát âm của bạn.")
-            : classified.type === "notFound"
-            ? t("sentence.micError.notFound.body", "Không tìm thấy thiết bị micro.")
-            : t("sentence.micError.generic.body", "Không thể bắt đầu ghi âm. Vui lòng thử lại.");
-        setError(errorMsg);
-        throw e;
-      }
-    },
-    [clearTimers, isScreening, onDailyLimitReached, recorder, stopRecorder, t, userKey, userTier]
-  );
-
-  const cancelRecording = useCallback(async () => {
-    sessionRef.current += 1;
+  const stopRecording = useCallback(async ({ check = true }: { check?: boolean } = {}): Promise<SentenceCheckResult | null> => {
+    const recorder = session.current;
+    if (recorder?.phase !== "recording") return null;
+    const id = attempt.current;
+    const checkTarget = target.current;
     clearTimers();
-    setIsStarting(false);
-    setIsRecording(false);
-    await stopRecorder();
-    releasePlayer(soundRef.current);
-    soundRef.current = null;
-  }, [clearTimers, stopRecorder]);
+    if (check) setChecking(true); // Includes native stop; never expose an idle tappable gap.
+    try {
+      const uri = await recorder.stop();
+      if (!current(id)) return null;
+      if (!uri) { setError("No speech detected. Try again."); return null; }
+      setAudioUri(uri);
+      if (!check || !checkTarget) return null;
+      return await checkPronunciation(uri, checkTarget, { countUsage: !isScreening });
+    } finally {
+      if (current(id)) { busy.current = false; setChecking(false); }
+    }
+  }, [checkPronunciation, clearTimers, current, isScreening]);
+
+  const startRecording = useCallback(async (checkTarget: { text: string; dialect?: Dialect | string }) => {
+    const recorder = session.current;
+    if (!enabled || !checkTarget.text || busy.current || request.current || !recorder || recorder.phase !== "idle") return;
+    if (!isScreening && isPronunciationQuotaExhausted({ userTier, userKey, usageStatus: useBillingStore.getState().usage })) {
+      callbacks.current.onDailyLimitReached?.(userTier === "anonymous" ? "anonymous" : "free");
+      return;
+    }
+    busy.current = true;
+    const id = ++attempt.current;
+    target.current = checkTarget;
+    stopPlayback();
+    setResult(null); setAudioUri(null); setError(""); setMicError(null);
+    const started = await recorder.start();
+    if (!current(id)) return;
+    if (!started) { busy.current = false; return; }
+    timer.current = setTimeout(() => { if (current(id)) void stopRecording(); }, maxRecordingMs);
+    if (autoStopOnSilence) {
+      let speechSeen = false;
+      let silentSince: number | null = null;
+      meter.current = setInterval(() => {
+        const level = recorder.metering();
+        if (!current(id) || level == null) return;
+        if (level > -32) { speechSeen = true; silentSince = null; }
+        else if (speechSeen) {
+          silentSince ??= Date.now();
+          if (Date.now() - silentSince >= 700) void stopRecording();
+        }
+      }, 80);
+    }
+  }, [autoStopOnSilence, current, enabled, isScreening, maxRecordingMs, stopPlayback, stopRecording, userKey, userTier]);
 
   const clearResult = useCallback(() => {
-    setResult(null);
-    setAudioUri(null);
-    setError("");
-    setMicError(null);
-  }, []);
+    void cancelRecording();
+    setResult(null); setAudioUri(null); setError(""); setMicError(null);
+  }, [cancelRecording]);
 
   const replayRecording = useCallback(async () => {
-    if (!audioUri) return;
+    if (!audioUri || busy.current || !enabled) return;
+    stopPlayback();
+    const id = replayId.current;
     try {
-      releasePlayer(soundRef.current);
-      soundRef.current = null;
-      await setAudioModeAsync({
-        allowsRecording: false,
-        playsInSilentMode: true,
-      });
+      if (!await prepareAudioPlayback()) return;
+      if (!mounted.current || id !== replayId.current || busy.current) return;
       const player = createAudioPlayer({ uri: audioUri });
-      soundRef.current = player;
-      player.addListener("playbackStatusUpdate", (status: any) => {
-        if (status?.didJustFinish) {
-          releasePlayer(player);
-          if (soundRef.current === player) soundRef.current = null;
-        }
+      sound.current = player;
+      soundListener.current = player.addListener("playbackStatusUpdate", status => {
+        if (status.didJustFinish && sound.current === player) stopPlayback();
       });
       player.play();
-    } catch {
-      /* ignore replay errors */
-    }
-  }, [audioUri]);
-
-  useEffect(() => {
-    return () => {
-      clearTimers();
-      sessionRef.current += 1;
-      void stopRecorder();
-      releasePlayer(soundRef.current);
-      soundRef.current = null;
-      setAudioModeAsync({ allowsRecording: false }).catch(() => {});
-    };
-  }, [clearTimers, stopRecorder]);
+    } catch { if (id === replayId.current) stopPlayback(); }
+  }, [audioUri, enabled, stopPlayback]);
 
   return {
-    isRecording,
-    isStarting,
-    checking,
-    result,
-    audioUri,
-    audioBlob: audioUri,
-    error,
-    micError,
-    startRecording,
-    stopRecording,
-    checkPronunciation,
-    clearResult,
-    replayRecording,
-    cancelRecording,
+    isRecording: phase === "recording",
+    isStarting: phase === "requesting" || phase === "preparing" || phase === "stopping",
+    checking, result, audioUri, audioBlob: audioUri, error, micError,
+    startRecording, stopRecording, checkPronunciation, clearResult, replayRecording, cancelRecording,
   };
 }

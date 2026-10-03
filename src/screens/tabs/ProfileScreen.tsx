@@ -17,6 +17,7 @@ import { LineChart } from "react-native-chart-kit";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import {
+  ArrowUpCircle,
   AudioLines,
   Award,
   Bell,
@@ -62,6 +63,8 @@ import { resolveUserTier } from "@/services/usageLimits";
 import { getItem } from "@/services/storage";
 import { setStoredLanguage } from "@/core/i18n";
 import { restoreStorePurchases, openManageSubscriptions } from "@/services/iap";
+import { useAppUpdateStore } from "@/store/useAppUpdateStore";
+import { getCurrentAppVersion } from "@/services/appUpdate";
 
 const TAB_PROGRESS = "progress";
 const TAB_ACCOUNT = "account";
@@ -186,6 +189,27 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
       setIsRestoring(false);
     }
   }, [authToken, queryClient, t]);
+
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
+  const handleCheckUpdate = useCallback(async () => {
+    setIsCheckingUpdate(true);
+    try {
+      const res = await useAppUpdateStore.getState().checkUpdate({ ignoreDismissed: true });
+      if (!res || !res.shouldUpdate) {
+        showToast.success(
+          t("appUpdate.latestTitle", "Ứng dụng đã là bản mới nhất"),
+          t("appUpdate.latestMessage", {
+            version: `v${getCurrentAppVersion()}`,
+            defaultValue: `Bạn đang sử dụng phiên bản v${getCurrentAppVersion()}`,
+          })
+        );
+      }
+    } catch {
+      // ignore
+    } finally {
+      setIsCheckingUpdate(false);
+    }
+  }, [t]);
 
   const displayEmail = useMemo(() => {
     return authEmail || t("profile.noEmailLinked") || "Chưa liên kết email";
@@ -1432,13 +1456,41 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                 accessibilityLabel={t("profile.privacyPolicy") || "Chính sách bảo mật"}
                 activeOpacity={0.75}
                 onPress={() => handleNavigate("Privacy")}
-                className="flex-row items-center justify-between px-4 py-3.5"
+                className="flex-row items-center justify-between px-4 py-3.5 border-b border-slate-100"
               >
                 <View className="flex-row items-center gap-2.5">
                   <ShieldCheck size={18} color="#10b981" />
                   <Text className="text-[15px] font-medium text-slate-700">{t("profile.privacyPolicy") || "Chính sách bảo mật"}</Text>
                 </View>
                 <ChevronRight size={14} color="#94a3b8" />
+              </TouchableOpacity>
+
+              {/* Check App Version / Update */}
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={t("profile.checkUpdate", "Kiểm tra cập nhật")}
+                activeOpacity={0.75}
+                onPress={handleCheckUpdate}
+                disabled={isCheckingUpdate}
+                className="flex-row items-center justify-between px-4 py-3.5"
+              >
+                <View className="flex-row items-center gap-2.5">
+                  <ArrowUpCircle size={18} color="#3b82f6" />
+                  <Text className="text-[15px] font-medium text-slate-700">
+                    {t("profile.checkUpdate", "Kiểm tra cập nhật")}
+                  </Text>
+                </View>
+                <View className="flex-row items-center gap-2">
+                  <View
+                    style={{ backgroundColor: "#f1f5f9" }}
+                    className="px-2.5 py-0.5 rounded-full"
+                  >
+                    <Text className="text-xs font-semibold text-slate-500">
+                      v{getCurrentAppVersion()}
+                    </Text>
+                  </View>
+                  <ChevronRight size={14} color="#94a3b8" />
+                </View>
               </TouchableOpacity>
             </View>
 

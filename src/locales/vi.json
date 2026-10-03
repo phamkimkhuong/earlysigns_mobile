@@ -222,6 +222,18 @@
     "missingConfig": "Thiếu cấu hình",
     "loginFailed": "Đăng nhập thất bại"
   },
+  "appUpdate": {
+    "forceTitle": "Yêu cầu cập nhật ứng dụng",
+    "softTitle": "Đã có bản cập nhật mới",
+    "forceMessage": "Phiên bản hiện tại của bạn không còn được hỗ trợ. Vui lòng cập nhật lên phiên bản mới nhất để tiếp tục sử dụng EarlySigns.",
+    "softMessage": "Đã có phiên bản mới với nhiều tính năng nâng cấp và cải tiến. Bạn có muốn cập nhật ngay không?",
+    "forceBadge": "Bắt buộc cập nhật",
+    "softBadge": "Bản nâng cấp đề xuất",
+    "updateNow": "Cập nhật ngay",
+    "later": "Để sau",
+    "latestTitle": "Ứng dụng đã là bản mới nhất",
+    "latestMessage": "Bạn đang sử dụng phiên bản {{version}}"
+  },
   "onboarding": {
     "brandName": "EarlySigns",
     "welcomeTitle": "Luyện phát âm chuẩn xác",

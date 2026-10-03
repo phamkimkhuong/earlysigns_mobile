@@ -397,7 +397,7 @@ export default function VideoRecordingHub({
               width: 98,
               height: 98,
               borderRadius: 49,
-              backgroundColor: "#0a2644",
+              backgroundColor: "#2383E2",
               transform: [{ scale: idleBreath }],
               opacity: idleOpacity,
             }}
@@ -410,11 +410,11 @@ export default function VideoRecordingHub({
           accessibilityRole="button"
           accessibilityLabel={
             isRecording
-              ? t("videos.practice.accessibilityStopRecording") || "Dừng thu âm và gửi AI chấm điểm"
+              ? t("videos.practice.accessibilityStopRecording") || "Dừng thu âm và gửi chấm điểm"
               : isStarting
               ? t("videos.practice.accessibilityStarting") || "Đang khởi động micro..."
               : checking
-              ? t("videos.practice.accessibilityAnalyzing") || "Hệ thống AI đang chấm điểm, vui lòng đợi..."
+              ? t("videos.practice.accessibilityAnalyzing") || "Hệ thống đang chấm điểm, vui lòng đợi..."
               : t("videos.practice.accessibilityStartRecording") || "Bắt đầu thu âm phát âm"
           }
           accessibilityHint={
@@ -436,15 +436,15 @@ export default function VideoRecordingHub({
             shadowOpacity: 0.35,
             shadowRadius: 10,
             borderWidth: 3,
-            borderColor: isRecording ? "#fecdd3" : "#1e3a5f",
+            borderColor: isRecording ? "#fecdd3" : isStarting ? "#fde68a" : checking ? "#93c5fd" : "#60a5fa",
             backgroundColor: isRecording
               ? "#f43f5e"
               : isStarting
               ? "#f59e0b"
               : checking
-              ? "#1e3a5f"
-              : "#0a2644",
-            shadowColor: isRecording ? "#f43f5e" : "#0a2644",
+              ? "#1d4ed8"
+              : "#2383E2",
+            shadowColor: isRecording ? "#f43f5e" : "#2383E2",
           }}
         >
           {isStarting ? (
