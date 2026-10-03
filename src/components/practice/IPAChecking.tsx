@@ -1,4 +1,6 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { releaseAudioPlayer } from "@/utils/audioPlayer";
+import { useIsFocused } from "@react-navigation/native";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Modal,
   Pressable,
@@ -12,7 +14,6 @@ import { useTranslation } from "react-i18next";
 import { BookOpen, ChevronLeft } from "lucide-react-native";
 import { usePronunciationCheck } from "@/hooks/usePronunciationCheck";
 import { buildSoundAnalysisRows } from "@/utils/pronunciationAnalysis";
-import { isQuotaExhausted } from "@/services/usageLimits";
 import { hapticFeedback } from "@/utils/haptics";
 import { setItem } from "@/services/storage";
 import { safeNavigate } from "@/navigation/nav";
@@ -109,6 +110,7 @@ export default function IPAChecking({
   onShowGuide,
   asModal = true,
 }: IPACheckingProps) {
+  const isFocused = useIsFocused();
   const isScreening = mode === "screening";
   const { t, i18n } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -126,6 +128,8 @@ export default function IPAChecking({
   const halfFiredRef = useRef(false);
   const allFiredRef = useRef(false);
   const sampleSoundRef = useRef<any>(null);
+  const sampleGeneration = useRef(0);
+  const sampleMounted = useRef(false);
   const replayTimeoutRef = useRef<any>(null);
 
   const {
@@ -140,6 +144,7 @@ export default function IPAChecking({
     replayRecording,
     clearResult,
   } = usePronunciationCheck({
+    enabled: open && isFocused,
     authFetch,
     language: i18n.resolvedLanguage || i18n.language || "vi",
     onUsageUpdated,
@@ -156,6 +161,7 @@ export default function IPAChecking({
 
   const handleReplayVoice = async () => {
     if (replayPlaying) return;
+    stopSample();
     try {
       setReplayPlaying(true);
       await replayRecording();
@@ -179,17 +185,24 @@ export default function IPAChecking({
     clearResult();
   }, [sessionKey, open, instructionsHtml, clearResult]);
 
-  useEffect(() => {
-    return () => {
-      if (sampleSoundRef.current) {
-        try { sampleSoundRef.current.remove(); } catch { /* ignore */ }
-        sampleSoundRef.current = null;
-      }
-      if (replayTimeoutRef.current) {
-        clearTimeout(replayTimeoutRef.current);
-      }
-    };
+  const stopSample = useCallback(() => {
+    ++sampleGeneration.current;
+    releaseAudioPlayer(sampleSoundRef.current);
+    sampleSoundRef.current = null;
+    if (sampleMounted.current) setSamplePlaying(false);
   }, []);
+  useEffect(() => {
+    sampleMounted.current = true;
+    return () => {
+      sampleMounted.current = false;
+      stopSample();
+      if (replayTimeoutRef.current) clearTimeout(replayTimeoutRef.current);
+    };
+  }, [stopSample]);
+  useEffect(() => {
+    stopSample();
+  }, [open, isFocused, currentIndex, isRecording, isStarting, checking, stopSample]);
+
 
   useEffect(() => {
     if (result) {
@@ -231,8 +244,6 @@ export default function IPAChecking({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, autoRecordKey, sessionKey]);
 
-  const isProOrTrial = userTier === "pro" || userTier === "trial";
-  const hasPreloadedAudio = Boolean(currentSentence?.audio_url);
   const storedResult: SentenceCheckResult | null = resultsByIndex[currentIndex] || result;
   const sentenceScore01 = useMemo(() => {
     const n = Number(storedResult?.accuracy);
@@ -283,24 +294,21 @@ export default function IPAChecking({
     showResultDetails;
 
   async function handleSample() {
-    if (!currentSentence) return;
-    if (!hasPreloadedAudio && !isProOrTrial) {
-      hapticFeedback.warning();
-      setUpgradeFeatureKey("sampleAudio");
-      setShowUpgradeModal(true);
-      return;
-    }
+    if (!currentSentence || isRecording || isStarting || checking) return;
+    stopSample();
+    const sampleId = sampleGeneration.current;
     try {
       setSamplePlaying(true);
       const sentenceKey = sentenceWordsKey(currentSentence);
       const cachedUrl = sampleAudioUrlsRef.current[sentenceKey];
       const url = currentSentence.audio_url || cachedUrl || (await onRequestSampleAudio?.(currentSentence));
+      if (sampleId !== sampleGeneration.current || !sampleMounted.current) return;
       if (!url) { setSamplePlaying(false); return; }
       if (!currentSentence.audio_url) {
         sampleAudioUrlsRef.current[sentenceKey] = url;
       }
       if (sampleSoundRef.current) {
-        try { sampleSoundRef.current.remove(); } catch { /* ignore */ }
+        try { releaseAudioPlayer(sampleSoundRef.current); } catch { /* ignore */ }
         sampleSoundRef.current = null;
       }
       const player = createAudioPlayer({ uri: url });
@@ -308,32 +316,25 @@ export default function IPAChecking({
       player.addListener("playbackStatusUpdate", (status: any) => {
         if (status?.didJustFinish) {
           setSamplePlaying(false);
-          try { player.remove(); } catch { /* ignore */ }
+          try { releaseAudioPlayer(player); } catch { /* ignore */ }
           if (sampleSoundRef.current === player) sampleSoundRef.current = null;
         }
       });
       player.play();
     } catch {
-      setSamplePlaying(false);
+      if (sampleId === sampleGeneration.current && sampleMounted.current) setSamplePlaying(false);
     }
   }
 
   async function handleRecordToggle() {
     hapticFeedback.light();
-    if (!isScreening && isQuotaExhausted({ userTier, userKey, usageStatus })) {
-      hapticFeedback.warning();
-      if (onDailyLimitReached) onDailyLimitReached(userTier);
-      else {
-        setUpgradeFeatureKey("dailyLimit");
-        setShowUpgradeModal(true);
-      }
-      return;
-    }
-    if (isRecording || isStarting) {
+    if (isStarting || checking) return;
+    if (isRecording) {
       await stopRecording({ check: true });
       return;
     }
     if (!currentSentenceText) return;
+    stopSample();
     await startRecording({ text: currentSentenceText, dialect });
   }
 

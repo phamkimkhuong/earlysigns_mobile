@@ -263,7 +263,7 @@ export default function SpeechRecordingDock({
   }, [isRecording, bar1, bar2, bar3, bar4, bar5]);
 
   const handlePress = () => {
-    if (disabled || checking) return;
+    if (disabled || isStarting || checking) return;
     hapticFeedback.medium();
     onRecordToggle();
   };
@@ -327,7 +327,7 @@ export default function SpeechRecordingDock({
         <View className="flex-row items-center gap-1.5 px-3.5 py-1 rounded-full bg-indigo-50 border border-indigo-200">
           <ActivityIndicator size={11} color="#4f46e5" />
           <Text className="text-xs font-bold text-indigo-700">
-            {t("sentence.checking", "Đang chấm điểm phát âm...")}
+            {t("sentence.checking", "Đang phân tích...")}
           </Text>
         </View>
       ) : null}
@@ -345,7 +345,7 @@ export default function SpeechRecordingDock({
         {onPrev ? (
           <Pressable
             onPress={onPrev}
-            disabled={!hasPrev || isRecording || checking}
+            disabled={!hasPrev || isRecording || isStarting || checking}
             accessible
             accessibilityRole="button"
             accessibilityLabel={t("sentence.previous", "Câu trước")}
@@ -358,7 +358,7 @@ export default function SpeechRecordingDock({
               borderColor: "rgba(15,23,42,0.1)",
               alignItems: "center",
               justifyContent: "center",
-              opacity: !hasPrev || isRecording || checking ? 0.35 : 1,
+              opacity: !hasPrev || isRecording || isStarting || checking ? 0.35 : 1,
             })}
           >
             <ChevronLeft size={22} color="#475569" />
@@ -438,7 +438,7 @@ export default function SpeechRecordingDock({
           <TouchableOpacity
             onPress={handlePress}
             activeOpacity={0.85}
-            disabled={disabled || checking}
+            disabled={disabled || isStarting || checking}
             accessible
             accessibilityRole="button"
             accessibilityLabel={
@@ -477,7 +477,7 @@ export default function SpeechRecordingDock({
         {onNext ? (
           <Pressable
             onPress={onNext}
-            disabled={!hasNext && !hasScore}
+            disabled={(!hasNext && !hasScore) || isRecording || isStarting || checking}
             accessible
             accessibilityRole="button"
             accessibilityLabel={t("sentence.nextSentence", "Câu tiếp theo")}
@@ -490,7 +490,7 @@ export default function SpeechRecordingDock({
               borderColor: isLast && hasScore ? "#a7f3d0" : "rgba(15,23,42,0.1)",
               alignItems: "center",
               justifyContent: "center",
-              opacity: !hasNext && !hasScore ? 0.35 : 1,
+              opacity: (!hasNext && !hasScore) || isRecording || isStarting || checking ? 0.35 : 1,
             })}
           >
             {isLast && hasScore ? (

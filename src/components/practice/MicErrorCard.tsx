@@ -1,5 +1,5 @@
 import React from "react";
-import { Linking, Text, TouchableOpacity, View } from "react-native";
+import { Text, View } from "react-native";
 import { AlertCircle } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import type { MicError } from "@/types/domain";
@@ -13,6 +13,9 @@ export interface MicErrorCardProps {
 export default function MicErrorCard({ micError, error, testID }: MicErrorCardProps) {
   const { t } = useTranslation();
 
+  // Permission denial is shown once by the shared hook's customAlert.
+  if (micError?.type === "denied") return null;
+
   if (micError) {
     const title =
       t(`sentence.micError.${micError.type}.title`) ||
@@ -20,31 +23,14 @@ export default function MicErrorCard({ micError, error, testID }: MicErrorCardPr
     const body =
       t(`sentence.micError.${micError.type}.body`) ||
       t("sentence.micError.generic.body", "Không thể bắt đầu ghi âm. Vui lòng thử lại.");
-    const isDenied = micError.type === "denied";
 
     return (
       <View testID={testID} className="bg-rose-50 border border-rose-200 rounded-2xl p-3.5 w-full gap-2 my-1">
         <View className="flex-row items-center gap-2">
           <AlertCircle size={18} color="#e11d48" />
-          <Text className="flex-1 text-xs font-bold text-rose-900">{title}</Text>
+          <Text className="flex-1 text-[15px] font-bold text-rose-900">{title}</Text>
         </View>
-        <Text className="text-xs text-rose-800 leading-relaxed pl-6">{body}</Text>
-        {isDenied ? (
-          <View className="flex-row justify-end pt-1">
-            <TouchableOpacity
-              accessible={true}
-              accessibilityRole="button"
-              accessibilityLabel={t("sentence.micError.openSettings", "Mở Cài đặt")}
-              activeOpacity={0.8}
-              onPress={() => Linking.openSettings()}
-              className="px-4 py-2 rounded-xl bg-rose-600 active:bg-rose-700"
-            >
-              <Text className="text-xs font-bold text-white">
-                {t("sentence.micError.openSettings", "Mở Cài đặt")}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        ) : null}
+        <Text className="text-[13px] text-rose-800 leading-relaxed pl-6">{body}</Text>
       </View>
     );
   }

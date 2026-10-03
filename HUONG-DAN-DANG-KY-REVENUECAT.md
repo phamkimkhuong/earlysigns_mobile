@@ -80,13 +80,13 @@ Sau khi tạo, bạn cần lấy đủ 4 thông tin:
    > **Apple chỉ cho phép tải tệp `.p8` này DUY NHẤT 1 LẦN**. Hãy cất giữ cẩn thận trong thư mục an toàn của công ty. Nếu làm mất, bạn sẽ phải thu hồi và tạo khóa mới.
 2. **Key ID:** `3GVVJ77PH8` (Dãy 10 ký tự của khóa In-App Purchase đã tạo).
 3. **Issuer ID:** `30415671-8a58-418c-8dc9-5b79c34796dc` (Mã UUID của tổ chức trên App Store Connect).
-4. **App Bundle ID:** `net.earlysigns.android`
+4. **App Bundle ID:** `net.earlysigns.app`
 
 ### 4.3. Kết nối vào RevenueCat
 1. Mở RevenueCat Dashboard → Chọn Project `EarlySigns` → Menu trái: **Project Settings** → **Apps** → Bấm **+ New App** → Chọn **App Store**.
 2. Điền các trường:
    - **App name:** `EarlySigns iOS`
-   - **Bundle ID:** `net.earlysigns.android`
+   - **Bundle ID:** `net.earlysigns.app`
    - **In-app purchase key (.p8 file):** Bấm tải lên tệp `.p8` vừa tải ở trên.
    - **Key ID:** `3GVVJ77PH8`
    - **Issuer ID:** `30415671-8a58-418c-8dc9-5b79c34796dc`
@@ -129,7 +129,7 @@ Google Play Console xác thực quyền kiểm tra hóa đơn thông qua **Googl
 1. Quay trở lại tab trình duyệt **Google Play Console** (trang API Access).
 2. Bấm nút **Refresh service accounts (Làm mới)**. Tài khoản vừa tạo ở bước 5.3 sẽ hiển thị.
 3. Bấm **Manage permissions (hoặc Grant access)** bên cạnh tài khoản đó:
-   - Tab **App permissions:** Chọn ứng dụng EarlySigns với Package Name **`net.earlysigns.android`**.
+   - Tab **App permissions:** Chọn ứng dụng EarlySigns với Package Name **`net.earlysigns.app`**.
    - Tab **Account permissions (Quyền tài khoản):** Tích chọn 3 quyền cốt lõi:
      - ✅ **View app information and download bulk reports (read-only)**
      - ✅ **View financial data, orders, and cancellation survey responses**
@@ -140,7 +140,7 @@ Google Play Console xác thực quyền kiểm tra hóa đơn thông qua **Googl
 1. Mở RevenueCat Dashboard → Project `EarlySigns` → **Project Settings** → **Apps** → Bấm **+ New App** → Chọn **Play Store**.
 2. Điền các trường:
    - **App name:** `EarlySigns Android`
-   - **Google Play Package Name:** **`net.earlysigns.android`**
+   - **Google Play Package Name:** **`net.earlysigns.app`**
    - **Service Account credentials JSON:** Bấm **Choose file** và tải tệp `.json` vừa tải ở bước 5.3 lên.
 3. Bấm **Save Changes**.
 

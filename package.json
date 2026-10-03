@@ -59,7 +59,7 @@
     "ios": "expo run:ios",
     "typecheck": "tsc --noEmit",
     "lint": "expo lint --max-warnings 0",
-    "test": "node --test tests/customAlert.test.cjs tests/errorManager.test.cjs tests/home.test.cjs tests/iap.test.cjs tests/notifications.test.cjs tests/pronunciationAnalysis.test.cjs tests/screening.test.cjs tests/textScaling.test.cjs tests/recording.test.cjs tests/videoPlayback.test.cjs",
+    "test": "node --test tests/customAlert.test.cjs tests/errorManager.test.cjs tests/home.test.cjs tests/iap.test.cjs tests/notifications.test.cjs tests/pronunciationAnalysis.test.cjs tests/screening.test.cjs tests/textScaling.test.cjs tests/recording.test.cjs tests/videoPlayback.test.cjs tests/appUpdate.test.cjs",
     "build:dev:android": "eas build --profile development --platform android",
     "build:dev:ios": "eas build --profile development --platform ios",
     "build:dev:sim": "eas build --profile development-simulator --platform ios",
