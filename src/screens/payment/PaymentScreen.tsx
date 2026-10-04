@@ -302,10 +302,10 @@ export default function PaymentScreen({ navigation, route }: Props) {
           }}
           className="w-10 h-10 rounded-full bg-white border border-slate-200 items-center justify-center active:opacity-70"
         >
-          <ChevronLeft size={22} color="#0c2340" strokeWidth={2.5} />
+          <ChevronLeft size={22} color="#37352f" strokeWidth={2.5} />
         </TouchableOpacity>
 
-        <AppText className="text-base font-extrabold text-[#0c2340]">
+        <AppText className="text-base font-extrabold text-[#37352f]">
           {t("payment.screenTitle") || "Gói dịch vụ & Hạn mức"}
         </AppText>
 
@@ -330,14 +330,14 @@ export default function PaymentScreen({ navigation, route }: Props) {
           className="rounded-3xl p-5 border shadow-xs items-center gap-3.5"
         >
           <View
-            style={{ backgroundColor: isPro ? "#fef3c7" : "#e0f2fe" }}
+            style={{ backgroundColor: isPro ? "#fef3c7" : "rgba(35, 131, 226, 0.12)" }}
             className="w-14 h-14 rounded-2xl items-center justify-center"
           >
-            <Crown size={28} color={isPro ? "#d97706" : "#0284c7"} strokeWidth={2.4} />
+            <Crown size={28} color={isPro ? "#d97706" : "#2383e2"} strokeWidth={2.4} />
           </View>
 
           <View className="items-center gap-1">
-            <AppText className="text-xl font-black text-[#0c2340] text-center">
+            <AppText className="text-xl font-black text-[#37352f] text-center">
               {isPro
                 ? (t("payment.heroTitlePro") || "EarlySigns Pro")
                 : (t("payment.heroTitleUpgrade") || "Nâng cấp EarlySigns Pro")}
@@ -398,7 +398,7 @@ export default function PaymentScreen({ navigation, route }: Props) {
               <View className="flex-row items-center justify-between">
                 <View className="flex-row items-center gap-2">
                   <Crown size={18} color="#d97706" />
-                  <AppText className="text-[15px] font-bold text-slate-900">
+                  <AppText className="text-[15px] font-bold text-[#37352f]">
                     {t("payment.accountStatusTitle") || "Trạng thái gói cước"}
                   </AppText>
                 </View>
@@ -414,12 +414,12 @@ export default function PaymentScreen({ navigation, route }: Props) {
 
               <View className="flex-row items-center justify-between p-3 bg-slate-50 rounded-xl">
                 <View className="flex-row items-center gap-2">
-                  <Clock size={15} color="#0284c7" />
+                  <Clock size={15} color="#2383e2" />
                   <AppText className="text-[13.5px] font-medium text-slate-600">
                     {t("payment.expiryDateLabel") || "Hạn dùng / Gia hạn:"}
                   </AppText>
                 </View>
-                <AppText className="text-[13.5px] font-bold text-[#0f172a]">
+                <AppText className="text-[13.5px] font-bold text-[#37352f]">
                   {formatExpiryDate(usage?.subscription_expires_at, i18n.language) || (t("payment.autoRenew") || "Tự động gia hạn")}
                 </AppText>
               </View>
@@ -428,7 +428,7 @@ export default function PaymentScreen({ navigation, route }: Props) {
                 accessibilityRole="button"
                 accessibilityLabel={t("payment.manageSubscriptions") || "Quản lý gói cước trên Cửa hàng ứng dụng"}
                 onPress={openManageSubscriptions}
-                style={{ backgroundColor: "#0f172a" }}
+                style={{ backgroundColor: "#37352f" }}
                 className="flex-row items-center justify-center gap-2 py-3 rounded-xl active:opacity-85 shadow-xs"
               >
                 <ExternalLink size={14} color="#ffffff" />
@@ -442,12 +442,12 @@ export default function PaymentScreen({ navigation, route }: Props) {
           {/* C. SUBSCRIPTION PACKAGES SELECTOR */}
           <View className="gap-3">
             <View className="flex-row items-center justify-between px-1">
-              <AppText className="text-[15px] font-extrabold text-slate-900">
+              <AppText className="text-[15px] font-extrabold text-[#37352f]">
                 {t("payment.selectPackageTitle") || "Chọn gói đăng ký phù hợp"}
               </AppText>
               {isLoadingStore && products.length > 0 ? (
                 <View className="flex-row items-center gap-1.5">
-                  <ActivityIndicator size="small" color="#0284c7" />
+                  <ActivityIndicator size="small" color="#2383e2" />
                   <AppText className="text-[13px] text-slate-400">
                     {t("payment.updatingPrices") || "Đang cập nhật..."}
                   </AppText>
@@ -460,7 +460,7 @@ export default function PaymentScreen({ navigation, route }: Props) {
                 style={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0" }}
                 className="py-8 items-center justify-center rounded-2xl border shadow-xs"
               >
-                <ActivityIndicator size="small" color="#0284c7" />
+                <ActivityIndicator size="small" color="#2383e2" />
                 <AppText className="text-[14px] font-medium text-slate-500 mt-2">
                   {t("payment.loadingPackages") || "Đang tải danh sách gói từ Cửa hàng..."}
                 </AppText>
@@ -497,8 +497,8 @@ export default function PaymentScreen({ navigation, route }: Props) {
                     activeOpacity={0.85}
                     onPress={() => setSelectedProductId(prod.id)}
                     style={{
-                      backgroundColor: isSelected ? "#eff6ff" : "#ffffff",
-                      borderColor: isSelected ? "#0284c7" : "#e2e8f0",
+                      backgroundColor: isSelected ? "rgba(35, 131, 226, 0.08)" : "#ffffff",
+                      borderColor: isSelected ? "#2383e2" : "#e2e8f0",
                       borderWidth: isSelected ? 2 : 1,
                     }}
                     className="relative p-4 rounded-2xl shadow-xs"
@@ -506,7 +506,7 @@ export default function PaymentScreen({ navigation, route }: Props) {
                     {/* Savings / Best Value Badge (Only for 12-month / most popular package) */}
                     {prod.months === 12 || prod.popular ? (
                       <View
-                        style={{ backgroundColor: "#f59e0b" }}
+                        style={{ backgroundColor: "#cb912f" }}
                         className="absolute -top-3 right-4 px-2.5 py-0.5 rounded-full z-10 flex-row items-center gap-1 shadow-xs shrink-0"
                       >
                         <Crown size={11} color="#ffffff" strokeWidth={2.5} />
@@ -524,13 +524,13 @@ export default function PaymentScreen({ navigation, route }: Props) {
                       <View className="flex-row items-center flex-1 pr-2">
                         <View
                           style={{
-                            borderColor: isSelected ? "#0284c7" : "#cbd5e1",
+                            borderColor: isSelected ? "#2383e2" : "#cbd5e1",
                           }}
                           className="w-5 h-5 rounded-full border-2 items-center justify-center mr-3 bg-white"
                         >
                           {isSelected ? (
                             <View
-                              style={{ backgroundColor: "#0284c7" }}
+                              style={{ backgroundColor: "#2383e2" }}
                               className="w-2.5 h-2.5 rounded-full"
                             />
                           ) : null}
@@ -538,7 +538,7 @@ export default function PaymentScreen({ navigation, route }: Props) {
 
                         <View className="flex-1">
                           <AppText
-                            style={{ color: isSelected ? "#0c2340" : "#1e293b" }}
+                            style={{ color: isSelected ? "#2383e2" : "#37352f" }}
                             className="text-[15px] font-extrabold"
                           >
                             {prod.months === 12
@@ -550,7 +550,7 @@ export default function PaymentScreen({ navigation, route }: Props) {
                                   : prod.name}
                           </AppText>
                           {prod.months > 1 ? (
-                            <AppText style={{ color: "#0284c7" }} className="text-[13px] font-bold mt-0.5">
+                            <AppText style={{ color: "#2383e2" }} className="text-[13px] font-bold mt-0.5">
                               {prod.monthlyEquivalent.split("/")[0]?.trim()} {t("payment.perMonth") || "/tháng"}
                             </AppText>
                           ) : (
@@ -564,7 +564,7 @@ export default function PaymentScreen({ navigation, route }: Props) {
                       {/* Right: Total Price */}
                       <View className="items-end pl-2">
                         <AppText
-                          style={{ color: isSelected ? "#0284c7" : "#0f172a" }}
+                          style={{ color: isSelected ? "#2383e2" : "#37352f" }}
                           className="text-base font-black"
                         >
                           {prod.priceDisplay}
@@ -625,11 +625,11 @@ export default function PaymentScreen({ navigation, route }: Props) {
                 activeOpacity={0.7}
               >
                 {restoring ? (
-                  <ActivityIndicator size="small" color="#0284c7" />
+                  <ActivityIndicator size="small" color="#2383e2" />
                 ) : (
-                  <RefreshCw size={14} color="#0284c7" />
+                  <RefreshCw size={14} color="#2383e2" />
                 )}
-                <AppText style={{ color: "#0284c7" }} className="text-[13.5px] font-bold">
+                <AppText style={{ color: "#2383e2" }} className="text-[13.5px] font-bold">
                   {restoring
                     ? (t("payment.restoring") || "Đang khôi phục...")
                     : (t("payment.restorePurchases") || "Khôi phục giao dịch")}
@@ -701,8 +701,8 @@ export default function PaymentScreen({ navigation, route }: Props) {
                   <View className="flex-row items-center gap-2">
                     <TextInput
                       accessibilityLabel={t("payment.giftCodePlaceholder") || "Nhập mã kích hoạt"}
-                      style={{ backgroundColor: "#F7F6F2", borderColor: "#cbd5e1" }}
-                      className="flex-1 h-11 px-3.5 border rounded-xl text-slate-900 text-[14px] uppercase font-bold"
+                      style={{ backgroundColor: "#f7f6f3", borderColor: "#cbd5e1" }}
+                      className="flex-1 h-11 px-3.5 border rounded-xl text-[#37352f] text-[14px] uppercase font-bold"
                       value={activationCode}
                       onFocus={handleInputFocus}
                       onChangeText={(val) => {
@@ -720,7 +720,7 @@ export default function PaymentScreen({ navigation, route }: Props) {
                       disabled={activating || !activationCode.trim()}
                       onPress={handleActivateCode}
                       style={{
-                        backgroundColor: !activationCode.trim() ? "#e2e8f0" : "#0284c7",
+                        backgroundColor: !activationCode.trim() ? "#e2e8f0" : "#2383e2",
                       }}
                       className="h-11 px-4 rounded-xl items-center justify-center flex-row gap-1"
                     >
@@ -780,7 +780,7 @@ export default function PaymentScreen({ navigation, route }: Props) {
                 accessibilityLabel={t("payment.eula") || "Điều khoản sử dụng"}
                 onPress={() => navigation.navigate("Terms")}
               >
-                <AppText style={{ color: "#0284c7" }} className="text-[13.5px] underline font-semibold">
+                <AppText style={{ color: "#2383e2" }} className="text-[13.5px] underline font-semibold">
                   {t("payment.eula") || "Điều khoản sử dụng"}
                 </AppText>
               </TouchableOpacity>
@@ -790,7 +790,7 @@ export default function PaymentScreen({ navigation, route }: Props) {
                 accessibilityLabel={t("payment.privacyPolicy") || "Chính sách bảo mật"}
                 onPress={() => navigation.navigate("Privacy")}
               >
-                <AppText style={{ color: "#0284c7" }} className="text-[13.5px] underline font-semibold">
+                <AppText style={{ color: "#2383e2" }} className="text-[13.5px] underline font-semibold">
                   {t("payment.privacyPolicy") || "Chính sách bảo mật"}
                 </AppText>
               </TouchableOpacity>

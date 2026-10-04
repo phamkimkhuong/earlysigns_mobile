@@ -10,7 +10,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import {
   AlertCircle,
   ChevronLeft,
-  Compass,
   Flame,
   TrendingUp,
   Trophy,
@@ -79,7 +78,7 @@ export default function JourneyScreen({ navigation }: { navigation?: any }) {
             left: 0,
             right: 0,
             height: 1000,
-            backgroundColor: "#F7F6F2",
+            backgroundColor: "#f7f6f3",
           }}
         />
 
@@ -100,10 +99,10 @@ export default function JourneyScreen({ navigation }: { navigation?: any }) {
               }}
               className="w-10 h-10 rounded-full bg-white border border-slate-200 items-center justify-center active:opacity-70"
             >
-              <ChevronLeft size={22} color="#0c2340" strokeWidth={2.5} />
+              <ChevronLeft size={22} color="#37352f" strokeWidth={2.5} />
             </TouchableOpacity>
 
-            <AppText className="text-base font-bold text-[#0c2340]">
+            <AppText className="text-base font-bold text-[#37352f]">
               {t("journeyPage.title", "Lộ trình học tập")}
             </AppText>
 
@@ -119,7 +118,7 @@ export default function JourneyScreen({ navigation }: { navigation?: any }) {
               <View className="flex-row items-center justify-between">
                 <View className="flex-row items-center gap-2 flex-1 mr-2">
                   <Trophy size={18} color="#d97706" />
-                  <AppText numberOfLines={1} className="text-[15px] font-extrabold text-slate-900">
+                  <AppText numberOfLines={1} className="text-[15px] font-extrabold text-[#37352f]">
                     {t("journeyPage.progressTitle", "Tiến độ lộ trình")}
                   </AppText>
                 </View>
@@ -153,7 +152,7 @@ export default function JourneyScreen({ navigation }: { navigation?: any }) {
                       total: totalModules || currentModule,
                     })}
                   </AppText>
-                  <AppText className="text-sm font-bold text-[#0284c7]">
+                  <AppText className="text-sm font-bold text-[#2383e2]">
                     {t("journeyPage.percentCompleted", {
                       percent: progressPct,
                       defaultValue: `${progressPct}% hoàn thành`,
@@ -163,7 +162,7 @@ export default function JourneyScreen({ navigation }: { navigation?: any }) {
 
                 <View className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
                   <View
-                    style={{ width: `${progressPct}%`, backgroundColor: "#0284c7" }}
+                    style={{ width: `${progressPct}%`, backgroundColor: "#2383e2" }}
                     className="h-full rounded-full"
                   />
                 </View>
@@ -172,10 +171,10 @@ export default function JourneyScreen({ navigation }: { navigation?: any }) {
               {/* Dynamic Note */}
               <View
                 className="flex-row items-center gap-2.5 p-3.5 rounded-2xl border"
-                style={{ backgroundColor: "#f0f9ff", borderColor: "#bae6fd" }}
+                style={{ backgroundColor: "rgba(35, 131, 226, 0.08)", borderColor: "rgba(35, 131, 226, 0.2)" }}
               >
-                <TrendingUp size={18} color="#0284c7" />
-                <AppText className="flex-1 text-[13px] text-[#0c2340] leading-snug font-medium">
+                <TrendingUp size={18} color="#2383e2" />
+                <AppText className="flex-1 text-[13px] text-[#37352f] leading-snug font-medium">
                   {t(
                     "journeyPage.adaptiveNote",
                     "Hệ thống sẽ cập nhật độ khó và thứ tự bài học tiếp theo dựa trên kết quả phát âm của bạn."
@@ -230,7 +229,7 @@ export default function JourneyScreen({ navigation }: { navigation?: any }) {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#f59e0b"
+            tintColor="#cb912f"
           />
         }
         showsVerticalScrollIndicator={false}

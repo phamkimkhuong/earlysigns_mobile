@@ -66,10 +66,10 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
               disabled={phase === "saving"}
               className="w-10 h-10 items-center justify-center rounded-full bg-white border border-slate-200 active:opacity-70"
             >
-              <ChevronLeft size={22} color="#0c2340" strokeWidth={2.5} />
+              <ChevronLeft size={22} color="#37352f" strokeWidth={2.5} />
             </Pressable>
 
-            <AppText accessibilityRole="header" className="text-base font-bold text-[#0c2340]">
+            <AppText accessibilityRole="header" className="text-base font-bold text-[#37352f]">
               {t("screeningPractice.title")}
             </AppText>
 
@@ -96,7 +96,7 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
                   key={i}
                   className="h-1.5 flex-1 rounded-full"
                   style={{
-                    backgroundColor: isDone ? "#10b981" : isCurrent ? "#0284c7" : "#e2e8f0",
+                    backgroundColor: isDone ? "#0f7b6c" : isCurrent ? "#2383e2" : "#e2e8f0",
                   }}
                 />
               );
@@ -120,7 +120,7 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
             <View
               className="bg-white rounded-[26px] p-4 border border-[#e8f1f8]"
               style={{
-                shadowColor: "#0c2340",
+                shadowColor: "#37352f",
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.05,
                 shadowRadius: 14,
@@ -130,7 +130,7 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
               {/* The Target Sentence */}
               <AppText
                 testID="screening-sentence"
-                className="text-[26px] leading-[38px] font-extrabold text-[#0c2340] mt-2 mb-1.5"
+                className="text-[26px] leading-[38px] font-extrabold text-[#37352f] mt-2 mb-1.5"
               >
                 {p.sentence.text}
               </AppText>
@@ -152,7 +152,7 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
                     onPress={p.onSample}
                     className="min-h-[38px] px-3.5 py-1.5 rounded-full border flex-row items-center gap-2 active:opacity-80"
                     style={{
-                      backgroundColor: p.samplePlaying ? "#e0f2fe" : "#F7F6F2",
+                      backgroundColor: p.samplePlaying ? "#e0f2fe" : "#f7f6f3",
                       borderColor: p.samplePlaying ? "#38bdf8" : "#e2e8f0",
                       opacity: busy ? 0.6 : 1,
                     }}
@@ -198,7 +198,7 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
                   className="flex-row items-center gap-3 rounded-2xl px-4 py-4 border"
                   style={{ backgroundColor: "#f0f9ff", borderColor: "#bae6fd" }}
                 >
-                  <ActivityIndicator color="#0284c7" />
+                  <ActivityIndicator color="#2383e2" />
                   <AppText className="flex-1 text-[14px] font-semibold text-[#0369a1]">
                     {t(`screeningPractice.${phase}`)}
                   </AppText>
@@ -213,7 +213,7 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
                   style={{ backgroundColor: "#ecfdf5", borderColor: "#a7f3d0" }}
                 >
                   <View className="flex-row gap-3 items-center">
-                    <View className="w-7 h-7 rounded-full bg-[#10b981] items-center justify-center">
+                    <View className="w-7 h-7 rounded-full bg-[#0f7b6c] items-center justify-center">
                       <Check size={16} color="#ffffff" strokeWidth={3} />
                     </View>
                     <AppText className="flex-1 text-base font-extrabold text-[#065f46]">
@@ -305,7 +305,7 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
           <View
             className="px-5 pt-3 pb-6 gap-2.5 border-t border-[#e2eaf2] bg-white"
             style={{
-              shadowColor: "#0c2340",
+              shadowColor: "#37352f",
               shadowOffset: { width: 0, height: -3 },
               shadowOpacity: 0.04,
               shadowRadius: 8,
@@ -323,12 +323,12 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
               style={{
                 backgroundColor:
                   phase === "recording"
-                    ? "#E03E3E"
+                    ? "#e03e3e"
                     : phase === "recorded"
                       ? last
-                        ? "#059669"
-                        : "#2383E2"
-                      : "#2383E2",
+                        ? "#0f7b6c"
+                        : "#2383e2"
+                      : "#2383e2",
                 opacity: waiting ? 0.65 : 1,
               }}
               className="min-h-[54px] rounded-2xl px-5 py-3.5 flex-row items-center justify-center gap-2.5"
@@ -376,13 +376,13 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
       {p.confirmExit ? (
         <View
           className="absolute inset-0 justify-center px-6"
-          style={{ backgroundColor: "rgba(10, 38, 68, 0.65)" }}
+          style={{ backgroundColor: "rgba(55, 53, 47, 0.65)" }}
           accessibilityViewIsModal
         >
           <View
             className="bg-white rounded-3xl p-6 gap-4 border border-[#e2eaf2]"
             style={{
-              shadowColor: "#0c2340",
+              shadowColor: "#37352f",
               shadowOffset: { width: 0, height: 8 },
               shadowOpacity: 0.12,
               shadowRadius: 24,
@@ -393,7 +393,7 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
               <View className="w-12 h-12 rounded-full bg-[#fef2f2] items-center justify-center">
                 <AlertCircle size={26} color="#dc2626" />
               </View>
-              <AppText accessibilityRole="header" className="text-lg font-extrabold text-[#0c2340] text-center">
+              <AppText accessibilityRole="header" className="text-lg font-extrabold text-[#37352f] text-center">
                 {t("screeningPractice.exitTitle")}
               </AppText>
               <AppText className="text-[15px] leading-6 text-[#53677a] text-center">
@@ -404,7 +404,7 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
             <Pressable
               accessibilityRole="button"
               onPress={p.onStay}
-              className="bg-[#0c2340] rounded-2xl min-h-[50px] p-3 items-center justify-center active:opacity-90"
+              className="bg-[#37352f] rounded-2xl min-h-[50px] p-3 items-center justify-center active:opacity-90"
             >
               <AppText className="text-base font-extrabold text-white">
                 {t("screeningPractice.stay")}

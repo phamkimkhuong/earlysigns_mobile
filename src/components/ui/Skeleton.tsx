@@ -296,7 +296,7 @@ export function PassageListSkeleton({ count = 3 }: { count?: number }) {
  */
 export function PracticeScreenSkeleton() {
   return (
-    <View className="flex-1 px-5 pt-3 gap-4" style={{ backgroundColor: "#F7F6F2" }}>
+    <View className="flex-1 px-5 pt-3 gap-4" style={{ backgroundColor: "#f7f6f3" }}>
       {/* 1. Progress Dots Placeholder */}
       <View className="flex-row justify-center items-center gap-1.5 py-2">
         <SkeletonItem width={20} height={8} borderRadius={4} />
@@ -370,7 +370,7 @@ export function ScreeningPracticeSkeleton({ onClose }: { onClose?: () => void } 
               accessibilityLabel="Quay lại"
               className="w-10 h-10 items-center justify-center rounded-full bg-white border border-slate-200"
             >
-              <ChevronLeft size={22} color="#0c2340" strokeWidth={2.5} />
+              <ChevronLeft size={22} color="#37352f" strokeWidth={2.5} />
             </TouchableOpacity>
           ) : (
             <SkeletonItem
@@ -403,7 +403,7 @@ export function ScreeningPracticeSkeleton({ onClose }: { onClose?: () => void } 
               borderRadius={3}
               style={{
                 flex: 1,
-                backgroundColor: i === 0 ? "#0284c7" : "#e2e8f0",
+                backgroundColor: i === 0 ? "#2383e2" : "#e2e8f0",
               }}
             />
           ))}
@@ -416,7 +416,7 @@ export function ScreeningPracticeSkeleton({ onClose }: { onClose?: () => void } 
         <View
           className="bg-white rounded-[26px] p-6 border border-[#e8f1f8] gap-3"
           style={{
-            shadowColor: "#0c2340",
+            shadowColor: "#37352f",
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.05,
             shadowRadius: 14,
@@ -462,7 +462,7 @@ export function PhonemeGuideSkeleton({
   onBack?: () => void;
 }) {
   return (
-    <View style={{ flex: 1, backgroundColor: "#F7F6F2" }}>
+    <View style={{ flex: 1, backgroundColor: "#f7f6f3" }}>
       {/* 1. Header matching PhonemeIntroGuide */}
       <View
         style={{
@@ -471,7 +471,7 @@ export function PhonemeGuideSkeleton({
           justifyContent: "space-between",
           paddingHorizontal: 16,
           paddingVertical: 12,
-          backgroundColor: "#F7F6F2",
+          backgroundColor: "#f7f6f3",
           borderBottomWidth: 1,
           borderBottomColor: "#e2e8f0",
         }}
@@ -492,7 +492,7 @@ export function PhonemeGuideSkeleton({
               borderColor: "rgba(15,23,42,0.08)",
             }}
           >
-            <ChevronLeft size={22} color="#0c2340" />
+            <ChevronLeft size={22} color="#37352f" />
           </TouchableOpacity>
         ) : (
           <SkeletonItem
@@ -505,7 +505,7 @@ export function PhonemeGuideSkeleton({
 
         <View style={{ alignItems: "center", gap: 4 }}>
           {phoneme ? (
-            <Text style={{ fontSize: 16, fontWeight: "700", color: "#0f172a" }}>
+            <Text style={{ fontSize: 16, fontWeight: "700", color: "#37352f" }}>
               Hướng dẫn âm /{phoneme}/
             </Text>
           ) : (
@@ -526,7 +526,7 @@ export function PhonemeGuideSkeleton({
               borderColor: "#bae6fd",
             }}
           >
-            <Text style={{ fontSize: 11, fontWeight: "700", color: "#0284c7" }}>
+            <Text style={{ fontSize: 11, fontWeight: "700", color: "#2383e2" }}>
               {dialect.toUpperCase()} {dialect.toLowerCase() === "uk" ? "🇬🇧" : "🇺🇸"}
             </Text>
           </View>
@@ -539,7 +539,7 @@ export function PhonemeGuideSkeleton({
       <View
         style={{
           flex: 1,
-          backgroundColor: "#F7F6F2",
+          backgroundColor: "#f7f6f3",
           paddingHorizontal: 16,
           paddingTop: 18,
           gap: 16,

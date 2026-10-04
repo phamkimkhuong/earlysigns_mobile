@@ -86,7 +86,7 @@ export default function PhonemeIntroGuide({
     >
       {/* Native modals need their own provider, separate from the app's native view tree. */}
       <SafeAreaProvider>
-        <SafeAreaView edges={["top", "right", "bottom", "left"]} style={{ flex: 1, backgroundColor: "#F7F6F2" }}>
+        <SafeAreaView edges={["top", "right", "bottom", "left"]} style={{ flex: 1, backgroundColor: "#f7f6f3" }}>
           {/* 1. TOP APP BAR */}
           <View
             style={{
@@ -95,7 +95,7 @@ export default function PhonemeIntroGuide({
               justifyContent: "space-between",
               paddingHorizontal: 16,
               paddingVertical: 12,
-              backgroundColor: "#F7F6F2",
+              backgroundColor: "#f7f6f3",
               borderBottomWidth: 1,
               borderBottomColor: "#e2e8f0",
             }}
@@ -118,12 +118,12 @@ export default function PhonemeIntroGuide({
                 borderColor: "rgba(15,23,42,0.08)",
               })}
             >
-              <X size={20} color="#0c2340" />
+              <X size={20} color="#37352f" />
             </Pressable>
 
             {/* Center Title & Dialect Badge */}
             <View style={{ alignItems: "center" }}>
-              <Text style={{ fontSize: 16, fontWeight: "700", color: "#0f172a" }}>
+              <Text style={{ fontSize: 16, fontWeight: "700", color: "#37352f" }}>
                 {isVi ? `Hướng dẫn âm /${cleanPhoneme}/` : `Guide for /${cleanPhoneme}/`}
               </Text>
             </View>
@@ -147,7 +147,7 @@ export default function PhonemeIntroGuide({
                 backgroundColor: pressed ? "#f1f5f9" : "transparent",
               })}
             >
-              <Text style={{ fontSize: 14, fontWeight: "700", color: "#0284c7" }}>
+              <Text style={{ fontSize: 14, fontWeight: "700", color: "#2383e2" }}>
                 {isVi ? "Đóng" : "Close"}
               </Text>
             </Pressable>
@@ -157,7 +157,7 @@ export default function PhonemeIntroGuide({
           <View
             style={{
               flex: 1,
-              backgroundColor: "#F7F6F2",
+              backgroundColor: "#f7f6f3",
               overflow: "hidden",
             }}
           >
@@ -179,7 +179,7 @@ export default function PhonemeIntroGuide({
                   padding: 18,
                   borderWidth: 1.5,
                   borderColor: "#e2eaf2",
-                  shadowColor: "#0c2340",
+                  shadowColor: "#37352f",
                   shadowOffset: { width: 0, height: 4 },
                   shadowOpacity: 0.05,
                   shadowRadius: 10,
@@ -233,7 +233,7 @@ export default function PhonemeIntroGuide({
                       {soundMeta?.example ? (
                         <Text style={{ fontSize: 13, color: "#64748b", fontWeight: "500" }}>
                           {isVi ? "Từ mẫu" : "Examples"}:{" "}
-                          <Text style={{ fontWeight: "700", color: "#0f172a" }}>{soundMeta.example}</Text>
+                          <Text style={{ fontWeight: "700", color: "#37352f" }}>{soundMeta.example}</Text>
                         </Text>
                       ) : null}
                     </View>
@@ -255,8 +255,8 @@ export default function PhonemeIntroGuide({
                       paddingHorizontal: 14,
                       paddingVertical: 10,
                       borderRadius: 16,
-                      backgroundColor: pressed ? "#0369a1" : "#0284c7",
-                      shadowColor: "#0284c7",
+                      backgroundColor: pressed ? "#1a6fc9" : "#2383e2",
+                      shadowColor: "#2383e2",
                       shadowOffset: { width: 0, height: 3 },
                       shadowOpacity: 0.3,
                       shadowRadius: 5,
@@ -280,7 +280,7 @@ export default function PhonemeIntroGuide({
                       style={{
                         fontSize: 16,
                         fontWeight: "800",
-                        color: "#0c2340",
+                        color: "#37352f",
                         marginTop: 6,
                       }}
                     >
@@ -327,7 +327,7 @@ export default function PhonemeIntroGuide({
                         padding: 16,
                         borderWidth: 1.5,
                         borderColor: "#e2eaf2",
-                        shadowColor: "#0c2340",
+                        shadowColor: "#37352f",
                         shadowOffset: { width: 0, height: 2 },
                         shadowOpacity: 0.04,
                         shadowRadius: 6,
@@ -337,7 +337,7 @@ export default function PhonemeIntroGuide({
                       <FormattedHtmlText
                         html={block.html}
                         style={{ fontSize: 14, color: "#334155", lineHeight: 22 }}
-                        boldStyle={{ fontWeight: "700", color: "#0c2340" }}
+                        boldStyle={{ fontWeight: "700", color: "#37352f" }}
                       />
                     </View>
                   );
@@ -357,7 +357,7 @@ export default function PhonemeIntroGuide({
                             padding: 15,
                             borderWidth: 1.5,
                             borderColor: "#e2eaf2",
-                            shadowColor: "#0c2340",
+                            shadowColor: "#37352f",
                             shadowOffset: { width: 0, height: 2 },
                             shadowOpacity: 0.03,
                             shadowRadius: 5,
@@ -370,7 +370,7 @@ export default function PhonemeIntroGuide({
                               width: 26,
                               height: 26,
                               borderRadius: 13,
-                              backgroundColor: "#0284c7",
+                              backgroundColor: "#2383e2",
                               alignItems: "center",
                               justifyContent: "center",
                               marginTop: 1,
@@ -384,7 +384,7 @@ export default function PhonemeIntroGuide({
                             <FormattedHtmlText
                               html={itemHtml}
                               style={{ fontSize: 14, color: "#334155", lineHeight: 22 }}
-                              boldStyle={{ fontWeight: "700", color: "#0284c7" }}
+                              boldStyle={{ fontWeight: "700", color: "#2383e2" }}
                             />
                           </View>
                         </View>
@@ -403,7 +403,7 @@ export default function PhonemeIntroGuide({
                         padding: 16,
                         borderWidth: 1.5,
                         borderColor: "#e2eaf2",
-                        shadowColor: "#0c2340",
+                        shadowColor: "#37352f",
                         shadowOffset: { width: 0, height: 2 },
                         shadowOpacity: 0.04,
                         shadowRadius: 6,
@@ -421,7 +421,7 @@ export default function PhonemeIntroGuide({
                               width: 6,
                               height: 6,
                               borderRadius: 3,
-                              backgroundColor: "#0284c7",
+                              backgroundColor: "#2383e2",
                               marginTop: 8,
                             }}
                           />
@@ -429,7 +429,7 @@ export default function PhonemeIntroGuide({
                             <FormattedHtmlText
                               html={itemHtml}
                               style={{ fontSize: 14, color: "#334155", lineHeight: 22 }}
-                              boldStyle={{ fontWeight: "700", color: "#0c2340" }}
+                              boldStyle={{ fontWeight: "700", color: "#37352f" }}
                             />
                           </View>
                         </View>
@@ -454,7 +454,7 @@ export default function PhonemeIntroGuide({
                   onClose();
                 }}
                 style={({ pressed }) => ({
-                  backgroundColor: pressed ? "#0369a1" : "#0284c7",
+                  backgroundColor: pressed ? "#1a6fc9" : "#2383e2",
                   minHeight: 52,
                   borderRadius: 18,
                   flexDirection: "row",
@@ -463,7 +463,7 @@ export default function PhonemeIntroGuide({
                   gap: 8,
                   marginTop: 10,
                   marginBottom: 24,
-                  shadowColor: "#0284c7",
+                  shadowColor: "#2383e2",
                   shadowOffset: { width: 0, height: 4 },
                   shadowOpacity: 0.3,
                   shadowRadius: 6,

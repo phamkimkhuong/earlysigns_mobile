@@ -268,10 +268,10 @@ export default function ReferralScreen({ navigation }: Props) {
           style={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0" }}
           className="w-10 h-10 rounded-2xl items-center justify-center border shadow-xs"
         >
-          <ChevronLeft size={22} color="#0f172a" />
+          <ChevronLeft size={22} color="#37352f" />
         </TouchableOpacity>
 
-        <AppText className="text-base font-extrabold text-[#0f172a]">
+        <AppText className="text-base font-extrabold text-[#37352f]">
           {tr("referral.pageTitle", "Chương trình giới thiệu")}
         </AppText>
 
@@ -345,8 +345,8 @@ export default function ReferralScreen({ navigation }: Props) {
 
             <View
               style={{
-                backgroundColor: "#f59e0b",
-                shadowColor: "#f59e0b",
+                backgroundColor: "#cb912f",
+                shadowColor: "#cb912f",
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.25,
                 shadowRadius: 6,
@@ -380,7 +380,7 @@ export default function ReferralScreen({ navigation }: Props) {
               >
                 <Users size={16} color="#4f46e5" />
               </View>
-              <AppText className="text-[15px] font-extrabold text-[#0f172a]">
+              <AppText className="text-[15px] font-extrabold text-[#37352f]">
                 {tr("referral.yourCodeTitle", "Mã giới thiệu của bạn")}
               </AppText>
             </View>
@@ -406,7 +406,7 @@ export default function ReferralScreen({ navigation }: Props) {
             ) : !referralData?.has_created_code || !referralData?.referral_code ? (
               /* CHƯA TẠO MÃ - HIỂN THỊ NÚT TẠO MÃ*/
               <View
-                style={{ backgroundColor: "#F7F6F2", borderColor: "#e2e8f0" }}
+                style={{ backgroundColor: "#f7f6f3", borderColor: "#e2e8f0" }}
                 className="rounded-2xl p-4 items-center justify-center gap-2 border"
               >
                 <View
@@ -446,7 +446,7 @@ export default function ReferralScreen({ navigation }: Props) {
               <>
                 <View
                   style={{
-                    backgroundColor: "#F7F6F2",
+                    backgroundColor: "#f7f6f3",
                     borderColor: "#cbd5e1",
                     borderStyle: "dashed",
                     borderWidth: 1.5,
@@ -513,7 +513,7 @@ export default function ReferralScreen({ navigation }: Props) {
           ) : (
             /* GUEST MODE */
             <View
-              style={{ backgroundColor: "#F7F6F2", borderColor: "#e2e8f0" }}
+              style={{ backgroundColor: "#f7f6f3", borderColor: "#e2e8f0" }}
               className="rounded-2xl p-4 items-center text-center gap-3 border"
             >
               <AppText className="text-[13px] text-slate-600 text-center leading-relaxed font-medium">
@@ -527,7 +527,7 @@ export default function ReferralScreen({ navigation }: Props) {
                 accessibilityLabel={tr("referral.ctaLogin", "Đăng nhập ngay")}
                 activeOpacity={0.85}
                 onPress={() => navigation.navigate("Login")}
-                style={{ backgroundColor: "#2383E2" }}
+                style={{ backgroundColor: "#2383e2" }}
                 className="flex-row items-center gap-2 py-2.5 px-6 rounded-full"
               >
                 <LogIn size={14} color="#ffffff" />
@@ -562,7 +562,7 @@ export default function ReferralScreen({ navigation }: Props) {
             >
               <Ticket size={16} color="#059669" />
             </View>
-            <AppText className="text-[15px] font-extrabold text-[#0f172a]">
+            <AppText className="text-[15px] font-extrabold text-[#37352f]">
               {tr("referral.redeemTitle", "Nhập mã của bạn bè")}
             </AppText>
           </View>
@@ -626,7 +626,7 @@ export default function ReferralScreen({ navigation }: Props) {
                   autoCapitalize="characters"
                   maxLength={12}
                   editable={!isRedeeming}
-                  style={{ backgroundColor: "#F7F6F2", borderColor: "#cbd5e1" }}
+                  style={{ backgroundColor: "#f7f6f3", borderColor: "#cbd5e1" }}
                   className="flex-1 h-12 px-4 rounded-2xl border text-sm font-bold text-slate-900"
                 />
                 <TouchableOpacity
@@ -706,9 +706,9 @@ export default function ReferralScreen({ navigation }: Props) {
               style={{ backgroundColor: "#f0f9ff" }}
               className="w-8 h-8 rounded-xl items-center justify-center"
             >
-              <Info size={16} color="#0284c7" />
+              <Info size={16} color="#2383e2" />
             </View>
-            <AppText className="text-[15px] font-extrabold text-[#0f172a]">
+            <AppText className="text-[15px] font-extrabold text-[#37352f]">
               {tr("referral.rulesTitle", "Thông tin chương trình")}
             </AppText>
           </View>
@@ -719,7 +719,7 @@ export default function ReferralScreen({ navigation }: Props) {
                 style={{ backgroundColor: "#f0f9ff" }}
                 className="w-8 h-8 rounded-xl items-center justify-center"
               >
-                <Users size={15} color="#0284c7" />
+                <Users size={15} color="#2383e2" />
               </View>
               <AppText className="flex-1 text-[13px] text-slate-600 font-medium leading-relaxed">
                 {tr(

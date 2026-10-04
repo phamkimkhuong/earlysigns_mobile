@@ -28,7 +28,7 @@ export default function FormattedHtmlText({
       {tokens.map((token, index) => {
         const itemStyles: StyleProp<TextStyle>[] = [];
         if (token.isBold) {
-          itemStyles.push({ fontWeight: "700", color: "#0c2340" }, boldStyle);
+          itemStyles.push({ fontWeight: "700", color: "#37352f" }, boldStyle);
         }
         if (token.isItalic) {
           itemStyles.push({ fontStyle: "italic" }, italicStyle);

@@ -94,7 +94,7 @@ export default function MonthlyQuotaCard({
       ),
       isLow: snapshot.ocr.isLow,
       isExhausted: snapshot.ocr.isExhausted,
-      color: "#0284c7",
+      color: "#2383e2",
       bgPad: "bg-sky-50",
     },
     {

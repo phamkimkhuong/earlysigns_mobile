@@ -34,7 +34,7 @@ import {
   Mic,
   RefreshCw,
   ShieldCheck,
-  Sparkles,
+  BookmarkCheck,
   Target,
   Trash2,
   User,
@@ -265,7 +265,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
       ]);
     }, [queryClient]),
     {
-      tintColor: "#0284c7",
+      tintColor: "#2383e2",
       enableHaptics: true,
       minDurationMs: 450,
     }
@@ -465,8 +465,8 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
           style={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0" }}
           className="rounded-3xl p-7 items-center justify-center gap-4 border shadow-xl min-w-[220px]"
         >
-          <ActivityIndicator size="large" color="#4f46e5" />
-          <AppText className="text-[15px] font-bold text-[#0f172a]">
+          <ActivityIndicator size="large" color="#2383e2" />
+          <AppText className="text-[15px] font-bold text-[#37352f]">
             {t("auth.loggingOut") || "Đang đăng xuất..."}
           </AppText>
         </View>
@@ -492,7 +492,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor="#0284c7"
+              tintColor="#2383e2"
             />
           ) : undefined
         }
@@ -532,12 +532,12 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                   {authToken ? (
                     <View
                       style={{
-                        backgroundColor: isPro ? "#f59e0b" : "rgba(255, 255, 255, 0.2)",
+                        backgroundColor: isPro ? "#cb912f" : "rgba(255, 255, 255, 0.2)",
                       }}
                       className="px-2.5 py-0.5 rounded-full"
                     >
                       <AppText
-                        style={{ color: isPro ? "#0f172a" : "#ffffff" }}
+                        style={{ color: isPro ? "#ffffff" : "#ffffff" }}
                         className="text-xs font-black uppercase tracking-wider"
                       >
                         {isPro ? "PRO" : "FREE"}
@@ -573,9 +573,9 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
             }}
             className="flex-row items-center justify-center gap-2 py-2.5 rounded-xl"
           >
-            <Target size={16} color={activeTab === TAB_PROGRESS ? "#0c2340" : "#64748b"} />
+            <Target size={16} color={activeTab === TAB_PROGRESS ? "#37352f" : "#64748b"} />
             <AppText
-              style={{ color: activeTab === TAB_PROGRESS ? "#0c2340" : "#64748b" }}
+              style={{ color: activeTab === TAB_PROGRESS ? "#37352f" : "#64748b" }}
               className="text-sm font-bold"
             >
               {t("profile.tabs.progress") || "Tiến độ"}
@@ -594,9 +594,9 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
             }}
             className="flex-row items-center justify-center gap-2 py-2.5 rounded-xl"
           >
-            <User size={16} color={activeTab === TAB_ACCOUNT ? "#0c2340" : "#64748b"} />
+            <User size={16} color={activeTab === TAB_ACCOUNT ? "#37352f" : "#64748b"} />
             <AppText
-              style={{ color: activeTab === TAB_ACCOUNT ? "#0c2340" : "#64748b" }}
+              style={{ color: activeTab === TAB_ACCOUNT ? "#37352f" : "#64748b" }}
               className="text-sm font-bold"
             >
               {t("profile.tabs.account") || "Tài khoản"}
@@ -619,14 +619,14 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
               className="rounded-3xl p-6 border items-center text-center gap-4 my-2"
             >
               <View
-                style={{ backgroundColor: "#e0f2fe" }}
+                style={{ backgroundColor: "rgba(35, 131, 226, 0.12)" }}
                 className="w-16 h-16 rounded-2xl items-center justify-center"
               >
-                <Sparkles size={28} color="#0284c7" />
+                <BookmarkCheck size={28} color="#2383e2" />
               </View>
 
               <View className="items-center gap-1.5 px-4">
-                <AppText className="text-lg font-black text-[#0f172a] text-center">
+                <AppText className="text-lg font-black text-[#37352f] text-center">
                   {t("profile.saveJourneyTitle") || "Lưu giữ hành trình phát âm của bạn"}
                 </AppText>
                 <AppText className="text-[13px] text-slate-500 text-center leading-relaxed">
@@ -653,7 +653,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                   backgroundColor: "#ffffff",
                   borderWidth: 0.5,
                   borderColor: "#f1f5f9",
-                  shadowColor: "#0c2340",
+                  shadowColor: "#37352f",
                   shadowOffset: { width: 0, height: 2 },
                   shadowOpacity: 0.05,
                   shadowRadius: 10,
@@ -664,8 +664,8 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                 {/* Header line: Audio waveform icon + Title + Help icon */}
                 <View className="flex-row items-center justify-between">
                   <View className="flex-row items-center gap-1.5">
-                    <AudioLines size={18} color="#0066ff" />
-                    <AppText className="text-sm font-extrabold text-[#0f172a]">
+                    <AudioLines size={18} color="#2383e2" />
+                    <AppText className="text-sm font-extrabold text-[#37352f]">
                       {t("profile.screeningTitle") || "Hồ sơ phát âm"}
                     </AppText>
                   </View>
@@ -674,7 +674,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                 {/* Split Row: Left text + Right 3D illustration asset */}
                 <View style={{ marginVertical: -4 }} className="flex-row items-center justify-between">
                   <View className="flex-1 pr-2 gap-1">
-                    <AppText className="text-[19px] font-black text-[#0f172a] leading-tight">
+                    <AppText className="text-[19px] font-black text-[#37352f] leading-tight">
                       {completedScreeningCount > 0
                         ? t("profile.screeningHeaderContinue") || "Tiếp tục bài kiểm tra\nsàng lọc"
                         : t("profile.screeningHeaderStart") || "Bắt đầu bài kiểm tra\nsàng lọc"}
@@ -702,7 +702,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
 
                 {/* Progress Numbers */}
                 <View className="flex-row items-baseline">
-                  <AppText style={{ color: "#0066ff" }} className="text-2xl font-black">
+                  <AppText style={{ color: "#2383e2" }} className="text-2xl font-black">
                     {completedScreeningCount}
                   </AppText>
                   <AppText className="text-base font-bold text-slate-400"> / {totalScreeningCount}</AppText>
@@ -717,7 +717,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                     <View
                       style={{
                         width: `${screeningProgressPct}%`,
-                        backgroundColor: "#0066ff",
+                        backgroundColor: "#2383e2",
                       }}
                       className="h-full rounded-full"
                     />
@@ -738,8 +738,8 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                   activeOpacity={0.85}
                   onPress={() => handleNavigate("Screening")}
                   style={{
-                    backgroundColor: "#0066ff",
-                    shadowColor: "#0066ff",
+                    backgroundColor: "#2383e2",
+                    shadowColor: "#2383e2",
                     shadowOffset: { width: 0, height: 4 },
                     shadowOpacity: 0.2,
                     shadowRadius: 8,
@@ -761,7 +761,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                   backgroundColor: "#ffffff",
                   borderWidth: 0.5,
                   borderColor: "#f1f5f9",
-                  shadowColor: "#0c2340",
+                  shadowColor: "#37352f",
                   shadowOffset: { width: 0, height: 2 },
                   shadowOpacity: 0.04,
                   shadowRadius: 8,
@@ -788,11 +788,11 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                     />
                   </View>
                   <View className="flex-row items-baseline gap-2">
-                    <AppText className="text-base font-black text-[#0f172a]">
+                    <AppText className="text-base font-black text-[#37352f]">
                       {t("profile.streakTitle") || "Chuỗi luyện tập"}
                     </AppText>
                     <View className="flex-row items-baseline gap-1">
-                      <AppText style={{ color: "#0066ff" }} className="text-xl font-black">
+                      <AppText style={{ color: "#2383e2" }} className="text-xl font-black">
                         {streakDays}
                       </AppText>
                       <AppText className="text-sm font-bold text-slate-600">
@@ -820,12 +820,12 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                             backgroundColor: isCompleted
                               ? "#fff7ed"
                               : isToday
-                                ? "#eff6ff"
-                                : "#F7F6F2",
+                                ? "rgba(35, 131, 226, 0.08)"
+                                : "#f7f6f3",
                             borderColor: isCompleted
                               ? "#fed7aa"
                               : isToday
-                                ? "#93c5fd"
+                                ? "#2383e2"
                                 : "#e2e8f0",
                             alignItems: "center",
                             justifyContent: "center",
@@ -838,11 +838,11 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                               resizeMode="contain"
                             />
                           ) : isToday ? (
-                            <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#0066ff" }} />
+                            <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#2383e2" }} />
                           ) : null}
                         </View>
                         <AppText
-                          style={{ color: isToday ? "#0066ff" : "#64748b" }}
+                          style={{ color: isToday ? "#2383e2" : "#64748b" }}
                           className="text-xs font-bold"
                         >
                           {day}
@@ -868,7 +868,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                     <AppText className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                       {t("profile.overallProfile") || "Hồ sơ phát âm tổng thể"}
                     </AppText>
-                    <AppText className="text-base font-extrabold text-[#0f172a]">
+                    <AppText className="text-base font-extrabold text-[#37352f]">
                       {t("profile.accuracyScore") || "Độ chuẩn xác phát âm"}
                     </AppText>
                   </View>
@@ -895,7 +895,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                     <AppText className="text-lg font-bold text-slate-400">/100</AppText>
                   </View>
                   <View className="flex-row items-center gap-1.5">
-                    <Flame size={14} color="#d97706" />
+                    <Flame size={14} color="#cb912f" />
                     <AppText className="text-[13px] font-medium text-slate-600">
                       {t("profile.streakCount", { days: streakDays }) || `Chuỗi ${streakDays} ngày`}
                     </AppText>
@@ -909,7 +909,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                 className="rounded-3xl p-5 border gap-3"
               >
                 <View className="flex-row items-center justify-between">
-                  <AppText className="text-sm font-extrabold text-[#0f172a]">
+                  <AppText className="text-sm font-extrabold text-[#37352f]">
                     {t("profile.progressChart7Days") || "Biểu đồ tiến độ 7 ngày"}
                   </AppText>
                   <AppText className="text-xs font-bold text-slate-500">
@@ -934,9 +934,9 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                       backgroundGradientFrom: "#ffffff",
                       backgroundGradientTo: "#ffffff",
                       decimalPlaces: 0,
-                      color: () => "#0284c7",
+                      color: () => "#2383e2",
                       labelColor: () => "#94a3b8",
-                      propsForDots: { r: "4", strokeWidth: "2", stroke: "#0284c7" },
+                      propsForDots: { r: "4", strokeWidth: "2", stroke: "#2383e2" },
                       propsForBackgroundLines: { strokeDasharray: "4", stroke: "#f1f5f9" },
                     }}
                     bezier
@@ -952,7 +952,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
               >
                 <View className="gap-1">
                   <View className="flex-row items-center justify-between">
-                    <AppText className="text-[15px] font-extrabold text-[#0f172a] flex-1 mr-2" numberOfLines={1}>
+                    <AppText className="text-[15px] font-extrabold text-[#37352f] flex-1 mr-2" numberOfLines={1}>
                       {t("profile.weakSoundsTitle") || "Âm ưu tiên cải thiện"}
                     </AppText>
                     <TouchableOpacity
@@ -963,10 +963,10 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                       className="flex-row items-center gap-0.5 shrink-0"
                       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                     >
-                      <AppText style={{ color: "#0c2340" }} className="text-sm font-bold">
+                      <AppText style={{ color: "#37352f" }} className="text-sm font-bold">
                         {t("profile.viewAllSounds") || "Xem tất cả âm"}
                       </AppText>
-                      <ChevronRight size={14} color="#0c2340" />
+                      <ChevronRight size={14} color="#37352f" />
                     </TouchableOpacity>
                   </View>
                   <AppText className="text-[13px] text-slate-500">
@@ -1043,7 +1043,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                                   className="h-full rounded-full"
                                   style={{
                                     width: `${Math.max(5, Math.min(100, acc))}%`,
-                                    backgroundColor: acc >= 70 ? "#10b981" : acc >= 50 ? "#f59e0b" : "#ef4444",
+                                    backgroundColor: acc >= 70 ? "#0f7b6c" : acc >= 50 ? "#cb912f" : "#e03e3e",
                                   }}
                                 />
                               </View>
@@ -1051,7 +1051,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                           </View>
 
                           <View
-                            style={{ backgroundColor: "#0c2340" }}
+                            style={{ backgroundColor: "#37352f" }}
                             className="px-3 py-2 rounded-xl flex-row items-center gap-1 shrink-0"
                           >
                             <Mic size={12} color="#ffffff" />
@@ -1074,7 +1074,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
           <View className="gap-4">
             {/* GROUP 1: THÔNG TIN TÀI KHOẢN */}
             <View>
-              <AppText className="text-base font-extrabold text-[#0f172a] mb-2 px-1">
+              <AppText className="text-base font-extrabold text-[#37352f] mb-2 px-1">
                 {t("profile.accountGroup") || "Tài khoản"}
               </AppText>
               <View
@@ -1082,7 +1082,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                   backgroundColor: "#ffffff",
                   borderColor: "#f1f5f9",
                   borderWidth: 1,
-                  shadowColor: "#0f172a",
+                  shadowColor: "#37352f",
                   shadowOffset: { width: 0, height: 1 },
                   shadowOpacity: 0.04,
                   shadowRadius: 6,
@@ -1094,12 +1094,12 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                 <View className="flex-row items-center justify-between p-3.5 border-b border-slate-100">
                   <View className="flex-row items-center gap-3">
                     <View
-                      style={{ backgroundColor: "#eff6ff" }}
+                      style={{ backgroundColor: "rgba(35, 131, 226, 0.08)" }}
                       className="w-9 h-9 rounded-xl items-center justify-center"
                     >
-                      <Mail size={18} color="#0066ff" />
+                      <Mail size={18} color="#2383e2" />
                     </View>
-                    <AppText className="text-[15px] font-semibold text-[#0f172a]">
+                    <AppText className="text-[15px] font-semibold text-[#37352f]">
                       {t("profile.email") || "Email"}
                     </AppText>
                   </View>
@@ -1118,12 +1118,12 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                 >
                   <View className="flex-row items-center gap-3">
                     <View
-                      style={{ backgroundColor: "#eff6ff" }}
+                      style={{ backgroundColor: "rgba(35, 131, 226, 0.08)" }}
                       className="w-9 h-9 rounded-xl items-center justify-center"
                     >
-                      <Globe size={18} color="#0066ff" />
+                      <Globe size={18} color="#2383e2" />
                     </View>
-                    <AppText className="text-[15px] font-semibold text-[#0f172a]">
+                    <AppText className="text-[15px] font-semibold text-[#37352f]">
                       {t("language.label") || "Ngôn ngữ"}
                     </AppText>
                   </View>
@@ -1153,9 +1153,9 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                   {/* Row 1: Plan Status with Renewal/Expiry Date & Active Badge */}
                   <View className="flex-row items-center justify-between px-4 py-3.5 border-b border-slate-100">
                     <View className="flex-row items-center gap-2.5 flex-1 pr-2">
-                      <Crown size={18} color="#f59e0b" />
+                      <Crown size={18} color="#cb912f" />
                       <View className="flex-1">
-                        <AppText className="text-[15px] font-bold text-[#0f172a]">
+                        <AppText className="text-[15px] font-bold text-[#37352f]">
                           {t("profile.proPlan") || "EarlySigns Pro"}
                         </AppText>
                         <AppText className="text-[13px] text-slate-500 mt-0.5">
@@ -1185,9 +1185,9 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                     className="px-4 py-3.5 flex-row items-center justify-between border-b border-slate-100 active:bg-slate-50"
                   >
                     <View className="flex-row items-center gap-2.5 flex-1 pr-2">
-                      <ExternalLink size={18} color="#0284c7" />
+                      <ExternalLink size={18} color="#2383e2" />
                       <View className="flex-1">
-                        <AppText className="text-[15px] font-bold text-[#0f172a]">
+                        <AppText className="text-[15px] font-bold text-[#37352f]">
                           {t("profile.manageStoreTitle") || "Quản lý gói cước"}
                         </AppText>
                         <AppText className="text-[13px] text-slate-500 mt-0.5">
@@ -1208,9 +1208,9 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                     className="px-4 py-3.5 flex-row items-center justify-between active:bg-slate-50"
                   >
                     <View className="flex-row items-center gap-2.5 flex-1 pr-2">
-                      <RefreshCw size={18} color="#6366f1" />
+                      <RefreshCw size={18} color="#2383e2" />
                       <View className="flex-1">
-                        <AppText className="text-[15px] font-bold text-[#0f172a]">
+                        <AppText className="text-[15px] font-bold text-[#37352f]">
                           {t("profile.restorePurchasesTitle") || "Khôi phục giao dịch"}
                         </AppText>
                         <AppText className="text-[13px] text-slate-500 mt-0.5">
@@ -1219,7 +1219,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                       </View>
                     </View>
                     {isRestoring ? (
-                      <ActivityIndicator size="small" color="#0c2340" />
+                      <ActivityIndicator size="small" color="#37352f" />
                     ) : (
                       <ChevronRight size={14} color="#94a3b8" />
                     )}
@@ -1237,9 +1237,9 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                     className="flex-row items-center justify-between px-4 py-3.5 border-b border-slate-100"
                   >
                     <View className="flex-row items-center gap-2.5 flex-1 pr-2">
-                      <ShieldCheck size={18} color="#0284c7" />
+                      <ShieldCheck size={18} color="#2383e2" />
                       <View className="flex-1">
-                        <AppText className="text-[15px] font-bold text-[#0f172a]">
+                        <AppText className="text-[15px] font-bold text-[#37352f]">
                           {t("profile.freePlan") || "Gói miễn phí"}
                         </AppText>
                         <AppText className="text-[13px] text-slate-500 mt-0.5">
@@ -1252,8 +1252,8 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                     <View
                       className="flex-row items-center gap-1.5 px-3 py-1.5 rounded-full shrink-0"
                       style={{
-                        backgroundColor: "#f59e0b",
-                        shadowColor: "#f59e0b",
+                        backgroundColor: "#cb912f",
+                        shadowColor: "#cb912f",
                         shadowOffset: { width: 0, height: 2 },
                         shadowOpacity: 0.25,
                         shadowRadius: 4,
@@ -1282,9 +1282,9 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                     className="px-4 py-3.5 flex-row items-center justify-between active:bg-slate-50"
                   >
                     <View className="flex-row items-center gap-2.5 flex-1 pr-2">
-                      <RefreshCw size={18} color="#6366f1" />
+                      <RefreshCw size={18} color="#2383e2" />
                       <View className="flex-1">
-                        <AppText className="text-[15px] font-bold text-[#0f172a]">
+                        <AppText className="text-[15px] font-bold text-[#37352f]">
                           {t("profile.restorePurchasesTitle") || "Khôi phục giao dịch"}
                         </AppText>
                         <AppText className="text-[13px] text-slate-500 mt-0.5">
@@ -1293,7 +1293,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                       </View>
                     </View>
                     {isRestoring ? (
-                      <ActivityIndicator size="small" color="#0c2340" />
+                      <ActivityIndicator size="small" color="#37352f" />
                     ) : (
                       <ChevronRight size={14} color="#94a3b8" />
                     )}
@@ -1318,8 +1318,8 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                 className="flex-row items-center justify-between px-4 py-3.5"
               >
                 <View className="flex-row items-center gap-2.5">
-                  <Bell size={18} color="#f97316" />
-                  <AppText className="text-[15px] font-bold text-[#0f172a]">
+                  <Bell size={18} color="#cb912f" />
+                  <AppText className="text-[15px] font-bold text-[#37352f]">
                     {t("profile.notifSettingsTitle") || "Cài đặt thông báo & giờ nhắc học"}
                   </AppText>
                 </View>
@@ -1344,7 +1344,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                 className="flex-row items-center justify-between px-4 py-3.5 border-b border-slate-100"
               >
                 <View className="flex-row items-center gap-2.5">
-                  <Gift size={18} color="#4f46e5" />
+                  <Gift size={18} color="#2383e2" />
                   <AppText className="text-[15px] font-medium text-slate-700">{t("profile.referralTitle") || "Chương trình giới thiệu"}</AppText>
                 </View>
                 <ChevronRight size={14} color="#94a3b8" />
@@ -1359,7 +1359,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                 className="flex-row items-center justify-between px-4 py-3.5 border-b border-slate-100"
               >
                 <View className="flex-row items-center gap-2.5">
-                  <HelpCircle size={18} color="#0284c7" />
+                  <HelpCircle size={18} color="#2383e2" />
                   <AppText className="text-[15px] font-medium text-slate-700">{t("profile.contactSupport") || "Liên hệ hỗ trợ"}</AppText>
                 </View>
                 <ExternalLink size={14} color="#94a3b8" />
@@ -1374,7 +1374,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                 className="flex-row items-center justify-between px-4 py-3.5 border-b border-slate-100"
               >
                 <View className="flex-row items-center gap-2.5">
-                  <Info size={18} color="#0284c7" />
+                  <Info size={18} color="#2383e2" />
                   <AppText className="text-[15px] font-medium text-slate-700">{t("profile.aboutApp") || "Về EarlySigns"}</AppText>
                 </View>
                 <ChevronRight size={14} color="#94a3b8" />
@@ -1404,7 +1404,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                 className="flex-row items-center justify-between px-4 py-3.5 border-b border-slate-100"
               >
                 <View className="flex-row items-center gap-2.5">
-                  <ShieldCheck size={18} color="#10b981" />
+                  <ShieldCheck size={18} color="#0f7b6c" />
                   <AppText className="text-[15px] font-medium text-slate-700">{t("profile.privacyPolicy") || "Chính sách bảo mật"}</AppText>
                 </View>
                 <ChevronRight size={14} color="#94a3b8" />
@@ -1506,7 +1506,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
             className="rounded-t-3xl p-5 pb-8 gap-4"
           >
             <View className="flex-row items-center justify-between pb-2 border-b border-slate-100">
-              <AppText className="text-base font-extrabold text-[#0f172a]">
+              <AppText className="text-base font-extrabold text-[#37352f]">
                 {t("profile.chooseLanguage") || "Chọn ngôn ngữ hiển thị"}
               </AppText>
               <TouchableOpacity
@@ -1527,21 +1527,21 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
               activeOpacity={0.8}
               onPress={() => handleSelectLanguage("vi")}
               style={{
-                backgroundColor: currentLang === "vi" ? "#eff6ff" : "#F7F6F2",
-                borderColor: currentLang === "vi" ? "#0066ff" : "#e2e8f0",
+                backgroundColor: currentLang === "vi" ? "rgba(35, 131, 226, 0.08)" : "#f7f6f3",
+                borderColor: currentLang === "vi" ? "#2383e2" : "#e2e8f0",
               }}
               className="flex-row items-center justify-between p-4 rounded-2xl border"
             >
               <View className="flex-row items-center gap-3">
                 <AppText className="text-xl">🇻🇳</AppText>
                 <AppText
-                  style={{ color: currentLang === "vi" ? "#0066ff" : "#0f172a" }}
+                  style={{ color: currentLang === "vi" ? "#2383e2" : "#37352f" }}
                   className="text-sm font-bold"
                 >
                   {t("language.vi") || "Tiếng Việt"}
                 </AppText>
               </View>
-              {currentLang === "vi" ? <Check size={18} color="#0066ff" strokeWidth={2.5} /> : null}
+              {currentLang === "vi" ? <Check size={18} color="#2383e2" strokeWidth={2.5} /> : null}
             </TouchableOpacity>
 
             {/* Option 2: English */}
@@ -1552,21 +1552,21 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
               activeOpacity={0.8}
               onPress={() => handleSelectLanguage("en")}
               style={{
-                backgroundColor: currentLang === "en" ? "#eff6ff" : "#F7F6F2",
-                borderColor: currentLang === "en" ? "#0066ff" : "#e2e8f0",
+                backgroundColor: currentLang === "en" ? "rgba(35, 131, 226, 0.08)" : "#f7f6f3",
+                borderColor: currentLang === "en" ? "#2383e2" : "#e2e8f0",
               }}
               className="flex-row items-center justify-between p-4 rounded-2xl border"
             >
               <View className="flex-row items-center gap-3">
                 <AppText className="text-xl">🇬🇧</AppText>
                 <AppText
-                  style={{ color: currentLang === "en" ? "#0066ff" : "#0f172a" }}
+                  style={{ color: currentLang === "en" ? "#2383e2" : "#37352f" }}
                   className="text-sm font-bold"
                 >
                   {t("language.en") || "English"}
                 </AppText>
               </View>
-              {currentLang === "en" ? <Check size={18} color="#0066ff" strokeWidth={2.5} /> : null}
+              {currentLang === "en" ? <Check size={18} color="#2383e2" strokeWidth={2.5} /> : null}
             </TouchableOpacity>
           </TouchableOpacity>
         </TouchableOpacity>

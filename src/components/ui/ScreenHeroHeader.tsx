@@ -5,7 +5,7 @@ import { ChevronLeft } from "lucide-react-native";
 /**
  * Top elastic overscroll filler to prevent white flash when rubber-band scrolling on iOS.
  */
-export function OverscrollFiller({ color = "#F7F6F2" }: { color?: string }) {
+export function OverscrollFiller({ color = "#f7f6f3" }: { color?: string }) {
   return (
     <View
       style={{
@@ -57,7 +57,7 @@ export function ScreenHeroHeader({
             onPress={onBack}
             className="w-10 h-10 rounded-full bg-white border border-slate-200 items-center justify-center active:opacity-70"
           >
-            <ChevronLeft size={22} color="#0c2340" strokeWidth={2.5} />
+            <ChevronLeft size={22} color="#37352f" strokeWidth={2.5} />
           </TouchableOpacity>
         ) : (
           <View className="w-10 h-10" />
@@ -73,7 +73,7 @@ export function ScreenHeroHeader({
             </Text>
           ) : null}
           <Text
-            className="text-[15px] font-bold text-[#0c2340] text-center"
+            className="text-[15px] font-bold text-[#37352f] text-center"
             numberOfLines={1}
           >
             {title}

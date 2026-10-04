@@ -183,7 +183,7 @@ export default function PhonemePracticeScreen({ navigation, route }: Props) {
   // 1. Loading State with PracticeScreenSkeleton
   if (loading) {
     return (
-      <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: "#F7F6F2" }}>
+      <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: "#f7f6f3" }}>
         {/* Unified Top Navigation Header */}
         <View
           style={{
@@ -193,7 +193,7 @@ export default function PhonemePracticeScreen({ navigation, route }: Props) {
             paddingVertical: 12,
             borderBottomWidth: 1,
             borderBottomColor: "#e2e8f0",
-            backgroundColor: "#F7F6F2",
+            backgroundColor: "#f7f6f3",
           }}
         >
           <TouchableOpacity
@@ -212,12 +212,12 @@ export default function PhonemePracticeScreen({ navigation, route }: Props) {
               justifyContent: "center",
             }}
           >
-            <ChevronLeft size={22} color="#0c2340" />
+            <ChevronLeft size={22} color="#37352f" />
           </TouchableOpacity>
 
           <View style={{ flex: 1, marginHorizontal: 12 }}>
             <AppText
-              style={{ fontSize: 16, fontWeight: "700", color: "#0f172a" }}
+              style={{ fontSize: 16, fontWeight: "700", color: "#37352f" }}
               numberOfLines={1}
             >
               {displayTitle}
@@ -242,7 +242,7 @@ export default function PhonemePracticeScreen({ navigation, route }: Props) {
   // 2. Error State with Retry & Back
   if (error || !lessonSession || !lessonSession.sentences?.length) {
     return (
-      <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: "#F7F6F2" }}>
+      <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: "#f7f6f3" }}>
         <View
           style={{
             flexDirection: "row",
@@ -251,7 +251,7 @@ export default function PhonemePracticeScreen({ navigation, route }: Props) {
             paddingVertical: 12,
             borderBottomWidth: 1,
             borderBottomColor: "#e2e8f0",
-            backgroundColor: "#F7F6F2",
+            backgroundColor: "#f7f6f3",
           }}
         >
           <TouchableOpacity
@@ -270,12 +270,12 @@ export default function PhonemePracticeScreen({ navigation, route }: Props) {
               justifyContent: "center",
             }}
           >
-            <ChevronLeft size={22} color="#0c2340" />
+            <ChevronLeft size={22} color="#37352f" />
           </TouchableOpacity>
 
           <View style={{ flex: 1, marginHorizontal: 12 }}>
             <AppText
-              style={{ fontSize: 16, fontWeight: "700", color: "#0f172a" }}
+              style={{ fontSize: 16, fontWeight: "700", color: "#37352f" }}
               numberOfLines={1}
             >
               {displayTitle}
@@ -287,7 +287,7 @@ export default function PhonemePracticeScreen({ navigation, route }: Props) {
           <View className="w-16 h-16 rounded-full bg-rose-100 items-center justify-center">
             <AlertCircle size={32} color="#e11d48" />
           </View>
-          <AppText className="text-base font-extrabold text-slate-900 text-center">
+          <AppText className="text-base font-extrabold text-[#37352f] text-center">
             {t("common.loadFailed", "Không thể tải bài học")}
           </AppText>
           <AppText className="text-[14px] text-slate-600 text-center leading-relaxed max-w-[280px]">
@@ -313,7 +313,7 @@ export default function PhonemePracticeScreen({ navigation, route }: Props) {
               activeOpacity={0.8}
               onPress={fetchLesson}
               className="py-3 px-6 rounded-2xl flex-row items-center gap-2"
-              style={{ backgroundColor: "#0284c7" }}
+              style={{ backgroundColor: "#2383e2" }}
             >
               <RefreshCw size={16} color="#ffffff" />
               <AppText className="text-sm font-bold text-white">

@@ -61,7 +61,7 @@ function renderIcon(type: AlertType = "info") {
           style={{ backgroundColor: "#e0f2fe" }}
           className="w-12 h-12 rounded-full items-center justify-center"
         >
-          <HelpCircle size={24} color="#0284c7" />
+          <HelpCircle size={24} color="#2383e2" />
         </View>
       );
     case "info":
@@ -71,7 +71,7 @@ function renderIcon(type: AlertType = "info") {
           style={{ backgroundColor: "#e0f2fe" }}
           className="w-12 h-12 rounded-full items-center justify-center"
         >
-          <Info size={24} color="#0284c7" />
+          <Info size={24} color="#2383e2" />
         </View>
       );
   }
@@ -133,7 +133,7 @@ export default function CustomAlertModal() {
           {renderIcon(type)}
 
           {/* Title */}
-          <Text className="text-[17px] font-black text-[#0f172a] text-center mt-3.5">
+          <Text className="text-[17px] font-black text-[#37352f] text-center mt-3.5">
             {title}
           </Text>
 
@@ -156,7 +156,7 @@ export default function CustomAlertModal() {
                     ? "#f1f5f9"
                     : isDestructive
                     ? "#dc2626"
-                    : "#0f172a";
+                    : "#37352f";
                   const textColor = isCancel ? "#475569" : "#ffffff";
 
                   return (
@@ -188,7 +188,7 @@ export default function CustomAlertModal() {
                     ? "#f1f5f9"
                     : isDestructive
                     ? "#dc2626"
-                    : "#0f172a";
+                    : "#37352f";
                   const textColor = isCancel ? "#475569" : "#ffffff";
 
                   return (

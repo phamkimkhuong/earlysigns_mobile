@@ -31,7 +31,7 @@ function EarlySignsBrandLogo() {
         className="w-7 h-7 rounded-lg"
         resizeMode="contain"
       />
-      <AppText className="text-[20px] font-black text-[#0c2340] tracking-tight">EarlySigns</AppText>
+      <AppText className="text-[20px] font-black text-[#37352f] tracking-tight">EarlySigns</AppText>
     </View>
   );
 }
@@ -72,8 +72,8 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#0284c7"
-            colors={["#0284c7"]}
+            tintColor="#2383e2"
+            colors={["#2383e2"]}
           />
         }
       >
@@ -102,17 +102,17 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
             accessibilityLabel={`${t("homeDesign.headline")} ${t("homeDesign.headlineLead", "muốn")} ${t("homeDesign.headlineAccent", "luyện gì?")}`}
             className="gap-1 mt-1"
           >
-            <AppText className="text-[32px] font-black text-[#0c2340] tracking-tight leading-[38px]">
+            <AppText className="text-[32px] font-black text-[#37352f] tracking-tight leading-[38px]">
               {t("homeDesign.headline")}
             </AppText>
             <View className="h-10 justify-center -mt-0.5">
               <Svg height={42} width="100%">
                 <Defs>
                   <LinearGradient id="headlineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <Stop offset="0%" stopColor="#0c2340" />
-                    <Stop offset="30%" stopColor="#0369a1" />
-                    <Stop offset="68%" stopColor="#0284c7" />
-                    <Stop offset="100%" stopColor="#0ea5e9" />
+                    <Stop offset="0%" stopColor="#37352f" />
+                    <Stop offset="30%" stopColor="#1a6fc9" />
+                    <Stop offset="68%" stopColor="#2383e2" />
+                    <Stop offset="100%" stopColor="#3b9df8" />
                   </LinearGradient>
                 </Defs>
                 <SvgText
@@ -276,17 +276,17 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
               </View>
 
               <View className="bg-white rounded-full py-2.5 px-4 self-start flex-row items-center gap-1.5 mt-4 shadow-sm">
-                <AppText className="text-xs font-bold text-[#0c2340]">
+                <AppText className="text-xs font-bold text-[#37352f]">
                   {videoProgress ? t("homeDesign.videoAction") : t("homeDesign.videoActionExplore")}
                 </AppText>
-                <ArrowRight size={14} color="#0c2340" />
+                <ArrowRight size={14} color="#37352f" />
               </View>
             </View>
           </Pressable>
 
-          {/* 4. SECTION 2: LUYỆN VỚI VĂN BẢN TỰ DO (ĐẶC TẢ §7) */}
+          {/* 4. SECTION 2: LUYỆN VỚI VĂN BẢN TỰ DO*/}
           <View testID="home-text-section" className="gap-2.5">
-            <AppText accessibilityRole="header" className="text-[19px] font-extrabold text-[#0c2340] tracking-tight">
+            <AppText accessibilityRole="header" className="text-[19px] font-extrabold text-[#37352f] tracking-tight">
               {t("homeDesign.textTitle")}
             </AppText>
             <View className={stackActions ? "flex-col gap-2.5" : "flex-row gap-2.5"}>
@@ -300,10 +300,10 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
               >
                 <View className="flex-row items-center gap-2 flex-1 min-w-0 pr-0.5">
                   <View className="w-9 h-9 rounded-xl bg-white items-center justify-center shadow-xs border border-sky-100">
-                    <FileText size={17} color="#0284c7" />
+                    <FileText size={17} color="#2383e2" />
                   </View>
                   <View className="flex-1 min-w-0 justify-center">
-                    <AppText numberOfLines={1} className="text-[15px] font-bold text-[#0c2340]">
+                    <AppText numberOfLines={1} className="text-[15px] font-bold text-[#37352f]">
                       {t("homeDesign.inputTitle")}
                     </AppText>
                     <AppText numberOfLines={1} className="text-xs text-[#64748b] mt-0.5">
@@ -327,7 +327,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
                     <Camera size={17} color="#0d9488" />
                   </View>
                   <View className="flex-1 min-w-0 justify-center">
-                    <AppText numberOfLines={1} className="text-[15px] font-bold text-[#0c2340]">
+                    <AppText numberOfLines={1} className="text-[15px] font-bold text-[#37352f]">
                       {t("homeDesign.scanTitle")}
                     </AppText>
                     <AppText numberOfLines={1} className="text-xs text-[#64748b] mt-0.5">
@@ -342,7 +342,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
 
           {/* 5. SECTION 3: LUYỆN NGỮ ÂM (ĐẶC TẢ §7) */}
           <View testID="home-phonemes-section" className="gap-2.5">
-            <AppText accessibilityRole="header" className="text-[19px] font-extrabold text-[#0c2340] tracking-tight">
+            <AppText accessibilityRole="header" className="text-[19px] font-extrabold text-[#37352f] tracking-tight">
               {t("homeDesign.phonemesTitle")}
             </AppText>
             <Pressable
@@ -389,7 +389,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
                     >
                       <AppText
                         numberOfLines={1}
-                        className="text-xs font-bold text-[#0284c7] text-center"
+                        className="text-xs font-bold text-[#2383e2] text-center"
                         style={{ includeFontPadding: false }}
                       >
                         {`/${sound}/`}
@@ -400,7 +400,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
 
                 {/* Phoneme Headline & Subtitle */}
                 <View>
-                  <AppText className="text-[17px] font-black text-[#0c2340] leading-6">
+                  <AppText className="text-[17px] font-black text-[#37352f] leading-6">
                     {t("homeDesign.phonemeHeadline")}
                   </AppText>
                   <AppText className="text-xs text-[#64748b] leading-4 mt-0.5">

@@ -332,9 +332,9 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
           accessibilityRole="button"
           accessibilityLabel={t("common.back", "Quay lại")}
         >
-          <ChevronLeft size={22} color="#0c2340" strokeWidth={2.5} />
+          <ChevronLeft size={22} color="#37352f" strokeWidth={2.5} />
         </TouchableOpacity>
-        <AppText className="text-base font-extrabold text-[#0f172a]">
+        <AppText className="text-base font-extrabold text-[#37352f]">
           {t("notifications.title", "Cài đặt thông báo")}
         </AppText>
         <View className="w-10" />
@@ -359,7 +359,7 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
               <ShieldAlert size={22} color="#dc2626" />
             )}
             <View className="flex-1">
-              <AppText className="text-[15px] font-bold text-[#0f172a]">
+              <AppText className="text-[15px] font-bold text-[#37352f]">
                 {permissionGranted
                   ? t("notifications.permissionGranted", "Thông báo hệ thống: Đã bật")
                   : t("notifications.permissionDenied", "Thông báo hệ thống: Đang tắt")}
@@ -375,7 +375,7 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
           {!permissionGranted ? (
             <TouchableOpacity
               onPress={() => openNotificationSettings()}
-              style={{ backgroundColor: "#0f172a" }}
+              style={{ backgroundColor: "#37352f" }}
               className="flex-row items-center gap-1.5 px-3 py-1.5 rounded-full active:opacity-80"
               accessibilityRole="button"
               accessibilityLabel={t("notifications.openSettings", "Mở Cài đặt")}
@@ -400,11 +400,11 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
           {/* 1. Nhắc luyện tập hằng ngày */}
           <View className="flex-row items-center justify-between">
             <View className="flex-row items-center gap-3 flex-1 pr-3">
-              <View style={{ backgroundColor: "#e0f2fe" }} className="w-10 h-10 rounded-xl items-center justify-center">
-                <Bell size={20} color="#0284c7" />
+              <View style={{ backgroundColor: "rgba(35, 131, 226, 0.12)" }} className="w-10 h-10 rounded-xl items-center justify-center">
+                <Bell size={20} color="#2383e2" />
               </View>
               <View className="flex-1">
-                <AppText className="text-[15px] font-bold text-[#0f172a]">
+                <AppText className="text-[15px] font-bold text-[#37352f]">
                   {t("notifications.dailyReminder", "Nhắc luyện tập hằng ngày")}
                 </AppText>
                 <AppText className="text-[13px] text-slate-500 leading-5 mt-0.5">
@@ -415,7 +415,7 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
             <Switch
               value={settings.dailyReminderEnabled}
               onValueChange={handleToggleDailyReminder}
-              trackColor={{ false: "#cbd5e1", true: "#0284c7" }}
+              trackColor={{ false: "#cbd5e1", true: "#2383e2" }}
               thumbColor="#ffffff"
             />
           </View>
@@ -441,8 +441,8 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
                       key={preset.label}
                       onPress={() => handleSelectTime(preset.hour, preset.minute)}
                       style={{
-                        backgroundColor: isSelected ? "#0284c7" : "#f1f5f9",
-                        borderColor: isSelected ? "#0284c7" : "#e2e8f0",
+                        backgroundColor: isSelected ? "#2383e2" : "#f1f5f9",
+                        borderColor: isSelected ? "#2383e2" : "#e2e8f0",
                       }}
                       className="px-3.5 py-1.5 rounded-full border active:opacity-80"
                       accessibilityRole="button"
@@ -467,8 +467,8 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
                     setCustomTimeModalVisible(true);
                   }}
                   style={{
-                    backgroundColor: isCustomTimeSelected ? "#0284c7" : "#f1f5f9",
-                    borderColor: isCustomTimeSelected ? "#0284c7" : "#e2e8f0",
+                    backgroundColor: isCustomTimeSelected ? "#2383e2" : "#f1f5f9",
+                    borderColor: isCustomTimeSelected ? "#2383e2" : "#e2e8f0",
                   }}
                   className="flex-row items-center gap-1.5 px-3.5 py-1.5 rounded-full border active:opacity-80"
                   accessibilityRole="button"
@@ -501,7 +501,7 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
                 <PlayCircle size={20} color="#4f46e5" />
               </View>
               <View className="flex-1">
-                <AppText className="text-[15px] font-bold text-[#0f172a]">
+                <AppText className="text-[15px] font-bold text-[#37352f]">
                   {t("notifications.incompleteLesson", "Nhắc bài học đang dang dở")}
                 </AppText>
                 <AppText className="text-[13px] text-slate-500 leading-5 mt-0.5">
@@ -529,7 +529,7 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
                 <Flame size={20} color="#ea580c" />
               </View>
               <View className="flex-1">
-                <AppText className="text-[15px] font-bold text-[#0f172a]">
+                <AppText className="text-[15px] font-bold text-[#37352f]">
                   {t("notifications.streakReminder", "Nhắc duy trì chuỗi Streak")}
                 </AppText>
                 <AppText className="text-[13px] text-slate-500 leading-5 mt-0.5">
@@ -561,17 +561,17 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
           {/* Hàng: Thông báo nội dung mới */}
           <View className="flex-row items-center justify-between py-0.5">
             <View className="flex-row items-center gap-3 flex-1 pr-3">
-              <View style={{ backgroundColor: "#e0f2fe" }} className="w-10 h-10 rounded-xl items-center justify-center">
-                <BookOpen size={20} color="#0284c7" />
+              <View style={{ backgroundColor: "rgba(35, 131, 226, 0.12)" }} className="w-10 h-10 rounded-xl items-center justify-center">
+                <BookOpen size={20} color="#2383e2" />
               </View>
-              <AppText className="text-[15px] font-bold text-[#0f172a] flex-1">
+              <AppText className="text-[15px] font-bold text-[#37352f] flex-1">
                 {t("notifications.contentUpdates", "Nội dung & bài học mới")}
               </AppText>
             </View>
             <Switch
               value={settings.contentUpdatesEnabled}
               onValueChange={handleToggleContentUpdates}
-              trackColor={{ false: "#cbd5e1", true: "#0284c7" }}
+              trackColor={{ false: "#cbd5e1", true: "#2383e2" }}
               thumbColor="#ffffff"
             />
           </View>
@@ -582,16 +582,16 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
           <View className="flex-row items-center justify-between py-0.5">
             <View className="flex-row items-center gap-3 flex-1 pr-3">
               <View style={{ backgroundColor: "#fffbeb" }} className="w-10 h-10 rounded-xl items-center justify-center">
-                <Tag size={20} color="#d97706" />
+                <Tag size={20} color="#cb912f" />
               </View>
-              <AppText className="text-[15px] font-bold text-[#0f172a] flex-1">
+              <AppText className="text-[15px] font-bold text-[#37352f] flex-1">
                 {t("notifications.promotions", "Ưu đãi & Chương trình đặc biệt")}
               </AppText>
             </View>
             <Switch
               value={settings.promotionsEnabled}
               onValueChange={handleTogglePromotions}
-              trackColor={{ false: "#cbd5e1", true: "#0284c7" }}
+              trackColor={{ false: "#cbd5e1", true: "#2383e2" }}
               thumbColor="#ffffff"
             />
           </View>
@@ -605,11 +605,11 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
           <View className="flex-row items-center justify-between">
             <View className="flex-row items-center gap-3 flex-1 pr-3">
               <View style={{ backgroundColor: "#ecfdf5" }} className="w-10 h-10 rounded-xl items-center justify-center">
-                <ShieldCheck size={20} color="#059669" />
+                <ShieldCheck size={20} color="#0f7b6c" />
               </View>
               <View className="flex-1">
                 <View className="flex-row items-center gap-2">
-                  <AppText className="text-[15px] font-bold text-[#0f172a]">
+                  <AppText className="text-[15px] font-bold text-[#37352f]">
                     {t("notifications.systemSecurity", "Bảo mật & Giao dịch")}
                   </AppText>
                   <View
@@ -665,13 +665,13 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
             <View className="flex-row items-center justify-between pb-3 border-b border-slate-100">
               <View className="flex-row items-center gap-2.5">
                 <View
-                  style={{ backgroundColor: "#e0f2fe" }}
+                  style={{ backgroundColor: "rgba(35, 131, 226, 0.12)" }}
                   className="w-9 h-9 rounded-xl items-center justify-center"
                 >
-                  <Clock size={18} color="#0284c7" />
+                  <Clock size={18} color="#2383e2" />
                 </View>
                 <View>
-                  <AppText className="text-base font-black text-[#0f172a]">
+                  <AppText className="text-base font-black text-[#37352f]">
                     {t("notifications.customTimeModalTitle", "Tùy chỉnh giờ nhắc")}
                   </AppText>
                   <AppText className="text-xs text-slate-500">
@@ -700,14 +700,14 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
                     onPress={() => setTempHour((prev) => (prev + 1) % 24)}
                     className="w-12 h-10 rounded-xl bg-slate-100 items-center justify-center active:bg-slate-200"
                   >
-                    <ChevronUp size={20} color="#0f172a" />
+                    <ChevronUp size={20} color="#37352f" />
                   </TouchableOpacity>
 
                   <View
-                    style={{ backgroundColor: "#F7F6F2", borderColor: "#cbd5e1" }}
+                    style={{ backgroundColor: "#f7f6f3", borderColor: "#cbd5e1" }}
                     className="w-20 h-20 rounded-2xl border items-center justify-center shadow-xs"
                   >
-                    <AppText className="text-3xl font-black text-[#0c2340]">
+                    <AppText className="text-3xl font-black text-[#37352f]">
                       {String(tempHour).padStart(2, "0")}
                     </AppText>
                     <AppText className="text-xs font-bold text-slate-400 uppercase mt-0.5">
@@ -721,7 +721,7 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
                     onPress={() => setTempHour((prev) => (prev - 1 + 24) % 24)}
                     className="w-12 h-10 rounded-xl bg-slate-100 items-center justify-center active:bg-slate-200"
                   >
-                    <ChevronDown size={20} color="#0f172a" />
+                    <ChevronDown size={20} color="#37352f" />
                   </TouchableOpacity>
                 </View>
 
@@ -736,14 +736,14 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
                     onPress={() => setTempMinute((prev) => (prev + 5) % 60)}
                     className="w-12 h-10 rounded-xl bg-slate-100 items-center justify-center active:bg-slate-200"
                   >
-                    <ChevronUp size={20} color="#0f172a" />
+                    <ChevronUp size={20} color="#37352f" />
                   </TouchableOpacity>
 
                   <View
-                    style={{ backgroundColor: "#F7F6F2", borderColor: "#cbd5e1" }}
+                    style={{ backgroundColor: "#f7f6f3", borderColor: "#cbd5e1" }}
                     className="w-20 h-20 rounded-2xl border items-center justify-center shadow-xs"
                   >
-                    <AppText className="text-3xl font-black text-[#0c2340]">
+                    <AppText className="text-3xl font-black text-[#37352f]">
                       {String(tempMinute).padStart(2, "0")}
                     </AppText>
                     <AppText className="text-xs font-bold text-slate-400 uppercase mt-0.5">
@@ -757,7 +757,7 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
                     onPress={() => setTempMinute((prev) => (prev - 5 + 60) % 60)}
                     className="w-12 h-10 rounded-xl bg-slate-100 items-center justify-center active:bg-slate-200"
                   >
-                    <ChevronDown size={20} color="#0f172a" />
+                    <ChevronDown size={20} color="#37352f" />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -786,16 +786,16 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
                     }}
                     style={{
                       backgroundColor:
-                        tempHour === item.h && tempMinute === item.m ? "#eff6ff" : "#F7F6F2",
+                        tempHour === item.h && tempMinute === item.m ? "rgba(35, 131, 226, 0.08)" : "#f7f6f3",
                       borderColor:
-                        tempHour === item.h && tempMinute === item.m ? "#0284c7" : "#e2e8f0",
+                        tempHour === item.h && tempMinute === item.m ? "#2383e2" : "#e2e8f0",
                     }}
                     className="px-3 py-1.5 rounded-full border active:opacity-80"
                   >
                     <AppText
                       style={{
                         color:
-                          tempHour === item.h && tempMinute === item.m ? "#0284c7" : "#475569",
+                          tempHour === item.h && tempMinute === item.m ? "#2383e2" : "#475569",
                       }}
                       className="text-xs font-semibold"
                     >
@@ -825,7 +825,7 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
                   handleSelectTime(tempHour, tempMinute);
                   setCustomTimeModalVisible(false);
                 }}
-                style={{ backgroundColor: "#0284c7" }}
+                style={{ backgroundColor: "#2383e2" }}
                 className="flex-1 py-3.5 rounded-2xl items-center justify-center shadow-sm active:opacity-90"
               >
                 <AppText className="text-sm font-extrabold text-white">

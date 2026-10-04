@@ -460,7 +460,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
             left: 0,
             right: 0,
             height: 1000,
-            backgroundColor: "#F7F6F2",
+            backgroundColor: "#f7f6f3",
           }}
         />
 
@@ -482,7 +482,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
               }}
               className="w-10 h-10 rounded-full bg-white border border-slate-200 items-center justify-center active:opacity-70"
             >
-              <ChevronLeft size={22} color="#0c2340" strokeWidth={2.5} />
+              <ChevronLeft size={22} color="#37352f" strokeWidth={2.5} />
             </TouchableOpacity>
 
             {/* Video Title / Topic Header */}
@@ -494,7 +494,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                 {video ? topicLabel(video.topic, t) : t("videos.breadcrumb.videos")}
               </AppText>
               <AppText
-                className="text-[15px] font-bold text-[#0c2340] text-center mt-0.5"
+                className="text-[15px] font-bold text-[#37352f] text-center mt-0.5"
                 numberOfLines={1}
               >
                 {video?.title || t("videos.practice.mainAria")}
@@ -515,7 +515,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                     total: segments.length || 1,
                   })}
                 </AppText>
-                <AppText className="text-xs font-bold text-[#0c2340]">
+                <AppText className="text-xs font-bold text-[#37352f]">
                   {progressPercent}%
                 </AppText>
               </View>

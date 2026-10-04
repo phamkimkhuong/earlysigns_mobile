@@ -317,11 +317,11 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
       <SafeAreaView className="flex-1 bg-white">
         <View className="flex-1 p-6 justify-center items-center gap-5">
           <View className="w-24 h-24 rounded-full bg-emerald-50 items-center justify-center border-2 border-emerald-200">
-            <CheckCircle2 size={54} color="#10b981" />
+            <CheckCircle2 size={54} color="#0f7b6c" />
           </View>
 
           <View className="items-center gap-2">
-            <AppText className="text-2xl font-black text-[#0c2340] text-center">
+            <AppText className="text-2xl font-black text-[#37352f] text-center">
               {t("sentence.allFinishedTitle", "Hoàn thành bài luyện tập!")}
             </AppText>
             <AppText className="text-[15px] text-slate-500 text-center leading-6">
@@ -333,7 +333,7 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
             <AppText className="text-xs font-bold text-sky-800 uppercase tracking-wider">
               {t("sentence.averageScore", "Điểm trung bình")}
             </AppText>
-            <AppText className="text-5xl font-black text-[#0a2644]">
+            <AppText className="text-5xl font-black text-[#37352f]">
               {avgScore}%
             </AppText>
             <AppText className="text-xs text-slate-500 font-medium">
@@ -347,7 +347,7 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
               accessibilityLabel={t("common.back", "Quay lại")}
               activeOpacity={0.85}
               onPress={() => navigation.goBack()}
-              className="w-full py-4 rounded-2xl bg-[#0a2644] items-center justify-center active:opacity-90 shadow-sm"
+              className="w-full py-4 rounded-2xl bg-[#37352f] items-center justify-center active:opacity-90 shadow-sm"
             >
               <AppText className="text-base font-extrabold text-white">
                 {t("common.back", "Quay lại")}
@@ -374,12 +374,12 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
           }}
           className="w-10 h-10 rounded-full bg-white border border-slate-200 items-center justify-center active:opacity-70"
         >
-          <ChevronLeft size={22} color="#0c2340" strokeWidth={2.5} />
+          <ChevronLeft size={22} color="#37352f" strokeWidth={2.5} />
         </TouchableOpacity>
 
         {/* Center Title & Counter */}
         <View className="flex-1 items-center mx-3">
-          <AppText numberOfLines={1} className="text-base font-bold text-[#0c2340]">
+          <AppText numberOfLines={1} className="text-base font-bold text-[#37352f]">
             {lessonTitle}
           </AppText>
           <AppText className="text-xs font-semibold text-slate-500 mt-0.5">
@@ -394,7 +394,7 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
       {/* 2. LINEAR SMOOTH PROGRESS BAR (Teal Accent like Video Card) */}
       <View className="h-1 w-full bg-slate-200">
         <View
-          className="h-full bg-[#2dd4bf] rounded-full"
+          className="h-full bg-[#0f7b6c] rounded-full"
           style={{ width: `${Math.max(8, Math.round(progressRatio * 100))}%` }}
         />
       </View>
@@ -426,7 +426,7 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
                   accessibilityState={{ selected: isCurrent }}
                   activeOpacity={0.7}
                   onPress={() => goToSentence(i)}
-                  className={`h-2 rounded-full ${isCurrent ? "w-6 bg-[#0284c7]" : isDone ? "w-2 bg-emerald-500" : "w-2 bg-slate-300"
+                  className={`h-2 rounded-full ${isCurrent ? "w-6 bg-[#2383e2]" : isDone ? "w-2 bg-emerald-500" : "w-2 bg-slate-300"
                     }`}
                 />
               );

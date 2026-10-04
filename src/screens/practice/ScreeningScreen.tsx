@@ -148,9 +148,9 @@ export default function ScreeningScreen({ navigation, route }: Props) {
             onPress={() => navigation.goBack()}
             className="w-10 h-10 rounded-full bg-white border border-slate-200 items-center justify-center active:opacity-70"
           >
-            <ChevronLeft size={22} color="#0c2340" strokeWidth={2.5} />
+            <ChevronLeft size={22} color="#37352f" strokeWidth={2.5} />
           </TouchableOpacity>
-          <AppText className="text-base font-bold text-[#0c2340]">
+          <AppText className="text-base font-bold text-[#37352f]">
             {t("screeningPractice.title")}
           </AppText>
           <View className="w-10 h-10" />
@@ -161,7 +161,7 @@ export default function ScreeningScreen({ navigation, route }: Props) {
             <AlertCircle size={32} color="#dc2626" />
           </View>
           <View className="gap-2 items-center">
-            <AppText className="text-lg font-extrabold text-[#0c2340] text-center">
+            <AppText className="text-lg font-extrabold text-[#37352f] text-center">
               {t("phonemesHome.startError")}
             </AppText>
             <AppText className="text-[15px] text-[#64748b] text-center leading-6 max-w-[300px]">
@@ -172,7 +172,7 @@ export default function ScreeningScreen({ navigation, route }: Props) {
             accessibilityRole="button"
             onPress={() => void fetchSentences()}
             activeOpacity={0.8}
-            className="min-h-[48px] px-6 py-3 rounded-2xl bg-[#2383E2] flex-row items-center gap-2"
+            className="min-h-[48px] px-6 py-3 rounded-2xl bg-[#2383e2] flex-row items-center gap-2"
           >
             <RotateCcw size={18} color="#ffffff" />
             <AppText className="text-sm font-bold text-white">

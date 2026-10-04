@@ -338,12 +338,12 @@ export default function SoundAnalysis({
               className="flex-row items-center gap-1.5 px-3 py-2 rounded-2xl"
               style={{
                 backgroundColor: isSelected
-                  ? "#2383E2"
+                  ? "#2383e2"
                   : w.hasErrors
                     ? "#fffbeb"
                     : w.isPerfect
                       ? "#f0fdf4"
-                      : "#F7F6F2",
+                      : "#f7f6f3",
                 borderWidth: 1.5,
                 borderColor: isSelected
                   ? "#1d4ed8"
@@ -375,7 +375,7 @@ export default function SoundAnalysis({
                 <View
                   className="min-w-[18px] h-[18px] px-1 rounded-full items-center justify-center"
                   style={{
-                    backgroundColor: isSelected ? "#ef4444" : "#f59e0b",
+                    backgroundColor: isSelected ? "#e03e3e" : "#cb912f",
                   }}
                 >
                   <Text className="text-[11px] font-black text-white leading-none">
@@ -386,7 +386,7 @@ export default function SoundAnalysis({
                 <View
                   className="w-4 h-4 rounded-full items-center justify-center"
                   style={{
-                    backgroundColor: isSelected ? "#10b981" : "#22c55e",
+                    backgroundColor: isSelected ? "#0f7b6c" : "#22c55e",
                   }}
                 >
                   <Check size={11} color="#ffffff" strokeWidth={3} />

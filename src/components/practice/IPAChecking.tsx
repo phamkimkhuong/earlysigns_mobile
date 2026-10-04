@@ -343,7 +343,7 @@ export default function IPAChecking({
   const totalSentences = sentences?.length || 1;
 
   const content = (
-    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: "#F7F6F2" }}>
+    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: "#f7f6f3" }}>
 
       {/* HEADER */}
       <View
@@ -354,7 +354,7 @@ export default function IPAChecking({
           paddingVertical: 12,
           borderBottomWidth: 1,
           borderBottomColor: "#e2e8f0",
-          backgroundColor: "#F7F6F2",
+          backgroundColor: "#f7f6f3",
         }}
       >
         <Pressable
@@ -373,12 +373,12 @@ export default function IPAChecking({
             justifyContent: "center",
           })}
         >
-          <ChevronLeft size={22} color="#0c2340" />
+          <ChevronLeft size={22} color="#37352f" />
         </Pressable>
 
         <View style={{ flex: 1, marginHorizontal: 12, justifyContent: "center" }}>
           <AppText
-            style={{ fontSize: 17, fontWeight: "800", color: "#0c2340" }}
+            style={{ fontSize: 17, fontWeight: "800", color: "#37352f" }}
             numberOfLines={1}
           >
             {lessonTitle || t("sentence.current", { current: currentIndex + 1, total: totalSentences })}
@@ -415,13 +415,13 @@ export default function IPAChecking({
               borderColor: "#bae6fd",
             }}
           >
-            <BookOpen size={16} color="#0284c7" />
+            <BookOpen size={16} color="#2383e2" />
             <AppText
               numberOfLines={1}
               style={{
                 fontSize: 13,
                 fontWeight: "700",
-                color: "#0284c7",
+                color: "#2383e2",
               }}
             >
               {t("phonemeGuide.guideBtn", "Hướng dẫn")}
@@ -454,7 +454,7 @@ export default function IPAChecking({
                   width: isCurrent ? 20 : 8,
                   height: 8,
                   borderRadius: 4,
-                  backgroundColor: isCurrent ? "#4f46e5" : isDone ? "#10b981" : "#cbd5e1",
+                  backgroundColor: isCurrent ? "#4f46e5" : isDone ? "#0f7b6c" : "#cbd5e1",
                 }}
               />
             );
@@ -482,8 +482,8 @@ export default function IPAChecking({
               <FormattedHtmlText
                 html={instructionsHtml}
                 style={{ fontSize: 15, color: "#334155", lineHeight: 24 }}
-                boldStyle={{ fontWeight: "700", color: "#0284c7" }}
-                italicStyle={{ fontStyle: "italic", color: "#0c2340" }}
+                boldStyle={{ fontWeight: "700", color: "#2383e2" }}
+                italicStyle={{ fontStyle: "italic", color: "#37352f" }}
               />
             </View>
             <PrimaryButton

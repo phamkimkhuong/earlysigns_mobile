@@ -77,10 +77,10 @@ export default function PhonemesScreen({ navigation, route }: NativeStackScreenP
           }}
           className="w-10 h-10 rounded-full bg-white border border-slate-200 items-center justify-center active:opacity-70"
         >
-          <ChevronLeft size={22} color="#0c2340" strokeWidth={2.5} />
+          <ChevronLeft size={22} color="#37352f" strokeWidth={2.5} />
         </TouchableOpacity>
 
-        <AppText className="text-base font-bold text-[#0c2340]">
+        <AppText className="text-base font-bold text-[#37352f]">
           {t("nav.phonemes")}
         </AppText>
 

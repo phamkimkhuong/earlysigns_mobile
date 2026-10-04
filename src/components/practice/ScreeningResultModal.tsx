@@ -45,7 +45,7 @@ export default function ScreeningResultModal({ open, totalAccuracy, onClose }: S
         <PrimaryButton
           title={buttonTitle}
           onPress={onClose}
-          style={{ backgroundColor: "#0c2340", borderRadius: 16 }}
+          style={{ backgroundColor: "#2383e2", borderRadius: 16 }}
         />
       }
     >

@@ -37,9 +37,9 @@ const TOAST_THEMES = {
   info: {
     bgColor: "#ffffff",
     borderColor: "#bae6fd",
-    accentColor: "#0284c7",
+    accentColor: "#2383e2",
     iconBg: "#e0f2fe",
-    iconColor: "#0284c7",
+    iconColor: "#2383e2",
     titleColor: "#075985",
     IconComponent: Info,
   },

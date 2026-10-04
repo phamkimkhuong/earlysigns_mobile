@@ -16,26 +16,36 @@ export interface Colors {
   warning: string;
   overlay: string;
   practiceHeader: string;
+  calloutBlue: string;
+  calloutYellow: string;
+  calloutPink: string;
+  calloutGreen: string;
+  calloutOrange: string;
 }
 
 export const colors: Colors = {
-  bg: "#F7F6F2",
+  bg: "#f7f6f3",
   bgElevated: "#ffffff",
-  bgMuted: "#f1f5f9",
-  text: "#0f172a",
-  textSecondary: "#475569",
-  textMuted: "#94a3b8",
-  border: "rgba(15, 23, 42, 0.06)",
-  borderStrong: "rgba(15, 23, 42, 0.12)",
-  accent: "#0284c7",
-  accentHover: "#0369a1",
-  accentMuted: "rgba(2, 132, 199, 0.12)",
-  danger: "#ef4444",
-  dangerMuted: "rgba(239, 68, 68, 0.1)",
-  success: "#10b981",
-  warning: "#f59e0b",
-  overlay: "rgba(15, 23, 42, 0.5)",
+  bgMuted: "#efeee9",
+  text: "#37352f",
+  textSecondary: "#6b6b66",
+  textMuted: "#9b9a97",
+  border: "rgba(55, 53, 47, 0.09)",
+  borderStrong: "rgba(55, 53, 47, 0.16)",
+  accent: "#2383e2",
+  accentHover: "#1a6fc9",
+  accentMuted: "rgba(35, 131, 226, 0.12)",
+  danger: "#e03e3e",
+  dangerMuted: "rgba(224, 62, 62, 0.1)",
+  success: "#0f7b6c",
+  warning: "#cb912f",
+  overlay: "rgba(55, 53, 47, 0.5)",
   practiceHeader: "#1a5f91",
+  calloutBlue: "rgba(35, 131, 226, 0.10)",
+  calloutYellow: "rgba(233, 168, 0, 0.12)",
+  calloutPink: "rgba(226, 85, 161, 0.10)",
+  calloutGreen: "rgba(15, 123, 108, 0.10)",
+  calloutOrange: "rgba(217, 115, 13, 0.10)",
 };
 
 export const radius = {

@@ -481,7 +481,7 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
   }, [queryClient]);
 
   const { refreshing, onRefresh } = usePullToRefresh(handleRefresh, {
-    tintColor: "#f59e0b",
+    tintColor: "#2383e2",
     enableHaptics: true,
     minDurationMs: 450,
   });
@@ -501,7 +501,7 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#f59e0b"
+            tintColor="#2383e2"
           />
         }
       >
@@ -513,7 +513,7 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
             left: 0,
             right: 0,
             height: 1000,
-            backgroundColor: "#F7F6F2",
+            backgroundColor: "#f7f6f3",
           }}
         />
 
@@ -532,10 +532,10 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
             }}
             className="w-10 h-10 rounded-full bg-white border border-slate-200 items-center justify-center active:opacity-70"
           >
-            <ChevronLeft size={22} color="#0c2340" strokeWidth={2.5} />
+            <ChevronLeft size={22} color="#37352f" strokeWidth={2.5} />
           </TouchableOpacity>
 
-          <AppText className="text-base font-bold text-[#0c2340]">
+          <AppText className="text-base font-bold text-[#37352f]">
             {t("videos.catalog.title") || "Luyện nói với YouTube"}
           </AppText>
 
@@ -620,8 +620,8 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
                           onPress={() => handleSelectTopic(tp)}
                           className="px-3.5 py-1.5 rounded-full border shrink-0 items-center justify-center"
                           style={{
-                            backgroundColor: isSelected ? "#0f172a" : "#ffffff",
-                            borderColor: isSelected ? "#0f172a" : "#e2e8f0",
+                            backgroundColor: isSelected ? "#37352f" : "#ffffff",
+                            borderColor: isSelected ? "#37352f" : "#e2e8f0",
                           }}
                         >
                           <AppText

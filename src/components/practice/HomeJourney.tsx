@@ -106,7 +106,7 @@ function NodeCircle({
           height: 58,
           borderRadius: 29,
           backgroundColor: isCompleted ? "#ecfdf5" : isCurrent ? "#4f46e5" : "#f1f5f9",
-          borderColor: isCompleted ? "#10b981" : isCurrent ? "#818cf8" : "#cbd5e1",
+          borderColor: isCompleted ? "#0f7b6c" : isCurrent ? "#818cf8" : "#cbd5e1",
           borderWidth: isCurrent ? 3 : 2,
           alignItems: "center",
           justifyContent: "center",
@@ -129,7 +129,7 @@ function NodeCircle({
 
       {/* Module Title & Label */}
       <View
-        style={{ backgroundColor: isCurrent ? "#e0e7ff" : "#F7F6F2" }}
+        style={{ backgroundColor: isCurrent ? "#e0e7ff" : "#f7f6f3" }}
         className="px-2.5 py-0.5 rounded-full border border-slate-200"
       >
         <Text
@@ -323,7 +323,7 @@ export default function HomeJourney({
       {onViewAll ? (
         <Pressable
           onPress={onViewAll}
-          style={{ backgroundColor: "#F7F6F2", borderColor: "#e2e8f0" }}
+          style={{ backgroundColor: "#f7f6f3", borderColor: "#e2e8f0" }}
           className="flex-row items-center justify-center gap-1.5 py-3 rounded-2xl border active:opacity-75 mt-1"
         >
           <Text style={{ color: "#4f46e5" }} className="text-sm font-bold">

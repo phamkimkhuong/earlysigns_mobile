@@ -134,7 +134,7 @@ export default function OnboardingScreen({ navigation }: Props) {
         accentKey: "onboarding.slide2Accent",
         descKey: "onboarding.slide2Desc",
         tagBg: "#eff6ff",
-        tagColor: "#0284c7",
+        tagColor: "#2383e2",
       },
       {
         id: 2,
@@ -234,7 +234,7 @@ export default function OnboardingScreen({ navigation }: Props) {
                 width: 64,
                 height: 64,
                 borderRadius: 16,
-                backgroundColor: "#F7F6F2",
+                backgroundColor: "#f7f6f3",
                 alignItems: "center",
                 justifyContent: "center",
                 borderWidth: 1,
@@ -272,8 +272,8 @@ export default function OnboardingScreen({ navigation }: Props) {
                 padding: 16,
                 borderRadius: 16,
                 borderWidth: 1.5,
-                borderColor: selectedLanguage === "vi" ? "#0084ff" : "#e2e8f0",
-                backgroundColor: selectedLanguage === "vi" ? "#eff6ff" : "#F7F6F2",
+                borderColor: selectedLanguage === "vi" ? "#2383e2" : "#e2e8f0",
+                backgroundColor: selectedLanguage === "vi" ? "#eff6ff" : "#f7f6f3",
                 flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "space-between",
@@ -294,7 +294,16 @@ export default function OnboardingScreen({ navigation }: Props) {
               </View>
 
               {selectedLanguage === "vi" ? (
-                <View className="w-7 h-7 rounded-full bg-blue-600 items-center justify-center">
+                <View
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: 14,
+                    backgroundColor: "#2383e2",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
                   <CheckCircle2 size={18} color="#ffffff" strokeWidth={2.5} />
                 </View>
               ) : (
@@ -313,8 +322,8 @@ export default function OnboardingScreen({ navigation }: Props) {
                 padding: 16,
                 borderRadius: 16,
                 borderWidth: 1.5,
-                borderColor: selectedLanguage === "en" ? "#0084ff" : "#e2e8f0",
-                backgroundColor: selectedLanguage === "en" ? "#eff6ff" : "#F7F6F2",
+                borderColor: selectedLanguage === "en" ? "#2383e2" : "#e2e8f0",
+                backgroundColor: selectedLanguage === "en" ? "#eff6ff" : "#f7f6f3",
                 flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "space-between",
@@ -335,7 +344,16 @@ export default function OnboardingScreen({ navigation }: Props) {
               </View>
 
               {selectedLanguage === "en" ? (
-                <View className="w-7 h-7 rounded-full bg-blue-600 items-center justify-center">
+                <View
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: 14,
+                    backgroundColor: "#2383e2",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
                   <CheckCircle2 size={18} color="#ffffff" strokeWidth={2.5} />
                 </View>
               ) : (
@@ -364,8 +382,8 @@ export default function OnboardingScreen({ navigation }: Props) {
                 <Svg width="100%" height="100%">
                   <Defs>
                     <LinearGradient id="btnGradLang" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <Stop offset="0%" stopColor="#0091ff" />
-                      <Stop offset="100%" stopColor="#0066ff" />
+                      <Stop offset="0%" stopColor="#2383e2" />
+                      <Stop offset="100%" stopColor="#1a6fc9" />
                     </LinearGradient>
                   </Defs>
                   <Rect width="100%" height="100%" fill="url(#btnGradLang)" />
@@ -432,7 +450,7 @@ export default function OnboardingScreen({ navigation }: Props) {
               hitSlop={16}
               className="w-10 h-10 items-start justify-center"
             >
-              <ChevronLeft size={24} color="#0f172a" strokeWidth={2.5} />
+              <ChevronLeft size={24} color="#37352f" strokeWidth={2.5} />
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -532,7 +550,7 @@ export default function OnboardingScreen({ navigation }: Props) {
                           style={{
                             fontSize: titleSize,
                             lineHeight: titleLineHeight,
-                            color: "#0c1a30",
+                            color: "#37352f",
                           }}
                           className="font-black"
                         >
@@ -542,7 +560,7 @@ export default function OnboardingScreen({ navigation }: Props) {
                           style={{
                             fontSize: titleSize,
                             lineHeight: titleLineHeight,
-                            color: "#0084ff",
+                            color: "#2383e2",
                           }}
                           className="font-black"
                         >
@@ -605,7 +623,7 @@ export default function OnboardingScreen({ navigation }: Props) {
                       height: 8,
                       borderRadius: 4,
                       width: isActive ? 28 : 8,
-                      backgroundColor: isActive ? "#0084ff" : "#e2e8f0",
+                      backgroundColor: isActive ? "#2383e2" : "#e2e8f0",
                     }}
                     accessibilityRole="button"
                     accessibilityLabel={t("onboarding.slideLabel", { number: idx + 1, defaultValue: `Slide ${idx + 1}` })}
@@ -634,8 +652,8 @@ export default function OnboardingScreen({ navigation }: Props) {
                 <Svg width="100%" height="100%">
                   <Defs>
                     <LinearGradient id="btnGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <Stop offset="0%" stopColor="#0091ff" />
-                      <Stop offset="100%" stopColor="#0066ff" />
+                      <Stop offset="0%" stopColor="#2383e2" />
+                      <Stop offset="100%" stopColor="#1a6fc9" />
                     </LinearGradient>
                   </Defs>
                   <Rect width="100%" height="100%" fill="url(#btnGrad)" />

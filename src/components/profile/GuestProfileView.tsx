@@ -110,7 +110,7 @@ export default function GuestProfileView({ navigation }: GuestProfileViewProps) 
             className="px-3 py-1 rounded-full border"
           >
             <AppText
-              style={{ color: "#0284c7" }}
+              style={{ color: "#2383e2" }}
               className="text-xs font-black uppercase tracking-wider"
             >
               {t("profile.guestBadge") || "GUEST"}
@@ -225,8 +225,8 @@ export default function GuestProfileView({ navigation }: GuestProfileViewProps) 
         {/* 3. SECTION 1: KHÁM PHÁ NHANH */}
         <View className="gap-2.5">
           <View className="flex-row items-center gap-2 px-1">
-            <Compass size={18} color="#0284c7" />
-            <AppText className="text-sm font-bold text-[#0f172a]">
+            <Compass size={18} color="#2383e2" />
+            <AppText className="text-sm font-bold text-[#37352f]">
               {t("profile.quickExplore") || "Khám phá nhanh"}
             </AppText>
           </View>
@@ -248,7 +248,7 @@ export default function GuestProfileView({ navigation }: GuestProfileViewProps) 
                 >
                   <Gift size={18} color="#4f46e5" />
                 </View>
-                <AppText className="text-[15px] font-semibold text-[#0f172a]">
+                <AppText className="text-[15px] font-semibold text-[#37352f]">
                   {t("profile.referralTitle") || "Chương trình giới thiệu"}
                 </AppText>
               </View>
@@ -265,9 +265,9 @@ export default function GuestProfileView({ navigation }: GuestProfileViewProps) 
                   style={{ backgroundColor: "#eff6ff" }}
                   className="w-9 h-9 rounded-xl items-center justify-center"
                 >
-                  <Globe size={18} color="#0284c7" />
+                  <Globe size={18} color="#2383e2" />
                 </View>
-                <AppText className="text-[15px] font-semibold text-[#0f172a]">
+                <AppText className="text-[15px] font-semibold text-[#37352f]">
                   {t("language.label") || "Ngôn ngữ"}
                 </AppText>
               </View>
@@ -285,8 +285,8 @@ export default function GuestProfileView({ navigation }: GuestProfileViewProps) 
         {/* 4. SECTION 2: HỖ TRỢ & THÔNG TIN */}
         <View className="gap-2.5">
           <View className="flex-row items-center gap-2 px-1">
-            <Info size={18} color="#0284c7" />
-            <AppText className="text-sm font-bold text-[#0f172a]">
+            <Info size={18} color="#2383e2" />
+            <AppText className="text-sm font-bold text-[#37352f]">
               {t("profile.supportAndInfo") || "Hỗ trợ & thông tin"}
             </AppText>
           </View>
@@ -308,9 +308,9 @@ export default function GuestProfileView({ navigation }: GuestProfileViewProps) 
                   style={{ backgroundColor: "#eff6ff" }}
                   className="w-9 h-9 rounded-xl items-center justify-center"
                 >
-                  <Headphones size={18} color="#0284c7" />
+                  <Headphones size={18} color="#2383e2" />
                 </View>
-                <AppText className="text-[15px] font-semibold text-[#0f172a]">
+                <AppText className="text-[15px] font-semibold text-[#37352f]">
                   {t("profile.contactSupport") || "Liên hệ hỗ trợ"}
                 </AppText>
               </View>
@@ -328,9 +328,9 @@ export default function GuestProfileView({ navigation }: GuestProfileViewProps) 
                   style={{ backgroundColor: "#ecfdf5" }}
                   className="w-9 h-9 rounded-xl items-center justify-center"
                 >
-                  <Info size={18} color="#10b981" />
+                  <Info size={18} color="#0f7b6c" />
                 </View>
-                <AppText className="text-[15px] font-semibold text-[#0f172a]">
+                <AppText className="text-[15px] font-semibold text-[#37352f]">
                   {t("profile.aboutApp") || "Về EarlySigns"}
                 </AppText>
               </View>
@@ -348,9 +348,9 @@ export default function GuestProfileView({ navigation }: GuestProfileViewProps) 
                   style={{ backgroundColor: "#eff6ff" }}
                   className="w-9 h-9 rounded-xl items-center justify-center"
                 >
-                  <FileText size={18} color="#0284c7" />
+                  <FileText size={18} color="#2383e2" />
                 </View>
-                <AppText className="text-[15px] font-semibold text-[#0f172a]">
+                <AppText className="text-[15px] font-semibold text-[#37352f]">
                   {t("profile.termsOfUse") || "Điều khoản sử dụng"}
                 </AppText>
               </View>
@@ -368,9 +368,9 @@ export default function GuestProfileView({ navigation }: GuestProfileViewProps) 
                   style={{ backgroundColor: "#ecfdf5" }}
                   className="w-9 h-9 rounded-xl items-center justify-center"
                 >
-                  <ShieldCheck size={18} color="#10b981" />
+                  <ShieldCheck size={18} color="#0f7b6c" />
                 </View>
-                <AppText className="text-[15px] font-semibold text-[#0f172a]">
+                <AppText className="text-[15px] font-semibold text-[#37352f]">
                   {t("profile.privacyPolicy") || "Chính sách bảo mật"}
                 </AppText>
               </View>
@@ -399,7 +399,7 @@ export default function GuestProfileView({ navigation }: GuestProfileViewProps) 
             className="rounded-t-3xl p-5 pb-8 gap-4"
           >
             <View className="flex-row items-center justify-between pb-2 border-b border-slate-100">
-              <AppText className="text-base font-extrabold text-[#0f172a]">
+              <AppText className="text-base font-extrabold text-[#37352f]">
                 {t("profile.chooseLanguage") || "Chọn ngôn ngữ hiển thị"}
               </AppText>
               <TouchableOpacity
@@ -415,21 +415,21 @@ export default function GuestProfileView({ navigation }: GuestProfileViewProps) 
               activeOpacity={0.8}
               onPress={() => handleSelectLanguage("vi")}
               style={{
-                backgroundColor: currentLang === "vi" ? "#eff6ff" : "#F7F6F2",
-                borderColor: currentLang === "vi" ? "#0284c7" : "#e2e8f0",
+                backgroundColor: currentLang === "vi" ? "#eff6ff" : "#f7f6f3",
+                borderColor: currentLang === "vi" ? "#2383e2" : "#e2e8f0",
               }}
               className="flex-row items-center justify-between p-4 rounded-2xl border"
             >
               <View className="flex-row items-center gap-3">
                 <AppText className="text-xl">🇻🇳</AppText>
                 <AppText
-                  style={{ color: currentLang === "vi" ? "#0284c7" : "#0f172a" }}
+                  style={{ color: currentLang === "vi" ? "#2383e2" : "#37352f" }}
                   className="text-[15px] font-bold"
                 >
                   {t("language.vi") || "Tiếng Việt"}
                 </AppText>
               </View>
-              {currentLang === "vi" ? <Check size={18} color="#0284c7" strokeWidth={2.5} /> : null}
+              {currentLang === "vi" ? <Check size={18} color="#2383e2" strokeWidth={2.5} /> : null}
             </TouchableOpacity>
 
             {/* Option 2: English */}
@@ -437,21 +437,21 @@ export default function GuestProfileView({ navigation }: GuestProfileViewProps) 
               activeOpacity={0.8}
               onPress={() => handleSelectLanguage("en")}
               style={{
-                backgroundColor: currentLang === "en" ? "#eff6ff" : "#F7F6F2",
-                borderColor: currentLang === "en" ? "#0284c7" : "#e2e8f0",
+                backgroundColor: currentLang === "en" ? "#eff6ff" : "#f7f6f3",
+                borderColor: currentLang === "en" ? "#2383e2" : "#e2e8f0",
               }}
               className="flex-row items-center justify-between p-4 rounded-2xl border"
             >
               <View className="flex-row items-center gap-3">
                 <AppText className="text-xl">🇬🇧</AppText>
                 <AppText
-                  style={{ color: currentLang === "en" ? "#0284c7" : "#0f172a" }}
+                  style={{ color: currentLang === "en" ? "#2383e2" : "#37352f" }}
                   className="text-[15px] font-bold"
                 >
                   {t("language.en") || "English"}
                 </AppText>
               </View>
-              {currentLang === "en" ? <Check size={18} color="#0284c7" strokeWidth={2.5} /> : null}
+              {currentLang === "en" ? <Check size={18} color="#2383e2" strokeWidth={2.5} /> : null}
             </TouchableOpacity>
           </TouchableOpacity>
         </TouchableOpacity>

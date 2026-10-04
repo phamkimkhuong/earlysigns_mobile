@@ -77,7 +77,7 @@ export default function PhonemeCatalogScreen({ navigation, route }: Props) {
             onPress={() => navigation.navigate("PhonemePractice", { phoneme: item.sound, dialect })}
             className="bg-white items-center justify-center min-h-[104px] px-2 py-3 rounded-[18px] active:opacity-80 gap-1"
             style={{
-              shadowColor: "#0c2340",
+              shadowColor: "#37352f",
               shadowOffset: { width: 0, height: 2 },
               shadowOpacity: 0.04,
               shadowRadius: 6,
@@ -85,7 +85,7 @@ export default function PhonemeCatalogScreen({ navigation, route }: Props) {
             }}
           >
             <AppText
-              className="text-[22px] font-extrabold text-[#0c2340] text-center"
+              className="text-[22px] font-extrabold text-[#37352f] text-center"
               style={{ includeFontPadding: false }}
               numberOfLines={1}
             >
@@ -164,8 +164,8 @@ export default function PhonemeCatalogScreen({ navigation, route }: Props) {
                 onPress={() => setSelectedCategory(category)}
                 className="px-4 py-2 min-h-[38px] rounded-[19px] border active:opacity-85 items-center justify-center"
                 style={{
-                  backgroundColor: isSelected ? "#0c2340" : "#ffffff",
-                  borderColor: isSelected ? "#0c2340" : "#e2eaf2",
+                  backgroundColor: isSelected ? "#37352f" : "#ffffff",
+                  borderColor: isSelected ? "#37352f" : "#e2eaf2",
                 }}
               >
                 <AppText
@@ -194,10 +194,10 @@ export default function PhonemeCatalogScreen({ navigation, route }: Props) {
           onPress={() => navigation.goBack()}
           className="w-10 h-10 rounded-full bg-white border border-slate-200 items-center justify-center active:opacity-70"
         >
-          <ChevronLeft size={22} color="#0c2340" strokeWidth={2.5} />
+          <ChevronLeft size={22} color="#37352f" strokeWidth={2.5} />
         </TouchableOpacity>
 
-        <AppText className="text-base flex-1 text-center font-bold text-[#0c2340]">
+        <AppText className="text-base flex-1 text-center font-bold text-[#37352f]">
           {t("phonemesHome.catalogTitle", "Kho 44 âm IPA")}
         </AppText>
 

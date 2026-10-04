@@ -7,7 +7,7 @@ import { getIpaSoundMeta } from "@/utils/ipaData";
 import { PhonemesChipsSkeleton } from "@/components/ui/Skeleton";
 
 const EXPLORE_SOUNDS = ["θ", "ɪ", "æ"];
-const primaryBlue = "#0284c7";
+const primaryBlue = "#2383e2";
 
 type Props = {
   t: TFunction;
@@ -51,7 +51,7 @@ function Action({
     paddingHorizontal: 18,
     paddingVertical: secondary ? 10 : 12,
     borderRadius: secondary ? 13 : 15,
-    backgroundColor: secondary ? "#f0f7fd" : "#0284c7",
+    backgroundColor: secondary ? "#f0f7fd" : "#2383e2",
     borderWidth: secondary ? 1.5 : 0,
     borderColor: secondary ? "#bae6fd" : "transparent",
     flexDirection: "row",
@@ -63,7 +63,7 @@ function Action({
     ...(secondary
       ? {}
       : {
-        shadowColor: "#0284c7",
+        shadowColor: "#2383e2",
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.22,
         shadowRadius: 8,
@@ -83,7 +83,7 @@ function Action({
     >
       {loading ? <ActivityIndicator color={secondary ? primaryBlue : "#ffffff"} /> : null}
       <Text
-        className={secondary ? "text-sm font-bold text-center text-[#0284c7]" : "text-base font-extrabold text-center text-white"}
+        className={secondary ? "text-sm font-bold text-center text-[#2383e2]" : "text-base font-extrabold text-center text-white"}
         style={{ lineHeight: secondary ? 20 : 23 }}
       >
         {title}
@@ -178,7 +178,7 @@ export default function PhonemesHome(props: Props) {
               borderColor: "#bae6fd",
             }}
           >
-            <Text className="text-[#0284c7] text-sm font-extrabold" numberOfLines={1}>
+            <Text className="text-[#2383e2] text-sm font-extrabold" numberOfLines={1}>
               {`/${sound}/`}
             </Text>
           </TouchableOpacity>
@@ -210,7 +210,7 @@ export default function PhonemesHome(props: Props) {
           testID="phonemes-screening-card"
           style={{
             borderRadius: 24,
-            shadowColor: "#0284c7",
+            shadowColor: "#2383e2",
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.1,
             shadowRadius: 14,
@@ -223,7 +223,7 @@ export default function PhonemesHome(props: Props) {
               className="self-start px-2.5 py-1 rounded-full"
               style={{ backgroundColor: "#e0effe", borderWidth: 1, borderColor: "#bae6fd" }}
             >
-              <Text className="text-[#0284c7] text-xs font-bold uppercase tracking-wider">
+              <Text className="text-[#2383e2] text-xs font-bold uppercase tracking-wider">
                 {t("phonemesHome.screeningEyebrow")}
               </Text>
             </View>
@@ -231,7 +231,7 @@ export default function PhonemesHome(props: Props) {
             {/* Main Headline */}
             <Text
               accessibilityRole="header"
-              className="text-[#0c2340] font-extrabold"
+              className="text-[#37352f] font-extrabold"
               style={{ fontSize: 26, lineHeight: 33, letterSpacing: -0.5 }}
             >
               {t("phonemesHome.screeningTitle")}
@@ -284,7 +284,7 @@ export default function PhonemesHome(props: Props) {
           testID="phonemes-lesson-hero"
           style={{
             borderRadius: 24,
-            shadowColor: "#0284c7",
+            shadowColor: "#2383e2",
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.1,
             shadowRadius: 14,
@@ -297,7 +297,7 @@ export default function PhonemesHome(props: Props) {
                 className="self-start px-2.5 py-1 rounded-full"
                 style={{ backgroundColor: "#e0effe", borderWidth: 1, borderColor: "#bae6fd" }}
               >
-                <Text className="text-[#0284c7] text-xs font-bold uppercase tracking-wider">
+                <Text className="text-[#2383e2] text-xs font-bold uppercase tracking-wider">
                   {t("phonemesHome.dailyMissionEyebrow", "Nhiệm vụ hôm nay")}
                 </Text>
               </View>
@@ -309,15 +309,15 @@ export default function PhonemesHome(props: Props) {
                 className="flex-row items-center gap-1.5 px-3 py-1 rounded-full border active:opacity-75"
                 style={{ backgroundColor: "#e0effe", borderColor: "#bae6fd" }}
               >
-                <Compass size={14} color="#0284c7" />
-                <Text className="text-[#0284c7] text-xs font-bold uppercase tracking-wider">
+                <Compass size={14} color="#2383e2" />
+                <Text className="text-[#2383e2] text-xs font-bold uppercase tracking-wider">
                   {t("phonemesHome.journeyLink", "Hành trình")} →
                 </Text>
               </Pressable>
             </View>
             <Text
               accessibilityRole="header"
-              className="text-[#0c2340] font-extrabold"
+              className="text-[#37352f] font-extrabold"
               style={{ fontSize: 24, lineHeight: 31, letterSpacing: -0.5 }}
             >
               {hasTargetSounds
@@ -341,7 +341,7 @@ export default function PhonemesHome(props: Props) {
           <View className="flex-row items-center justify-between">
             <Text
               accessibilityRole="header"
-              className="text-[#0c2340] text-lg font-bold"
+              className="text-[#37352f] text-lg font-bold"
               style={{ lineHeight: 25 }}
             >
               {t("phonemesHome.practiceTitle")}
@@ -354,7 +354,7 @@ export default function PhonemesHome(props: Props) {
               className="justify-center py-1 active:opacity-75"
               style={{ minHeight: 36 }}
             >
-              <Text className="text-[#0284c7] text-sm font-bold">
+              <Text className="text-[#2383e2] text-sm font-bold">
                 {t("phonemesHome.journeyLink", "Hành trình")} →
               </Text>
             </Pressable>
@@ -367,14 +367,14 @@ export default function PhonemesHome(props: Props) {
               borderRadius: 20,
               borderWidth: 1,
               borderColor: "#e2eaf2",
-              shadowColor: "#0c2340",
+              shadowColor: "#37352f",
               shadowOffset: { width: 0, height: 2 },
               shadowOpacity: 0.04,
               shadowRadius: 8,
               elevation: 1,
             }}
           >
-            <Text className="text-[#0c2340] text-base font-bold" style={{ lineHeight: 23 }}>
+            <Text className="text-[#37352f] text-base font-bold" style={{ lineHeight: 23 }}>
               {t("phonemesHome.dailyMissionTitle", "Nhiệm vụ luyện tập hôm nay")}
             </Text>
             <Text className="text-[#64748b] text-sm" style={{ lineHeight: 21 }}>
@@ -400,7 +400,7 @@ export default function PhonemesHome(props: Props) {
         <View className="flex-row items-center justify-between">
           <Text
             accessibilityRole="header"
-            className="text-[#0c2340] text-lg font-bold"
+            className="text-[#37352f] text-lg font-bold"
             style={{ lineHeight: 25 }}
           >
             {t(hasWeakSounds ? "phonemesHome.weakTitle" : "phonemesHome.exploreTitle")}
@@ -413,7 +413,7 @@ export default function PhonemesHome(props: Props) {
             className="justify-center py-1 active:opacity-75"
             style={{ minHeight: 36 }}
           >
-            <Text className="text-[#0284c7] text-sm font-bold">
+            <Text className="text-[#2383e2] text-sm font-bold">
               {t("phonemesHome.allSounds")} →
             </Text>
           </Pressable>
@@ -434,7 +434,7 @@ export default function PhonemesHome(props: Props) {
               className="justify-center self-start active:opacity-75"
               style={{ minHeight: 36 }}
             >
-              <Text className="text-[#0284c7] text-sm font-bold">
+              <Text className="text-[#2383e2] text-sm font-bold">
                 {t("phonemesHome.retry")}
               </Text>
             </Pressable>
@@ -473,7 +473,7 @@ export default function PhonemesHome(props: Props) {
                     alignItems: "center",
                     justifyContent: "center",
                     gap: 3,
-                    shadowColor: "#0c2340",
+                    shadowColor: "#37352f",
                     shadowOffset: { width: 0, height: 2 },
                     shadowOpacity: 0.04,
                     shadowRadius: 6,
@@ -487,7 +487,7 @@ export default function PhonemesHome(props: Props) {
                     <>
                       <Text
                         numberOfLines={1}
-                        className="text-[#0c2340] text-lg font-extrabold text-center"
+                        className="text-[#37352f] text-lg font-extrabold text-center"
                         style={{ includeFontPadding: false, textAlign: "center" }}
                       >
                         {`/${cleanSound}/`}

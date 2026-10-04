@@ -55,7 +55,7 @@ export default function PracticeFeedbackCard({
       return {
         bg: "#f0f9ff",
         border: "#bae6fd",
-        color: "#0284c7",
+        color: "#2383e2",
         ringTrack: "#e0f2fe",
       };
     }
@@ -221,7 +221,7 @@ export default function PracticeFeedbackCard({
                 paddingVertical: 7,
                 paddingHorizontal: 12,
                 borderRadius: 14,
-                backgroundColor: replayPlaying ? "#f0f9ff" : "#F7F6F2",
+                backgroundColor: replayPlaying ? "#f0f9ff" : "#f7f6f3",
                 borderWidth: 1,
                 borderColor: replayPlaying ? "#38bdf8" : "#e2e8f0",
                 width: "100%",
@@ -232,7 +232,7 @@ export default function PracticeFeedbackCard({
                   width: 26,
                   height: 26,
                   borderRadius: 13,
-                  backgroundColor: replayPlaying ? "#0284c7" : "#e0f2fe",
+                  backgroundColor: replayPlaying ? "#2383e2" : "#e0f2fe",
                   alignItems: "center",
                   justifyContent: "center",
                   flexShrink: 0,
@@ -241,7 +241,7 @@ export default function PracticeFeedbackCard({
                 {replayPlaying ? (
                   <Square size={11} color="#ffffff" fill="#ffffff" />
                 ) : (
-                  <Play size={11} color="#0284c7" fill="#0284c7" style={{ marginLeft: 1.5 }} />
+                  <Play size={11} color="#2383e2" fill="#2383e2" style={{ marginLeft: 1.5 }} />
                 )}
               </View>
 
@@ -251,7 +251,7 @@ export default function PracticeFeedbackCard({
                 style={{
                   fontSize: 13,
                   fontWeight: "700",
-                  color: replayPlaying ? "#0284c7" : "#0f172a",
+                  color: replayPlaying ? "#2383e2" : "#37352f",
                   flexShrink: 1,
                 }}
               >
@@ -280,7 +280,7 @@ export default function PracticeFeedbackCard({
             paddingVertical: 10,
             paddingHorizontal: 20,
             borderRadius: 14,
-            backgroundColor: pressed ? "#f1f5f9" : "#F7F6F2",
+            backgroundColor: pressed ? "#f1f5f9" : "#f7f6f3",
             borderWidth: 1,
             borderColor: "rgba(15,23,42,0.08)",
           })}

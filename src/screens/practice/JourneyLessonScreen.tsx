@@ -145,7 +145,7 @@ export default function JourneyLessonScreen({ navigation, route }: Props) {
   // Loading state (Matches IPAChecking header styling 100% to eliminate visual jump)
   if (loading) {
     return (
-      <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: "#F7F6F2" }}>
+      <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: "#f7f6f3" }}>
         {/* UNIFIED WHITE HEADER */}
         <View
           style={{
@@ -167,7 +167,7 @@ export default function JourneyLessonScreen({ navigation, route }: Props) {
               width: 38,
               height: 38,
               borderRadius: 19,
-              backgroundColor: "#F7F6F2",
+              backgroundColor: "#f7f6f3",
               alignItems: "center",
               justifyContent: "center",
             }}
@@ -177,7 +177,7 @@ export default function JourneyLessonScreen({ navigation, route }: Props) {
 
           <View style={{ flex: 1, marginHorizontal: 12 }}>
             <AppText
-              style={{ fontSize: 15, fontWeight: "700", color: "#0f172a" }}
+              style={{ fontSize: 15, fontWeight: "700", color: "#37352f" }}
               numberOfLines={1}
             >
               {displayTitle}
@@ -205,7 +205,7 @@ export default function JourneyLessonScreen({ navigation, route }: Props) {
   // Error state (Matches IPAChecking header styling)
   if (error || !lessonSession) {
     return (
-      <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: "#F7F6F2" }}>
+      <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: "#f7f6f3" }}>
         {/* UNIFIED WHITE HEADER */}
         <View
           style={{
@@ -227,7 +227,7 @@ export default function JourneyLessonScreen({ navigation, route }: Props) {
               width: 38,
               height: 38,
               borderRadius: 19,
-              backgroundColor: "#F7F6F2",
+              backgroundColor: "#f7f6f3",
               alignItems: "center",
               justifyContent: "center",
             }}
@@ -237,7 +237,7 @@ export default function JourneyLessonScreen({ navigation, route }: Props) {
 
           <View style={{ flex: 1, marginHorizontal: 12 }}>
             <AppText
-              style={{ fontSize: 15, fontWeight: "700", color: "#0f172a" }}
+              style={{ fontSize: 15, fontWeight: "700", color: "#37352f" }}
               numberOfLines={1}
             >
               {displayTitle}
@@ -261,7 +261,7 @@ export default function JourneyLessonScreen({ navigation, route }: Props) {
           <View className="w-16 h-16 rounded-full bg-rose-100 items-center justify-center">
             <AlertCircle size={32} color="#e11d48" />
           </View>
-          <AppText className="text-base font-extrabold text-slate-900 text-center">
+          <AppText className="text-base font-extrabold text-[#37352f] text-center">
             {t("common.loadFailed", "Không thể tải bài học")}
           </AppText>
           <AppText className="text-[14px] text-slate-600 text-center leading-relaxed max-w-[280px]">
@@ -287,7 +287,7 @@ export default function JourneyLessonScreen({ navigation, route }: Props) {
               activeOpacity={0.8}
               onPress={fetchLesson}
               className="py-3 px-6 rounded-2xl flex-row items-center gap-2"
-              style={{ backgroundColor: "#0284c7" }}
+              style={{ backgroundColor: "#2383e2" }}
             >
               <RefreshCw size={16} color="#ffffff" />
               <AppText className="text-sm font-bold text-white">

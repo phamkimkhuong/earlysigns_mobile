@@ -64,7 +64,7 @@ export default function LoginScreen({ navigation, route }: Props) {
               onPress={() => navigation.goBack()}
               className="w-10 h-10 rounded-2xl items-center justify-center bg-white border border-slate-200 shadow-sm"
             >
-              <ChevronLeft size={22} color="#0c2340" />
+              <ChevronLeft size={22} color="#37352f" />
             </TouchableOpacity>
           ) : (
             <View className="w-10 h-10" />
@@ -84,15 +84,15 @@ export default function LoginScreen({ navigation, route }: Props) {
           </View>
 
           <View className="flex-row items-center px-3 py-1 rounded-full bg-[#f0f9ff] border border-[#bae6fd] mt-1">
-            <AppText className="text-xs font-bold text-[#0284c7] uppercase tracking-wider">
+            <AppText className="text-xs font-bold text-[#2383e2] uppercase tracking-wider">
               EarlySigns English
             </AppText>
           </View>
 
-          <AppText className="text-[26px] font-extrabold text-[#0c2340] text-center leading-tight">
+          <AppText className="text-[26px] font-extrabold text-[#37352f] text-center leading-tight">
             {t("login.heroTitle", "Luyện phát âm chuẩn quốc tế")}
           </AppText>
-          <AppText className="text-[20px] font-extrabold text-[#0284c7] text-center -mt-1">
+          <AppText className="text-[20px] font-extrabold text-[#2383e2] text-center -mt-1">
             {t("login.heroTitleAccent", "Tự tin giao tiếp")}
           </AppText>
         </View>
@@ -101,7 +101,7 @@ export default function LoginScreen({ navigation, route }: Props) {
         <View className="bg-white rounded-[28px] p-6 border border-slate-200 shadow-sm gap-4">
           {vm.emailStep === "email" ? (
             <>
-              <AppText className="text-lg font-extrabold text-[#0c2340]">
+              <AppText className="text-lg font-extrabold text-[#37352f]">
                 {t("login.title", "Đăng nhập")}
               </AppText>
 
@@ -145,7 +145,7 @@ export default function LoginScreen({ navigation, route }: Props) {
                   <Mail size={18} color="#64748b" />
                   <TextInput
                     accessibilityLabel={t("login.emailLabel", "Email của bạn")}
-                    className="flex-1 ml-2.5 text-[15px] text-[#0c2340] p-0 font-medium"
+                    className="flex-1 ml-2.5 text-[15px] text-[#37352f] p-0 font-medium"
                     autoCapitalize="none"
                     keyboardType="email-address"
                     autoCorrect={false}
@@ -186,8 +186,8 @@ export default function LoginScreen({ navigation, route }: Props) {
                   onPress={vm.handleBackToEmail}
                   className="flex-row items-center gap-1 active:opacity-70 py-1"
                 >
-                  <ChevronLeft size={18} color="#0284c7" />
-                  <AppText className="text-sm font-bold text-[#0284c7]">
+                  <ChevronLeft size={18} color="#2383e2" />
+                  <AppText className="text-sm font-bold text-[#2383e2]">
                     {t("login.backToEmail", "Đổi email khác")}
                   </AppText>
                 </Pressable>
@@ -203,7 +203,7 @@ export default function LoginScreen({ navigation, route }: Props) {
               </View>
 
               <View className="gap-1">
-                <AppText className="text-xl font-extrabold text-[#0c2340]">
+                <AppText className="text-xl font-extrabold text-[#37352f]">
                   {t("login.otpScreenTitle", "Nhập mã xác thực")}
                 </AppText>
                 <AppText className="text-sm text-slate-500 font-medium leading-relaxed">
@@ -246,8 +246,8 @@ export default function LoginScreen({ navigation, route }: Props) {
                     disabled={vm.sendingOtp || vm.verifyingOtp}
                     className="flex-row items-center gap-1.5 py-1 px-3 rounded-full active:opacity-70"
                   >
-                    <RotateCcw size={14} color="#0284c7" />
-                    <AppText className="text-sm font-bold text-[#0284c7]">
+                    <RotateCcw size={14} color="#2383e2" />
+                    <AppText className="text-sm font-bold text-[#2383e2]">
                       {vm.sendingOtp ? t("login.resendingOtp", "Đang gửi lại...") : t("login.resendOtp", "Gửi lại mã OTP")}
                     </AppText>
                   </Pressable>

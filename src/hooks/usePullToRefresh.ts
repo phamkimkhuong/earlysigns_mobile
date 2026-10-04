@@ -47,13 +47,13 @@ export interface UsePullToRefreshOptions {
 
   /**
    * Primary spinner tint color for iOS.
-   * @default "#f59e0b" (Warning/Amber matching app theme)
+   * @default "#2383e2" (Brand accent matching app theme)
    */
   tintColor?: string;
 
   /**
    * Spinner color sequence for Android.
-   * @default ["#f59e0b", "#4f46e5"]
+   * @default ["#2383e2", "#1a6fc9"]
    */
   colors?: string[];
 
@@ -109,8 +109,8 @@ export interface UsePullToRefreshResult {
 }
 
 const DEFAULT_MIN_DURATION_MS = 450;
-const DEFAULT_TINT_COLOR = "#f59e0b";
-const DEFAULT_ANDROID_COLORS = ["#f59e0b", "#4f46e5"];
+const DEFAULT_TINT_COLOR = "#2383e2";
+const DEFAULT_ANDROID_COLORS = ["#2383e2", "#1a6fc9"];
 
 /**
  * Senior-level reusable Pull-To-Refresh hook.

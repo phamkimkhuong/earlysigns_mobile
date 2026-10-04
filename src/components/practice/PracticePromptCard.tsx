@@ -98,9 +98,9 @@ export default function PracticePromptCard({
             })}
           >
             {samplePlaying ? (
-              <ActivityIndicator size="small" color="#0284c7" />
+              <ActivityIndicator size="small" color="#2383e2" />
             ) : (
-              <Volume2 size={17} color="#0284c7" />
+              <Volume2 size={17} color="#2383e2" />
             )}
           </Pressable>
         </View>
@@ -110,7 +110,7 @@ export default function PracticePromptCard({
       {showTranslation && translationVi ? (
         <View
           style={{
-            backgroundColor: "#F7F6F2",
+            backgroundColor: "#f7f6f3",
             borderRadius: 12,
             paddingVertical: 8,
             paddingHorizontal: 12,

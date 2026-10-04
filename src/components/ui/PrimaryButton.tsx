@@ -34,7 +34,7 @@ export default function PrimaryButton({
     ? "bg-transparent border border-appBorderStrong"
     : isDanger
     ? "bg-danger"
-    : "bg-[#2383E2]";
+    : "bg-[#2383e2]";
 
   const stateClass = disabled || loading ? "opacity-50" : "active:opacity-85";
 
@@ -92,14 +92,14 @@ export function ChipButton({
       onPress={onPress}
       disabled={disabled}
       style={({ pressed }) => ({
-        backgroundColor: active ? "#e0f2fe" : "#ffffff",
-        borderColor: active ? "#0284c7" : "#cbd5e1",
+        backgroundColor: active ? "#eff6ff" : "#ffffff",
+        borderColor: active ? "#2383e2" : "#cbd5e1",
         opacity: disabled ? 0.45 : pressed ? 0.85 : 1,
       })}
       className={`rounded-full border px-3 py-1.5 ${className}`}
     >
       <Text
-        style={{ color: active ? "#0284c7" : "#475569" }}
+        style={{ color: active ? "#2383e2" : "#475569" }}
         className="font-semibold text-[13px]"
       >
         {title}
