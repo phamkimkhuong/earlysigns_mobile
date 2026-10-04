@@ -512,9 +512,6 @@ export default function SoundAnalysis({
             </View>
           ) : (
             <>
-              <Text className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                {t("result.soundAnalysis.errorsTitle", "Các âm cần cải thiện")}
-              </Text>
               {renderErrorPhonemeTable(activeWord.errorPhonemes)}
             </>
           )}
