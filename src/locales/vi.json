@@ -360,7 +360,7 @@
       "viewDetails": "Xem phân tích chi tiết",
       "hideDetails": "Ẩn chi tiết",
       "videoLabel": "Xem video hướng dẫn",
-      "learnPhoneme": "Học âm /{{phoneme}}/",
+      "learnPhoneme": "Học âm {{phoneme}}",
       "learnLoading": "Đang tải bài...",
       "wordPerfect": "Chuẩn xác",
       "wordErrors": "{{count}} âm cần sửa",
@@ -1080,7 +1080,7 @@
         "login": "Đăng nhập"
       }
     },
-    "titlePhoneme": "Học âm /{{phoneme}}/",
+    "titlePhoneme": "Học âm {{phoneme}}",
     "titlePersonalized": "Bài cá nhân hoá · {{phonemes}}",
     "titlePersonalizedShort": "Bài học cá nhân hoá",
     "empty": "Chưa có nội dung cho bài học này.",

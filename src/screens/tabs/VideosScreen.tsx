@@ -243,7 +243,7 @@ function TopicSectionRow({
     }
   }, [queryClient, topicVideosKey]);
 
-  // Auto-trigger load more ONLY when loadMoreTrigger strictly increments from parent scroll
+  // Consume each parent scroll/layout trigger once; failed batches require explicit retry.
   useEffect(() => {
     if (
       topicFilter &&
@@ -251,9 +251,9 @@ function TopicSectionRow({
       loadMoreTrigger > lastProcessedTriggerRef.current
     ) {
       lastProcessedTriggerRef.current = loadMoreTrigger;
-      handleLoadMore();
+      if (!loadMoreFailed) handleLoadMore();
     }
-  }, [loadMoreTrigger, topicFilter, handleLoadMore]);
+  }, [loadMoreTrigger, topicFilter, handleLoadMore, loadMoreFailed]);
 
   // If topic has 0 videos and not in specific topic filter mode, omit this row
   if (videos.length === 0 && !topicFilter) {
@@ -261,7 +261,7 @@ function TopicSectionRow({
   }
 
   // If in specific topic filter mode and 0 videos
-  if (videos.length === 0 && topicFilter) {
+  if (videos.length === 0 && topicFilter && cursor >= videoIds.length) {
     return (
       <View className="py-12 items-center justify-center">
         <AppText className="text-[13px] text-slate-400 font-medium">
@@ -273,8 +273,8 @@ function TopicSectionRow({
 
   return (
     <View className="gap-2.5 pt-1">
-      <View className="flex-row justify-between items-center px-1">
-        <AppText className="text-base font-extrabold text-slate-900">
+      <View className="flex-row items-center gap-3 px-1">
+        <AppText className="flex-1 text-base font-extrabold text-slate-900" style={{ minWidth: 0 }}>
           {topicLabel(topic, t)}
         </AppText>
         {topicFilter ? (
@@ -282,7 +282,7 @@ function TopicSectionRow({
             accessibilityRole="button"
             accessibilityLabel={t("videos.catalog.allTopics") || "Tất cả chủ đề"}
             onPress={() => onSelectTopic("")}
-            className="py-1"
+            className="py-1 shrink-0"
           >
             <AppText className="text-sm text-indigo-600 font-bold">
               {t("videos.catalog.allTopics") || "Tất cả"}
@@ -293,7 +293,7 @@ function TopicSectionRow({
             accessibilityRole="button"
             accessibilityLabel={t("videos.catalog.viewAll") || "Xem tất cả"}
             onPress={() => onSelectTopic(topic)}
-            className="py-1"
+            className="py-1 shrink-0"
           >
             <AppText className="text-sm text-indigo-600 font-bold">
               {t("videos.catalog.viewAll")}
@@ -353,7 +353,7 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
   const { authToken } = useAuth();
   const queryClient = useQueryClient();
   const scrollViewRef = useRef<ScrollView>(null);
-  const lastTriggerTimeRef = useRef(0);
+  const scrollMetricsRef = useRef({ viewportHeight: 0, contentHeight: 0 });
 
   const [topicFilter, setTopicFilter] = useState("");
   const [level, setLevel] = useState("");
@@ -394,7 +394,6 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
     setLevel(lv);
     setVisibleTopicLimit(INITIAL_TOPIC_COUNT);
     setLoadMoreTrigger(0);
-    lastTriggerTimeRef.current = Date.now();
     scrollViewRef.current?.scrollTo({ y: 0, animated: false });
   }, []);
 
@@ -402,7 +401,6 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
     setTopicFilter(tp);
     setVisibleTopicLimit(INITIAL_TOPIC_COUNT);
     setLoadMoreTrigger(0);
-    lastTriggerTimeRef.current = Date.now();
     scrollViewRef.current?.scrollTo({ y: 0, animated: false });
   }, []);
 
@@ -439,34 +437,40 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
     [filteredFeedTopics, topicFilter, visibleTopicLimit]
   );
 
+  // A short filtered grid cannot emit a useful scroll event. Recheck after
+  // layout/content changes (including each loaded batch) until it fills the viewport.
+  const fillShortTopic = useCallback(() => {
+    const { viewportHeight, contentHeight } = scrollMetricsRef.current;
+    if (topicFilter && viewportHeight > 0 && contentHeight > 0 && contentHeight <= viewportHeight + 100) {
+      setLoadMoreTrigger((prev) => prev + 1);
+    }
+  }, [topicFilter]);
+
+  useEffect(() => {
+    if (!feedLoading) fillShortTopic();
+  }, [feedLoading, fillShortTopic, level]);
+
   // Infinite vertical scrolling: load next batch of topics or more videos when near bottom
   const handleScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
-      // 1. Never trigger if user hasn't scrolled down at least 100px
-      // or if content height doesn't exceed screen height by at least 100px
-      if (contentOffset.y < 100 || contentSize.height <= layoutMeasurement.height + 100) {
-        return;
-      }
-
-      // 2. Check if user is close to bottom (within 160px)
+      // Check if the user is close to the bottom (within 160px).
       const paddingToBottom = 160;
       const isCloseToBottom =
         layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom;
 
       if (!isCloseToBottom) return;
 
-      // 3. Khi đang xem một chủ đề (lưới 2 cột): kích hoạt nạp thêm 4 video, kèm throttle 1200ms
+      // The row guards concurrent requests and exhaustion. Do not require a
+      // minimum scroll distance or time: short grids may only scroll a few pixels.
       if (topicFilter) {
-        const now = Date.now();
-        if (now - lastTriggerTimeRef.current > 1200) {
-          lastTriggerTimeRef.current = now;
-          setLoadMoreTrigger((prev) => prev + 1);
-        }
+        setLoadMoreTrigger((prev) => prev + 1);
         return;
       }
 
-      // 4. Khi đang xem danh mục chung: nạp thêm các hàng chủ đề tiếp theo
+      if (contentOffset.y < 100 || contentSize.height <= layoutMeasurement.height + 100) return;
+
+      // Khi đang xem danh mục chung: nạp thêm các hàng chủ đề tiếp theo.
       if (visibleTopicLimit < filteredFeedTopics.length) {
         setVisibleTopicLimit((prev) => Math.min(prev + BATCH_TOPIC_COUNT, filteredFeedTopics.length));
       }
@@ -493,10 +497,17 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
       <ScrollView
         ref={scrollViewRef}
         className="flex-1 bg-appBg"
-        contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={64}
         onScroll={handleScroll}
+        onLayout={(event) => {
+          scrollMetricsRef.current.viewportHeight = event.nativeEvent.layout.height;
+          fillShortTopic();
+        }}
+        onContentSizeChange={(_width, height) => {
+          scrollMetricsRef.current.contentHeight = height;
+          fillShortTopic();
+        }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -543,7 +554,7 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
         </View>
 
         {/* 2. MAIN CONTENT */}
-        <View className="flex-1 bg-appBg px-4 pt-4 pb-20 gap-4">
+        <View className="bg-appBg px-4 pt-4 pb-20 gap-4">
           {/* Filter Bar: Level Chips */}
           <View className="gap-2">
             <AppText className="text-xs font-extrabold uppercase tracking-wider text-slate-400 px-1">
@@ -644,7 +655,7 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
           </View>
 
           {/* Viewed / Continue Learning Section */}
-          {authToken && viewedVideos.length > 0 ? (
+          {!topicFilter && !level && authToken && viewedVideos.length > 0 ? (
             <View className="gap-2.5 pt-1">
               <View className="flex-row items-center justify-between px-1">
                 <AppText className="text-base font-extrabold text-slate-900">

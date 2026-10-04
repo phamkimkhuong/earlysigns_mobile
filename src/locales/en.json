@@ -371,7 +371,7 @@
       "viewDetails": "View detailed analysis",
       "hideDetails": "Hide details",
       "videoLabel": "Watch tutorial video",
-      "learnPhoneme": "Learn /{{phoneme}}/",
+      "learnPhoneme": "Learn {{phoneme}}",
       "learnLoading": "Loading lesson...",
       "selectWordHint": "Tap a word to inspect its phonemes:",
       "wordPerfect": "Perfect",
@@ -1086,7 +1086,7 @@
         "login": "Log in"
       }
     },
-    "titlePhoneme": "Learning /{{phoneme}}/",
+    "titlePhoneme": "Learning {{phoneme}}",
     "titlePersonalized": "Personalized lesson · {{phonemes}}",
     "titlePersonalizedShort": "Personalized lesson",
     "empty": "No items available for this lesson yet.",

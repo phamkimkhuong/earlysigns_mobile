@@ -24,14 +24,16 @@ function catalogHarness(fetchCards) {
   const jsx = (type, props) => ({ type, props });
   const mocks = {
     react, 'react/jsx-runtime': { jsx, jsxs: jsx },
-    'react-native': Object.fromEntries(['View', 'Text', 'TouchableOpacity', 'FlatList', 'ActivityIndicator'].map(name => [name, name])),
-    'react-native-safe-area-context': {}, 'react-i18next': {}, 'lucide-react-native': {},
-    '@/services/Auth': {}, '@/utils/errors': { topicLabel: topic => topic },
+    'react-native': Object.fromEntries(['View', 'Text', 'TouchableOpacity', 'FlatList', 'ActivityIndicator', 'ScrollView', 'RefreshControl'].map(name => [name, name])),
+    'react-native-safe-area-context': { SafeAreaView: 'SafeAreaView' }, 'react-i18next': { useTranslation: () => ({ t: key => key }) }, 'lucide-react-native': {},
+    '@/services/Auth': { useAuth: () => ({ authToken: 'session' }) }, '@/utils/errors': { topicLabel: topic => topic },
     '@tanstack/react-query': { useQueryClient: () => queryClient },
-    '@/components/ui/Skeleton': {}, '@/hooks/usePullToRefresh': {},
+    '@/components/ui/Skeleton': {}, '@/hooks/usePullToRefresh': { usePullToRefresh: () => ({ refreshing: false, onRefresh() {} }) },
     '@/components': { AppText: 'Text' },
     '@/components/ui/AppText': { AppText: 'Text' },
     '@/hooks/queries/useVideoQueries': {
+      useVideoFeedQuery: () => ({ data: [{ topic: 'conversation', videos: props.initialVideos, video_ids: props.videoIds }], isLoading: false }),
+      useViewedVideosQuery: () => ({ data: [] }),
       videoKeys: { topicVideos: (topic, level) => ['videos', topic, level] },
       fetchVideoCards: async (_, ids) => { requests.push([...ids]); return fetchCards ? fetchCards([...ids], requests.length) : ids.map(youtube_id => ({ youtube_id })); },
     },
@@ -55,11 +57,13 @@ function catalogHarness(fetchCards) {
     if (!node || typeof node !== 'object') return undefined;
     if (Array.isArray(node)) return node.map(child => find(type, child)).find(Boolean);
     if (node.type === type) return node;
-    return find(type, node.props?.children);
+    return node.props?.children == null ? undefined : find(type, node.props.children);
   }
   return {
     props, requests, cache, find,
     render() { cursor = 0; tree = module.exports.TopicSectionRow(props); while (effects.length) effects.shift()(); },
+    renderScreen() { cursor = 0; tree = module.exports.default({ navigation: {} }); while (effects.length) effects.shift()(); },
+    row() { return find(module.exports.TopicSectionRow); },
     unmount() { cells.forEach(cell => cell?.cleanup?.()); },
   };
 }
@@ -116,6 +120,56 @@ test('catalog grid keeps parent scrolling as its load trigger', async () => {
   h.render();
   assert.deepEqual(h.requests, [['5', '6', '7', '8']]);
   assert.equal(h.find('FlatList').props.data.length, 8);
+});
+
+test('short topic grid requests more without scrolling, stops filling once tall, and resumes near the bottom', () => {
+  const h = catalogHarness(); h.renderScreen();
+  let scroll = h.find('ScrollView');
+  scroll.props.onLayout({ nativeEvent: { layout: { height: 900 } } });
+  scroll.props.onContentSizeChange(400, 750);
+  h.renderScreen();
+  assert.equal(h.row().props.loadMoreTrigger, 0); // All topics does not auto-fill cards.
+  h.row().props.onSelectTopic('conversation'); h.renderScreen(); h.renderScreen();
+  assert.ok(h.row().props.loadMoreTrigger > 0); // Same content height on tab change still checked.
+  let trigger = h.row().props.loadMoreTrigger;
+  h.find('ScrollView').props.onContentSizeChange(400, 980); h.renderScreen();
+  assert.ok(h.row().props.loadMoreTrigger > trigger); // Only 80px overflow is insufficient.
+  trigger = h.row().props.loadMoreTrigger;
+  h.find('ScrollView').props.onContentSizeChange(400, 1400); h.renderScreen();
+  assert.equal(h.row().props.loadMoreTrigger, trigger);
+  h.find('ScrollView').props.onScroll({ nativeEvent: { layoutMeasurement: { height: 900 }, contentSize: { height: 980 }, contentOffset: { y: 30 } } });
+  h.renderScreen();
+  assert.ok(h.row().props.loadMoreTrigger > trigger); // No former 100px/1200ms gate.
+  trigger = h.row().props.loadMoreTrigger;
+  h.find('ScrollView').props.onLayout({ nativeEvent: { layout: { height: 1500 } } }); h.renderScreen();
+  assert.ok(h.row().props.loadMoreTrigger > trigger); // Larger viewport/rotation fills again.
+});
+
+test('grid layout triggers cannot duplicate a pending batch or automatically retry a failed batch', async () => {
+  let reject;
+  const h = catalogHarness(() => new Promise((_, fail) => { reject = fail; }));
+  h.props.topicFilter = 'conversation'; h.render(); h.render();
+  h.props.loadMoreTrigger++; h.render();
+  h.props.loadMoreTrigger++; h.render();
+  assert.equal(h.requests.length, 1);
+  reject(Error('offline'));
+  for (let i = 0; i < 10; i++) await Promise.resolve();
+  h.render(); h.props.loadMoreTrigger++; h.render();
+  assert.equal(h.requests.length, 1); // Spinner/error layout changes must not make a retry loop.
+});
+
+test('grid exhausts remaining IDs even for empty batches and then ignores further triggers', async () => {
+  const h = catalogHarness(async () => []);
+  h.props.topicFilter = 'conversation'; h.props.initialVideos = [];
+  h.props.videoIds = ['1', '2', '3', '4', '5'];
+  h.render(); h.render();
+  for (let n = 0; n < 3; n++) {
+    h.props.loadMoreTrigger++; h.render();
+    for (let i = 0; i < 10; i++) await Promise.resolve();
+    h.render();
+  }
+  assert.deepEqual(h.requests, [['1', '2', '3', '4'], ['5']]);
+  assert.equal(h.find('Text').props.children, 'videos.catalog.empty');
 });
 
 test('late catalog responses cannot append cards from the previous level', async () => {

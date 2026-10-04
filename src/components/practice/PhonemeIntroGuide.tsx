@@ -54,15 +54,6 @@ export default function PhonemeIntroGuide({
   // 4. Sequential linear blocks (preserves exact natural ordering without rigid tabs)
   const blocks = useMemo(() => parseSequentialHtml(rawHtml), [rawHtml]);
 
-  const totalExercises = useMemo(() => {
-    const count = Array.isArray(lessonData?.items)
-      ? lessonData.items.length
-      : Array.isArray(lessonData?.sentences)
-        ? lessonData.sentences.length
-        : 10;
-    return count || 10;
-  }, [lessonData]);
-
   // Sound classification fallback
   const soundClassification = useMemo(() => {
     if (soundMeta?.category === "consonant") {
@@ -440,43 +431,6 @@ export default function PhonemeIntroGuide({
 
                 return null;
               })}
-
-              {/* C. BOTTOM CALL-TO-ACTION INSIDE SCROLLVIEW */}
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={
-                  isVi
-                    ? `Đã hiểu, vào luyện tập (${totalExercises} bài)`
-                    : `Got it, Start Practice (${totalExercises} exercises)`
-                }
-                onPress={() => {
-                  hapticFeedback.medium();
-                  onClose();
-                }}
-                style={({ pressed }) => ({
-                  backgroundColor: pressed ? "#1a6fc9" : "#2383e2",
-                  minHeight: 52,
-                  borderRadius: 18,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8,
-                  marginTop: 10,
-                  marginBottom: 24,
-                  shadowColor: "#2383e2",
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.3,
-                  shadowRadius: 6,
-                  elevation: 4,
-                })}
-              >
-                <Text style={{ fontSize: 16, fontWeight: "800", color: "#ffffff" }}>
-                  {isVi
-                    ? `Đã hiểu, vào luyện tập (${totalExercises} bài)`
-                    : `Got it, Start Practice (${totalExercises} exercises)`}
-                </Text>
-                <ArrowRight size={18} color="#ffffff" strokeWidth={2.5} />
-              </Pressable>
             </ScrollView>
           </View>
         </SafeAreaView>

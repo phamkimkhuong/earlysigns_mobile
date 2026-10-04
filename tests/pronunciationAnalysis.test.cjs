@@ -70,8 +70,8 @@ function practiceRouteHarness({ sentence = false, instructions = {} } = {}) {
     '@/store/useBillingStore': { useBillingStore: select => select({ usage: null }) },
     '@/hooks/usePronunciationCheck': { usePronunciationCheck: () => ({ checking: false, isRecording: false }) },
     '@/hooks/queries/useBillingQueries': { useBillingUsageQuery: () => ({ data: null }) },
-    '@/hooks/queries/useLessonQueries': { lessonKeys: {} },
-    '@/hooks/queries/useProgressQueries': { progressKeys: {} },
+    '@/hooks/queries/useLessonQueries': { lessonKeys: { homeSummary: dialect => ['lessons', 'home', dialect] } },
+    '@/hooks/queries/useProgressQueries': { progressKeys: { all: ['progress'], sounds: dialect => ['progress', 'sounds', dialect] } },
     '@/components/ui/Skeleton': { PracticeScreenSkeleton: 'Skeleton' },
     '@/api': { lessonApi: { getPhonemeLesson: async (...args) => { calls.push(['fetch', ...args]); return lesson; }, markPracticed: async () => {} }, textPracticeApi: {} },
     '@/api/textPracticeApi': { textPracticeApi: {} },
@@ -85,7 +85,7 @@ function practiceRouteHarness({ sentence = false, instructions = {} } = {}) {
   const Screen = load(`src/screens/practice/${sentence ? 'Sentence' : 'Phoneme'}PracticeScreen.tsx`, mocks).default;
   const props = {
     route: { params: sentence ? { sentences: lesson.sentences, dialect: 'us' } : { phoneme: '/θ/', dialect: 'us' } },
-    navigation: { navigate: (...args) => calls.push(args), push: (...args) => calls.push(args), goBack: () => calls.push(['back']) },
+    navigation: { navigate: (...args) => calls.push(args), push: (...args) => calls.push(args), replace: (...args) => calls.push(['replace', ...args]), goBack: () => calls.push(['back']) },
   };
   const find = (type, node = tree) => {
     if (!node) return undefined;
@@ -95,7 +95,7 @@ function practiceRouteHarness({ sentence = false, instructions = {} } = {}) {
   return { calls, lesson, props, find, render() { cursor = 0; tree = Screen(props); while (effects.length) effects.shift()(); } };
 }
 
-test('shared IPA route opens its guide on entry, stays dismissed during practice, and allows manual reopening', async () => {
+test('shared IPA route opens its guide on entry, allows manual reopening, and advances to the next sound', async () => {
   for (const instructions of [{ vi_instructions: '<p>Đặt lưỡi giữa hai hàm răng</p>' }, { en_instructions: '<p>Place your tongue between your teeth</p>' }]) {
     const h = practiceRouteHarness({ instructions });
     h.render(); await new Promise(resolve => setImmediate(resolve)); h.render();
@@ -106,10 +106,12 @@ test('shared IPA route opens its guide on entry, stays dismissed during practice
     assert.equal(h.find('PhonemeIntroGuide').props.dialect, 'us');
     h.find('PhonemeIntroGuide').props.onClose(); h.render();
     assert.equal(h.find('PhonemeIntroGuide').props.visible, false);
-    await h.find('IPAChecking').props.loadNextLesson(); h.render(); h.render();
-    assert.equal(h.find('PhonemeIntroGuide').props.visible, false, 'Next exercises must not reopen a dismissed guide');
+    h.render();
+    assert.equal(h.find('PhonemeIntroGuide').props.visible, false, 'Rerenders must not reopen a dismissed guide');
     h.find('IPAChecking').props.onShowGuide(); h.render();
     assert.equal(h.find('PhonemeIntroGuide').props.visible, true);
+    await h.find('IPAChecking').props.loadNextLesson(); h.render();
+    assert.deepEqual(h.calls.at(-1), ['replace', 'PhonemePractice', { phoneme: 'ð', dialect: 'us' }]);
     h.find('IPAChecking').props.onClose();
     assert.deepEqual(h.calls.at(-1), ['back']);
   }

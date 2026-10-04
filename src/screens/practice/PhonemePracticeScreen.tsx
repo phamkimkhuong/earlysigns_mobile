@@ -18,7 +18,7 @@ import { useBillingUsageQuery } from "@/hooks/queries/useBillingQueries";
 import IPAChecking, { type IPASentence } from "@/components/practice/IPAChecking";
 import PhonemeIntroGuide from "@/components/practice/PhonemeIntroGuide";
 import { PracticeScreenSkeleton } from "@/components/ui/Skeleton";
-import { getIpaSoundMeta } from "@/utils/ipaData";
+import { ALL_44_IPA_SOUNDS, getIpaSoundMeta } from "@/utils/ipaData";
 import { getFriendlyErrorMessage } from "@/utils/localizedError";
 import type { Dialect, LessonSession } from "@/types/domain";
 
@@ -116,22 +116,26 @@ export default function PhonemePracticeScreen({ navigation, route }: Props) {
     if (!cleanPhoneme) return;
     try {
       await lessonApi.markPracticed([cleanPhoneme]).catch(() => {});
-      const data = await lessonApi.getPhonemeLesson(cleanPhoneme, dialect, true);
-      const nextSession = buildLessonSession(
-        "phoneme",
-        data,
-        { phoneme: cleanPhoneme, dialect },
-        t,
-        i18n.language
+      const allSounds = ALL_44_IPA_SOUNDS;
+      const currentIdx = allSounds.findIndex(
+        (s) => s.sound.toLowerCase() === cleanPhoneme.toLowerCase()
       );
-      if (nextSession) {
-        setLessonSession(nextSession);
-        setSessionKey((k) => k + 1);
-      }
+      const nextPhoneme =
+        currentIdx >= 0 && currentIdx < allSounds.length - 1
+          ? allSounds[currentIdx + 1].sound
+          : allSounds[0].sound;
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: lessonKeys.homeSummary(dialect) }),
+        queryClient.invalidateQueries({ queryKey: progressKeys.sounds(dialect) }),
+        queryClient.invalidateQueries({ queryKey: progressKeys.all }),
+      ]);
+
+      navigation.replace("PhonemePractice", { phoneme: nextPhoneme, dialect });
     } catch (err: any) {
       setError(String(err?.message || err));
     }
-  }, [cleanPhoneme, dialect, i18n.language, t]);
+  }, [cleanPhoneme, dialect, navigation, queryClient]);
 
   const handleLessonAllCompleted = useCallback(async () => {
     if (!cleanPhoneme) return;

@@ -290,8 +290,7 @@ export default function IPAChecking({
 
   const showNextLessonBtn =
     Boolean(loadNextLesson) &&
-    currentIndex >= (sentences?.length || 1) - 1 &&
-    showResultDetails;
+    currentIndex >= (sentences?.length || 1) - 1;
 
   async function handleSample() {
     if (!currentSentence || isRecording || isStarting || checking) return;
@@ -542,6 +541,7 @@ export default function IPAChecking({
           hasNext={currentIndex < totalSentences - 1 || showNextLessonBtn}
           isLast={currentIndex >= totalSentences - 1}
           hasScore={scorePct != null}
+          nextLessonLoading={nextLessonLoading}
           onPrev={() => {
             setCurrentIndex((v) => Math.max(0, v - 1));
             setShowDetails(false);

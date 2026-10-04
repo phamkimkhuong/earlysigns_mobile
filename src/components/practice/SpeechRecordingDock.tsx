@@ -2,12 +2,11 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
-  Pressable,
   TouchableOpacity,
   View,
 } from "react-native";
 import { AppText } from "../ui/AppText";
-import { CheckCircle2, ChevronLeft, ChevronRight, Mic, Square } from "lucide-react-native";
+import { ArrowRight, CheckCircle2, ChevronLeft, ChevronRight, Mic, Square } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import { hapticFeedback } from "@/utils/haptics";
 
@@ -23,6 +22,7 @@ export interface SpeechRecordingDockProps {
   hasNext?: boolean;
   isLast?: boolean;
   hasScore?: boolean;
+  nextLessonLoading?: boolean;
   onPrev?: () => void;
   onNext?: () => void;
   statusHint?: string;
@@ -39,6 +39,7 @@ export default function SpeechRecordingDock({
   hasNext = false,
   isLast = false,
   hasScore = false,
+  nextLessonLoading = false,
   onPrev,
   onNext,
   statusHint,
@@ -348,30 +349,31 @@ export default function SpeechRecordingDock({
         }}
       >
         {/* Previous Sentence Button */}
-        {onPrev ? (
-          <Pressable
-            onPress={onPrev}
-            disabled={!hasPrev || isRecording || isStarting || checking}
-            accessible
-            accessibilityRole="button"
-            accessibilityLabel={t("sentence.previous", "Câu trước")}
-            style={({ pressed }) => ({
-              width: 48,
-              height: 48,
-              borderRadius: 24,
-              backgroundColor: pressed ? "#e2e8f0" : "#f7f6f3",
-              borderWidth: 1,
-              borderColor: "rgba(15,23,42,0.1)",
-              alignItems: "center",
-              justifyContent: "center",
-              opacity: !hasPrev || isRecording || isStarting || checking ? 0.35 : 1,
-            })}
-          >
-            <ChevronLeft size={22} color="#475569" />
-          </Pressable>
-        ) : (
-          <View style={{ width: 48 }} />
-        )}
+        <View style={{ flex: 1, alignItems: "flex-start" }}>
+          {onPrev ? (
+            <TouchableOpacity
+              onPress={onPrev}
+              disabled={!hasPrev || isRecording || isStarting || checking}
+              activeOpacity={0.7}
+              accessible
+              accessibilityRole="button"
+              accessibilityLabel={t("sentence.previous", "Câu trước")}
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: 24,
+                backgroundColor: "#f7f6f3",
+                borderWidth: 1,
+                borderColor: "rgba(15,23,42,0.1)",
+                alignItems: "center",
+                justifyContent: "center",
+                opacity: !hasPrev || isRecording || isStarting || checking ? 0.35 : 1,
+              }}
+            >
+              <ChevronLeft size={22} color="#475569" />
+            </TouchableOpacity>
+          ) : null}
+        </View>
 
         {/* Hero Mic Button with Ripple Waves & Equalizer */}
         <View
@@ -480,40 +482,67 @@ export default function SpeechRecordingDock({
         </View>
 
         {/* Next / Complete Sentence Button */}
-        {onNext ? (
-          <Pressable
-            onPress={onNext}
-            disabled={(!hasNext && !hasScore) || isRecording || isStarting || checking}
-            accessible
-            accessibilityRole="button"
-            accessibilityLabel={t("sentence.nextSentence", "Câu tiếp theo")}
-            style={({ pressed }) => ({
-              width: 48,
-              height: 48,
-              borderRadius: 24,
-              backgroundColor: isLast && hasScore ? "#ecfdf5" : pressed ? "#e2e8f0" : "#f7f6f3",
-              borderWidth: 1,
-              borderColor: isLast && hasScore ? "#a7f3d0" : "rgba(15,23,42,0.1)",
-              alignItems: "center",
-              justifyContent: "center",
-              opacity: (!hasNext && !hasScore) || isRecording || isStarting || checking ? 0.35 : 1,
-            })}
-          >
-            {isLast && hasScore ? (
-              <CheckCircle2 size={22} color="#059669" strokeWidth={2.5} />
+        <View style={{ flex: 1, alignItems: "flex-end" }}>
+          {onNext ? (
+            isLast && hasNext ? (
+              <TouchableOpacity
+                onPress={onNext}
+                disabled={isRecording || isStarting || checking || nextLessonLoading}
+                activeOpacity={0.8}
+                accessible
+                accessibilityRole="button"
+                accessibilityLabel={t("lesson.nextLesson", "Bài tiếp theo")}
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 24,
+                  backgroundColor: "#2383e2",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  opacity: isRecording || isStarting || checking || nextLessonLoading ? 0.6 : 1,
+                }}
+              >
+                {nextLessonLoading ? (
+                  <ActivityIndicator size="small" color="#ffffff" />
+                ) : (
+                  <ArrowRight size={22} color="#ffffff" strokeWidth={2.5} />
+                )}
+              </TouchableOpacity>
             ) : (
-              <ChevronRight size={22} color="#475569" />
-            )}
-          </Pressable>
-        ) : (
-          <View style={{ width: 48 }} />
-        )}
+              <TouchableOpacity
+                onPress={onNext}
+                disabled={(!hasNext && !hasScore) || isRecording || isStarting || checking}
+                activeOpacity={0.7}
+                accessible
+                accessibilityRole="button"
+                accessibilityLabel={t("sentence.nextSentence", "Câu tiếp theo")}
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 24,
+                  backgroundColor: isLast && hasScore ? "#ecfdf5" : "#f7f6f3",
+                  borderWidth: 1,
+                  borderColor: isLast && hasScore ? "#a7f3d0" : "rgba(15,23,42,0.1)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  opacity: (!hasNext && !hasScore) || isRecording || isStarting || checking ? 0.35 : 1,
+                }}
+              >
+                {isLast && hasScore ? (
+                  <CheckCircle2 size={22} color="#059669" strokeWidth={2.5} />
+                ) : (
+                  <ChevronRight size={22} color="#475569" />
+                )}
+              </TouchableOpacity>
+            )
+          ) : null}
+        </View>
       </View>
 
       {/* 3. SUBTLE STATUS HINT LABEL */}
       {!isRecording && !checking && !isStarting ? (
         <AppText style={{ fontSize: 13, fontWeight: "600", color: "#64748b" }}>
-          {statusHint || t("sentence.tapToRecord", "Chạm micro để bắt đầu nói")}
+          {statusHint || (isLast && hasNext ? t("lesson.tapNextHint", "Chạm micro để luyện hoặc ➜ để sang bài tiếp theo") : t("sentence.tapToRecord", "Chạm micro để bắt đầu nói"))}
         </AppText>
       ) : null}
     </View>
