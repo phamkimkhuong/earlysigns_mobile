@@ -317,7 +317,7 @@ export default function PaymentScreen({ navigation, route }: Props) {
 
       <ScrollView
         ref={scrollViewRef}
-        className="flex-1 bg-[#f8fafc]"
+        className="flex-1 bg-appBg"
         contentContainerStyle={{
           paddingBottom: keyboardHeight > 0 ? keyboardHeight + 40 : 48,
         }}
@@ -765,7 +765,7 @@ export default function PaymentScreen({ navigation, route }: Props) {
                   <View className="flex-row items-center gap-2 mt-1">
                     <TextInput
                       accessibilityLabel={t("payment.giftCodePlaceholder") || "Nhập mã kích hoạt"}
-                      style={{ backgroundColor: "#f8fafc", borderColor: "#cbd5e1" }}
+                      style={{ backgroundColor: "#F7F6F2", borderColor: "#cbd5e1" }}
                       className="flex-1 h-12 px-3.5 border rounded-2xl text-slate-900 text-[15px] uppercase font-bold"
                       value={activationCode}
                       onFocus={handleInputFocus}

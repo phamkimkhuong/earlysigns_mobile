@@ -11,7 +11,6 @@ import {
   ChevronDown,
   ChevronUp,
   Mic,
-  RotateCcw,
   Square,
   Volume2,
 } from "lucide-react-native";
@@ -19,11 +18,11 @@ import { useTranslation } from "react-i18next";
 import { hapticFeedback } from "@/utils/haptics";
 import { checkResultScoreColorFromPct } from "@/utils/checkResultScoreColor";
 import SoundAnalysis from "./SoundAnalysis";
-import StagedAiProgress from "./StagedAiProgress";
 import MicErrorCard from "./MicErrorCard";
 import type { MicError, SentenceCheckResult } from "@/types/domain";
 
 export interface VideoRecordingHubProps {
+  children?: React.ReactNode;
   isRecording: boolean;
   isStarting: boolean;
   checking: boolean;
@@ -45,6 +44,7 @@ export interface VideoRecordingHubProps {
 }
 
 export default function VideoRecordingHub({
+  children,
   isRecording,
   isStarting,
   checking,
@@ -297,6 +297,13 @@ export default function VideoRecordingHub({
         shadowRadius: 8,
       }}
     >
+      {/* 0. SENTENCE & SUBTITLE HEADER */}
+      {children ? (
+        <View className="w-full gap-2.5 pb-2.5 border-b border-slate-100">
+          {children}
+        </View>
+      ) : null}
+
       {/* 1. TOP DYNAMIC STATUS PILL (Only during active recording/starting/checking states) */}
       {isStarting ? (
         <View className="items-center">
@@ -349,16 +356,16 @@ export default function VideoRecordingHub({
       ) : null}
 
       {/* 2. HERO MICROPHONE BUTTON WITH MULTI-TIER WAVES */}
-      <View className="items-center justify-center relative my-0.5" style={{ width: 110, height: 110 }}>
+      <View className="items-center justify-center relative my-0.5" style={{ width: 92, height: 92 }}>
         {/* Multi-tier Ripple Sound Waves (Recording) */}
         {isRecording ? (
           <>
             <Animated.View
               style={{
                 position: "absolute",
-                width: 82,
-                height: 82,
-                borderRadius: 41,
+                width: 68,
+                height: 68,
+                borderRadius: 34,
                 backgroundColor: "rgba(224, 62, 62, 0.2)",
                 borderWidth: 1.5,
                 borderColor: "rgba(224, 62, 62, 0.4)",
@@ -369,9 +376,9 @@ export default function VideoRecordingHub({
             <Animated.View
               style={{
                 position: "absolute",
-                width: 82,
-                height: 82,
-                borderRadius: 41,
+                width: 68,
+                height: 68,
+                borderRadius: 34,
                 backgroundColor: "rgba(224, 62, 62, 0.15)",
                 borderWidth: 1.5,
                 borderColor: "rgba(224, 62, 62, 0.3)",
@@ -382,9 +389,9 @@ export default function VideoRecordingHub({
             <Animated.View
               style={{
                 position: "absolute",
-                width: 82,
-                height: 82,
-                borderRadius: 41,
+                width: 68,
+                height: 68,
+                borderRadius: 34,
                 backgroundColor: "rgba(224, 62, 62, 0.1)",
                 borderWidth: 1,
                 borderColor: "rgba(224, 62, 62, 0.2)",
@@ -400,9 +407,9 @@ export default function VideoRecordingHub({
           <Animated.View
             style={{
               position: "absolute",
-              width: 98,
-              height: 98,
-              borderRadius: 49,
+              width: 82,
+              height: 82,
+              borderRadius: 41,
               backgroundColor: "#2383E2",
               transform: [{ scale: idleBreath }],
               opacity: idleOpacity,
@@ -418,10 +425,10 @@ export default function VideoRecordingHub({
             isRecording
               ? t("videos.practice.accessibilityStopRecording") || "Dừng thu âm và gửi chấm điểm"
               : isStarting
-              ? t("videos.practice.accessibilityStarting") || "Đang khởi động micro..."
-              : checking
-              ? t("videos.practice.accessibilityAnalyzing") || "Hệ thống đang chấm điểm, vui lòng đợi..."
-              : t("videos.practice.accessibilityStartRecording") || "Bắt đầu thu âm phát âm"
+                ? t("videos.practice.accessibilityStarting") || "Đang khởi động micro..."
+                : checking
+                  ? t("videos.practice.accessibilityAnalyzing") || "Hệ thống đang chấm điểm, vui lòng đợi..."
+                  : t("videos.practice.accessibilityStartRecording") || "Bắt đầu thu âm phát âm"
           }
           accessibilityHint={
             isRecording
@@ -435,13 +442,13 @@ export default function VideoRecordingHub({
           activeOpacity={0.85}
           disabled={disabled || isStarting || checking || !hasSentence}
           onPress={handlePress}
-          className="w-[82px] h-[82px] rounded-full items-center justify-center"
+          className="w-[68px] h-[68px] rounded-full items-center justify-center"
           style={{
-            elevation: 8,
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.35,
-            shadowRadius: 10,
-            borderWidth: 3,
+            elevation: 6,
+            shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.3,
+            shadowRadius: 8,
+            borderWidth: 2.5,
             borderColor: isRecording ? "#fca5a5" : isStarting ? "#93c5fd" : checking ? "#93c5fd" : "#60a5fa",
             backgroundColor: isRecording ? "#E03E3E" : checking ? "#1d4ed8" : "#2383E2",
             opacity: isStarting ? 0.65 : 1,
@@ -451,9 +458,9 @@ export default function VideoRecordingHub({
           {isStarting ? (
             <ActivityIndicator size="small" color="#ffffff" />
           ) : isRecording ? (
-            <Square size={26} color="#ffffff" fill="#ffffff" />
+            <Square size={22} color="#ffffff" fill="#ffffff" />
           ) : (
-            <Mic size={34} color="#ffffff" />
+            <Mic size={28} color="#ffffff" />
           )}
         </TouchableOpacity>
       </View>
@@ -470,33 +477,17 @@ export default function VideoRecordingHub({
       ) : null}
 
       {/* 4. GUIDANCE & ACTION PROMPTS */}
-      <View className="items-center px-4">
+      {!checking ? <View className="items-center px-4">
         <Text className="text-base font-black text-slate-900 text-center">
           {isStarting
             ? t("videos.practice.startingMic")
             : isRecording
-            ? t("videos.practice.recordingNow")
-            : checking
-            ? t("sentence.checking")
-            : showResultDetails
-            ? t("videos.practice.practiceSentence")
-            : t("videos.practice.tapToRecord")}
+              ? t("videos.practice.recordingNow")
+              : showResultDetails
+                ? t("videos.practice.practiceSentence")
+                : t("videos.practice.tapToRecord")}
         </Text>
-        <Text className="text-xs font-medium text-slate-500 text-center mt-0.5 leading-relaxed">
-          {isRecording
-            ? t("videos.practice.pausesOnSilence")
-            : checking
-            ? t("sentence.aiProgress.title")
-            : t("videos.practice.tapHint", "Chạm mic để bắt đầu luyện nói")}
-        </Text>
-      </View>
-
-      {/* 5. STAGED AI PROGRESS */}
-      {checking ? (
-        <View className="w-full pt-1">
-          <StagedAiProgress active={checking} variant="compact" />
-        </View>
-      ) : null}
+      </View> : null}
 
       {/* 6. ERROR NOTIFICATIONS */}
       <MicErrorCard micError={micError} error={checkError} />
@@ -512,12 +503,8 @@ export default function VideoRecordingHub({
             >
               {scorePct != null ? `${scorePct}%` : "--"}
             </Text>
-            <Text className="text-xs font-extrabold text-slate-700 mt-1">
-              {scorePct != null && scorePct >= 80
-                ? t("videos.practice.excellentScore")
-                : scorePct != null && scorePct >= 50
-                ? t("videos.practice.goodScore")
-                : t("videos.practice.practiceMoreScore")}
+            <Text className="text-sm font-semibold text-slate-500 mt-1">
+              {t("result.pronunciationScore", "Điểm phát âm")}
             </Text>
           </View>
 
@@ -569,22 +556,6 @@ export default function VideoRecordingHub({
               )}
             </TouchableOpacity>
           </View>
-
-          {/* Quick Re-record Button */}
-          <TouchableOpacity
-            accessible={true}
-            accessibilityRole="button"
-            accessibilityLabel={t("sentence.tryAgainLowScore") || "Luyện lại câu này"}
-            activeOpacity={0.8}
-            onPress={handlePress}
-            className="flex-row items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg"
-          >
-            <RotateCcw size={13} color="#64748b" />
-            <Text className="text-xs font-bold text-slate-500">
-              {t("sentence.tryAgainLowScore")}
-            </Text>
-          </TouchableOpacity>
-
           {/* Expandable Sound Breakdown */}
           {showDetails ? (
             <View className="w-full pt-2">

@@ -11,7 +11,6 @@ import {
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { useTranslation } from "react-i18next";
 import {
-  AudioLines,
   Check,
   ChevronRight,
   Compass,
@@ -280,25 +279,6 @@ export default function GuestProfileView({ navigation }: GuestProfileViewProps) 
                 <ChevronRight size={16} color="#94a3b8" />
               </View>
             </TouchableOpacity>
-
-            {/* Row: Giọng mẫu (Static text chuẩn spec) */}
-            <View className="flex-row items-center justify-between p-3.5">
-              <View className="flex-row items-center gap-3">
-                <View
-                  style={{ backgroundColor: "#ecfdf5" }}
-                  className="w-9 h-9 rounded-xl items-center justify-center"
-                >
-                  <AudioLines size={18} color="#10b981" />
-                </View>
-                <Text className="text-sm font-semibold text-[#0f172a]">
-                  {t("profile.standardVoice") || "Giọng mẫu"}
-                </Text>
-              </View>
-
-              <Text className="text-xs font-semibold text-slate-500">
-                {t("profile.standardVoiceUK") || "Anh – Anh (UK)"}
-              </Text>
-            </View>
           </View>
         </View>
 
@@ -435,7 +415,7 @@ export default function GuestProfileView({ navigation }: GuestProfileViewProps) 
               activeOpacity={0.8}
               onPress={() => handleSelectLanguage("vi")}
               style={{
-                backgroundColor: currentLang === "vi" ? "#eff6ff" : "#f8fafc",
+                backgroundColor: currentLang === "vi" ? "#eff6ff" : "#F7F6F2",
                 borderColor: currentLang === "vi" ? "#0284c7" : "#e2e8f0",
               }}
               className="flex-row items-center justify-between p-4 rounded-2xl border"
@@ -457,7 +437,7 @@ export default function GuestProfileView({ navigation }: GuestProfileViewProps) 
               activeOpacity={0.8}
               onPress={() => handleSelectLanguage("en")}
               style={{
-                backgroundColor: currentLang === "en" ? "#eff6ff" : "#f8fafc",
+                backgroundColor: currentLang === "en" ? "#eff6ff" : "#F7F6F2",
                 borderColor: currentLang === "en" ? "#0284c7" : "#e2e8f0",
               }}
               className="flex-row items-center justify-between p-4 rounded-2xl border"

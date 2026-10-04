@@ -22,7 +22,6 @@ import {
 import { useAuth } from "@/services/Auth";
 import { formatDuration, topicLabel, videoThumbnail } from "@/utils/errors";
 import { useQueryClient } from "@tanstack/react-query";
-import { colors } from "@/core/theme";
 import { VideoCatalogSkeleton } from "@/components/ui/Skeleton";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import {
@@ -174,7 +173,9 @@ function TopicSectionRow({
   const [videos, setVideos] = useState<VideoItem[]>(getInitialVideos);
   const [cursor, setCursor] = useState<number>(() => getInitialVideos().length);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [loadMoreFailed, setLoadMoreFailed] = useState(false);
   const fetchingRef = useRef(false);
+  const generationRef = useRef(0);
   const cursorRef = useRef(cursor);
   const videoIdsRef = useRef(videoIds);
   const lastProcessedTriggerRef = useRef(loadMoreTrigger || 0);
@@ -185,6 +186,7 @@ function TopicSectionRow({
 
   // Sync state when initialVideos, videoIds, or topicVideosKey change
   useEffect(() => {
+    const generation = ++generationRef.current;
     const cached = queryClient.getQueryData<VideoItem[]>(topicVideosKey);
     const currentList = cached && cached.length > 0 ? cached : initialVideos;
     setVideos(currentList);
@@ -192,8 +194,12 @@ function TopicSectionRow({
     cursorRef.current = currentList.length;
     videoIdsRef.current = videoIds;
     setIsLoadingMore(false);
+    setLoadMoreFailed(false);
     fetchingRef.current = false;
     lastProcessedTriggerRef.current = loadMoreTriggerRef.current;
+    return () => {
+      generationRef.current = generation + 1;
+    };
   }, [initialVideos, videoIds, topicVideosKey, queryClient]);
 
   // Stable callback that fetches cards via TanStack Query cache
@@ -208,10 +214,13 @@ function TopicSectionRow({
     if (nextBatchIds.length === 0) return;
 
     fetchingRef.current = true;
+    const generation = generationRef.current;
     setIsLoadingMore(true);
+    setLoadMoreFailed(false);
 
     try {
       const newCards = await fetchVideoCards(queryClient, nextBatchIds);
+      if (generation !== generationRef.current) return;
       if (Array.isArray(newCards) && newCards.length > 0) {
         setVideos((prev) => {
           const existingIds = new Set(prev.map((v) => v.youtube_id));
@@ -221,14 +230,16 @@ function TopicSectionRow({
           return updated;
         });
       }
+      // A successful response may omit unavailable cards; consume the requested IDs.
+      cursorRef.current = currentCursor + nextBatchIds.length;
+      setCursor(cursorRef.current);
     } catch {
-      // Quietly handle network hiccup on scroll
+      if (generation === generationRef.current) setLoadMoreFailed(true);
     } finally {
-      // Rule: Luôn tăng con trỏ thêm 4, kể cả khi thiếu một thẻ
-      cursorRef.current = currentCursor + 4;
-      setCursor(currentCursor + 4);
-      setIsLoadingMore(false);
-      fetchingRef.current = false;
+      if (generation === generationRef.current) {
+        setIsLoadingMore(false);
+        fetchingRef.current = false;
+      }
     }
   }, [queryClient, topicVideosKey]);
 
@@ -308,7 +319,25 @@ function TopicSectionRow({
           />
         )}
         scrollEnabled={!topicFilter}
+        onEndReached={!topicFilter ? handleLoadMore : undefined}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={!topicFilter && isLoadingMore ? (
+          <View style={{ padding: 16, justifyContent: "center" }}>
+            <ActivityIndicator color="#4f46e5" size="small" />
+          </View>
+        ) : null}
       />
+
+      {loadMoreFailed ? (
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel={t("common.retry")}
+          onPress={handleLoadMore}
+          style={{ paddingVertical: 12, alignSelf: "center" }}
+        >
+          <Text className="text-sm font-bold text-indigo-600">{t("common.retry")}</Text>
+        </TouchableOpacity>
+      ) : null}
 
       {topicFilter && isLoadingMore ? (
         <View className="py-5 items-center justify-center">
@@ -460,7 +489,7 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
   const levels = useMemo(() => ["A1", "A2", "B1", "B2", "C1", "C2"], []);
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-practiceHeader">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-appBg">
       <ScrollView
         ref={scrollViewRef}
         className="flex-1 bg-appBg"
@@ -484,44 +513,37 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
             left: 0,
             right: 0,
             height: 1000,
-            backgroundColor: colors.practiceHeader,
+            backgroundColor: "#F7F6F2",
           }}
         />
 
-        {/* 1. HERO HEADER */}
-        <View className="bg-practiceHeader pt-3 pb-6 px-5">
-          {/* Top Nav Bar */}
-          <View className="flex-row items-center justify-between mb-1">
-            <TouchableOpacity
-              accessibilityRole="button"
-              accessibilityLabel={t("common.back", "Quay lại")}
-              activeOpacity={0.8}
-              onPress={() => {
-                if (navigation.canGoBack()) {
-                  navigation.goBack();
-                } else {
-                  navigation.navigate("Main");
-                }
-              }}
-              className="w-10 h-10 rounded-2xl items-center justify-center border"
-              style={{
-                backgroundColor: "rgba(255, 255, 255, 0.16)",
-                borderColor: "rgba(255, 255, 255, 0.25)",
-              }}
-            >
-              <ChevronLeft size={22} color="#ffffff" />
-            </TouchableOpacity>
+        {/* 1. TOP NAV BAR */}
+        <View className="bg-appBg px-4 py-3 border-b border-slate-200 flex-row items-center justify-between">
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={t("common.back", "Quay lại")}
+            activeOpacity={0.7}
+            onPress={() => {
+              if (navigation.canGoBack()) {
+                navigation.goBack();
+              } else {
+                navigation.navigate("Main");
+              }
+            }}
+            className="w-10 h-10 rounded-full bg-white border border-slate-200 items-center justify-center active:opacity-70"
+          >
+            <ChevronLeft size={22} color="#0c2340" strokeWidth={2.5} />
+          </TouchableOpacity>
 
-            <Text className="text-base font-extrabold text-white">
-              {t("videos.catalog.title") || "Luyện nói với YouTube"}
-            </Text>
+          <Text className="text-base font-bold text-[#0c2340]">
+            {t("videos.catalog.title") || "Luyện nói với YouTube"}
+          </Text>
 
-            <View className="w-10 h-10" />
-          </View>
+          <View className="w-10 h-10" />
         </View>
 
-        {/* 2. LAYERED OVERLAPPING CANVAS SHEET */}
-        <View className="flex-1 bg-appBg -mt-5 rounded-t-[32px] px-4 pt-5 pb-20 gap-4">
+        {/* 2. MAIN CONTENT */}
+        <View className="flex-1 bg-appBg px-4 pt-4 pb-20 gap-4">
           {/* Filter Bar: Level Chips */}
           <View className="gap-2">
             <Text className="text-xs font-extrabold uppercase tracking-wider text-slate-400 px-1">

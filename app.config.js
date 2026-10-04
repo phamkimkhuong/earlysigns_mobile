@@ -26,7 +26,10 @@ module.exports = ({ config }) => {
   const fbAppId = process.env.EXPO_PUBLIC_FACEBOOK_APP_ID;
   const fbClientToken = process.env.EXPO_PUBLIC_FACEBOOK_CLIENT_TOKEN;
 
-  let plugins = config.plugins || [];
+  let plugins = config.plugins ? [...config.plugins] : [];
+  if (!plugins.includes("expo-font")) {
+    plugins.unshift("expo-font");
+  }
   if (fbAppId || fbClientToken) {
     plugins = plugins.map((plugin) => {
       if (Array.isArray(plugin) && plugin[0] === "react-native-fbsdk-next") {

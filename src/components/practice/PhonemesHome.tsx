@@ -200,7 +200,7 @@ export default function PhonemesHome(props: Props) {
 
   return (
     <ScrollView
-      className="flex-1 bg-[#f8fafc]"
+      className="flex-1 bg-appBg"
       contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 40, gap: 24 }}
       showsVerticalScrollIndicator={false}
     >
@@ -418,11 +418,6 @@ export default function PhonemesHome(props: Props) {
             </Text>
           </Pressable>
         </View>
-
-        {/* Instructional Subtitle */}
-        <Text className="text-[#64748b] text-sm" style={{ lineHeight: 21 }}>
-          {t(hasWeakSounds ? "phonemesHome.weakDescription" : "phonemesHome.exploreDescription")}
-        </Text>
 
         {props.summaryLoading ? (
           <PhonemesChipsSkeleton count={6} />

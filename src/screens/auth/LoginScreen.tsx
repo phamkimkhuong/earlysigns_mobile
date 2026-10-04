@@ -146,7 +146,7 @@ export default function LoginScreen({ navigation, route }: Props) {
               <Text className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                 {t("login.emailLabel", "Email của bạn")}
               </Text>
-              <View className="flex-row items-center border border-slate-200 rounded-xl px-3.5 py-3 bg-[#f8fafc]">
+              <View className="flex-row items-center border border-slate-200 rounded-xl px-3.5 py-3 bg-appBg">
                 <Mail size={18} color="#64748b" />
                 <TextInput
                   accessibilityLabel={t("login.emailLabel", "Email của bạn")}

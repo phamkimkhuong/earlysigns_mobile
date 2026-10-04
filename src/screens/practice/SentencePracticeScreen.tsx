@@ -83,6 +83,7 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeFeatureKey, setUpgradeFeatureKey] = useState<"dailyLimit" | "generic" | "sampleAudio">("dailyLimit");
   const [isCompletedAll, setIsCompletedAll] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
 
   const sampleSoundRef = useRef<any>(null);
   const sampleGeneration = useRef(0);
@@ -291,6 +292,7 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
     stopSample();
     clearResult();
     setCurrentIndex(index);
+    setShowDetails(false);
     scrollViewRef.current?.scrollTo({ y: 0, animated: true });
   }
 
@@ -358,9 +360,9 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
   }
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-[#f8fafc]">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-appBg">
       {/* 1. NATIVE MOBILE HEADER */}
-      <View className="flex-row items-center justify-between px-4 py-3 bg-white border-b border-slate-100">
+      <View className="flex-row items-center justify-between px-4 py-3 bg-appBg border-b border-slate-200">
         {/* Back Button */}
         <TouchableOpacity
           accessibilityRole="button"
@@ -370,7 +372,7 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
             hapticFeedback.light();
             navigation.goBack();
           }}
-          className="w-10 h-10 rounded-full bg-[#f8fafc] border border-slate-200 items-center justify-center active:opacity-70"
+          className="w-10 h-10 rounded-full bg-white border border-slate-200 items-center justify-center active:opacity-70"
         >
           <ChevronLeft size={22} color="#0c2340" strokeWidth={2.5} />
         </TouchableOpacity>
@@ -478,9 +480,13 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
           checking={checking}
           replayPlaying={replayPlaying}
           onReplayVoice={handleReplay}
-          showDetails={true}
+          showDetails={showDetails}
+          onToggleDetails={() => setShowDetails((v) => !v)}
           soundRows={soundRows}
           words={displayWords}
+          onPracticePhoneme={(phoneme) =>
+            navigation.navigate("PhonemePractice", { phoneme, dialect })
+          }
           isRecording={isRecording}
         />
       </ScrollView>

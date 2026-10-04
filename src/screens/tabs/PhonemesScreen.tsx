@@ -60,43 +60,35 @@ export default function PhonemesScreen({ navigation, route }: NativeStackScreenP
   const openCatalog = () => navigation.navigate("PhonemeCatalog", { dialect });
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-practiceHeader">
-      {/* 1. HERO HEADER */}
-      <View className="bg-practiceHeader pt-2 pb-6 px-5">
-        {/* Top Nav Bar */}
-        <View className="flex-row items-center justify-between mb-3">
-          <TouchableOpacity
-            accessible={true}
-            accessibilityRole="button"
-            accessibilityLabel={t("common.back", "Quay lại")}
-            activeOpacity={0.8}
-            onPress={() => {
-              if (navigation?.canGoBack?.()) {
-                navigation.goBack();
-              } else {
-                navigation?.navigate?.("Main");
-              }
-            }}
-            className="w-10 h-10 rounded-2xl items-center justify-center border"
-            style={{
-              backgroundColor: "rgba(255, 255, 255, 0.16)",
-              borderColor: "rgba(255, 255, 255, 0.25)",
-            }}
-          >
-            <ChevronLeft size={22} color="#ffffff" />
-          </TouchableOpacity>
+    <SafeAreaView edges={["top"]} className="flex-1 bg-appBg">
+      {/* 1. TOP NAV BAR */}
+      <View className="bg-appBg px-4 py-3 border-b border-slate-200 flex-row items-center justify-between">
+        <TouchableOpacity
+          accessible={true}
+          accessibilityRole="button"
+          accessibilityLabel={t("common.back", "Quay lại")}
+          activeOpacity={0.7}
+          onPress={() => {
+            if (navigation?.canGoBack?.()) {
+              navigation.goBack();
+            } else {
+              navigation?.navigate?.("Main");
+            }
+          }}
+          className="w-10 h-10 rounded-full bg-white border border-slate-200 items-center justify-center active:opacity-70"
+        >
+          <ChevronLeft size={22} color="#0c2340" strokeWidth={2.5} />
+        </TouchableOpacity>
 
-          <Text className="text-base font-extrabold text-white">
-            {t("nav.phonemes")}
-          </Text>
+        <Text className="text-base font-bold text-[#0c2340]">
+          {t("nav.phonemes")}
+        </Text>
 
-          {/* Symmetrical placeholder to center title */}
-          <View className="w-10 h-10" />
-        </View>
+        <View className="w-10 h-10" />
       </View>
 
-      {/* 2. LAYERED OVERLAPPING CANVAS SHEET (Primary scrollable container <ScrollView> is encapsulated inside PhonemesHome) */}
-      <View className="flex-1 bg-[#f8fafc] -mt-4 rounded-t-[32px] overflow-hidden">
+      {/* 2. MAIN CONTENT (Primary scrollable container <ScrollView> is encapsulated inside PhonemesHome) */}
+      <View className="flex-1 bg-appBg overflow-hidden">
         <PhonemesHome
           t={t}
           dialect={dialect}

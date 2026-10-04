@@ -45,6 +45,25 @@ export const navTheme = {
     border: colors.border,
     primary: colors.accent,
   },
+  fonts: {
+    ...DefaultTheme.fonts,
+    regular: {
+      fontFamily: "Inter_400Regular",
+      fontWeight: "400" as const,
+    },
+    medium: {
+      fontFamily: "Inter_500Medium",
+      fontWeight: "500" as const,
+    },
+    bold: {
+      fontFamily: "Inter_700Bold",
+      fontWeight: "700" as const,
+    },
+    heavy: {
+      fontFamily: "Inter_800ExtraBold",
+      fontWeight: "800" as const,
+    },
+  },
 };
 
 function MainTabs() {

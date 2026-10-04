@@ -17,7 +17,6 @@ import {
 } from "lucide-react-native";
 import { JourneyPathItem } from "@/components/practice/HomeJourney";
 import { JourneyPathSkeleton } from "@/components/ui/Skeleton";
-import { colors } from "@/core/theme";
 import { useJourneyViewModel } from "@/hooks/useJourneyViewModel";
 
 export default function JourneyScreen({ navigation }: { navigation?: any }) {
@@ -72,7 +71,7 @@ export default function JourneyScreen({ navigation }: { navigation?: any }) {
 
   const renderHeader = useMemo(
     () => (
-      <View className="bg-[#f8fafc]">
+      <View className="bg-appBg">
         {/* Top elastic overscroll filler */}
         <View
           style={{
@@ -81,16 +80,16 @@ export default function JourneyScreen({ navigation }: { navigation?: any }) {
             left: 0,
             right: 0,
             height: 1000,
-            backgroundColor: colors.practiceHeader,
+            backgroundColor: "#F7F6F2",
           }}
         />
 
-        {/* 1. HERO HEADER */}
-        <View className="bg-practiceHeader pt-2 pb-6 px-5">
+        {/* 1. TOP NAV BAR */}
+        <View className="bg-appBg px-4 py-3 border-b border-slate-200">
           {/* Top Bar */}
-          <View className="flex-row items-center justify-between mb-3">
+          <View className="flex-row items-center justify-between mb-2">
             <TouchableOpacity
-              activeOpacity={0.8}
+              activeOpacity={0.7}
               accessibilityRole="button"
               accessibilityLabel={t("common.back", "Quay lại")}
               onPress={() => {
@@ -100,16 +99,12 @@ export default function JourneyScreen({ navigation }: { navigation?: any }) {
                   navigation?.navigate?.("Main");
                 }
               }}
-              className="w-10 h-10 rounded-2xl items-center justify-center border"
-              style={{
-                backgroundColor: "rgba(255, 255, 255, 0.16)",
-                borderColor: "rgba(255, 255, 255, 0.25)",
-              }}
+              className="w-10 h-10 rounded-full bg-white border border-slate-200 items-center justify-center active:opacity-70"
             >
-              <ChevronLeft size={22} color="#ffffff" />
+              <ChevronLeft size={22} color="#0c2340" strokeWidth={2.5} />
             </TouchableOpacity>
 
-            <Text className="text-base font-extrabold text-white">
+            <Text className="text-base font-bold text-[#0c2340]">
               {t("journeyPage.title", "Lộ trình học tập")}
             </Text>
 
@@ -117,15 +112,12 @@ export default function JourneyScreen({ navigation }: { navigation?: any }) {
           </View>
 
           {/* Hero Content */}
-          <View className="flex-row items-center gap-3.5 mt-1">
-            <View
-              className="w-12 h-12 rounded-2xl items-center justify-center shadow-sm"
-              style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
-            >
-              <Compass size={24} color="#ffffff" />
+          <View className="flex-row items-center gap-3.5 mt-1 p-3 rounded-2xl bg-slate-50 border border-slate-200">
+            <View className="w-10 h-10 rounded-xl items-center justify-center bg-sky-100">
+              <Compass size={20} color="#0284c7" />
             </View>
             <View className="flex-1">
-              <Text className="text-xs text-sky-50 mt-0.5 leading-relaxed font-medium">
+              <Text className="text-xs text-slate-500 leading-relaxed font-medium">
                 {t(
                   "journeyPage.heroSubtitle",
                   "Lộ trình thích ứng thông minh tự động tối ưu theo từng âm bạn cần cải thiện."
@@ -135,8 +127,8 @@ export default function JourneyScreen({ navigation }: { navigation?: any }) {
           </View>
         </View>
 
-        {/* 2. LAYERED OVERLAPPING CANVAS SHEET */}
-        <View className="bg-[#f8fafc] -mt-4 rounded-t-[32px] px-4 pt-5 pb-3 gap-4">
+        {/* 2. MAIN CONTENT */}
+        <View className="bg-appBg px-4 pt-4 pb-3 gap-4">
           {/* Progress Overview Card */}
           {displayJourney ? (
             <View className="bg-white rounded-3xl p-5 border border-slate-200 gap-3.5 shadow-sm">
@@ -239,7 +231,7 @@ export default function JourneyScreen({ navigation }: { navigation?: any }) {
   );
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-practiceHeader">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-appBg">
       <FlatList
         data={displayJourney ? items : []}
         keyExtractor={(item, index) =>
@@ -258,7 +250,7 @@ export default function JourneyScreen({ navigation }: { navigation?: any }) {
           />
         }
         showsVerticalScrollIndicator={false}
-        className="flex-1 bg-[#f8fafc]"
+        className="flex-1 bg-appBg"
         contentContainerStyle={{ flexGrow: 1 }}
       />
     </SafeAreaView>

@@ -207,7 +207,7 @@ export default function ScreeningSession({ sentences, dialect, userTier, userKey
   const error = audio.micError ? "" : localError || (audio.error === "No speech detected. Try again." ? t("screeningPractice.noSpeech") : audio.error);
   if (!sentence) return null;
   const content = (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-practiceHeader">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-appBg">
       <ScreeningPracticeView
         t={t}
         sentence={sentence}

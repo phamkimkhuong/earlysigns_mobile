@@ -7,6 +7,15 @@ import * as SplashScreen from "expo-splash-screen";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/core/queryClient";
 import Toast from "react-native-toast-message";
+import {
+  useFonts,
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+  Inter_800ExtraBold,
+  Inter_900Black,
+} from "@expo-google-fonts/inter";
 
 import { AppState, LogBox } from "react-native";
 import { configureReanimatedLogger, ReanimatedLogLevel } from "react-native-reanimated";
@@ -51,6 +60,27 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function App() {
   const [booted, setBooted] = useState(false);
+  const [fontsLoaded, fontError] = useFonts({
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+    Inter_800ExtraBold,
+    Inter_900Black,
+    Inter: Inter_400Regular,
+    "Inter-Regular": Inter_400Regular,
+    "Inter-Medium": Inter_500Medium,
+    "Inter-SemiBold": Inter_600SemiBold,
+    "Inter-Bold": Inter_700Bold,
+    "Inter-ExtraBold": Inter_800ExtraBold,
+    "Inter-Black": Inter_900Black,
+  });
+
+  useEffect(() => {
+    if (booted && (fontsLoaded || fontError)) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [booted, fontsLoaded, fontError]);
 
   useEffect(() => {
     let cancelled = false;
@@ -74,7 +104,6 @@ export default function App() {
       } finally {
         if (!cancelled) {
           setBooted(true);
-          await SplashScreen.hideAsync().catch(() => {});
         }
       }
     })();
@@ -94,7 +123,7 @@ export default function App() {
     };
   }, []);
 
-  if (!booted) {
+  if (!booted || (!fontsLoaded && !fontError)) {
     return null;
   }
 

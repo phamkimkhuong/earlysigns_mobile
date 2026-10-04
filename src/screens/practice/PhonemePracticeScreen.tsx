@@ -59,7 +59,12 @@ export default function PhonemePracticeScreen({ navigation, route }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [lessonSession, setLessonSession] = useState<LessonSession | null>(null);
   const [sessionKey, setSessionKey] = useState(0);
-  const [showGuideModal, setShowGuideModal] = useState(false);
+  const [showGuideModal, setShowGuideModal] = useState(true);
+
+  // Each sound starts with its guide; closing it lasts for this practice visit.
+  useEffect(() => {
+    setShowGuideModal(true);
+  }, [cleanPhoneme, dialect]);
 
   const displayTitle = useMemo(() => {
     if (!cleanPhoneme) return t("lesson.practiceSound", "Luyện phát âm");
@@ -177,7 +182,7 @@ export default function PhonemePracticeScreen({ navigation, route }: Props) {
   // 1. Loading State with PracticeScreenSkeleton
   if (loading) {
     return (
-      <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: "#f8fafc" }}>
+      <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: "#F7F6F2" }}>
         {/* Unified Top Navigation Header */}
         <View
           style={{
@@ -186,12 +191,12 @@ export default function PhonemePracticeScreen({ navigation, route }: Props) {
             paddingHorizontal: 16,
             paddingVertical: 12,
             borderBottomWidth: 1,
-            borderBottomColor: "rgba(15,23,42,0.07)",
-            backgroundColor: "#ffffff",
+            borderBottomColor: "#e2e8f0",
+            backgroundColor: "#F7F6F2",
           }}
         >
           <TouchableOpacity
-            activeOpacity={0.8}
+            activeOpacity={0.7}
             accessibilityRole="button"
             accessibilityLabel={t("common.back", "Quay lại")}
             onPress={() => navigation.goBack()}
@@ -199,14 +204,14 @@ export default function PhonemePracticeScreen({ navigation, route }: Props) {
               width: 38,
               height: 38,
               borderRadius: 19,
-              backgroundColor: "#f8fafc",
+              backgroundColor: "#ffffff",
               borderWidth: 1,
               borderColor: "rgba(15,23,42,0.08)",
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <ChevronLeft size={22} color="#334155" />
+            <ChevronLeft size={22} color="#0c2340" />
           </TouchableOpacity>
 
           <View style={{ flex: 1, marginHorizontal: 12 }}>
@@ -236,7 +241,7 @@ export default function PhonemePracticeScreen({ navigation, route }: Props) {
   // 2. Error State with Retry & Back
   if (error || !lessonSession || !lessonSession.sentences?.length) {
     return (
-      <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: "#f8fafc" }}>
+      <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: "#F7F6F2" }}>
         <View
           style={{
             flexDirection: "row",
@@ -244,12 +249,12 @@ export default function PhonemePracticeScreen({ navigation, route }: Props) {
             paddingHorizontal: 16,
             paddingVertical: 12,
             borderBottomWidth: 1,
-            borderBottomColor: "rgba(15,23,42,0.07)",
-            backgroundColor: "#ffffff",
+            borderBottomColor: "#e2e8f0",
+            backgroundColor: "#F7F6F2",
           }}
         >
           <TouchableOpacity
-            activeOpacity={0.8}
+            activeOpacity={0.7}
             accessibilityRole="button"
             accessibilityLabel={t("common.back", "Quay lại")}
             onPress={() => navigation.goBack()}
@@ -257,14 +262,14 @@ export default function PhonemePracticeScreen({ navigation, route }: Props) {
               width: 38,
               height: 38,
               borderRadius: 19,
-              backgroundColor: "#f8fafc",
+              backgroundColor: "#ffffff",
               borderWidth: 1,
               borderColor: "rgba(15,23,42,0.08)",
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <ChevronLeft size={22} color="#334155" />
+            <ChevronLeft size={22} color="#0c2340" />
           </TouchableOpacity>
 
           <View style={{ flex: 1, marginHorizontal: 12 }}>

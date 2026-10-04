@@ -47,44 +47,34 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
     Array.isArray(p.sentence.words) ? p.sentence.words.map((word: any) => word.ipa || "").filter(Boolean).join(" ") : "";
 
   return (
-    <View className="flex-1 min-h-0 bg-practiceHeader">
+    <View className="flex-1 min-h-0 bg-appBg">
       <View
         className="flex-1 min-h-0"
         accessibilityElementsHidden={p.confirmExit}
         importantForAccessibility={p.confirmExit ? "no-hide-descendants" : "auto"}
       >
-        {/* 1. HERO HEADER */}
-        <View className="bg-practiceHeader pt-2 pb-5 px-5">
+        {/* 1. TOP NAV BAR */}
+        <View className="bg-appBg px-4 py-3 border-b border-slate-200">
           {/* Top navigation bar */}
-          <View className="flex-row items-center justify-between mb-3.5">
+          <View className="flex-row items-center justify-between mb-2.5">
             <Pressable
               testID="screening-close"
               accessibilityRole="button"
               accessibilityLabel={t("common.back", "Quay lại")}
               onPress={p.onClose}
               disabled={phase === "saving"}
-              className="w-10 h-10 items-center justify-center rounded-2xl border active:opacity-80"
-              style={{
-                backgroundColor: "rgba(255, 255, 255, 0.16)",
-                borderColor: "rgba(255, 255, 255, 0.25)",
-              }}
+              className="w-10 h-10 items-center justify-center rounded-full bg-white border border-slate-200 active:opacity-70"
             >
-              <ChevronLeft size={22} color="#ffffff" />
+              <ChevronLeft size={22} color="#0c2340" strokeWidth={2.5} />
             </Pressable>
 
-            <Text accessibilityRole="header" className="text-base font-extrabold text-white">
+            <Text accessibilityRole="header" className="text-base font-bold text-[#0c2340]">
               {t("screeningPractice.title")}
             </Text>
 
             {/* Step Counter Pill */}
-            <View
-              className="px-3 py-1.5 rounded-full border items-center justify-center"
-              style={{
-                backgroundColor: "rgba(255, 255, 255, 0.16)",
-                borderColor: "rgba(255, 255, 255, 0.25)",
-              }}
-            >
-              <Text className="text-xs font-bold text-white shrink-0" numberOfLines={1}>
+            <View className="px-2.5 py-1 rounded-xl bg-sky-50 border border-sky-200 items-center justify-center">
+              <Text className="text-xs font-extrabold text-sky-800 shrink-0" numberOfLines={1}>
                 {p.current + 1}/{SCREENING_SENTENCE_COUNT}
               </Text>
             </View>
@@ -105,22 +95,21 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
                   key={i}
                   className="h-1.5 flex-1 rounded-full"
                   style={{
-                    backgroundColor: isDone ? "#10b981" : isCurrent ? "#38bdf8" : "rgba(255, 255, 255, 0.22)",
+                    backgroundColor: isDone ? "#10b981" : isCurrent ? "#0284c7" : "#e2e8f0",
                   }}
                 />
               );
             })}
           </View>
           <Text
-            className="text-xs font-medium mt-2"
-            style={{ color: "rgba(255, 255, 255, 0.72)" }}
+            className="text-xs font-medium mt-1.5 text-slate-500"
           >
             {t("screeningPractice.progress", { count: p.completed.length, total: SCREENING_SENTENCE_COUNT })}
           </Text>
         </View>
 
-        {/* 2. LAYERED OVERLAPPING CANVAS SHEET */}
-        <View className="flex-1 bg-[#f8fafc] -mt-3 rounded-t-[32px] overflow-hidden">
+        {/* 2. MAIN CONTENT SHEET */}
+        <View className="flex-1 bg-appBg overflow-hidden">
           <ScrollView
             className="flex-1 min-h-0"
             contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 24, paddingBottom: 28, gap: 18 }}
@@ -170,7 +159,7 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
                     onPress={p.onSample}
                     className="min-h-[38px] px-3.5 py-1.5 rounded-full border flex-row items-center gap-2 active:opacity-80"
                     style={{
-                      backgroundColor: p.samplePlaying ? "#e0f2fe" : "#f8fafc",
+                      backgroundColor: p.samplePlaying ? "#e0f2fe" : "#F7F6F2",
                       borderColor: p.samplePlaying ? "#38bdf8" : "#e2e8f0",
                       opacity: busy ? 0.6 : 1,
                     }}

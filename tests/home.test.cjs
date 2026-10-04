@@ -113,11 +113,10 @@ test("signed-in users open each feature directly", () => {
   assert.deepEqual(calls, destinations);
 });
 
-test("guest Home never exposes old cached progress, journey or weak sounds", () => {
+test("guest Home never exposes old cached progress or weak sounds", () => {
   const { model } = createHome({ summary: { streak_days: 9, total_accuracy: 0.9, journey: { current_module: 2 }, weakest_phonemes: [{ sound: "θ" }] }, soundData: sounds(44), unlocked: true });
   assert.equal(model.streakDays, null);
   assert.equal(model.clarityPct, null);
-  assert.equal(model.journey, null);
   assert.equal(model.quota, null);
   assert.deepEqual(model.weakestPhonemes, []);
 });

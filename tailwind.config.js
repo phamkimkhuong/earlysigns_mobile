@@ -8,7 +8,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        appBg: "#f8fafc",
+        appBg: "#F7F6F2",
         appElevated: "#ffffff",
         appMuted: "#f1f5f9",
         appText: "#0f172a",
@@ -39,6 +39,15 @@ module.exports = {
         "heading-sm": ["22px", { lineHeight: "28px" }],
         "heading": ["26px", { lineHeight: "32px" }],
         "display": ["32px", { lineHeight: "38px" }],
+      },
+      fontFamily: {
+        sans: ["Inter_400Regular"],
+        inter: ["Inter_400Regular"],
+        "inter-medium": ["Inter_500Medium"],
+        "inter-semibold": ["Inter_600SemiBold"],
+        "inter-bold": ["Inter_700Bold"],
+        "inter-extrabold": ["Inter_800ExtraBold"],
+        "inter-black": ["Inter_900Black"],
       },
     },
   },

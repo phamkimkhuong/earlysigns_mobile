@@ -12,26 +12,22 @@ import {
   ChevronRight,
   Eye,
   EyeOff,
-  Film,
   RotateCcw,
 } from "lucide-react-native";
 import VideoPlayerFrame from "@/components/practice/VideoPlayerFrame";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/services/Auth";
-import { colors } from "@/core/theme";
 import { usePronunciationCheck } from "@/hooks/usePronunciationCheck";
 import { useSegmentIpa } from "@/hooks/useSegmentIpa";
 import { buildSoundAnalysisRows } from "@/utils/pronunciationAnalysis";
 import { resolveUserKey, resolveUserTier } from "@/services/usageLimits";
 import { useBillingStore } from "@/store/useBillingStore";
 import { topicLabel } from "@/utils/errors";
-import DialectToggle from "@/components/ui/DialectToggle";
-import IPAChecking, { type IPASentence } from "@/components/practice/IPAChecking";
 import ScoreWords from "@/components/practice/ScoreWords";
 import VideoRecordingHub from "@/components/practice/VideoRecordingHub";
 import UpgradeProModal from "@/components/ui/UpgradeProModal";
 import { VideoPracticeSkeleton } from "@/components/ui/Skeleton";
-import { videoApi, lessonApi, billingApi, textPracticeApi } from "@/api";
+import { videoApi, billingApi } from "@/api";
 import { useVideoDetailQuery } from "@/hooks/queries/useVideoQueries";
 import {
   scheduleIncompleteLessonReminder,
@@ -59,7 +55,6 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
     authToken,
     authEmail,
     userDialect,
-    updateUserDialect,
   } = useAuth();
 
   const {
@@ -79,7 +74,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
     const stored = getItem(`${STORAGE_KEY_LAST_PRACTICED_PREFIX}${youtubeId}`);
     const playedCount = detailData?.played_count;
     const candidates = [route.params?.initialIndex, stored == null ? NaN : parseInt(stored, 10),
-      typeof playedCount === "number" && playedCount < segments.length ? playedCount : 0, 0];
+    typeof playedCount === "number" && playedCount < segments.length ? playedCount : 0, 0];
     const selected = candidates.find(value => typeof value === "number" && Number.isFinite(value) && value >= 0) ?? 0;
     const index = Math.max(0, Math.min(segments.length - 1, Math.floor(selected)));
     return { index, seconds: segments[index] ? segmentSeekSec(segments[index], segments[index - 1]) : 0 };
@@ -87,13 +82,9 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
   const [activeIndex, setActiveIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [playerReady, setPlayerReady] = useState(false);
-  const [hideTranscript, setHideTranscript] = useState(false);
   const [showTranslation, setShowTranslation] = useState(false);
-  const [detailsCollapsedFor, setDetailsCollapsedFor] = useState<string | null>(null);
-  const [phonemeLesson, setPhonemeLesson] = useState<any>(null);
-  const [userSelectedDialect, setUserSelectedDialect] = useState<Dialect | null>(null);
-  const practiceDialect: Dialect = userSelectedDialect || detailData?.dialect || userDialect || "uk";
-  const [dialectSaving, setDialectSaving] = useState(false);
+  const [detailsExpandedFor, setDetailsExpandedFor] = useState<string | null>(null);
+  const practiceDialect: Dialect = detailData?.dialect || userDialect || "uk";
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const usageStatus = useBillingStore((s) => s.usage);
 
@@ -167,7 +158,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
     clearResult,
     replayRecording,
   } = usePronunciationCheck({
-    enabled: isFocused && !phonemeLesson,
+    enabled: isFocused,
     language: i18n.resolvedLanguage || i18n.language || "vi",
     userTier,
     userKey,
@@ -304,13 +295,13 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
   }, [resetPlayer, youtubeId]);
 
   useEffect(() => {
-    if (isFocused && !phonemeLesson) return;
+    if (isFocused) return;
     pauseLockRef.current = true;
     pauseTimestampRef.current = Date.now();
     playingRef.current = false;
     setPlaying(false);
     if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current);
-  }, [isFocused, phonemeLesson]);
+  }, [isFocused]);
 
   const hasInitializedRef = useRef(false);
 
@@ -421,7 +412,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
   );
 
   const currentResultKey = `${activeIndex}_${result?.overallScore ?? ""}_${result?.accuracy ?? ""}`;
-  const showDetails = Boolean(result) && detailsCollapsedFor !== currentResultKey;
+  const showDetails = detailsExpandedFor === currentResultKey;
 
   const handleRecordToggle = useCallback(async () => {
     if (isStarting || checking) return;
@@ -450,44 +441,12 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
     practiceDialect,
   ]);
 
-  const phonemeLessonDialect = phonemeLesson?.dialect || practiceDialect;
-
-  const requestPhonemeSentenceWords = useCallback(
-    async (sentence: IPASentence) => {
-      try {
-        return await textPracticeApi.getIpaWords(
-          sentence.text,
-          phonemeLessonDialect
-        );
-      } catch {
-        return [];
-      }
-    },
-    [phonemeLessonDialect]
-  );
-
-  const requestPhonemeSampleAudio = useCallback(
-    async (sentence: IPASentence) => {
-      try {
-        if (!sentence?.text) return null;
-        return await textPracticeApi.generateAudio(
-          sentence.text,
-          phonemeLessonDialect,
-          false
-        );
-      } catch {
-        return null;
-      }
-    },
-    [phonemeLessonDialect]
-  );
-
   const progressPercent = Math.round(
     ((activeIndex + 1) / Math.max(1, segments.length)) * 100
   );
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-practiceHeader">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-appBg">
       <ScrollView
         className="flex-1 bg-appBg"
         contentContainerStyle={{ flexGrow: 1 }}
@@ -501,19 +460,19 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
             left: 0,
             right: 0,
             height: 1000,
-            backgroundColor: colors.practiceHeader,
+            backgroundColor: "#F7F6F2",
           }}
         />
 
-        {/* 1. LUXURY TOP NAVIGATION BAR */}
-        <View className="bg-practiceHeader px-4 pt-3 pb-6 gap-3.5">
+        {/* 1. TOP NAVIGATION BAR */}
+        <View className="bg-appBg px-4 py-3 border-b border-slate-200 gap-3">
           <View className="flex-row items-center justify-between">
             {/* Back Button */}
             <TouchableOpacity
               accessible={true}
               accessibilityRole="button"
               accessibilityLabel={t("common.back", "Quay lại danh sách video")}
-              activeOpacity={0.8}
+              activeOpacity={0.7}
               onPress={() => {
                 if (navigation?.canGoBack?.()) {
                   navigation.goBack();
@@ -521,68 +480,48 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                   navigation?.navigate?.("Videos");
                 }
               }}
-              className="w-10 h-10 rounded-2xl items-center justify-center border"
-              style={{
-                backgroundColor: "rgba(255, 255, 255, 0.16)",
-                borderColor: "rgba(255, 255, 255, 0.25)",
-              }}
+              className="w-10 h-10 rounded-full bg-white border border-slate-200 items-center justify-center active:opacity-70"
             >
-              <ChevronLeft size={22} color="#ffffff" />
+              <ChevronLeft size={22} color="#0c2340" strokeWidth={2.5} />
             </TouchableOpacity>
 
             {/* Video Title / Topic Header */}
             <View className="flex-1 px-3 items-center">
               <Text
-                className="text-xs font-bold text-sky-200 uppercase tracking-wider"
+                className="text-xs font-bold text-slate-500 uppercase tracking-wider"
                 numberOfLines={1}
               >
                 {video ? topicLabel(video.topic, t) : t("videos.breadcrumb.videos")}
               </Text>
               <Text
-                className="text-sm font-extrabold text-white text-center mt-0.5"
+                className="text-[15px] font-bold text-[#0c2340] text-center mt-0.5"
                 numberOfLines={1}
               >
                 {video?.title || t("videos.practice.mainAria")}
               </Text>
             </View>
 
-            {/* Dialect Toggle */}
-            <DialectToggle
-              value={practiceDialect}
-              saving={dialectSaving}
-              onChange={async (next) => {
-                setDialectSaving(true);
-                try {
-                  await updateUserDialect(next);
-                  setUserSelectedDialect(next);
-                  clearResult();
-                } finally {
-                  setDialectSaving(false);
-                }
-              }}
-            />
+            {/* Right placeholder to keep Title centered */}
+            <View className="w-10 h-10" />
           </View>
 
           {/* Integrated Header Progress Bar */}
           {video && segments.length > 0 ? (
             <View className="gap-1.5 pt-1">
               <View className="flex-row items-center justify-between px-1">
-                <Text className="text-xs font-bold text-sky-100">
+                <Text className="text-xs font-semibold text-slate-500">
                   {t("videos.practice.sentenceProgress", {
                     current: activeIndex + 1,
                     total: segments.length || 1,
                   })}
                 </Text>
-                <Text className="text-xs font-extrabold text-white">
+                <Text className="text-xs font-bold text-[#0c2340]">
                   {progressPercent}%
                 </Text>
               </View>
-              <View
-                className="h-1.5 rounded-full overflow-hidden"
-                style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
-              >
+              <View className="h-1.5 rounded-full overflow-hidden bg-slate-200">
                 <View
-                  className="h-full bg-white rounded-full"
+                  className="h-full bg-teal-500 rounded-full"
                   style={{ width: `${progressPercent}%` }}
                 />
               </View>
@@ -590,8 +529,8 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
           ) : null}
         </View>
 
-        {/* 2. LAYERED OVERLAPPING CANVAS SHEET */}
-        <View className="flex-1 bg-appBg -mt-3 rounded-t-[32px] px-4 pt-4 pb-24 gap-3.5">
+        {/* 2. MAIN CONTENT */}
+        <View className="flex-1 bg-appBg px-4 pt-3 pb-24 gap-3.5">
           {loading ? <VideoPracticeSkeleton /> : null}
 
           {error ? (
@@ -664,116 +603,6 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                 />
               </View>
 
-              {/* CARD 2: INTERACTIVE SUBTITLE & KARAOKE CARD */}
-              <View
-                className="bg-white rounded-3xl p-5 gap-3"
-                style={{
-                  borderColor: "#f1f5f9",
-                  borderWidth: 1,
-                  elevation: 2,
-                  shadowColor: "#0f172a",
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.04,
-                  shadowRadius: 8,
-                }}
-              >
-                {/* Card Sub-header Toolbar */}
-                <View className="flex-row items-center justify-between border-b border-slate-100 pb-2.5">
-                  <View className="flex-row items-center gap-1.5">
-                    <View className="w-2 h-2 rounded-full bg-indigo-500" />
-                    <Text className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
-                      {t("videos.practice.practiceSentence")}
-                    </Text>
-                  </View>
-
-                  <View className="flex-row items-center gap-2">
-                    {/* Toggle Vietnamese Translation */}
-                    {current?.translation_vi ? (
-                      <TouchableOpacity
-                        accessibilityRole="button"
-                        accessibilityLabel={t("videos.practice.toggleTranslation")}
-                        accessibilityState={{ selected: showTranslation }}
-                        activeOpacity={0.7}
-                        onPress={() => setShowTranslation((v) => !v)}
-                        className={`flex-row items-center gap-1 px-2.5 py-1 rounded-full border ${showTranslation
-                          ? "bg-indigo-50 border-indigo-200"
-                          : "bg-slate-50 border-slate-200"
-                          }`}
-                      >
-                        {showTranslation ? (
-                          <EyeOff size={13} color="#4f46e5" />
-                        ) : (
-                          <Eye size={13} color="#64748b" />
-                        )}
-                        <Text
-                          className={`text-xs font-bold ${showTranslation ? "text-indigo-700" : "text-slate-600"
-                            }`}
-                        >
-                          {t("videos.practice.toggleTranslation")}
-                        </Text>
-                      </TouchableOpacity>
-                    ) : null}
-
-                    {/* Toggle Hide/Show Transcript */}
-                    <TouchableOpacity
-                      accessibilityRole="button"
-                      accessibilityLabel={hideTranscript ? (t("videos.practice.showSubtitles") || "Hiện phụ đề") : "Ẩn phụ đề"}
-                      accessibilityState={{ selected: hideTranscript }}
-                      activeOpacity={0.7}
-                      onPress={() => setHideTranscript((v) => !v)}
-                      className={`p-1.5 rounded-full border ${hideTranscript
-                        ? "bg-indigo-50 border-indigo-200"
-                        : "bg-slate-50 border-slate-200"
-                        }`}
-                    >
-                      <Film size={14} color={hideTranscript ? "#4f46e5" : "#64748b"} />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-
-                {/* Subtitle Content */}
-                {hideTranscript ? (
-                  <View className="py-6 items-center justify-center gap-2">
-                    <Text className="text-xs text-slate-400 font-medium">
-                      {t("videos.practice.listeningModeActive")}
-                    </Text>
-                    <TouchableOpacity
-                      accessibilityRole="button"
-                      accessibilityLabel={t("videos.practice.showSubtitles")}
-                      activeOpacity={0.7}
-                      onPress={() => setHideTranscript(false)}
-                      className="px-3 py-1 bg-slate-100 rounded-full"
-                    >
-                      <Text className="text-xs font-bold text-slate-700">
-                        {t("videos.practice.showSubtitles")}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                ) : current?.text ? (
-                  <View className="gap-2.5 py-1">
-                    {/* IPA Word Breakdown with Alignment */}
-                    <ScoreWords
-                      words={practiceWords}
-                      alignment={result?.char_alignment}
-                      showResultDetails={showResultDetails}
-                      loadingIpa={segmentIpaLoading}
-                    />
-
-                    {/* Collapsible Vietnamese Translation */}
-                    {showTranslation && current.translation_vi ? (
-                      <View className="bg-indigo-50 border border-indigo-100 rounded-2xl p-3.5 mt-1">
-                        <Text className="text-xs text-indigo-950 font-medium leading-relaxed italic">
-                          💡 {current.translation_vi}
-                        </Text>
-                      </View>
-                    ) : null}
-                  </View>
-                ) : null}
-                {segmentIpaError ? (
-                  <Text className="text-danger text-xs">{segmentIpaError}</Text>
-                ) : null}
-              </View>
-
               {/* TOOLBAR: THUMB-FRIENDLY SENTENCE NAVIGATION */}
               <View className="flex-row items-center justify-between gap-2.5 px-0.5">
                 {/* Previous Sentence */}
@@ -814,7 +643,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                 <TouchableOpacity
                   accessible={true}
                   accessibilityRole="button"
-                  accessibilityLabel={t("videos.practice.replaySentence", "Phát lại câu")}
+                  accessibilityLabel={t("videos.practice.replaySentence", "Phát lại")}
                   accessibilityState={{ disabled: !current, busy: !playerReady && playing }}
                   activeOpacity={0.85}
                   disabled={!current}
@@ -876,7 +705,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                 </TouchableOpacity>
               </View>
 
-              {/* CARD 3: HERO RECORDING CTA & AI FEEDBACK HUB */}
+              {/* COMBINED CARD: SUBTITLE & RECORDING HUB   */}
               <VideoRecordingHub
                 isRecording={isRecording}
                 isStarting={isStarting}
@@ -892,52 +721,75 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                 showDetails={showDetails}
                 replayRecording={replayRecording}
                 onToggleDetails={() =>
-                  setDetailsCollapsedFor((prev) =>
+                  setDetailsExpandedFor((prev) =>
                     prev === currentResultKey ? null : currentResultKey
                   )
                 }
                 soundRows={soundRows}
                 words={practiceWords}
-                onPracticePhoneme={async (phoneme) => {
-                  const data = await lessonApi.getPhonemeLesson(
-                    phoneme,
-                    practiceDialect,
-                    false
-                  );
-                  const sentences = Array.isArray(data?.sentences)
-                    ? data.sentences
-                    : [];
-                  if (!sentences.length) return;
-                  setPhonemeLesson({
-                    phoneme,
-                    dialect: data.dialect || practiceDialect,
-                    sentences,
-                    title: t("lesson.titlePhoneme", { phoneme }),
-                    sessionKey: Date.now(),
-                  });
-                }}
+                onPracticePhoneme={(phoneme) =>
+                  navigation.navigate("PhonemePractice", { phoneme, dialect: practiceDialect })
+                }
                 hasSentence={Boolean(current?.text)}
-              />
+              >
+                {/* Card Sub-header Toolbar: Toggle Vietnamese Translation */}
+                {current?.translation_vi ? (
+                  <View className="flex-row justify-end border-b border-slate-100 pb-1">
+                    <TouchableOpacity
+                      accessibilityRole="button"
+                      accessibilityLabel={t("videos.practice.toggleTranslation")}
+                      accessibilityState={{ selected: showTranslation }}
+                      activeOpacity={0.7}
+                      onPress={() => setShowTranslation((v) => !v)}
+                      className={`flex-row items-center gap-1 px-2.5 py-1 rounded-full border ${showTranslation
+                        ? "bg-indigo-50 border-indigo-200"
+                        : "bg-slate-50 border-slate-200"
+                        }`}
+                    >
+                      {showTranslation ? (
+                        <EyeOff size={13} color="#4f46e5" />
+                      ) : (
+                        <Eye size={13} color="#64748b" />
+                      )}
+                      <Text
+                        className={`text-xs font-bold ${showTranslation ? "text-indigo-700" : "text-slate-600"
+                          }`}
+                      >
+                        {t("videos.practice.toggleTranslation")}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : null}
+
+                {/* Subtitle / Sentence Content */}
+                {current?.text ? (
+                  <View className="gap-2.5 py-1">
+                    {/* IPA Word Breakdown with Alignment */}
+                    <ScoreWords
+                      words={practiceWords}
+                      alignment={result?.char_alignment}
+                      showResultDetails={showResultDetails}
+                      loadingIpa={segmentIpaLoading}
+                    />
+
+                    {/* Collapsible Vietnamese Translation */}
+                    {showTranslation && current.translation_vi ? (
+                      <View className="bg-indigo-50 border border-indigo-100 rounded-2xl p-3.5 mt-1">
+                        <Text className="text-xs text-indigo-950 font-medium leading-relaxed italic">
+                          💡 {current.translation_vi}
+                        </Text>
+                      </View>
+                    ) : null}
+                  </View>
+                ) : null}
+                {segmentIpaError ? (
+                  <Text className="text-danger text-xs">{segmentIpaError}</Text>
+                ) : null}
+              </VideoRecordingHub>
             </>
           ) : null}
         </View>
       </ScrollView>
-
-      {/* Modal luyện âm IPA riêng lẻ từ SoundAnalysis */}
-      {phonemeLesson ? <IPAChecking
-        open={Boolean(phonemeLesson)}
-        onClose={() => setPhonemeLesson(null)}
-        sentences={phonemeLesson?.sentences || []}
-        dialect={phonemeLesson?.dialect || practiceDialect}
-        onUsageUpdated={(u) => useBillingStore.getState().setUsage(u)}
-        sessionKey={phonemeLesson?.sessionKey}
-        lessonTitle={phonemeLesson?.title}
-        userTier={userTier}
-        userKey={userKey}
-        usageStatus={usageStatus}
-        onRequestSampleAudio={requestPhonemeSampleAudio}
-        onRequestSentenceWords={requestPhonemeSentenceWords}
-      /> : null}
 
       <UpgradeProModal
         open={showUpgradeModal}

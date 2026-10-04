@@ -19,7 +19,7 @@ export interface Colors {
 }
 
 export const colors: Colors = {
-  bg: "#f8fafc",
+  bg: "#F7F6F2",
   bgElevated: "#ffffff",
   bgMuted: "#f1f5f9",
   text: "#0f172a",

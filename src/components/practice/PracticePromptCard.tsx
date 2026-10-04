@@ -48,14 +48,26 @@ export default function PracticePromptCard({
         elevation: 2,
       }}
     >
-      {/* 1. Main Text */}
-      {text ? (
+      {/* 1. Practice Sentence: Words with IPA directly underneath each word */}
+      {words && words.length > 0 ? (
+        <ScoreWords
+          words={words}
+          alignment={alignment}
+          showWord={true}
+          showIpa={true}
+          showResultDetails={showResultDetails}
+          loadingIpa={loadingIpa}
+          size="xl"
+          justifyCenter={true}
+        />
+      ) : text ? (
+        /* Fallback if words list is not yet ready */
         <Text
           style={{
-            fontSize: 26,
+            fontSize: 22,
             fontWeight: "800",
             color: "#0f172a",
-            lineHeight: 34,
+            lineHeight: 32,
             textAlign: "center",
             letterSpacing: -0.3,
           }}
@@ -64,33 +76,18 @@ export default function PracticePromptCard({
         </Text>
       ) : null}
 
-      {/* 2. Target IPA + Inline Speaker Icon Button */}
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 10,
-        }}
-      >
-        <ScoreWords
-          words={words}
-          alignment={alignment}
-          showWord={false}
-          showResultDetails={showResultDetails}
-          loadingIpa={loadingIpa}
-        />
-
-        {onPlaySample ? (
+      {/* 2. Sample Audio Playback Action */}
+      {onPlaySample ? (
+        <View style={{ alignItems: "center", marginTop: 4 }}>
           <Pressable
             onPress={samplePlaying ? undefined : onPlaySample}
             accessible
             accessibilityRole="button"
             accessibilityLabel={t("sentence.listenToSample", "Nghe phát âm mẫu")}
             style={({ pressed }) => ({
-              width: 34,
-              height: 34,
-              borderRadius: 17,
+              width: 36,
+              height: 36,
+              borderRadius: 18,
               backgroundColor: pressed ? "#e0f2fe" : "#f0f9ff",
               alignItems: "center",
               justifyContent: "center",
@@ -105,14 +102,14 @@ export default function PracticePromptCard({
               <Volume2 size={17} color="#0284c7" />
             )}
           </Pressable>
-        ) : null}
-      </View>
+        </View>
+      ) : null}
 
       {/* 3. Optional Vietnamese translation */}
       {showTranslation && translationVi ? (
         <View
           style={{
-            backgroundColor: "#f8fafc",
+            backgroundColor: "#F7F6F2",
             borderRadius: 12,
             paddingVertical: 8,
             paddingHorizontal: 12,

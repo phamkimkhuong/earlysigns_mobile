@@ -92,7 +92,6 @@ export function useHomeViewModel(navigation: any) {
   const streakDays = homeSummary?.streak_days != null && Number.isFinite(rawStreak) && rawStreak >= 0
     ? Math.floor(rawStreak)
     : null;
-  const journey = homeSummary?.journey || null;
 
   // Real video progress from viewed videos API
   const recentVideo = authToken && viewedVideos && viewedVideos.length > 0 ? viewedVideos[0] : null;
@@ -134,23 +133,11 @@ export function useHomeViewModel(navigation: any) {
         .filter((item): item is { sound: string } => Boolean(item && item.sound))
     : [];
 
-  // Journey progress percentage from journey milestones or clarity
-  const journeyProgressPct = useMemo(() => {
-    if (clarityPct != null) return clarityPct;
-    if (journey?.milestones && Array.isArray(journey.milestones)) {
-      const completed = journey.milestones.filter((ms: any) => ms.status === "completed").length;
-      const total = journey.milestones.length;
-      if (total > 0) return Math.min(100, Math.round((completed / total) * 100));
-    }
-    return null;
-  }, [clarityPct, journey]);
-
   return {
     t,
     dialect,
     authToken,
     authEmail,
-    userName: authEmail?.split("@")[0] || "",
     refreshing,
     onRefresh,
     homeSummary,
@@ -159,8 +146,6 @@ export function useHomeViewModel(navigation: any) {
     userKey,
     streakDays,
     clarityPct,
-    journey,
-    journeyProgressPct,
     weakestPhonemes,
     recentVideo,
     videoProgress,

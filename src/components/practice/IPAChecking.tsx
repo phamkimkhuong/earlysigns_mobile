@@ -6,6 +6,7 @@ import {
   Pressable,
   ScrollView,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { createAudioPlayer } from "expo-audio";
@@ -115,7 +116,7 @@ export default function IPAChecking({
   const { t, i18n } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [resultsByIndex, setResultsByIndex] = useState<Record<number, SentenceCheckResult>>({});
-  const [showDetails, setShowDetails] = useState(true);
+  const [showDetails, setShowDetails] = useState(false);
   const [instructionsDismissed, setInstructionsDismissed] = useState(false);
   const [nextLessonLoading, setNextLessonLoading] = useState(false);
   const [practicePhonemeLoading] = useState("");
@@ -177,7 +178,7 @@ export default function IPAChecking({
   useEffect(() => {
     setCurrentIndex(0);
     setResultsByIndex({});
-    setShowDetails(true);
+    setShowDetails(false);
     setInstructionsDismissed(!instructionsHtml);
     setReplayPlaying(false);
     halfFiredRef.current = false;
@@ -207,7 +208,6 @@ export default function IPAChecking({
   useEffect(() => {
     if (result) {
       setResultsByIndex((prev) => ({ ...prev, [currentIndex]: result }));
-      setShowDetails(true);
       const score = Number(result.accuracy ?? result.overall_score ?? 0);
       if (score >= 0.8) hapticFeedback.success();
       else if (score < 0.4) hapticFeedback.warning();
@@ -253,7 +253,6 @@ export default function IPAChecking({
   }, [storedResult]);
   const scorePct = sentenceScore01 == null ? null : Math.round(sentenceScore01 * 1000) / 10;
   const showResultDetails = scorePct != null && scorePct >= LOW_SCORE_THRESHOLD * 100;
-  const showTryAgain = scorePct != null && scorePct < LOW_SCORE_THRESHOLD * 100 && !checking && !isRecording;
   const displayWords = useMemo(() => {
     const key = sentenceWordsKey(currentSentence);
     const loaded = resolvedWordsByKey[key] || currentSentence?.words;
@@ -344,251 +343,235 @@ export default function IPAChecking({
   const totalSentences = sentences?.length || 1;
 
   const content = (
-    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: "#f8fafc" }}>
+    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: "#F7F6F2" }}>
 
-        {/* HEADER */}
+      {/* HEADER */}
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          paddingHorizontal: 16,
+          paddingVertical: 12,
+          borderBottomWidth: 1,
+          borderBottomColor: "#e2e8f0",
+          backgroundColor: "#F7F6F2",
+        }}
+      >
+        <Pressable
+          accessible
+          accessibilityRole="button"
+          accessibilityLabel={t("common.back", "Quay lại")}
+          onPress={onClose}
+          style={({ pressed }) => ({
+            width: 38,
+            height: 38,
+            borderRadius: 19,
+            backgroundColor: pressed ? "#e2e8f0" : "#ffffff",
+            borderWidth: 1,
+            borderColor: "rgba(15,23,42,0.08)",
+            alignItems: "center",
+            justifyContent: "center",
+          })}
+        >
+          <ChevronLeft size={22} color="#0c2340" />
+        </Pressable>
+
+        <View style={{ flex: 1, marginHorizontal: 12, justifyContent: "center" }}>
+          <Text
+            style={{ fontSize: 17, fontWeight: "800", color: "#0c2340" }}
+            numberOfLines={1}
+          >
+            {lessonTitle || t("sentence.current", { current: currentIndex + 1, total: totalSentences })}
+          </Text>
+          {journeyData?.current_module != null ? (
+            <Text style={{ fontSize: 13, fontWeight: "500", color: "#64748b", marginTop: 2 }}>
+              {t("home.journey.moduleOf", {
+                current: journeyData.current_module,
+                total: journeyData.total_modules || journeyData.current_module,
+              })}
+            </Text>
+          ) : null}
+        </View>
+
+        {onShowGuide ? (
+          <TouchableOpacity
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel={t("phonemeGuide.viewGuide", "Xem hướng dẫn")}
+            activeOpacity={0.7}
+            onPress={onShowGuide}
+            className="flex-row items-center shrink-0"
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              flexWrap: "nowrap",
+              flexShrink: 0,
+              gap: 6,
+              paddingHorizontal: 11,
+              paddingVertical: 6,
+              borderRadius: 14,
+              backgroundColor: "#f0f9ff",
+              borderWidth: 1,
+              borderColor: "#bae6fd",
+            }}
+          >
+            <BookOpen size={16} color="#0284c7" />
+            <Text
+              numberOfLines={1}
+              style={{
+                fontSize: 13,
+                fontWeight: "700",
+                color: "#0284c7",
+              }}
+            >
+              {t("phonemeGuide.guideBtn", "Hướng dẫn")}
+            </Text>
+          </TouchableOpacity>
+        ) : null}
+      </View>
+
+      {/* PROGRESS DOTS */}
+      {totalSentences > 1 ? (
         <View
           style={{
             flexDirection: "row",
+            justifyContent: "center",
             alignItems: "center",
-            paddingHorizontal: 16,
-            paddingVertical: 12,
-            borderBottomWidth: 1,
-            borderBottomColor: "rgba(15,23,42,0.07)",
+            gap: 6,
+            paddingVertical: 10,
             backgroundColor: "#ffffff",
+            borderBottomWidth: 1,
+            borderBottomColor: "rgba(15,23,42,0.05)",
           }}
         >
-          <Pressable
-            accessible
-            accessibilityRole="button"
-            accessibilityLabel={t("common.back", "Quay lại")}
-            onPress={onClose}
-            style={({ pressed }) => ({
-              width: 38,
-              height: 38,
-              borderRadius: 19,
-              backgroundColor: pressed ? "#f1f5f9" : "#f8fafc",
-              alignItems: "center",
-              justifyContent: "center",
-            })}
-          >
-            <ChevronLeft size={22} color="#334155" />
-          </Pressable>
-
-          <View style={{ flex: 1, marginHorizontal: 12 }}>
-            <Text
-              style={{ fontSize: 15, fontWeight: "700", color: "#0f172a" }}
-              numberOfLines={1}
-            >
-              {lessonTitle || t("sentence.current", { current: currentIndex + 1, total: totalSentences })}
-            </Text>
-            {journeyData?.current_module != null ? (
-              <Text style={{ fontSize: 13, fontWeight: "500", color: "#64748b", marginTop: 2 }}>
-                {t("home.journey.moduleOf", {
-                  current: journeyData.current_module,
-                  total: journeyData.total_modules || journeyData.current_module,
-                })}
-              </Text>
-            ) : null}
-          </View>
-
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            {onShowGuide ? (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={t("phonemeGuide.viewGuide", "Xem hướng dẫn")}
-                onPress={onShowGuide}
-                style={({ pressed }) => ({
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 4,
-                  paddingHorizontal: 9,
-                  paddingVertical: 4.5,
-                  borderRadius: 14,
-                  backgroundColor: pressed ? "#e0f2fe" : "#f0f9ff",
-                  borderWidth: 1,
-                  borderColor: "#bae6fd",
-                })}
-              >
-                <BookOpen size={13} color="#0284c7" />
-                <Text style={{ fontSize: 12, fontWeight: "700", color: "#0284c7" }}>
-                  {t("phonemeGuide.guideBtn", "Hướng dẫn")}
-                </Text>
-              </Pressable>
-            ) : null}
-
-            <View style={{ backgroundColor: "#0284c7", borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 }}>
-              <Text style={{ fontSize: 13, fontWeight: "700", color: "#ffffff" }}>
-                {currentIndex + 1}/{totalSentences}
-              </Text>
-            </View>
-          </View>
+          {sentences.map((_, i) => {
+            const isDone = resultsByIndex[i] != null;
+            const isCurrent = i === currentIndex;
+            return (
+              <View
+                key={i}
+                style={{
+                  width: isCurrent ? 20 : 8,
+                  height: 8,
+                  borderRadius: 4,
+                  backgroundColor: isCurrent ? "#4f46e5" : isDone ? "#10b981" : "#cbd5e1",
+                }}
+              />
+            );
+          })}
         </View>
+      ) : null}
 
-        {/* PROGRESS DOTS */}
-        {totalSentences > 1 ? (
+      {/* SCROLL CONTENT */}
+      <ScrollView
+        contentContainerStyle={{ padding: 20, gap: 16, paddingBottom: 32 }}
+        showsVerticalScrollIndicator={false}
+      >
+        {instructionsHtml && !instructionsDismissed ? (
           <View
             style={{
-              flexDirection: "row",
-              justifyContent: "center",
-              alignItems: "center",
-              gap: 6,
-              paddingVertical: 10,
               backgroundColor: "#ffffff",
-              borderBottomWidth: 1,
-              borderBottomColor: "rgba(15,23,42,0.05)",
+              borderRadius: 20,
+              padding: 20,
+              borderWidth: 1,
+              borderColor: "rgba(15,23,42,0.08)",
+              gap: 16,
             }}
           >
-            {sentences.map((_, i) => {
-              const isDone = resultsByIndex[i] != null;
-              const isCurrent = i === currentIndex;
-              return (
-                <View
-                  key={i}
-                  style={{
-                    width: isCurrent ? 20 : 8,
-                    height: 8,
-                    borderRadius: 4,
-                    backgroundColor: isCurrent ? "#4f46e5" : isDone ? "#10b981" : "#cbd5e1",
-                  }}
-                />
-              );
-            })}
-          </View>
-        ) : null}
-
-        {/* SCROLL CONTENT */}
-        <ScrollView
-          contentContainerStyle={{ padding: 20, gap: 16, paddingBottom: 32 }}
-          showsVerticalScrollIndicator={false}
-        >
-          {instructionsHtml && !instructionsDismissed ? (
-            <View
-              style={{
-                backgroundColor: "#ffffff",
-                borderRadius: 20,
-                padding: 20,
-                borderWidth: 1,
-                borderColor: "rgba(15,23,42,0.08)",
-                gap: 16,
-              }}
-            >
-              <View className="leading-6 flex-wrap">
-                <FormattedHtmlText
-                  html={instructionsHtml}
-                  style={{ fontSize: 15, color: "#334155", lineHeight: 24 }}
-                  boldStyle={{ fontWeight: "700", color: "#0284c7" }}
-                  italicStyle={{ fontStyle: "italic", color: "#0c2340" }}
-                />
-              </View>
-              <PrimaryButton
-                title={t("sentence.startRecording")}
-                onPress={() => setInstructionsDismissed(true)}
+            <View className="leading-6 flex-wrap">
+              <FormattedHtmlText
+                html={instructionsHtml}
+                style={{ fontSize: 15, color: "#334155", lineHeight: 24 }}
+                boldStyle={{ fontWeight: "700", color: "#0284c7" }}
+                italicStyle={{ fontStyle: "italic", color: "#0c2340" }}
               />
             </View>
-          ) : (
-            <>
-              {/* Unified Practice Prompt Card */}
-              <PracticePromptCard
-                text={currentSentence?.text}
-                words={displayWords}
-                alignment={storedResult?.char_alignment}
-                showResultDetails={showResultDetails}
-                loadingIpa={!displayWords.some((w: any) => w.ipa)}
-                onPlaySample={
-                  onRequestSampleAudio || currentSentence?.audio_url
-                    ? handleSample
-                    : undefined
-                }
-                samplePlaying={samplePlaying}
-              />
+            <PrimaryButton
+              title={t("sentence.startRecording")}
+              onPress={() => setInstructionsDismissed(true)}
+            />
+          </View>
+        ) : (
+          <>
+            {/* Unified Practice Prompt Card */}
+            <PracticePromptCard
+              text={currentSentence?.text}
+              words={displayWords}
+              alignment={storedResult?.char_alignment}
+              showResultDetails={showResultDetails}
+              loadingIpa={!displayWords.some((w: any) => w.ipa)}
+              onPlaySample={
+                onRequestSampleAudio || currentSentence?.audio_url
+                  ? handleSample
+                  : undefined
+              }
+              samplePlaying={samplePlaying}
+            />
 
-              {/* Unified Practice Feedback Card */}
-              <PracticeFeedbackCard
-                scorePct={scorePct}
-                checking={checking}
-                replayPlaying={replayPlaying}
-                onReplayVoice={handleReplayVoice}
-                showDetails={showDetails}
-                onToggleDetails={() => setShowDetails((v) => !v)}
-                soundRows={soundRows}
-                words={displayWords}
-                onPracticePhoneme={onPracticePhoneme}
-                practicePhonemeLoading={practicePhonemeLoading}
-                isRecording={isRecording}
-              />
+            {/* Unified Practice Feedback Card */}
+            <PracticeFeedbackCard
+              scorePct={scorePct}
+              checking={checking}
+              replayPlaying={replayPlaying}
+              onReplayVoice={handleReplayVoice}
+              showDetails={showDetails}
+              onToggleDetails={() => setShowDetails((v) => !v)}
+              soundRows={soundRows}
+              words={displayWords}
+              onPracticePhoneme={onPracticePhoneme}
+              practicePhonemeLoading={practicePhonemeLoading}
+              isRecording={isRecording}
+            />
 
-              {/* Low Score Card */}
-              {showTryAgain ? (
-                <View
-                  style={{
-                    backgroundColor: "#fff7ed",
-                    borderRadius: 16,
-                    padding: 16,
-                    borderWidth: 1,
-                    borderColor: "#fed7aa",
-                    alignItems: "center",
-                    gap: 8,
-                  }}
-                >
-                  <Text style={{ fontSize: 15, fontWeight: "700", color: "#9a3412", textAlign: "center" }}>
-                    {t("sentence.tryAgainLowScore")}
-                  </Text>
-                  <Text style={{ fontSize: 13, color: "#c2410c", textAlign: "center" }}>
-                    Lắng nghe mẫu rồi thử lại nhé!
-                  </Text>
-                </View>
-              ) : null}
+            {/* Errors */}
+            <MicErrorCard micError={micError} error={error} />
+          </>
+        )}
+      </ScrollView>
 
-              {/* Errors */}
-              <MicErrorCard micError={micError} error={error} />
-            </>
-          )}
-        </ScrollView>
-
-        {/* BOTTOM ACTION BAR (Unified SpeechRecordingDock with 25s auto-stop & ripple waves) */}
-        {(!instructionsHtml || instructionsDismissed) ? (
-          <SpeechRecordingDock
-            isRecording={isRecording}
-            isStarting={isStarting}
-            checking={checking}
-            disabled={!currentSentenceText || nextLessonLoading}
-            onRecordToggle={handleRecordToggle}
-            maxSeconds={25}
-            hasPrev={currentIndex > 0}
-            hasNext={currentIndex < totalSentences - 1 || showNextLessonBtn}
-            isLast={currentIndex >= totalSentences - 1}
-            hasScore={scorePct != null}
-            onPrev={() => {
-              setCurrentIndex((v) => Math.max(0, v - 1));
+      {/* BOTTOM ACTION BAR (Unified SpeechRecordingDock with 25s auto-stop & ripple waves) */}
+      {(!instructionsHtml || instructionsDismissed) ? (
+        <SpeechRecordingDock
+          isRecording={isRecording}
+          isStarting={isStarting}
+          checking={checking}
+          disabled={!currentSentenceText || nextLessonLoading}
+          onRecordToggle={handleRecordToggle}
+          maxSeconds={25}
+          hasPrev={currentIndex > 0}
+          hasNext={currentIndex < totalSentences - 1 || showNextLessonBtn}
+          isLast={currentIndex >= totalSentences - 1}
+          hasScore={scorePct != null}
+          onPrev={() => {
+            setCurrentIndex((v) => Math.max(0, v - 1));
+            setShowDetails(false);
+            clearResult();
+          }}
+          onNext={() => {
+            if (showNextLessonBtn) {
+              setNextLessonLoading(true);
+              void loadNextLesson?.().finally(() => setNextLessonLoading(false));
+            } else if (currentIndex < totalSentences - 1) {
+              setCurrentIndex((v) => v + 1);
               setShowDetails(false);
               clearResult();
-            }}
-            onNext={() => {
-              if (showNextLessonBtn) {
-                setNextLessonLoading(true);
-                void loadNextLesson?.().finally(() => setNextLessonLoading(false));
-              } else if (currentIndex < totalSentences - 1) {
-                setCurrentIndex((v) => v + 1);
-                setShowDetails(false);
-                clearResult();
-              }
-            }}
-          />
-        ) : null}
-
-
-        <UpgradeProModal
-          open={showUpgradeModal}
-          featureKey={upgradeFeatureKey}
-          onClose={() => setShowUpgradeModal(false)}
-          onUpgrade={() => {
-            setShowUpgradeModal(false);
-            onClose();
-            safeNavigate("Payment");
+            }
           }}
         />
-      </SafeAreaView>
+      ) : null}
+
+
+      <UpgradeProModal
+        open={showUpgradeModal}
+        featureKey={upgradeFeatureKey}
+        onClose={() => setShowUpgradeModal(false)}
+        onUpgrade={() => {
+          setShowUpgradeModal(false);
+          onClose();
+          safeNavigate("Payment");
+        }}
+      />
+    </SafeAreaView>
   );
 
   if (asModal === false) {

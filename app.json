@@ -2,7 +2,7 @@
   "expo": {
     "name": "EarlySigns",
     "slug": "earlysigns",
-    "owner": "phamkhuong436",
+    "owner": "test222a",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -13,6 +13,7 @@
       "supportsTablet": true,
       "usesAppleSignIn": true,
       "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
         "NSMicrophoneUsageDescription": "EarlySigns records your voice to check English pronunciation.",
         "NSCameraUsageDescription": "EarlySigns uses the camera to scan text for pronunciation practice.",
         "NSPhotoLibraryUsageDescription": "EarlySigns uses your photos to scan text for pronunciation practice.",
@@ -40,6 +41,7 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
+      "expo-font",
       [
         "expo-audio",
         {

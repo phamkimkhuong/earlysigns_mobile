@@ -364,7 +364,6 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
     }
     return 0;
   }, [screeningCompleted, scoreUnlocked, totalScreeningCount]);
-  const remainingScreeningCount = Math.max(0, totalScreeningCount - completedScreeningCount);
   const screeningProgressPct = Math.round((completedScreeningCount / totalScreeningCount) * 100);
 
   // Responsive screening card illustration size (prominent 3D hero asset)
@@ -463,7 +462,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
 
   if (isLoggingOut) {
     return (
-      <SafeAreaView edges={["top"]} className="flex-1 bg-[#f8fafc] items-center justify-center p-6">
+      <SafeAreaView edges={["top"]} className="flex-1 bg-appBg items-center justify-center p-6">
         <View
           style={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0" }}
           className="rounded-3xl p-7 items-center justify-center gap-4 border shadow-xl min-w-[220px]"
@@ -479,14 +478,14 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
 
   if (!authToken) {
     return (
-      <SafeAreaView edges={["top"]} className="flex-1 bg-[#f8fafc]">
+      <SafeAreaView edges={["top"]} className="flex-1 bg-appBg">
         <GuestProfileView navigation={navigation} />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-[#f8fafc]">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-appBg">
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 48, gap: 16 }}
@@ -671,21 +670,6 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                     <Text className="text-sm font-extrabold text-[#0f172a]">
                       {t("profile.screeningTitle") || "Hồ sơ phát âm"}
                     </Text>
-                    <TouchableOpacity
-                      accessibilityRole="button"
-                      accessibilityLabel={t("profile.screeningHelpTitle", "Trợ giúp hồ sơ phát âm")}
-                      activeOpacity={0.7}
-                      onPress={() =>
-                        customAlert.info(
-                          t("profile.screeningTitle") || "Hồ sơ phát âm",
-                          t("profile.screeningHelpBody") ||
-                          "Bài kiểm tra sàng lọc gồm các câu ngắn bao phủ 80% âm IPA cốt lõi để EarlySigns đánh giá phát âm và mở khóa toàn bộ hồ sơ của bạn."
-                        )
-                      }
-                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                    >
-                      <HelpCircle size={15} color="#94a3b8" />
-                    </TouchableOpacity>
                   </View>
                 </View>
 
@@ -702,7 +686,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                         ? t("profile.screeningDescContinue") ||
                         "Hoàn thành các câu còn lại để EarlySigns đánh giá phát âm và mở hồ sơ phát âm của bạn."
                         : t("profile.screeningDescStart") ||
-                        "Hoàn thành bài kiểm tra để EarlySigns đánh giá phát âm và mở hồ sơ phát âm của bạn."}
+                        "Hoàn thành bài kiểm tra để EarlySigns đánh giá phát âm và mở hồ sơ của bạn."}
                     </Text>
                   </View>
 
@@ -742,17 +726,6 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                   </View>
                   <Text className="text-xs font-bold text-slate-600">
                     {screeningProgressPct}%
-                  </Text>
-                </View>
-
-                {/* Info Hint */}
-                <View className="flex-row items-center gap-1.5">
-                  <Info size={13} color="#0066ff" />
-                  <Text className="text-xs text-slate-500">
-                    {remainingScreeningCount > 0
-                      ? t("profile.screeningRemainingHint", { count: remainingScreeningCount }) ||
-                      `Cần hoàn thành thêm ${remainingScreeningCount} câu để mở hồ sơ phát âm.`
-                      : t("profile.screeningDoneHint") || "Bạn đã hoàn thành đủ số câu, sẵn sàng mở khóa hồ sơ!"}
                   </Text>
                 </View>
 
@@ -850,7 +823,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                               ? "#fff7ed"
                               : isToday
                                 ? "#eff6ff"
-                                : "#f8fafc",
+                                : "#F7F6F2",
                             borderColor: isCompleted
                               ? "#fed7aa"
                               : isToday
@@ -1174,23 +1147,6 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
                   </View>
                 </TouchableOpacity>
 
-                {/* Row 3: Giọng mẫu */}
-                <View className="flex-row items-center justify-between p-3.5">
-                  <View className="flex-row items-center gap-3">
-                    <View
-                      style={{ backgroundColor: "#eff6ff" }}
-                      className="w-9 h-9 rounded-xl items-center justify-center"
-                    >
-                      <Mic size={18} color="#0066ff" />
-                    </View>
-                    <Text className="text-[15px] font-semibold text-[#0f172a]">
-                      {t("profile.standardVoiceLabel") || "Giọng mẫu"}
-                    </Text>
-                  </View>
-                  <Text className="text-[14px] font-medium text-slate-500">
-                    {t("profile.standardVoiceUK") || "Anh – Anh (UK)"}
-                  </Text>
-                </View>
               </View>
             </View>
 
@@ -1582,7 +1538,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
               activeOpacity={0.8}
               onPress={() => handleSelectLanguage("vi")}
               style={{
-                backgroundColor: currentLang === "vi" ? "#eff6ff" : "#f8fafc",
+                backgroundColor: currentLang === "vi" ? "#eff6ff" : "#F7F6F2",
                 borderColor: currentLang === "vi" ? "#0066ff" : "#e2e8f0",
               }}
               className="flex-row items-center justify-between p-4 rounded-2xl border"
@@ -1607,7 +1563,7 @@ export default function ProfileScreen({ route, navigation }: { route: any; navig
               activeOpacity={0.8}
               onPress={() => handleSelectLanguage("en")}
               style={{
-                backgroundColor: currentLang === "en" ? "#eff6ff" : "#f8fafc",
+                backgroundColor: currentLang === "en" ? "#eff6ff" : "#F7F6F2",
                 borderColor: currentLang === "en" ? "#0066ff" : "#e2e8f0",
               }}
               className="flex-row items-center justify-between p-4 rounded-2xl border"

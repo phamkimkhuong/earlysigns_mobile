@@ -251,9 +251,9 @@ export default function ReferralScreen({ navigation }: Props) {
   };
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-[#f8fafc]">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-appBg">
       {/* 1. TOP APP BAR */}
-      <View className="flex-row items-center justify-between px-4 py-2.5 bg-[#f8fafc]">
+      <View className="flex-row items-center justify-between px-4 py-2.5 bg-appBg">
         <TouchableOpacity
           accessibilityRole="button"
           accessibilityLabel={tr("common.back", "Quay lại")}
@@ -406,7 +406,7 @@ export default function ReferralScreen({ navigation }: Props) {
                 ) : !referralData?.has_created_code || !referralData?.referral_code ? (
                   /* CHƯA TẠO MÃ - HIỂN THỊ NÚT TẠO MÃ*/
                   <View
-                    style={{ backgroundColor: "#f8fafc", borderColor: "#e2e8f0" }}
+                    style={{ backgroundColor: "#F7F6F2", borderColor: "#e2e8f0" }}
                     className="rounded-2xl p-4 items-center justify-center gap-2 border"
                   >
                     <View
@@ -452,7 +452,7 @@ export default function ReferralScreen({ navigation }: Props) {
                   <>
                     <View
                       style={{
-                        backgroundColor: "#f8fafc",
+                        backgroundColor: "#F7F6F2",
                         borderColor: "#cbd5e1",
                         borderStyle: "dashed",
                         borderWidth: 1.5,
@@ -519,7 +519,7 @@ export default function ReferralScreen({ navigation }: Props) {
               ) : (
                 /* GUEST MODE */
                 <View
-                  style={{ backgroundColor: "#f8fafc", borderColor: "#e2e8f0" }}
+                  style={{ backgroundColor: "#F7F6F2", borderColor: "#e2e8f0" }}
                   className="rounded-2xl p-4 items-center text-center gap-3 border"
                 >
                   <Text className="text-[13px] text-slate-600 text-center leading-relaxed font-medium">
@@ -632,7 +632,7 @@ export default function ReferralScreen({ navigation }: Props) {
                       autoCapitalize="characters"
                       maxLength={12}
                       editable={!isRedeeming}
-                      style={{ backgroundColor: "#f8fafc", borderColor: "#cbd5e1" }}
+                      style={{ backgroundColor: "#F7F6F2", borderColor: "#cbd5e1" }}
                       className="flex-1 h-12 px-4 rounded-2xl border text-sm font-bold text-slate-900"
                     />
                     <TouchableOpacity

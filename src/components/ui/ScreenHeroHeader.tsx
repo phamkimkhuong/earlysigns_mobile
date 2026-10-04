@@ -1,12 +1,11 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { ChevronLeft } from "lucide-react-native";
-import { colors } from "@/core/theme";
 
 /**
  * Top elastic overscroll filler to prevent white flash when rubber-band scrolling on iOS.
  */
-export function OverscrollFiller({ color = colors.practiceHeader }: { color?: string }) {
+export function OverscrollFiller({ color = "#F7F6F2" }: { color?: string }) {
   return (
     <View
       style={{
@@ -33,8 +32,7 @@ export interface ScreenHeroHeaderProps {
 }
 
 /**
- * Standardized Luxury Hero Header for practice and section screens.
- * Uses centralized theme tokens (`colors.practiceHeader` & `bg-practiceHeader`).
+ * Standardized Clean Header for practice and section screens.
  */
 export function ScreenHeroHeader({
   title,
@@ -47,23 +45,19 @@ export function ScreenHeroHeader({
   className = "",
 }: ScreenHeroHeaderProps) {
   return (
-    <View className={`bg-practiceHeader pt-2 pb-6 px-5 ${className}`}>
+    <View className={`bg-appBg px-4 py-3 border-b border-slate-200 ${className}`}>
       {/* Navigation Row */}
-      <View className="flex-row items-center justify-between mb-3">
+      <View className="flex-row items-center justify-between">
         {showBack ? (
           <TouchableOpacity
             accessible={true}
             accessibilityRole="button"
             accessibilityLabel={backAccessibilityLabel}
-            activeOpacity={0.8}
+            activeOpacity={0.7}
             onPress={onBack}
-            className="w-10 h-10 rounded-2xl items-center justify-center border"
-            style={{
-              backgroundColor: "rgba(255, 255, 255, 0.16)",
-              borderColor: "rgba(255, 255, 255, 0.25)",
-            }}
+            className="w-10 h-10 rounded-full bg-white border border-slate-200 items-center justify-center active:opacity-70"
           >
-            <ChevronLeft size={22} color="#ffffff" />
+            <ChevronLeft size={22} color="#0c2340" strokeWidth={2.5} />
           </TouchableOpacity>
         ) : (
           <View className="w-10 h-10" />
@@ -72,14 +66,14 @@ export function ScreenHeroHeader({
         <View className="flex-1 px-3 items-center">
           {subtitle ? (
             <Text
-              className="text-xs font-bold text-sky-200 uppercase tracking-wider"
+              className="text-xs font-bold text-slate-500 uppercase tracking-wider"
               numberOfLines={1}
             >
               {subtitle}
             </Text>
           ) : null}
           <Text
-            className="text-base font-extrabold text-white text-center"
+            className="text-[15px] font-bold text-[#0c2340] text-center"
             numberOfLines={1}
           >
             {title}

@@ -130,7 +130,7 @@ export default function ScreeningScreen({ navigation, route }: Props) {
   // Loading State
   if (loading) {
     return (
-      <SafeAreaView edges={["top"]} className="flex-1 bg-practiceHeader">
+      <SafeAreaView edges={["top"]} className="flex-1 bg-appBg">
         <ScreeningPracticeSkeleton onClose={() => navigation.goBack()} />
       </SafeAreaView>
     );
@@ -139,27 +139,23 @@ export default function ScreeningScreen({ navigation, route }: Props) {
   // Error State
   if (error || !sentences.length) {
     return (
-      <SafeAreaView edges={["top"]} className="flex-1 bg-practiceHeader">
-        <View className="bg-practiceHeader pt-2 pb-6 px-5 flex-row items-center justify-between">
+      <SafeAreaView edges={["top"]} className="flex-1 bg-appBg">
+        <View className="bg-appBg px-4 py-3 border-b border-slate-200 flex-row items-center justify-between">
           <TouchableOpacity
             accessibilityRole="button"
             accessibilityLabel={t("common.back", "Quay lại")}
             onPress={() => navigation.goBack()}
-            className="w-10 h-10 rounded-2xl items-center justify-center border"
-            style={{
-              backgroundColor: "rgba(255, 255, 255, 0.12)",
-              borderColor: "rgba(255, 255, 255, 0.16)",
-            }}
+            className="w-10 h-10 rounded-full bg-white border border-slate-200 items-center justify-center active:opacity-70"
           >
-            <ChevronLeft size={22} color="#ffffff" />
+            <ChevronLeft size={22} color="#0c2340" strokeWidth={2.5} />
           </TouchableOpacity>
-          <Text className="text-base font-extrabold text-white">
+          <Text className="text-base font-bold text-[#0c2340]">
             {t("screeningPractice.title")}
           </Text>
           <View className="w-10 h-10" />
         </View>
 
-        <View className="flex-1 bg-[#f8fafc] -mt-4 rounded-t-[32px] items-center justify-center px-6 gap-5">
+        <View className="flex-1 bg-appBg items-center justify-center px-6 gap-5">
           <View className="w-16 h-16 rounded-3xl bg-[#fef2f2] items-center justify-center">
             <AlertCircle size={32} color="#dc2626" />
           </View>
@@ -188,7 +184,7 @@ export default function ScreeningScreen({ navigation, route }: Props) {
   }
 
   return (
-    <View className="flex-1 bg-practiceHeader">
+    <View className="flex-1 bg-appBg">
       <ScreeningSession
         sentences={sentences}
         dialect={dialect}

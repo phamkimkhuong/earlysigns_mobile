@@ -1,4 +1,6 @@
 // UI Base Components
+export { default as AppText } from "./ui/AppText";
+export type { AppTextProps, AppFontWeight } from "./ui/AppText";
 export { default as PrimaryButton, ChipButton } from "./ui/PrimaryButton";
 export { default as AppModal } from "./ui/AppModal";
 export { default as CustomAlertModal } from "./ui/CustomAlertModal";
@@ -18,7 +20,6 @@ export { default as SoundAnalysis } from "./practice/SoundAnalysis";
 export { default as ScreeningResultModal } from "./practice/ScreeningResultModal";
 export { default as HomeJourney, buildItems, WindingPath } from "./practice/HomeJourney";
 export { default as YoutubePlayer } from "./practice/YoutubePlayer";
-export { default as StagedAiProgress } from "./practice/StagedAiProgress";
 export { default as PracticePromptCard } from "./practice/PracticePromptCard";
 export { default as PracticeFeedbackCard } from "./practice/PracticeFeedbackCard";
 export { default as SpeechRecordingDock } from "./practice/SpeechRecordingDock";

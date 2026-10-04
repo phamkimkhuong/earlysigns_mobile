@@ -5,10 +5,135 @@ const path = require('node:path');
 const vm = require('node:vm');
 const ts = require('typescript');
 
+// Execute the real private topic row; native scrolling and HTTP completion are controlled.
+function catalogHarness(fetchCards) {
+  const cells = [], effects = [], cache = new Map(), requests = [];
+  let cursor = 0, tree;
+  const same = (a, b) => a && a.length === b.length && a.every((v, i) => Object.is(v, b[i]));
+  const react = {
+    useState(initial) { const i = cursor++; if (!(i in cells)) cells[i] = typeof initial === 'function' ? initial() : initial; return [cells[i], value => { cells[i] = typeof value === 'function' ? value(cells[i]) : value; }]; },
+    useRef(value) { const i = cursor++; return cells[i] ??= { current: value }; },
+    useMemo(fn, deps) { const i = cursor++; if (!same(cells[i]?.deps, deps)) cells[i] = { value: fn(), deps }; return cells[i].value; },
+    useCallback(fn, deps) { return react.useMemo(() => fn, deps); },
+    useEffect(fn, deps) { const i = cursor++, old = cells[i]; if (!same(old?.deps, deps)) { cells[i] = { deps, cleanup: old?.cleanup }; effects.push(() => { old?.cleanup?.(); cells[i].cleanup = fn(); }); } },
+  };
+  const queryClient = {
+    getQueryData: key => cache.get(JSON.stringify(key)),
+    setQueryData: (key, value) => cache.set(JSON.stringify(key), value),
+  };
+  const jsx = (type, props) => ({ type, props });
+  const mocks = {
+    react, 'react/jsx-runtime': { jsx, jsxs: jsx },
+    'react-native': Object.fromEntries(['View', 'Text', 'TouchableOpacity', 'FlatList', 'ActivityIndicator'].map(name => [name, name])),
+    'react-native-safe-area-context': {}, 'react-i18next': {}, 'lucide-react-native': {},
+    '@/services/Auth': {}, '@/utils/errors': { topicLabel: topic => topic },
+    '@tanstack/react-query': { useQueryClient: () => queryClient },
+    '@/components/ui/Skeleton': {}, '@/hooks/usePullToRefresh': {},
+    '@/hooks/queries/useVideoQueries': {
+      videoKeys: { topicVideos: (topic, level) => ['videos', topic, level] },
+      fetchVideoCards: async (_, ids) => { requests.push([...ids]); return fetchCards ? fetchCards([...ids], requests.length) : ids.map(youtube_id => ({ youtube_id })); },
+    },
+  };
+  const filename = path.resolve(__dirname, '../src/screens/tabs/VideosScreen.tsx');
+  const source = ts.transpileModule(fs.readFileSync(filename, 'utf8') + '\nexport { TopicSectionRow };', {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },
+  }).outputText;
+  const module = { exports: {} };
+  vm.runInNewContext(source, { module, exports: module.exports, require: name => {
+    if (!(name in mocks)) throw Error('Missing mock: ' + name);
+    return mocks[name];
+  } }, { filename });
+  const props = {
+    topic: 'conversation', level: 'A1', topicFilter: '', loadMoreTrigger: 0,
+    videoIds: Array.from({ length: 10 }, (_, i) => String(i + 1)),
+    initialVideos: Array.from({ length: 4 }, (_, i) => ({ youtube_id: String(i + 1) })),
+    t: key => key, onSelectTopic() {}, onOpenVideo() {},
+  };
+  function find(type, node = tree) {
+    if (!node || typeof node !== 'object') return undefined;
+    if (Array.isArray(node)) return node.map(child => find(type, child)).find(Boolean);
+    if (node.type === type) return node;
+    return find(type, node.props?.children);
+  }
+  return {
+    props, requests, cache, find,
+    render() { cursor = 0; tree = module.exports.TopicSectionRow(props); while (effects.length) effects.shift()(); },
+    unmount() { cells.forEach(cell => cell?.cleanup?.()); },
+  };
+}
+
+test('horizontal catalog loads subsequent four-card batches, deduplicates triggers and stops at the end', async () => {
+  let resolve;
+  const pending = new Promise(done => { resolve = done; });
+  const h = catalogHarness(async (ids, count) => count === 1 ? pending : ids.map(youtube_id => ({ youtube_id })));
+  h.render(); h.render();
+  const load = h.find('FlatList').props.onEndReached;
+  assert.equal(typeof load, 'function');
+  const first = load(); await load(); h.render();
+  assert.deepEqual(h.requests, [['5', '6', '7', '8']]);
+  assert.ok(h.find('FlatList').props.ListFooterComponent);
+  resolve(['4', '5', '6', '7', '8'].map(youtube_id => ({ youtube_id })));
+  await first; h.render();
+  assert.equal(h.find('FlatList').props.data.length, 8);
+  await h.find('FlatList').props.onEndReached(); h.render();
+  await h.find('FlatList').props.onEndReached();
+  assert.deepEqual(h.requests, [['5', '6', '7', '8'], ['9', '10']]);
+  assert.equal(h.find('FlatList').props.data.length, 10);
+});
+
+test('failed catalog batch remains retryable without skipping videos', async () => {
+  const h = catalogHarness(async (ids, count) => {
+    if (count === 1) throw Error('offline');
+    return ids.map(youtube_id => ({ youtube_id }));
+  });
+  h.render(); h.render(); await h.find('FlatList').props.onEndReached(); h.render();
+  assert.equal(h.find('FlatList').props.data.length, 4);
+  const findRetry = node => {
+    if (!node || typeof node !== 'object') return;
+    if (Array.isArray(node)) return node.map(findRetry).find(Boolean);
+    if (node.props?.accessibilityLabel === 'common.retry') return node;
+    return findRetry(node.props?.children);
+  };
+  await findRetry(h.find('View')).props.onPress(); h.render();
+  assert.deepEqual(h.requests, [['5', '6', '7', '8'], ['5', '6', '7', '8']]);
+  assert.equal(h.find('FlatList').props.data.length, 8);
+});
+
+test('successful catalog batch with unavailable cards advances by requested IDs', async () => {
+  const h = catalogHarness(async (ids, count) => (count === 1 ? ids.slice(0, 1) : ids).map(youtube_id => ({ youtube_id })));
+  h.render(); h.render(); await h.find('FlatList').props.onEndReached(); h.render();
+  await h.find('FlatList').props.onEndReached();
+  assert.deepEqual(h.requests, [['5', '6', '7', '8'], ['9', '10']]);
+});
+
+test('catalog grid keeps parent scrolling as its load trigger', async () => {
+  const h = catalogHarness(); h.props.topicFilter = 'conversation'; h.render(); h.render();
+  assert.equal(h.find('FlatList').props.onEndReached, undefined);
+  h.props.loadMoreTrigger++; h.render();
+  for (let i = 0; i < 10; i++) await Promise.resolve();
+  h.render();
+  assert.deepEqual(h.requests, [['5', '6', '7', '8']]);
+  assert.equal(h.find('FlatList').props.data.length, 8);
+});
+
+test('late catalog responses cannot append cards from the previous level', async () => {
+  let resolve;
+  const h = catalogHarness(() => new Promise(done => { resolve = done; }));
+  h.render(); h.render(); const pending = h.find('FlatList').props.onEndReached();
+  h.props.level = 'B2';
+  h.props.initialVideos = [{ youtube_id: 'b2' }]; h.props.videoIds = ['b2'];
+  h.render(); h.render();
+  resolve([{ youtube_id: '5' }]); await pending; h.render();
+  assert.equal(h.find('FlatList').props.data.length, 1);
+  assert.equal(h.find('FlatList').props.data[0].youtube_id, 'b2');
+  assert.equal(h.cache.size, 0);
+});
+
 function harness({ frame = false, stored, initialIndex, segments, playedCount = 0 } = {}) {
   const cells = [], effects = [], timers = new Map(), intervals = new Map();
   let cursor = 0, nextTimer = 0;
-  const calls = { seeks: [], clear: 0, record: 0, view: 0, reset: 0, ready: 0, play: 0 };
+  const calls = { seeks: [], navigation: [], recordingEnabled: [], clear: 0, record: 0, view: 0, reset: 0, ready: 0, play: 0 };
+  const focus = { current: true };
   const data = { title: 'Test', segments: segments || [{ start_ms: 10000, end_ms: 12000, text: 'First' }, { start_ms: 15000, end_ms: 18000, text: 'Next' }], played_count: playedCount, duration_ms: 30000 };
   const store = new Map(stored == null ? [] : [['earlysigns_video_last_index_test-video', stored]]);
   const noop = () => {};
@@ -31,10 +156,10 @@ function harness({ frame = false, stored, initialIndex, segments, playedCount = 
     'react-native': { ...native, StyleSheet: { absoluteFill: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 } } },
     'react-native-safe-area-context': { SafeAreaView: 'SafeAreaView' },
     'lucide-react-native': Object.fromEntries(['ChevronLeft', 'ChevronRight', 'Eye', 'EyeOff', 'Film', 'RotateCcw', 'Play'].map(name => [name, name])),
-    '@react-navigation/native': { useIsFocused: () => true },
+    '@react-navigation/native': { useIsFocused: () => focus.current },
     'react-i18next': { useTranslation: () => translation },
     '@/services/Auth': { useAuth: () => auth },
-    '@/hooks/usePronunciationCheck': { usePronunciationCheck: () => recording },
+    '@/hooks/usePronunciationCheck': { usePronunciationCheck: options => { calls.recordingEnabled.push(options.enabled); return recording; } },
     '@/hooks/useSegmentIpa': { useSegmentIpa: () => ({ words: [] }) },
     '@/utils/pronunciationAnalysis': { buildSoundAnalysisRows: () => [] },
     '@/services/usageLimits': { resolveUserKey: () => '', resolveUserTier: () => 'free' },
@@ -59,7 +184,7 @@ function harness({ frame = false, stored, initialIndex, segments, playedCount = 
     setInterval(fn, ms) { const id = ++nextTimer; intervals.set(id, { fn, ms }); return id; }, clearInterval: id => intervals.delete(id),
     require(name) { if (!(name in mocks)) throw Error('Missing mock ' + name); return mocks[name]; },
   }, { filename: file });
-  const props = frame ? { videoId: 'test-video', startSeconds: 9.75, play: false, onPlay: () => calls.play++, onReset: () => calls.reset++, onReady: () => calls.ready++, onChangeState: noop } : { route: { params: { youtubeId: 'test-video', initialIndex } }, navigation: {} };
+  const props = frame ? { videoId: 'test-video', startSeconds: 9.75, play: false, onPlay: () => calls.play++, onReset: () => calls.reset++, onReady: () => calls.ready++, onChangeState: noop } : { route: { params: { youtubeId: 'test-video', initialIndex } }, navigation: { navigate: (...args) => calls.navigation.push(args) } };
   let tree;
   const find = (type, predicate = () => true, node = tree) => {
     if (!node) return undefined;
@@ -68,12 +193,28 @@ function harness({ frame = false, stored, initialIndex, segments, playedCount = 
     return find(type, predicate, node.props?.children ?? null);
   };
   return {
-    calls, data, props, timers, recording, find,
+    calls, data, props, timers, recording, focus, find,
     render() { cursor = 0; tree = module.exports.default(props, { current: null }); while (effects.length) effects.shift()(); return tree; },
     attachPlayer() { find('VideoPlayerFrame').props.ref.current = { seekTo: seconds => calls.seeks.push(seconds), getCurrentTime: async () => 10 }; },
     fire(ms) { for (const [id, timer] of [...timers]) if (timer.ms === ms) { timers.delete(id); timer.fn(); } },
   };
 }
+
+test('learning a failed video sound opens the shared IPA route and pauses video while it is away', () => {
+  const h = harness(); h.data.dialect = 'us'; h.render(); h.render(); h.attachPlayer();
+  h.find('VideoPlayerFrame').props.onPlay(); h.render();
+  h.find('VideoRecordingHub').props.onPracticePhoneme('θ');
+  assert.equal(h.calls.navigation[0][0], 'PhonemePractice');
+  assert.equal(h.calls.navigation[0][1].phoneme, 'θ');
+  assert.equal(h.calls.navigation[0][1].dialect, 'us');
+  assert.equal(h.find('IPAChecking'), undefined, 'Use the full route with guidance, not a separate modal');
+  h.focus.current = false; h.render(); h.render();
+  assert.equal(h.calls.recordingEnabled.at(-1), false);
+  assert.equal(h.find('VideoPlayerFrame').props.play, false);
+  h.focus.current = true; h.render(); h.render();
+  assert.equal(h.calls.recordingEnabled.at(-1), true);
+  assert.equal(h.find('VideoPlayerFrame').props.play, false, 'Returning must not autoplay');
+});
 
 test('video startup cues sentence zero at its actual timestamp without seeking or autoplay', () => {
   const h = harness(); h.render(); h.render(); h.attachPlayer();

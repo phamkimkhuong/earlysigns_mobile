@@ -359,7 +359,7 @@ export default function SpeechRecordingDock({
               width: 48,
               height: 48,
               borderRadius: 24,
-              backgroundColor: pressed ? "#e2e8f0" : "#f8fafc",
+              backgroundColor: pressed ? "#e2e8f0" : "#F7F6F2",
               borderWidth: 1,
               borderColor: "rgba(15,23,42,0.1)",
               alignItems: "center",
@@ -380,8 +380,8 @@ export default function SpeechRecordingDock({
             alignItems: "center",
             justifyContent: "center",
             position: "relative",
-            width: 104,
-            height: 104,
+            width: 80,
+            height: 80,
           }}
         >
           {/* Multi-tier Ripple Sound Waves during recording */}
@@ -391,9 +391,9 @@ export default function SpeechRecordingDock({
                 pointerEvents="none"
                 style={{
                   position: "absolute",
-                  width: 90,
-                  height: 90,
-                  borderRadius: 45,
+                  width: 64,
+                  height: 64,
+                  borderRadius: 32,
                   backgroundColor: "rgba(224, 62, 62, 0.25)",
                   transform: [{ scale: wave1 }],
                   opacity: waveOpacity1,
@@ -403,9 +403,9 @@ export default function SpeechRecordingDock({
                 pointerEvents="none"
                 style={{
                   position: "absolute",
-                  width: 90,
-                  height: 90,
-                  borderRadius: 45,
+                  width: 64,
+                  height: 64,
+                  borderRadius: 32,
                   backgroundColor: "rgba(224, 62, 62, 0.18)",
                   transform: [{ scale: wave2 }],
                   opacity: waveOpacity2,
@@ -415,9 +415,9 @@ export default function SpeechRecordingDock({
                 pointerEvents="none"
                 style={{
                   position: "absolute",
-                  width: 90,
-                  height: 90,
-                  borderRadius: 45,
+                  width: 64,
+                  height: 64,
+                  borderRadius: 32,
                   backgroundColor: "rgba(224, 62, 62, 0.12)",
                   transform: [{ scale: wave3 }],
                   opacity: waveOpacity3,
@@ -430,9 +430,9 @@ export default function SpeechRecordingDock({
               pointerEvents="none"
               style={{
                 position: "absolute",
-                width: 86,
-                height: 86,
-                borderRadius: 43,
+                width: 76,
+                height: 76,
+                borderRadius: 38,
                 backgroundColor: "#2383E2",
                 transform: [{ scale: idleBreath }],
                 opacity: idleOpacity,
@@ -453,28 +453,28 @@ export default function SpeechRecordingDock({
                 : t("sentence.startRecording", "Bắt đầu ghi âm")
             }
             style={{
-              width: 72,
-              height: 72,
-              borderRadius: 36,
+              width: 62,
+              height: 62,
+              borderRadius: 31,
               backgroundColor: isRecording ? "#E03E3E" : checking ? "#1d4ed8" : "#2383E2",
-              borderWidth: 2.5,
+              borderWidth: 2,
               borderColor: isRecording ? "#fca5a5" : isStarting ? "#93c5fd" : checking ? "#93c5fd" : "#60a5fa",
               alignItems: "center",
               justifyContent: "center",
               shadowColor: isRecording ? "#E03E3E" : "#2383E2",
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.35,
-              shadowRadius: 10,
-              elevation: 6,
+              shadowOffset: { width: 0, height: 3 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+              elevation: 5,
               opacity: disabled ? 0.45 : isStarting ? 0.65 : 1,
             }}
           >
             {checking || isStarting ? (
               <ActivityIndicator size="small" color="#ffffff" />
             ) : isRecording ? (
-              <Square size={26} color="#ffffff" fill="#ffffff" />
+              <Square size={22} color="#ffffff" fill="#ffffff" />
             ) : (
-              <Mic size={30} color="#ffffff" strokeWidth={2.4} />
+              <Mic size={26} color="#ffffff" strokeWidth={2.4} />
             )}
           </TouchableOpacity>
         </View>
@@ -491,7 +491,7 @@ export default function SpeechRecordingDock({
               width: 48,
               height: 48,
               borderRadius: 24,
-              backgroundColor: isLast && hasScore ? "#ecfdf5" : pressed ? "#e2e8f0" : "#f8fafc",
+              backgroundColor: isLast && hasScore ? "#ecfdf5" : pressed ? "#e2e8f0" : "#F7F6F2",
               borderWidth: 1,
               borderColor: isLast && hasScore ? "#a7f3d0" : "rgba(15,23,42,0.1)",
               alignItems: "center",

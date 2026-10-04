@@ -10,7 +10,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   AlertCircle,
-  BookOpen,
   Bookmark,
   Camera,
   Check,
@@ -23,7 +22,6 @@ import {
   Trash2,
 } from "lucide-react-native";
 import PrimaryButton from "@/components/ui/PrimaryButton";
-import { colors } from "@/core/theme";
 import { PassageListSkeleton } from "@/components/ui/Skeleton";
 import { useTextPracticeViewModel } from "@/hooks/useTextPracticeViewModel";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -136,7 +134,7 @@ export default function TextPracticeScreen({ navigation, route }: NativeStackScr
 
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-practiceHeader">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-appBg">
       <ScrollView
         ref={scrollViewRef}
         className="flex-1 bg-appBg"
@@ -153,19 +151,18 @@ export default function TextPracticeScreen({ navigation, route }: NativeStackScr
             left: 0,
             right: 0,
             height: 1000,
-            backgroundColor: colors.practiceHeader,
+            backgroundColor: "#F7F6F2",
           }}
         />
 
-        {/* 1. HERO HEADER */}
-        <View className="bg-practiceHeader pt-2 pb-6 px-5">
-          {/* Top Nav Bar */}
-          <View className="flex-row items-center justify-between mb-3">
+        {/* 1. TOP NAV BAR */}
+        <View className="bg-appBg px-4 py-3 border-b border-slate-200">
+          <View className="flex-row items-center justify-between">
             <TouchableOpacity
               accessible={true}
               accessibilityRole="button"
               accessibilityLabel={t("common.back", "Quay lại")}
-              activeOpacity={0.8}
+              activeOpacity={0.7}
               onPress={() => {
                 if (navigation?.canGoBack?.()) {
                   navigation.goBack();
@@ -173,34 +170,23 @@ export default function TextPracticeScreen({ navigation, route }: NativeStackScr
                   navigation?.navigate?.("Main");
                 }
               }}
-              className="w-10 h-10 rounded-2xl items-center justify-center border"
-              style={{
-                backgroundColor: "rgba(255, 255, 255, 0.16)",
-                borderColor: "rgba(255, 255, 255, 0.25)",
-              }}
+              className="w-10 h-10 rounded-full bg-white border border-slate-200 items-center justify-center active:opacity-70"
             >
-              <ChevronLeft size={22} color="#ffffff" />
+              <ChevronLeft size={22} color="#0c2340" strokeWidth={2.5} />
             </TouchableOpacity>
 
-            <Text className="text-base font-extrabold text-white">
+            <Text className="text-base font-bold text-[#0c2340]">
               {t("textPractice.title")}
             </Text>
 
-            {/* Symmetrical placeholder to center title */}
             <View className="w-10 h-10" />
           </View>
 
           {/* Clean Subtitle Bar */}
-          <View className="flex-row items-center gap-2 px-1">
-            <BookOpen size={16} color="#ffffff" />
-            <Text className="flex-1 text-[13px] text-sky-50 leading-relaxed font-medium">
-              {t("textPractice.subtitle")}
-            </Text>
-          </View>
         </View>
 
-        {/* 2. LAYERED OVERLAPPING CANVAS SHEET */}
-        <View className="flex-1 bg-appBg -mt-4 rounded-t-[32px] px-4 pt-5 pb-20 gap-4">
+        {/* 2. MAIN CONTENT */}
+        <View className="flex-1 bg-appBg px-4 pt-4 pb-20 gap-4">
           {/* CARD 1: INPUT & OCR WORKSPACE (Consolidated Seamless Design) */}
           <View className="bg-white rounded-3xl p-5 border border-slate-200 gap-4">
             {/* Toolbar Header */}

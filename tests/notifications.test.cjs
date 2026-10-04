@@ -87,6 +87,15 @@ function notificationHarness(options = {}) {
   };
   for (const name of ["react-native-gesture-handler", "./global.css", "expo-status-bar", "react-native-safe-area-context", "@tanstack/react-query", "@/core/queryClient", "react-native-toast-message", "@/services/Auth", "@react-navigation/native", "@/navigation/RootNavigator", "@/components/ui/CustomAlertModal", "@/components/ui/CustomToast", "@/components/ui/AppUpdateModal"]) mocks[name] = {};
   mocks["@/store/useAppUpdateStore"] = { useAppUpdateStore: { getState: () => ({ checkUpdate: async () => {} }) } };
+  mocks["@expo-google-fonts/inter"] = {
+    useFonts: () => [true, null],
+    Inter_400Regular: "Inter_400Regular",
+    Inter_500Medium: "Inter_500Medium",
+    Inter_600SemiBold: "Inter_600SemiBold",
+    Inter_700Bold: "Inter_700Bold",
+    Inter_800ExtraBold: "Inter_800ExtraBold",
+    Inter_900Black: "Inter_900Black",
+  };
   function load(file) {
     if (cache[file]) return cache[file];
     const filename = path.resolve(__dirname, "..", file), module = { exports: {} };

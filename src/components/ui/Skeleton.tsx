@@ -296,7 +296,7 @@ export function PassageListSkeleton({ count = 3 }: { count?: number }) {
  */
 export function PracticeScreenSkeleton() {
   return (
-    <View className="flex-1 px-5 pt-3 gap-4" style={{ backgroundColor: "#f8fafc" }}>
+    <View className="flex-1 px-5 pt-3 gap-4" style={{ backgroundColor: "#F7F6F2" }}>
       {/* 1. Progress Dots Placeholder */}
       <View className="flex-row justify-center items-center gap-1.5 py-2">
         <SkeletonItem width={20} height={8} borderRadius={4} />
@@ -359,42 +359,38 @@ export function PracticeScreenSkeleton() {
  */
 export function ScreeningPracticeSkeleton({ onClose }: { onClose?: () => void } = {}) {
   return (
-    <View className="flex-1 bg-practiceHeader">
+    <View className="flex-1 bg-appBg">
       {/* 1. Header Placeholder */}
-      <View className="bg-practiceHeader pt-2 pb-5 px-5">
-        <View className="flex-row items-center justify-between mb-3.5">
+      <View className="bg-appBg px-4 py-3 border-b border-slate-200">
+        <View className="flex-row items-center justify-between mb-2.5">
           {onClose ? (
             <TouchableOpacity
               onPress={onClose}
               accessibilityRole="button"
               accessibilityLabel="Quay lại"
-              className="w-10 h-10 items-center justify-center rounded-2xl border"
-              style={{
-                backgroundColor: "rgba(255, 255, 255, 0.12)",
-                borderColor: "rgba(255, 255, 255, 0.16)",
-              }}
+              className="w-10 h-10 items-center justify-center rounded-full bg-white border border-slate-200"
             >
-              <ChevronLeft size={22} color="#ffffff" />
+              <ChevronLeft size={22} color="#0c2340" strokeWidth={2.5} />
             </TouchableOpacity>
           ) : (
             <SkeletonItem
               width={40}
               height={40}
-              borderRadius={16}
-              style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
+              borderRadius={20}
+              style={{ backgroundColor: "#e2e8f0" }}
             />
           )}
           <SkeletonItem
             width={140}
             height={20}
             borderRadius={6}
-            style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
+            style={{ backgroundColor: "#e2e8f0" }}
           />
           <SkeletonItem
             width={52}
             height={26}
             borderRadius={13}
-            style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
+            style={{ backgroundColor: "#e2e8f0" }}
           />
         </View>
 
@@ -407,7 +403,7 @@ export function ScreeningPracticeSkeleton({ onClose }: { onClose?: () => void } 
               borderRadius={3}
               style={{
                 flex: 1,
-                backgroundColor: i === 0 ? "rgba(56, 189, 248, 0.6)" : "rgba(255, 255, 255, 0.15)",
+                backgroundColor: i === 0 ? "#0284c7" : "#e2e8f0",
               }}
             />
           ))}
@@ -415,7 +411,7 @@ export function ScreeningPracticeSkeleton({ onClose }: { onClose?: () => void } 
       </View>
 
       {/* 2. Light Canvas Sheet */}
-      <View className="flex-1 bg-[#f8fafc] -mt-3 rounded-t-[32px] px-5 pt-6 gap-5">
+      <View className="flex-1 bg-appBg px-5 pt-6 gap-5">
         {/* Hero Sentence Card */}
         <View
           className="bg-white rounded-[26px] p-6 border border-[#e8f1f8] gap-3"
@@ -466,15 +462,18 @@ export function PhonemeGuideSkeleton({
   onBack?: () => void;
 }) {
   return (
-    <View style={{ flex: 1, backgroundColor: "#0a2644" }}>
-      {/* 1. Header with exact Navy color and title */}
+    <View style={{ flex: 1, backgroundColor: "#F7F6F2" }}>
+      {/* 1. Header matching PhonemeIntroGuide */}
       <View
         style={{
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
           paddingHorizontal: 16,
-          paddingVertical: 10,
+          paddingVertical: 12,
+          backgroundColor: "#F7F6F2",
+          borderBottomWidth: 1,
+          borderBottomColor: "#e2e8f0",
         }}
       >
         {onBack ? (
@@ -483,30 +482,30 @@ export function PhonemeGuideSkeleton({
             accessibilityLabel="Quay lại"
             onPress={onBack}
             style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
+              width: 38,
+              height: 38,
+              borderRadius: 19,
               alignItems: "center",
               justifyContent: "center",
-              backgroundColor: "rgba(255, 255, 255, 0.12)",
+              backgroundColor: "#ffffff",
               borderWidth: 1,
-              borderColor: "rgba(255, 255, 255, 0.18)",
+              borderColor: "rgba(15,23,42,0.08)",
             }}
           >
-            <ChevronLeft size={22} color="#ffffff" />
+            <ChevronLeft size={22} color="#0c2340" />
           </TouchableOpacity>
         ) : (
           <SkeletonItem
-            width={40}
-            height={40}
-            borderRadius={20}
-            style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
+            width={38}
+            height={38}
+            borderRadius={19}
+            style={{ backgroundColor: "#e2e8f0" }}
           />
         )}
 
         <View style={{ alignItems: "center", gap: 4 }}>
           {phoneme ? (
-            <Text style={{ fontSize: 16, fontWeight: "800", color: "#ffffff" }}>
+            <Text style={{ fontSize: 16, fontWeight: "700", color: "#0f172a" }}>
               Hướng dẫn âm /{phoneme}/
             </Text>
           ) : (
@@ -514,7 +513,7 @@ export function PhonemeGuideSkeleton({
               width={140}
               height={18}
               borderRadius={6}
-              style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
+              style={{ backgroundColor: "#e2e8f0" }}
             />
           )}
           <View
@@ -522,27 +521,25 @@ export function PhonemeGuideSkeleton({
               paddingHorizontal: 8,
               paddingVertical: 1.5,
               borderRadius: 12,
-              backgroundColor: "rgba(56, 189, 248, 0.16)",
+              backgroundColor: "#e0f2fe",
               borderWidth: 1,
-              borderColor: "rgba(56, 189, 248, 0.35)",
+              borderColor: "#bae6fd",
             }}
           >
-            <Text style={{ fontSize: 11, fontWeight: "700", color: "#7dd3fc" }}>
+            <Text style={{ fontSize: 11, fontWeight: "700", color: "#0284c7" }}>
               {dialect.toUpperCase()} {dialect.toLowerCase() === "uk" ? "🇬🇧" : "🇺🇸"}
             </Text>
           </View>
         </View>
 
-        <View style={{ width: 40, height: 40 }} />
+        <View style={{ width: 38, height: 38 }} />
       </View>
 
       {/* 2. Main Sheet matching PhonemeIntroGuide */}
       <View
         style={{
           flex: 1,
-          backgroundColor: "#f8fafc",
-          borderTopLeftRadius: 28,
-          borderTopRightRadius: 28,
+          backgroundColor: "#F7F6F2",
           paddingHorizontal: 16,
           paddingTop: 18,
           gap: 16,

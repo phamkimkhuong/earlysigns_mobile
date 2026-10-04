@@ -19,14 +19,21 @@ export interface ScoreWordsProps {
   showResultDetails?: boolean;
   loadingIpa?: boolean;
   showInserted?: boolean;
+  size?: "base" | "lg" | "xl";
+  justifyCenter?: boolean;
 }
 
 const PHONE_COLORS: Record<string, string> = {
   correct: colors.success,
   deleted: colors.danger,
   replaced: colors.warning,
-  inserted: "#ea580c",
   neutral: colors.textSecondary,
+};
+
+const WORD_STYLES = {
+  base: { wordSize: 16, wordWeight: "600" as const, ipaSize: 13 },
+  lg: { wordSize: 18, wordWeight: "700" as const, ipaSize: 13 },
+  xl: { wordSize: 20, wordWeight: "800" as const, ipaSize: 14 },
 };
 
 export default function ScoreWords({
@@ -37,65 +44,88 @@ export default function ScoreWords({
   showResultDetails = false,
   loadingIpa = false,
   showInserted = false,
+  size = "base",
+  justifyCenter = false,
 }: ScoreWordsProps) {
   const wordScores = useMemo(() => buildWordScores(words, alignment), [words, alignment]);
   if (!words.length) return null;
+
+  const currentSize = WORD_STYLES[size] || WORD_STYLES.base;
+
   return (
-    <View className="flex-row flex-wrap gap-2.5">
+    <View
+      className="flex-row flex-wrap"
+      style={{
+        flexDirection: "row",
+        flexWrap: "wrap",
+        gap: size === "xl" ? 12 : 10,
+        justifyContent: justifyCenter ? "center" : "flex-start",
+      }}
+    >
       {words.map((w, i) => {
         const ipaTokens = wordScores[i]?.ipaTokens || tokenizeIpa(w?.ipa || "");
         const alignedPhones = wordScores[i]?.alignment || [];
-        const insertedPhones = wordScores[i]?.inserted || [];
         const phones =
           showResultDetails && alignedPhones.length
-            ? alignedPhones.filter((p) => p?.status !== "inserted")
+            ? alignedPhones
             : ipaTokens.map((phone) => ({ char: phone, status: "neutral" }));
         return (
-          <View key={`${w.word}-${i}`} className="items-center max-w-[120px]">
+          <View
+            key={`${w.word}-${i}`}
+            className="items-center"
+            style={{
+              alignItems: "center",
+              minWidth: 28,
+              paddingHorizontal: 2,
+            }}
+          >
             {showWord ? (
-              <Text className="text-appText text-base font-semibold">{w.word || ""}</Text>
+              <Text
+                numberOfLines={1}
+                style={{
+                  fontSize: currentSize.wordSize,
+                  fontWeight: currentSize.wordWeight,
+                  color: "#0f172a",
+                  textAlign: "center",
+                }}
+              >
+                {w.word || ""}
+              </Text>
             ) : null}
             {showIpa ? (
-              <View className="flex-row items-center flex-wrap justify-center mt-0.5">
-                <Text className="text-appTextSecondary text-[13px]">{"/"}</Text>
-                {w.ipa ? (
-                  phones.map((phone, phoneIndex) => (
-                    <Text
-                      key={`${w.word}-${i}-${phoneIndex}`}
-                      style={{ color: PHONE_COLORS[phone?.status || ""] || PHONE_COLORS.neutral }}
-                      className="text-[13px]"
-                    >
-                      {phone?.char || ""}
-                    </Text>
-                  ))
-                ) : (
-                  <Text className="text-appTextSecondary text-[13px]">
-                    {loadingIpa ? "…" : "—"}
-                  </Text>
-                )}
-                <Text className="text-appTextSecondary text-[13px]">{"/"}</Text>
-                {showInserted && showResultDetails && insertedPhones.length > 0 ? (
-                  <View className="flex-row items-center ml-1 gap-1">
-                    {insertedPhones.map((ins, insIdx) => {
-                      const sound = ins.predicted_char || ins.char || "";
-                      return (
-                        <View
-                          key={`ins-${i}-${insIdx}`}
-                          className="px-1.5 py-0.5 rounded-md shrink-0 flex-row items-center"
-                          style={{ backgroundColor: "#ffedd5" }}
-                        >
-                          <Text
-                            numberOfLines={1}
-                            className="text-xs font-bold"
-                            style={{ color: "#c2410c" }}
-                          >
-                            +{sound}
-                          </Text>
-                        </View>
-                      );
-                    })}
-                  </View>
-                ) : null}
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginTop: 2,
+                }}
+              >
+                <Text
+                  numberOfLines={1}
+                  style={{
+                    fontSize: currentSize.ipaSize,
+                    color: colors.textSecondary,
+                    textAlign: "center",
+                  }}
+                >
+                  {"/"}
+                  {w.ipa ? (
+                    phones.map((phone, phoneIndex) => (
+                      <Text
+                        key={`${w.word}-${i}-${phoneIndex}`}
+                        style={{
+                          color: PHONE_COLORS[phone?.status || ""] || PHONE_COLORS.neutral,
+                        }}
+                      >
+                        {phone?.char || ""}
+                      </Text>
+                    ))
+                  ) : (
+                    loadingIpa ? "…" : "—"
+                  )}
+                  {"/"}
+                </Text>
               </View>
             ) : null}
           </View>

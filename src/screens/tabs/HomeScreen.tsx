@@ -11,7 +11,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Defs, LinearGradient, Rect, Stop, Text as SvgText } from "react-native-svg";
 import {
   ArrowRight,
-  AudioLines,
   Camera,
   ChevronRight,
   FileText,
@@ -41,13 +40,11 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
   const {
     t,
     authToken,
-    userName,
     userTier,
     refreshing,
     onRefresh,
     streakDays,
     clarityPct,
-    journeyProgressPct,
     weakestPhonemes,
     videoProgress,
     navigateWithGate,
@@ -66,13 +63,8 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
     .filter((s) => s.length > 0 && s !== "/");
   const displayPhonemes = [0, 1, 2].map((i) => rawPhonemes[i] || DEFAULT_CORE_PHONEMES[i]);
 
-  // Journey progress percentage: from API for authenticated users, strictly 0 for guests
-  const displayJourneyPct = authToken
-    ? (journeyProgressPct != null ? journeyProgressPct : (clarityPct != null ? clarityPct : 0))
-    : 0;
-
   return (
-    <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-[#f8fafc]">
+    <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-appBg">
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ flexGrow: 1 }}
@@ -86,25 +78,10 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
         }
       >
         <View className="w-full max-w-[600px] self-center px-5 pt-3.5 pb-8 gap-5">
-          {/* 1. TOP BAR: BRAND LOGO & USER ACCOUNT / LOGIN BUTTON */}
+          {/* 1. TOP BAR: BRAND LOGO & GUEST LOGIN BUTTON */}
           <View className="flex-row items-center justify-between">
             <EarlySignsBrandLogo />
-            {authToken ? (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`${t("homeDesign.greeting", { name: userName || "bạn" })}, ${t("nav.profile", "Trang cá nhân")}`}
-                testID="home-account"
-                onPress={() => navigation.navigate("Profile", { tab: "account" })}
-                className="py-1 active:opacity-75"
-              >
-                <Text
-                  numberOfLines={1}
-                  className="text-base font-bold text-[#0c2340] max-w-[170px]"
-                >
-                  {t("homeDesign.greeting", { name: userName || "bạn" })}
-                </Text>
-              </Pressable>
-            ) : (
+            {!authToken ? (
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={t("homeDesign.login", "Đăng nhập")}
@@ -116,7 +93,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
                   {t("homeDesign.login", "Đăng nhập")}
                 </Text>
               </Pressable>
-            )}
+            ) : null}
           </View>
 
           {/* 2. EDITORIAL HEADLINE & STATUS ACCORDING TO SPEC §7 */}
@@ -149,9 +126,6 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
                 </SvgText>
               </Svg>
             </View>
-            <Text className="text-[14px] font-medium text-[#64748b] leading-relaxed mt-0.5">
-              {t("homeDesign.subtitle")}
-            </Text>
 
             {/* Signed-in Account Status & Progress Badges */}
             {authToken ? (
@@ -434,37 +408,8 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
                   </Text>
                 </View>
 
-                {/* Journey Progress Bar with Ocean-to-Mint Gradient */}
-                <View className="flex-row items-center gap-2.5 pt-1">
-                  <View className="flex-1 h-[7px] bg-[#edf2f7] rounded-full overflow-hidden">
-                    {displayJourneyPct > 0 ? (
-                      <View
-                        className="h-full rounded-full overflow-hidden"
-                        style={{ width: `${Math.min(100, Math.max(6, displayJourneyPct))}%` }}
-                      >
-                        <Svg width="100%" height="100%">
-                          <Defs>
-                            <LinearGradient id="journeyBarGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                              <Stop offset="0%" stopColor="#0369a1" />
-                              <Stop offset="100%" stopColor="#2dd4bf" />
-                            </LinearGradient>
-                          </Defs>
-                          <Rect width="100%" height="100%" fill="url(#journeyBarGrad)" />
-                        </Svg>
-                      </View>
-                    ) : null}
-                  </View>
-                  <Text className="text-xs font-bold text-[#475569]">
-                    {displayJourneyPct}%
-                  </Text>
-                </View>
               </View>
             </Pressable>
-          </View>
-          {/* 7. FOOTNOTE */}
-          <View className="flex-row items-center justify-center gap-1.5 -mt-1">
-            <AudioLines size={14} color="#64748b" />
-            <Text className="text-xs text-slate-500 text-center">{t("homeDesign.ukVoice")}</Text>
           </View>
         </View>
       </ScrollView>

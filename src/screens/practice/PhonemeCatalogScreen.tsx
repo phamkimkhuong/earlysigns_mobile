@@ -146,7 +146,7 @@ export default function PhonemeCatalogScreen({ navigation, route }: Props) {
                 </Text>
               </View>
             ) : (
-              <View className="px-2.5 py-0.5 rounded-full mt-0.5 shrink-0 bg-[#f8fafc] border border-[#e2e8f0]">
+              <View className="px-2.5 py-0.5 rounded-full mt-0.5 shrink-0 bg-appBg border border-[#e2e8f0]">
                 <Text
                   numberOfLines={1}
                   className="text-xs font-medium text-[#94a3b8] text-center"
@@ -247,45 +247,32 @@ export default function PhonemeCatalogScreen({ navigation, route }: Props) {
   );
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-practiceHeader">
-      {/* 1. HERO HEADER */}
-      <View className="bg-practiceHeader pt-2 pb-5 px-5">
-        <View className="flex-row items-center justify-between mb-2.5">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-appBg">
+      {/* 1. TOP NAV BAR */}
+      <View className="bg-appBg px-4 py-3 border-b border-slate-200">
+        <View className="flex-row items-center justify-between mb-2">
           <TouchableOpacity
             accessibilityRole="button"
             accessibilityLabel={t("common.back", "Quay lại")}
-            activeOpacity={0.8}
+            activeOpacity={0.7}
             onPress={() => navigation.goBack()}
-            className="w-10 h-10 rounded-2xl items-center justify-center border"
-            style={{
-              backgroundColor: "rgba(255, 255, 255, 0.16)",
-              borderColor: "rgba(255, 255, 255, 0.25)",
-            }}
+            className="w-10 h-10 rounded-full bg-white border border-slate-200 items-center justify-center active:opacity-70"
           >
-            <ChevronLeft size={22} color="#ffffff" />
+            <ChevronLeft size={22} color="#0c2340" strokeWidth={2.5} />
           </TouchableOpacity>
 
-          <Text className="text-base font-extrabold text-white">
+          <Text className="text-base font-bold text-[#0c2340]">
             {t("phonemesHome.catalogTitle", "Kho 44 âm IPA")}
           </Text>
 
-          <View
-            className="px-2 py-0.5 rounded-xl border"
-            style={{
-              backgroundColor: "rgba(255, 255, 255, 0.2)",
-              borderColor: "rgba(255, 255, 255, 0.35)",
-            }}
-          >
-            <Text className="text-[11px] font-extrabold text-white">
+          <View className="flex-row items-center px-2.5 py-1 rounded-xl bg-sky-50 border border-sky-200">
+            <Text className="text-xs font-extrabold text-sky-800">
               {dialect.toUpperCase()} {dialect.toLowerCase() === "uk" ? "🇬🇧" : "🇺🇸"}
             </Text>
           </View>
         </View>
 
-        <Text
-          className="text-[13px] font-medium leading-[18px]"
-          style={{ color: "rgba(255, 255, 255, 0.75)" }}
-        >
+        <Text className="text-xs font-medium text-slate-500 leading-relaxed">
           {t(
             "phonemesHome.catalogSubtitle",
             "Toàn bộ hệ thống phiên âm chuẩn quốc tế IPA với bảng phân loại chi tiết."
@@ -294,7 +281,7 @@ export default function PhonemeCatalogScreen({ navigation, route }: Props) {
       </View>
 
       {/* 2. VIRTUALIZED FLATLIST GRID CANVAS */}
-      <View className="flex-1 bg-[#f8fafc] -mt-3 rounded-t-[28px] overflow-hidden pt-4">
+      <View className="flex-1 bg-appBg overflow-hidden pt-3">
         <FlatList
           data={filteredCatalog}
           key={`catalog-grid-${columns}`}

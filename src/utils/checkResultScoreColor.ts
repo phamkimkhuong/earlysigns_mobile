@@ -4,14 +4,20 @@ export const CHECK_RESULT_SCORE_GOOD_THRESHOLD = 0.8;
 
 export function checkResultScoreColor(score01: number | string | null | undefined): string {
   const s = Number(score01);
-  if (!Number.isFinite(s)) return colors.warning;
-  return s >= CHECK_RESULT_SCORE_GOOD_THRESHOLD ? colors.success : colors.warning;
+  if (!Number.isFinite(s)) return colors.danger;
+  if (s >= 0.8) return colors.success;
+  if (s >= 0.6) return colors.accent;
+  if (s >= 0.4) return colors.warning;
+  return colors.danger;
 }
 
 export function checkResultScoreColorFromPct(pct: number | string | null | undefined): string {
   const p = Number(pct);
-  if (!Number.isFinite(p)) return colors.warning;
-  return p >= CHECK_RESULT_SCORE_GOOD_THRESHOLD * 100 ? colors.success : colors.warning;
+  if (!Number.isFinite(p)) return colors.danger;
+  if (p >= 80) return colors.success;
+  if (p >= 60) return colors.accent;
+  if (p >= 40) return colors.warning;
+  return colors.danger;
 }
 
 export function accuracyBandColor(value: number | string | null | undefined): string {

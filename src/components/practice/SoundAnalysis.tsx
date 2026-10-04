@@ -8,8 +8,6 @@ import {
 } from "react-native";
 import { Check, ChevronLeft, ChevronRight } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
-import PrimaryButton from "@/components/ui/PrimaryButton";
-import { colors } from "@/core/theme";
 import { hapticFeedback } from "@/utils/haptics";
 import type { SoundAnalysisRow } from "@/types";
 
@@ -49,14 +47,9 @@ export default function SoundAnalysis({
         const exp = (r.expected || "").trim();
         return exp !== "" && exp !== "." && exp !== "ˈ" && exp !== "ˌ" && exp !== "+";
       });
-      const errorPhonemes = realPhonemes.filter((r) => {
-        if (r.status === "correct") return false;
-        if (r.status === "inserted") {
-          const sound = (r.pronounced || r.expected || "").replace(/^\+/, "").trim();
-          return sound !== "" && sound !== "." && sound !== "ˈ" && sound !== "ˌ";
-        }
-        return r.status === "replaced" || r.status === "deleted";
-      });
+      const errorPhonemes = realPhonemes.filter(
+        (r) => r.status === "replaced" || r.status === "deleted"
+      );
       const correctPhonemes = realPhonemes.filter((r) => r.status === "correct");
       const hasErrors = errorPhonemes.length > 0;
       const isPerfect = realPhonemes.length > 0 && !hasErrors;
@@ -103,21 +96,179 @@ export default function SoundAnalysis({
     wordsWithPhonemes.length > 0 &&
     wordsWithPhonemes.some((w) => w.phonemes.length > 0);
 
+  // Table renderer for error phonemes (Web-identical 2-column layout: Âm | Phân tích)
+  const renderErrorPhonemeTable = (items: SoundAnalysisRow[]) => (
+    <View
+      className="rounded-2xl overflow-hidden mt-1"
+      style={{
+        borderWidth: 1,
+        borderColor: "#e2e8f0",
+      }}
+    >
+      {/* Table Header: Âm | Phân tích */}
+      <View
+        className="flex-row items-center px-3.5 py-2.5"
+        style={{
+          backgroundColor: "#f1f5f9",
+          borderBottomWidth: 1,
+          borderBottomColor: "#e2e8f0",
+        }}
+      >
+        <Text
+          style={{
+            width: 72,
+            fontSize: 13,
+            fontWeight: "700",
+            color: "#64748b",
+          }}
+        >
+          {t("result.soundAnalysis.soundColumn", "Âm")}
+        </Text>
+        <Text
+          style={{
+            flex: 1,
+            fontSize: 13,
+            fontWeight: "700",
+            color: "#64748b",
+          }}
+        >
+          {t("result.soundAnalysis.analysisColumn", "Phân tích")}
+        </Text>
+      </View>
+
+      {/* Table Rows */}
+      {items.map((row, index) => {
+        const isDeleted = row.status === "deleted";
+        const cleanExpected = (row.expected || "").trim().replace(/^\/+|\/+$/g, "") || "?";
+        const cleanPronounced = (row.pronounced || row.expected || "").trim().replace(/^\/+|\/+$/g, "");
+
+        const explanation =
+          isDeleted
+            ? t("result.soundAnalysis.missed")
+            : t("result.soundAnalysis.replaced", {
+              pronounced: cleanPronounced || cleanExpected,
+            });
+        const tipText = row.tipText;
+
+        const rowBg = isDeleted ? "#fff1f2" : "#fffbeb";
+        const rowBorderColor = isDeleted ? "#ffe4e6" : "#fef3c7";
+        const accentColor = isDeleted ? "#dc2626" : "#d97706";
+        const isLast = index === items.length - 1;
+
+        return (
+          <View
+            key={row.id || `phoneme-row-${index}-${cleanExpected}`}
+            className="flex-row items-start px-3.5 py-3"
+            style={{
+              backgroundColor: rowBg,
+              borderBottomWidth: isLast ? 0 : 1,
+              borderBottomColor: rowBorderColor,
+            }}
+          >
+            {/* Cột 1: Âm */}
+            <View style={{ width: 72, paddingTop: 1 }}>
+              <Text
+                style={{
+                  fontSize: 17,
+                  fontWeight: "800",
+                  color: accentColor,
+                }}
+              >
+                {`/${cleanExpected}/`}
+              </Text>
+            </View>
+
+            {/* Cột 2: Phân tích */}
+            <View style={{ flex: 1, gap: 6, paddingLeft: 4 }}>
+              {/* Lời nhận xét */}
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: "700",
+                  color: accentColor,
+                  lineHeight: 20,
+                }}
+              >
+                {explanation}
+              </Text>
+
+              {/* Mẹo */}
+              {tipText ? (
+                <Text
+                  style={{
+                    fontSize: 13,
+                    color: "#334155",
+                    lineHeight: 19,
+                  }}
+                >
+                  <Text style={{ fontWeight: "700", color: "#334155" }}>
+                    {t("result.soundAnalysis.tipLabel", "Mẹo:")}{" "}
+                  </Text>
+                  {tipText}
+                </Text>
+              ) : null}
+
+              {/* Nút Học âm */}
+              {onPracticePhoneme ? (
+                <TouchableOpacity
+                  accessible={true}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("result.soundAnalysis.learnPhoneme", {
+                    phoneme: cleanExpected,
+                  })}
+                  activeOpacity={0.8}
+                  disabled={disabled || Boolean(practicePhonemeLoading)}
+                  onPress={() => {
+                    hapticFeedback.light();
+                    onPracticePhoneme(cleanExpected);
+                  }}
+                  style={{
+                    alignSelf: "flex-start",
+                    backgroundColor:
+                      practicePhonemeLoading === cleanExpected
+                        ? "#93c5fd"
+                        : "#2383E2",
+                    paddingHorizontal: 14,
+                    paddingVertical: 7,
+                    borderRadius: 8,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 6,
+                    marginTop: 3,
+                  }}
+                >
+                  {practicePhonemeLoading === cleanExpected ? (
+                    <ActivityIndicator size={12} color="#ffffff" />
+                  ) : null}
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      fontWeight: "700",
+                      color: "#ffffff",
+                    }}
+                  >
+                    {practicePhonemeLoading === cleanExpected
+                      ? t("result.soundAnalysis.learnLoading")
+                      : t("result.soundAnalysis.learnPhoneme", {
+                        phoneme: cleanExpected,
+                      })}
+                  </Text>
+                </TouchableOpacity>
+              ) : null}
+            </View>
+          </View>
+        );
+      })}
+    </View>
+  );
+
   // If no word grouping data is available, fall back to flat list view (errors only)
   if (!hasWordGrouping) {
     const errorRows = (rows || []).filter((r) => {
-      const isError =
-        r.status === "replaced" || r.status === "deleted" || r.status === "inserted";
+      const isError = r.status === "replaced" || r.status === "deleted";
       if (!isError) return false;
       const expected = (r.expected || "").trim();
-      if (!expected || expected === "." || expected === "ˈ" || expected === "ˌ" || expected === "+") {
-        return false;
-      }
-      if (r.status === "inserted") {
-        const sound = (r.pronounced || r.expected || "").replace(/^\+/, "").trim();
-        return sound !== "" && sound !== "." && sound !== "ˈ" && sound !== "ˌ";
-      }
-      return true;
+      return Boolean(expected && expected !== "." && expected !== "ˈ" && expected !== "ˌ" && expected !== "+");
     });
 
     return (
@@ -140,62 +291,7 @@ export default function SoundAnalysis({
             </Text>
           </View>
         ) : (
-          errorRows.map((row) => {
-            const isInserted = row.status === "inserted";
-            const cleanExpected = (row.expected || "").trim() || "?";
-            const cleanPronounced = (row.pronounced || row.expected || "").replace(/^\+/, "").trim();
-            const explanation =
-              row.status === "deleted"
-                ? t("result.soundAnalysis.missed")
-                : isInserted
-                  ? t("result.soundAnalysis.inserted", {
-                    pronounced: cleanPronounced || cleanExpected,
-                  })
-                  : t("result.soundAnalysis.replaced", {
-                    pronounced: cleanPronounced || cleanExpected,
-                  });
-            const tipText = row.tipText;
-            const statusColor =
-              row.status === "deleted"
-                ? colors.danger
-                : isInserted
-                  ? "#64748b"
-                  : colors.warning;
-            const phonemeDisplay = isInserted
-              ? `+/${cleanPronounced || cleanExpected}/`
-              : `/${cleanExpected}/`;
-            return (
-              <View
-                key={row.id}
-                className="border-l-[3px] pl-2.5 py-2 gap-1.5"
-                style={{ borderLeftColor: statusColor }}
-              >
-                <Text className="font-bold text-slate-900">
-                  {phonemeDisplay}
-                </Text>
-                <Text className="text-slate-600 text-xs">{explanation}</Text>
-                {!isInserted && tipText ? (
-                  <Text className="text-slate-700 text-xs">
-                    {t("result.soundAnalysis.tipLabel")} {tipText}
-                  </Text>
-                ) : null}
-                {!isInserted && onPracticePhoneme ? (
-                  <PrimaryButton
-                    title={
-                      practicePhonemeLoading === cleanExpected
-                        ? t("result.soundAnalysis.learnLoading")
-                        : t("result.soundAnalysis.learnPhoneme", {
-                          phoneme: cleanExpected,
-                        })
-                    }
-                    variant="ghost"
-                    disabled={disabled || Boolean(practicePhonemeLoading)}
-                    onPress={() => onPracticePhoneme(cleanExpected)}
-                  />
-                ) : null}
-              </View>
-            );
-          })
+          renderErrorPhonemeTable(errorRows)
         )}
       </View>
     );
@@ -211,9 +307,6 @@ export default function SoundAnalysis({
       <View className="gap-0.5">
         <Text className="font-black text-slate-900 text-base">
           {t("result.soundAnalysis.title")}
-        </Text>
-        <Text className="text-xs font-medium text-slate-500">
-          {t("result.soundAnalysis.selectWordHint")}
         </Text>
       </View>
 
@@ -231,10 +324,10 @@ export default function SoundAnalysis({
               accessible={true}
               accessibilityRole="button"
               accessibilityLabel={`${w.word}, ${w.hasErrors
-                  ? `${w.errorCount} âm cần sửa`
-                  : w.isPerfect
-                    ? "Phát âm chuẩn xác"
-                    : ""
+                ? `${w.errorCount} âm cần sửa`
+                : w.isPerfect
+                  ? "Phát âm chuẩn xác"
+                  : ""
                 }`}
               accessibilityState={{ selected: isSelected }}
               activeOpacity={0.75}
@@ -250,7 +343,7 @@ export default function SoundAnalysis({
                     ? "#fffbeb"
                     : w.isPerfect
                       ? "#f0fdf4"
-                      : "#f8fafc",
+                      : "#F7F6F2",
                 borderWidth: 1.5,
                 borderColor: isSelected
                   ? "#1d4ed8"
@@ -373,12 +466,7 @@ export default function SoundAnalysis({
                         : p.status === "deleted"
                           ? "#dc2626"
                           : "#64748b";
-                  const charText =
-                    p.status === "inserted"
-                      ? (p.pronounced || p.expected).startsWith("+")
-                        ? (p.pronounced || p.expected)
-                        : `+${p.pronounced || p.expected}`
-                      : p.expected;
+                  const charText = p.expected;
                   return (
                     <Text
                       key={`ipa-char-${pIdx}-${p.expected}`}
@@ -427,187 +515,7 @@ export default function SoundAnalysis({
               <Text className="text-xs font-bold uppercase tracking-wider text-slate-500">
                 {t("result.soundAnalysis.errorsTitle", "Các âm cần cải thiện")}
               </Text>
-              {activeWord.errorPhonemes.map((row) => {
-                const isInserted = row.status === "inserted";
-                const isDeleted = row.status === "deleted";
-
-                const cleanExpected = (row.expected || "").trim() || "?";
-                const cleanPronounced = (row.pronounced || row.expected || "").replace(/^\+/, "").trim();
-
-                const explanation =
-                  isDeleted
-                    ? t("result.soundAnalysis.missed")
-                    : isInserted
-                      ? t("result.soundAnalysis.inserted", {
-                        pronounced: cleanPronounced || cleanExpected,
-                      })
-                      : t("result.soundAnalysis.replaced", {
-                        pronounced: cleanPronounced || cleanExpected,
-                      });
-                const tipText = row.tipText;
-
-                const cardBg = isInserted
-                  ? "#f8fafc"
-                  : isDeleted
-                    ? "#fef2f2"
-                    : "#fffbeb";
-
-                const cardBorder = isInserted
-                  ? "#e2e8f0"
-                  : isDeleted
-                    ? "#fecdd3"
-                    : "#fde68a";
-
-                const badgeBg = isInserted
-                  ? "#f1f5f9"
-                  : isDeleted
-                    ? "#fee2e2"
-                    : "#fef3c7";
-
-                const badgeTextColor = isInserted
-                  ? "#334155"
-                  : isDeleted
-                    ? "#991b1b"
-                    : "#78350f";
-
-                const statusLabelColor = isInserted
-                  ? "#64748b"
-                  : isDeleted
-                    ? "#dc2626"
-                    : "#92400e";
-
-                const textColor = isInserted
-                  ? "#475569"
-                  : isDeleted
-                    ? "#991b1b"
-                    : "#78350f";
-
-                const tipLabelColor = isInserted
-                  ? "#64748b"
-                  : isDeleted
-                    ? "#dc2626"
-                    : "#92400e";
-
-                const badgeLabel = isInserted
-                  ? t("result.soundAnalysis.insertedBadge", "Âm thừa")
-                  : isDeleted
-                    ? t("result.soundAnalysis.missedBadge", "Âm bị thiếu")
-                    : t("result.soundAnalysis.needsImprovement", "Cần sửa");
-
-                const phonemeDisplay = isInserted
-                  ? `+/${cleanPronounced || cleanExpected}/`
-                  : `/${cleanExpected}/`;
-
-                return (
-                  <View
-                    key={row.id}
-                    className="rounded-2xl p-3.5 gap-2.5"
-                    style={{
-                      backgroundColor: cardBg,
-                      borderColor: cardBorder,
-                      borderWidth: 1,
-                    }}
-                  >
-                    {/* Phoneme Badge & Error Status */}
-                    <View className="flex-row items-center justify-between">
-                      <View className="flex-row items-center gap-2">
-                        <View
-                          className="px-2.5 py-1 rounded-lg"
-                          style={{
-                            backgroundColor: badgeBg,
-                          }}
-                        >
-                          <Text
-                            className="text-base font-black"
-                            style={{
-                              color: badgeTextColor,
-                              textDecorationLine: isDeleted ? "line-through" : "none",
-                            }}
-                          >
-                            {phonemeDisplay}
-                          </Text>
-                        </View>
-                        <Text
-                          className="text-xs font-bold"
-                          style={{
-                            color: statusLabelColor,
-                          }}
-                        >
-                          {badgeLabel}
-                        </Text>
-                      </View>
-                    </View>
-
-                    {/* Explanation */}
-                    <Text
-                      className="text-xs font-semibold leading-relaxed"
-                      style={{
-                        color: textColor,
-                      }}
-                    >
-                      {explanation}
-                    </Text>
-
-                    {/* Pronunciation Tip */}
-                    {!isInserted && tipText ? (
-                      <View className="flex-row items-start gap-1.5 pt-0.5">
-                        <Text
-                          className="text-xs font-bold shrink-0"
-                          style={{
-                            color: tipLabelColor,
-                          }}
-                        >
-                          💡 {t("result.soundAnalysis.tipLabel")}
-                        </Text>
-                        <Text
-                          className="flex-1 text-xs font-medium leading-relaxed"
-                          style={{
-                            color: textColor,
-                          }}
-                        >
-                          {tipText}
-                        </Text>
-                      </View>
-                    ) : null}
-
-                    {/* Learn Phoneme CTA Button (#2383E2 Blue) */}
-                    {!isInserted && onPracticePhoneme ? (
-                      <TouchableOpacity
-                        accessible={true}
-                        accessibilityRole="button"
-                        accessibilityLabel={t(
-                          "result.soundAnalysis.learnPhoneme",
-                          { phoneme: cleanExpected }
-                        )}
-                        activeOpacity={0.8}
-                        disabled={disabled || Boolean(practicePhonemeLoading)}
-                        onPress={() => {
-                          hapticFeedback.light();
-                          onPracticePhoneme(cleanExpected);
-                        }}
-                        className="self-start px-3.5 py-2 rounded-xl flex-row items-center gap-1.5 mt-0.5"
-                        style={{
-                          backgroundColor:
-                            practicePhonemeLoading === cleanExpected
-                              ? "#93c5fd"
-                              : "#2383E2",
-                        }}
-                      >
-                        {practicePhonemeLoading === cleanExpected ? (
-                          <ActivityIndicator size={12} color="#ffffff" />
-                        ) : null}
-                        <Text className="text-xs font-bold text-white">
-                          {practicePhonemeLoading === cleanExpected
-                            ? t("result.soundAnalysis.learnLoading")
-                            : t("result.soundAnalysis.learnPhoneme", {
-                              phoneme: cleanExpected,
-                            })}
-                        </Text>
-                      </TouchableOpacity>
-                    ) : null}
-                  </View>
-                );
-              })}
+              {renderErrorPhonemeTable(activeWord.errorPhonemes)}
             </>
           )}
         </View>

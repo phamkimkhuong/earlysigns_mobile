@@ -144,7 +144,7 @@ export default function JourneyLessonScreen({ navigation, route }: Props) {
   // Loading state (Matches IPAChecking header styling 100% to eliminate visual jump)
   if (loading) {
     return (
-      <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: "#f8fafc" }}>
+      <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: "#F7F6F2" }}>
         {/* UNIFIED WHITE HEADER */}
         <View
           style={{
@@ -166,7 +166,7 @@ export default function JourneyLessonScreen({ navigation, route }: Props) {
               width: 38,
               height: 38,
               borderRadius: 19,
-              backgroundColor: "#f8fafc",
+              backgroundColor: "#F7F6F2",
               alignItems: "center",
               justifyContent: "center",
             }}
@@ -204,7 +204,7 @@ export default function JourneyLessonScreen({ navigation, route }: Props) {
   // Error state (Matches IPAChecking header styling)
   if (error || !lessonSession) {
     return (
-      <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: "#f8fafc" }}>
+      <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: "#F7F6F2" }}>
         {/* UNIFIED WHITE HEADER */}
         <View
           style={{
@@ -226,7 +226,7 @@ export default function JourneyLessonScreen({ navigation, route }: Props) {
               width: 38,
               height: 38,
               borderRadius: 19,
-              backgroundColor: "#f8fafc",
+              backgroundColor: "#F7F6F2",
               alignItems: "center",
               justifyContent: "center",
             }}

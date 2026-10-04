@@ -323,16 +323,16 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
   }
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-[#f8fafc]">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-appBg">
       {/* Top Navigation Bar */}
-      <View className="flex-row items-center justify-between px-4 py-3 bg-white border-b border-slate-200">
+      <View className="flex-row items-center justify-between px-4 py-3 bg-appBg border-b border-slate-200">
         <TouchableOpacity
           onPress={() => navigation.goBack()}
-          className="w-10 h-10 rounded-full items-center justify-center active:opacity-70"
+          className="w-10 h-10 rounded-full bg-white border border-slate-200 items-center justify-center active:opacity-70"
           accessibilityRole="button"
           accessibilityLabel={t("common.back", "Quay lại")}
         >
-          <ChevronLeft size={24} color="#0f172a" />
+          <ChevronLeft size={22} color="#0c2340" strokeWidth={2.5} />
         </TouchableOpacity>
         <Text className="text-base font-extrabold text-[#0f172a]">
           {t("notifications.title", "Cài đặt thông báo")}
@@ -704,7 +704,7 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
                   </TouchableOpacity>
 
                   <View
-                    style={{ backgroundColor: "#f8fafc", borderColor: "#cbd5e1" }}
+                    style={{ backgroundColor: "#F7F6F2", borderColor: "#cbd5e1" }}
                     className="w-20 h-20 rounded-2xl border items-center justify-center shadow-xs"
                   >
                     <Text className="text-3xl font-black text-[#0c2340]">
@@ -740,7 +740,7 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
                   </TouchableOpacity>
 
                   <View
-                    style={{ backgroundColor: "#f8fafc", borderColor: "#cbd5e1" }}
+                    style={{ backgroundColor: "#F7F6F2", borderColor: "#cbd5e1" }}
                     className="w-20 h-20 rounded-2xl border items-center justify-center shadow-xs"
                   >
                     <Text className="text-3xl font-black text-[#0c2340]">
@@ -786,7 +786,7 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
                     }}
                     style={{
                       backgroundColor:
-                        tempHour === item.h && tempMinute === item.m ? "#eff6ff" : "#f8fafc",
+                        tempHour === item.h && tempMinute === item.m ? "#eff6ff" : "#F7F6F2",
                       borderColor:
                         tempHour === item.h && tempMinute === item.m ? "#0284c7" : "#e2e8f0",
                     }}
