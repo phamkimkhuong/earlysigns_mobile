@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   ScrollView,
-  Text,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -12,8 +11,8 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import {
   CheckCircle2,
   Clock,
+  Crown,
   XCircle,
-  Sparkles,
   ArrowRight,
   RefreshCw,
   Home,
@@ -25,6 +24,7 @@ import { formatExpiryDate } from "@/utils/errors";
 import { billingApi } from "@/api/billingApi";
 import { getVerifiedActiveProEntitlement } from "@/services/iap";
 import { navigateToTab } from "@/navigation/nav";
+import { AppText } from "@/components/ui/AppText";
 import type { RootStackParamList } from "@/types/navigation";
 
 const MAX_VERIFY_ATTEMPTS = 5;
@@ -135,7 +135,7 @@ export default function PaymentResultScreen({ navigation, route }: Props) {
         />
 
         {/* 1. LUXURY NAVY HERO HEADER */}
-        <View className="bg-[#1e2538] pt-6 pb-10 px-5 items-center text-center">
+        <View className="bg-[#1e2538] pt-6 pb-10 px-5 items-center">
           <View className="mb-4">
             {isSuccess ? (
               <View className="w-16 h-16 rounded-3xl bg-emerald-500 items-center justify-center shadow-lg">
@@ -156,7 +156,7 @@ export default function PaymentResultScreen({ navigation, route }: Props) {
             )}
           </View>
 
-          <Text className="text-2xl font-black text-white text-center tracking-tight">
+          <AppText className="text-2xl font-black text-white text-center tracking-tight">
             {isCancelled
               ? t("paymentResult.cancelledTitle") || "Giao dịch đã hủy"
               : isSuccess
@@ -164,9 +164,9 @@ export default function PaymentResultScreen({ navigation, route }: Props) {
                 : isPending
                   ? t("paymentResult.pendingTitle") || "Đang xử lý giao dịch"
                   : t("paymentResult.verifyingTitle") || "Đang kiểm tra thanh toán..."}
-          </Text>
+          </AppText>
 
-          <Text className="text-xs text-slate-300 text-center mt-1.5 px-4 leading-relaxed font-medium">
+          <AppText className="text-[13px] text-slate-300 text-center mt-1.5 px-4 leading-relaxed font-medium">
             {isSuccess
               ? (t("paymentResult.successDesc") || "Tài khoản của bạn đã được nâng cấp lên gói EarlySigns Pro. Tất cả đặc quyền và hạn mức không giới hạn đã sẵn sàng!")
               : isPending
@@ -174,93 +174,94 @@ export default function PaymentResultScreen({ navigation, route }: Props) {
                 : isCancelled
                   ? (t("paymentResult.cancelledDesc") || "Bạn đã hủy quá trình thanh toán. Không có khoản tiền nào bị trừ khỏi tài khoản của bạn.")
                   : (t("paymentResult.verifyingDesc") || "Vui lòng giữ kết nối mạng trong giây lát khi hệ thống xác thực đơn hàng...")}
-          </Text>
+          </AppText>
         </View>
 
         {/* 2. LAYERED OVERLAPPING CANVAS SHEET */}
         <View className="flex-1 bg-appBg -mt-5 rounded-t-[32px] px-4 pt-5 pb-16 gap-4">
           {/* Order Details Receipt Card */}
-          <View className="bg-white rounded-3xl p-5 border border-slate-200 gap-3.5 shadow-sm">
+          <View className="bg-white rounded-3xl p-5 border border-slate-200 gap-3.5 shadow-xs">
             <View className="flex-row items-center justify-between pb-3 border-b border-slate-100">
               <View className="flex-row items-center gap-2">
-                <Sparkles size={16} color="#4f46e5" />
-                <Text className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                <Crown size={16} color="#4f46e5" />
+                <AppText className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   {t("paymentResult.packageInfo", "Thông tin gói dịch vụ")}
-                </Text>
+                </AppText>
               </View>
               <View
                 style={{
                   backgroundColor: isSuccess ? "#ecfdf5" : isCancelled ? "#fff1f2" : "#fef3c7",
                 }}
-                className="px-2.5 py-1 rounded-full border border-slate-200"
+                className="px-2.5 py-1 rounded-full border border-slate-200 shrink-0"
               >
-                <Text
+                <AppText
+                  numberOfLines={1}
                   style={{
                     color: isSuccess ? "#059669" : isCancelled ? "#e11d48" : "#d97706",
                   }}
-                  className="text-[11px] font-black"
+                  className="text-xs font-black uppercase"
                 >
                   {isSuccess
                     ? (t("paymentResult.statusActivated", "ĐÃ KÍCH HOẠT"))
                     : isCancelled
                       ? (t("paymentResult.statusCancelled", "ĐÃ HỦY"))
                       : (t("paymentResult.statusPending", "CHỜ XỬ LÝ"))}
-                </Text>
+                </AppText>
               </View>
             </View>
 
             <View className="gap-2.5">
               <View className="flex-row justify-between items-center">
-                <Text className="text-xs text-slate-500">
+                <AppText className="text-xs text-slate-500">
                   {t("paymentResult.subscriptionPackage", "Gói đăng ký")}
-                </Text>
-                <Text className="text-xs font-extrabold text-slate-900">
+                </AppText>
+                <AppText className="text-xs font-extrabold text-slate-900">
                   {t("paymentResult.planName", "EarlySigns Pro")}
-                </Text>
+                </AppText>
               </View>
 
               {orderCode ? (
                 <View className="flex-row justify-between items-center">
-                  <Text className="text-xs text-slate-500">
+                  <AppText className="text-xs text-slate-500">
                     {t("paymentResult.orderCode", "Mã đơn hàng")}
-                  </Text>
-                  <Text className="text-xs font-mono font-bold text-indigo-600">#{orderCode}</Text>
+                  </AppText>
+                  <AppText className="text-xs font-mono font-bold text-indigo-600">#{orderCode}</AppText>
                 </View>
               ) : null}
 
               {subscriptionExpiresAt ? (
                 <View className="flex-row justify-between items-center">
-                  <Text className="text-xs text-slate-500">
+                  <AppText className="text-xs text-slate-500">
                     {t("paymentResult.expiryDate", "Thời hạn sử dụng")}
-                  </Text>
-                  <Text className="text-xs font-extrabold text-emerald-600">
+                  </AppText>
+                  <AppText className="text-xs font-extrabold text-emerald-600">
                     {formatExpiryDate(subscriptionExpiresAt, i18n.language)}
-                  </Text>
+                  </AppText>
                 </View>
               ) : null}
 
               <View className="flex-row justify-between items-center">
-                <Text className="text-xs text-slate-500">
+                <AppText className="text-xs text-slate-500">
                   {t("paymentResult.aiQuota", "Hạn mức AI")}
-                </Text>
-                <Text className="text-xs font-extrabold text-slate-900">
+                </AppText>
+                <AppText className="text-xs font-extrabold text-slate-900">
                   {t("paymentResult.unlimited", "Không giới hạn")}
-                </Text>
+                </AppText>
               </View>
             </View>
 
             {isSuccess && (
               <View className="mt-2 bg-emerald-50 rounded-2xl p-3 border border-emerald-100 flex-row items-center gap-2">
                 <ShieldCheck size={18} color="#059669" />
-                <Text className="flex-1 text-[11px] text-emerald-800 leading-snug font-medium">
+                <AppText className="flex-1 text-xs text-emerald-800 leading-snug font-medium">
                   {t("paymentResult.featuresUnlocked", "Toàn bộ 44 âm IPA, bài tập sàng lọc chuyên sâu và chẩn đoán dạng sóng âm học đã được mở khóa!")}
-                </Text>
+                </AppText>
               </View>
             )}
 
             {errorMessage ? (
               <View className="mt-1 bg-rose-50 rounded-2xl p-3 border border-rose-200">
-                <Text className="text-xs text-rose-700 leading-snug">{errorMessage}</Text>
+                <AppText className="text-xs text-rose-700 leading-snug">{errorMessage}</AppText>
               </View>
             ) : null}
           </View>
@@ -274,11 +275,11 @@ export default function PaymentResultScreen({ navigation, route }: Props) {
                   accessibilityLabel={t("paymentResult.startPracticeNow", "Bắt đầu luyện tập ngay")}
                   activeOpacity={0.8}
                   onPress={() => navigation.navigate("Phonemes")}
-                  className="w-full py-4 px-5 rounded-2xl bg-indigo-600 flex-row items-center justify-center gap-2 shadow-sm"
+                  className="w-full py-4 px-5 rounded-2xl bg-indigo-600 flex-row items-center justify-center gap-2 shadow-xs"
                 >
-                  <Text className="text-sm font-bold text-white">
+                  <AppText className="text-sm font-bold text-white">
                     {t("paymentResult.startPracticeNow", "Bắt đầu luyện tập ngay")}
-                  </Text>
+                  </AppText>
                   <ArrowRight size={18} color="#ffffff" />
                 </TouchableOpacity>
 
@@ -290,16 +291,16 @@ export default function PaymentResultScreen({ navigation, route }: Props) {
                   className="w-full py-3.5 px-5 rounded-2xl bg-white border border-slate-200 flex-row items-center justify-center gap-2"
                 >
                   <User size={16} color="#334155" />
-                  <Text className="text-xs font-bold text-slate-700">
+                  <AppText className="text-sm font-bold text-slate-700">
                     {t("paymentResult.goToProfile") || "Xem Trang cá nhân & Hạn mức"}
-                  </Text>
+                  </AppText>
                 </TouchableOpacity>
               </>
             ) : isVerifying ? (
               <View className="items-center py-4">
-                <Text className="text-xs text-slate-500">
+                <AppText className="text-xs text-slate-500">
                   {t("paymentResult.syncingData", "Đang đồng bộ dữ liệu giao dịch...")}
-                </Text>
+                </AppText>
               </View>
             ) : (
               <>
@@ -308,12 +309,12 @@ export default function PaymentResultScreen({ navigation, route }: Props) {
                   accessibilityLabel={t("paymentResult.retryPayment", "Thử lại thanh toán")}
                   activeOpacity={0.8}
                   onPress={() => navigation.replace("Payment")}
-                  className="w-full py-4 px-5 rounded-2xl bg-indigo-600 flex-row items-center justify-center gap-2 shadow-sm"
+                  className="w-full py-4 px-5 rounded-2xl bg-indigo-600 flex-row items-center justify-center gap-2 shadow-xs"
                 >
                   <RefreshCw size={16} color="#ffffff" />
-                  <Text className="text-sm font-bold text-white">
+                  <AppText className="text-sm font-bold text-white">
                     {t("paymentResult.retryPayment", "Thử lại thanh toán")}
-                  </Text>
+                  </AppText>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -324,9 +325,9 @@ export default function PaymentResultScreen({ navigation, route }: Props) {
                   className="w-full py-3.5 px-5 rounded-2xl bg-white border border-slate-200 flex-row items-center justify-center gap-2"
                 >
                   <Home size={16} color="#334155" />
-                  <Text className="text-xs font-bold text-slate-700">
+                  <AppText className="text-sm font-bold text-slate-700">
                     {t("paymentResult.backToHome", "Về trang chủ")}
-                  </Text>
+                  </AppText>
                 </TouchableOpacity>
               </>
             )}

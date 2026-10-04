@@ -5,7 +5,6 @@ import {
   Image,
   RefreshControl,
   ScrollView,
-  Text,
   TouchableOpacity,
   View,
   type NativeScrollEvent,
@@ -31,6 +30,7 @@ import {
   videoKeys,
 } from "@/hooks/queries/useVideoQueries";
 import type { VideoItem } from "@/types/domain";
+import { AppText } from "@/components/ui/AppText";
 
 const VIEWED_PREVIEW_SIZE = 4;
 const INITIAL_TOPIC_COUNT = 4;
@@ -74,14 +74,14 @@ function VideoCard({
 
         {/* Level Tag floating on top-left */}
         <View className="absolute top-1.5 left-1.5 bg-slate-900 px-1.5 py-0.5 rounded-full border border-slate-700">
-          <Text className="text-xs font-black text-white">{video.level || "A1"}</Text>
+          <AppText className="text-xs font-black text-white">{video.level || "A1"}</AppText>
         </View>
 
         {/* Duration Tag floating on bottom-right */}
         <View className="absolute bottom-1.5 right-1.5 bg-black px-1.5 py-0.5 rounded-md">
-          <Text className="text-xs font-bold text-white tracking-wide">
+          <AppText className="text-xs font-bold text-white tracking-wide">
             {formatDuration(video.duration_ms)}
-          </Text>
+          </AppText>
         </View>
 
         {/* Play Icon Badge */}
@@ -98,38 +98,38 @@ function VideoCard({
       <View className="p-2.5 gap-1">
         <View className="flex-row items-center gap-1.5">
           <View className="bg-indigo-50 px-2 py-0.5 rounded-md self-start">
-            <Text className="text-xs font-bold text-indigo-700" numberOfLines={1}>
+            <AppText className="text-xs font-bold text-indigo-700" numberOfLines={1}>
               {topicLabel(video.topic || video.topics?.[0], t)}
-            </Text>
+            </AppText>
           </View>
         </View>
 
-        <Text
+        <AppText
           className="text-sm font-bold text-slate-900 leading-snug"
           numberOfLines={2}
         >
           {video.title}
-        </Text>
+        </AppText>
 
         {showProgress ? (
           <View className="mt-0.5 gap-1">
             <View className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
               <View className="h-full bg-emerald-500 rounded-full" style={{ width: `${playedPct}%` }} />
             </View>
-            <Text className="text-xs font-semibold text-emerald-600" numberOfLines={1}>
+            <AppText className="text-xs font-semibold text-emerald-600" numberOfLines={1}>
               {t("videos.viewed.progress", {
                 played: video.played_count ?? 0,
                 total: totalSegments,
                 pct: playedPct,
               })}
-            </Text>
+            </AppText>
           </View>
         ) : (
           <View className="flex-row items-center gap-1 mt-0.5">
             <PlayCircle size={12} color="#64748b" />
-            <Text className="text-xs text-slate-500 font-medium" numberOfLines={1}>
+            <AppText className="text-xs text-slate-500 font-medium" numberOfLines={1}>
               {t("videos.catalog.segments", { count: video.segment_count })}
-            </Text>
+            </AppText>
           </View>
         )}
       </View>
@@ -264,9 +264,9 @@ function TopicSectionRow({
   if (videos.length === 0 && topicFilter) {
     return (
       <View className="py-12 items-center justify-center">
-        <Text className="text-[13px] text-slate-400 font-medium">
+        <AppText className="text-[13px] text-slate-400 font-medium">
           {t("videos.catalog.empty")}
-        </Text>
+        </AppText>
       </View>
     );
   }
@@ -274,9 +274,9 @@ function TopicSectionRow({
   return (
     <View className="gap-2.5 pt-1">
       <View className="flex-row justify-between items-center px-1">
-        <Text className="text-base font-extrabold text-slate-900">
+        <AppText className="text-base font-extrabold text-slate-900">
           {topicLabel(topic, t)}
-        </Text>
+        </AppText>
         {topicFilter ? (
           <TouchableOpacity
             accessibilityRole="button"
@@ -284,9 +284,9 @@ function TopicSectionRow({
             onPress={() => onSelectTopic("")}
             className="py-1"
           >
-            <Text className="text-sm text-indigo-600 font-bold">
+            <AppText className="text-sm text-indigo-600 font-bold">
               {t("videos.catalog.allTopics") || "Tất cả"}
-            </Text>
+            </AppText>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
@@ -295,9 +295,9 @@ function TopicSectionRow({
             onPress={() => onSelectTopic(topic)}
             className="py-1"
           >
-            <Text className="text-sm text-indigo-600 font-bold">
+            <AppText className="text-sm text-indigo-600 font-bold">
               {t("videos.catalog.viewAll")}
-            </Text>
+            </AppText>
           </TouchableOpacity>
         )}
       </View>
@@ -335,7 +335,7 @@ function TopicSectionRow({
           onPress={handleLoadMore}
           style={{ paddingVertical: 12, alignSelf: "center" }}
         >
-          <Text className="text-sm font-bold text-indigo-600">{t("common.retry")}</Text>
+          <AppText className="text-sm font-bold text-indigo-600">{t("common.retry")}</AppText>
         </TouchableOpacity>
       ) : null}
 
@@ -535,9 +535,9 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
             <ChevronLeft size={22} color="#0c2340" strokeWidth={2.5} />
           </TouchableOpacity>
 
-          <Text className="text-base font-bold text-[#0c2340]">
+          <AppText className="text-base font-bold text-[#0c2340]">
             {t("videos.catalog.title") || "Luyện nói với YouTube"}
-          </Text>
+          </AppText>
 
           <View className="w-10 h-10" />
         </View>
@@ -546,9 +546,9 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
         <View className="flex-1 bg-appBg px-4 pt-4 pb-20 gap-4">
           {/* Filter Bar: Level Chips */}
           <View className="gap-2">
-            <Text className="text-xs font-extrabold uppercase tracking-wider text-slate-400 px-1">
+            <AppText className="text-xs font-extrabold uppercase tracking-wider text-slate-400 px-1">
               {t("videos.speakingLevel")}
-            </Text>
+            </AppText>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-grow-0">
               <TouchableOpacity
                 accessibilityRole="button"
@@ -561,14 +561,14 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
                   : "bg-white border-slate-200"
                   }`}
               >
-                <Text
+                <AppText
                   numberOfLines={1}
                   className={`text-sm font-bold ${!level ? "text-white" : "text-slate-700"
                     }`}
                   style={{ includeFontPadding: false }}
                 >
                   {t("videos.catalog.allLevels")}
-                </Text>
+                </AppText>
               </TouchableOpacity>
               {levels.map((lv) => {
                 const isSelected = level === lv;
@@ -585,14 +585,14 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
                       : "bg-white border-slate-200"
                       }`}
                   >
-                    <Text
+                    <AppText
                       numberOfLines={1}
                       className={`text-sm font-bold ${isSelected ? "text-white" : "text-slate-700"
                         }`}
                       style={{ includeFontPadding: false }}
                     >
                       {lv}
-                    </Text>
+                    </AppText>
                   </TouchableOpacity>
                 );
               })}
@@ -601,9 +601,9 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
 
           {/* Filter Bar: Topic Chips */}
           <View className="gap-2">
-            <Text className="text-xs font-extrabold uppercase tracking-wider text-slate-400 px-1">
+            <AppText className="text-xs font-extrabold uppercase tracking-wider text-slate-400 px-1">
               {t("videos.conversationTopic")}
-            </Text>
+            </AppText>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-grow-0">
               <View className="gap-2 pr-4">
                 {topicChipRows.map((row, rowIdx) => (
@@ -624,7 +624,7 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
                             borderColor: isSelected ? "#0f172a" : "#e2e8f0",
                           }}
                         >
-                          <Text
+                          <AppText
                             numberOfLines={1}
                             className="text-sm font-bold"
                             style={{
@@ -633,7 +633,7 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
                             }}
                           >
                             {tp ? topicLabel(tp, t) : t("videos.catalog.allTopics")}
-                          </Text>
+                          </AppText>
                         </TouchableOpacity>
                       );
                     })}
@@ -647,9 +647,9 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
           {authToken && viewedVideos.length > 0 ? (
             <View className="gap-2.5 pt-1">
               <View className="flex-row items-center justify-between px-1">
-                <Text className="text-base font-extrabold text-slate-900">
+                <AppText className="text-base font-extrabold text-slate-900">
                   {t("videos.viewed.title")}
-                </Text>
+                </AppText>
               </View>
               <FlatList
                 horizontal
@@ -672,9 +672,9 @@ export default function VideosScreen({ navigation }: { navigation: any }) {
 
           {!feedLoading && displayedTopics.length === 0 ? (
             <View className="py-12 items-center justify-center">
-              <Text className="text-[13px] text-slate-400 font-medium">
+              <AppText className="text-[13px] text-slate-400 font-medium">
                 {t("videos.catalog.empty")}
-              </Text>
+              </AppText>
             </View>
           ) : null}
 

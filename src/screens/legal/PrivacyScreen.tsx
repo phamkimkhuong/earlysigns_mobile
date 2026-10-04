@@ -1,8 +1,9 @@
 import React from "react";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { ChevronLeft } from "lucide-react-native";
+import { AppText } from "@/components/ui/AppText";
 
 export default function PrivacyScreen({ navigation }: { navigation?: any }) {
   const { t } = useTranslation();
@@ -38,9 +39,9 @@ export default function PrivacyScreen({ navigation }: { navigation?: any }) {
           <ChevronLeft size={22} color="#0f172a" />
         </TouchableOpacity>
 
-        <Text className="text-base font-extrabold text-[#0f172a]">
+        <AppText className="text-base font-extrabold text-[#0f172a]">
           {t("legal.privacyTitle", "Chính sách bảo mật")}
-        </Text>
+        </AppText>
 
         <View className="w-10 h-10" />
       </View>
@@ -51,20 +52,20 @@ export default function PrivacyScreen({ navigation }: { navigation?: any }) {
         contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 48 }}
         showsVerticalScrollIndicator={false}
       >
-        <Text className="text-[13px] text-slate-400 font-medium mb-5">
+        <AppText className="text-[13px] text-slate-400 font-medium mb-5">
           {t("legal.lastUpdated", "Cập nhật lần cuối: 24/09/2026 • Phiên bản 1.0")}
-        </Text>
+        </AppText>
 
         {/* Các mục liền kề từ trên xuống */}
         <View className="gap-6">
           {sections.map((sec, idx) => (
             <View key={idx}>
-              <Text className="text-base font-extrabold text-slate-900 mb-2">
+              <AppText className="text-base font-extrabold text-slate-900 mb-2">
                 {sec.title}
-              </Text>
-              <Text className="text-[15px] text-slate-700 leading-6">
+              </AppText>
+              <AppText className="text-[15px] text-slate-700 leading-6">
                 {sec.body}
-              </Text>
+              </AppText>
               {idx < sections.length - 1 && (
                 <View className="h-px bg-slate-100 mt-5" />
               )}
@@ -74,15 +75,15 @@ export default function PrivacyScreen({ navigation }: { navigation?: any }) {
 
         {/* Sign-off Footer */}
         <View className="mt-10 pt-6 border-t border-slate-200 gap-1 items-center">
-          <Text className="text-xs font-bold text-slate-500 text-center uppercase tracking-wider">
+          <AppText className="text-xs font-bold text-slate-500 text-center uppercase tracking-wider">
             {t("legal.dataProtectionTeam", "EarlySigns Data Protection")}
-          </Text>
-          <Text className="text-xs text-slate-400 text-center">
+          </AppText>
+          <AppText className="text-xs text-slate-400 text-center">
             {t("legal.companyName", "CÔNG TY TNHH EARLYSIGNS VIỆT NAM")}
-          </Text>
-          <Text className="text-xs text-slate-400 text-center">
+          </AppText>
+          <AppText className="text-xs text-slate-400 text-center">
             {t("legal.gdprCommitment", "Cam kết bảo mật dữ liệu âm thanh và tài khoản theo chuẩn GDPR")}
-          </Text>
+          </AppText>
         </View>
       </ScrollView>
     </SafeAreaView>

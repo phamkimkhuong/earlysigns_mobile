@@ -1,10 +1,10 @@
 import React, { useMemo } from "react";
-import { ScrollView, Text } from "react-native";
+import { ScrollView } from "react-native";
 import { useTranslation } from "react-i18next";
+import { AppText } from "@/components/ui/AppText";
 import AppModal from "@/components/ui/AppModal";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import { checkResultScoreColor } from "@/utils/checkResultScoreColor";
-import { colors } from "@/core/theme";
 
 export interface ScreeningResultModalProps {
   open: boolean;
@@ -50,18 +50,18 @@ export default function ScreeningResultModal({ open, totalAccuracy, onClose }: S
       }
     >
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ alignItems: "center", paddingVertical: 4 }}>
-        <Text style={{ fontSize: 13, fontWeight: "600", color: colors.textSecondary, marginBottom: 4 }}>
+        <AppText className="text-[13px] font-semibold text-slate-500 mb-1">
           {t("screening.result.scoreLabel")}
-        </Text>
-        <Text style={{ fontSize: 44, fontWeight: "800", color, textAlign: "center" }}>
+        </AppText>
+        <AppText style={{ color }} className="text-5xl font-black text-center">
           {hasScore ? `${pct}%` : "—"}
-        </Text>
-        <Text style={{ fontSize: 18, fontWeight: "800", color: colors.text, textAlign: "center", marginTop: 6 }}>
+        </AppText>
+        <AppText className="text-lg font-extrabold text-slate-900 text-center mt-2">
           {hasScore ? t(`screening.result.levels.${level}.label`) : t("phonemesHome.profileTitle")}
-        </Text>
-        <Text style={{ fontSize: 15, lineHeight: 22, color: colors.textSecondary, textAlign: "center", marginTop: 10 }}>
+        </AppText>
+        <AppText className="text-[15px] leading-6 text-slate-600 text-center mt-2.5">
           {hasScore ? t(`screening.result.levels.${level}.message`) : t("screeningPractice.scorePending")}
-        </Text>
+        </AppText>
       </ScrollView>
     </AppModal>
   );

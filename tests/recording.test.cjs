@@ -442,6 +442,8 @@ test('permission denials use customAlert without a duplicate inline card or erro
   const jsx = (type, props) => ({ type, props });
   h.mocks['react/jsx-runtime'] = { jsx, jsxs: jsx };
   h.mocks['lucide-react-native'] = { AlertCircle: 'AlertCircle' };
+  h.mocks['../ui/AppText'] = { AppText: 'Text', default: 'Text' };
+  h.mocks['@/components/ui/AppText'] = { AppText: 'Text', default: 'Text' };
   const { default: Card } = h.load('src/components/practice/MicErrorCard.tsx');
   for (const canAskAgain of [false, true]) {
     assert.equal(Card({ micError: { type: 'denied', raw: 'denied', canAskAgain }, error: 'Legacy permission error' }), null);

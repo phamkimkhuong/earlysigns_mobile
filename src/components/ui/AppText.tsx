@@ -49,7 +49,9 @@ const getFontFamilyForWeight = (
   }
 };
 
-export const AppText = forwardRef<RNText, AppTextProps>(
+const safeForwardRef = (forwardRef || ((fn: any) => fn)) as typeof forwardRef;
+
+export const AppText = safeForwardRef<RNText, AppTextProps>(
   ({ style, weight, children, ...rest }, ref) => {
     const flattened = StyleSheet.flatten(style);
     const customFontFamily = flattened?.fontFamily;

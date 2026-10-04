@@ -3,10 +3,10 @@ import { useIsFocused } from "@react-navigation/native";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ScrollView,
-  Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { AppText } from "@/components";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import {
@@ -321,24 +321,24 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
           </View>
 
           <View className="items-center gap-2">
-            <Text className="text-2xl font-black text-[#0c2340] text-center">
+            <AppText className="text-2xl font-black text-[#0c2340] text-center">
               {t("sentence.allFinishedTitle", "Hoàn thành bài luyện tập!")}
-            </Text>
-            <Text className="text-[15px] text-slate-500 text-center leading-6">
+            </AppText>
+            <AppText className="text-[15px] text-slate-500 text-center leading-6">
               {t("sentence.allFinishedDesc", "Bạn đã hoàn thành tất cả các câu trong bài học này.")}
-            </Text>
+            </AppText>
           </View>
 
           <View className="w-full bg-[#edf5fc] rounded-3xl p-5 items-center border border-sky-200 gap-2">
-            <Text className="text-xs font-bold text-sky-800 uppercase tracking-wider">
+            <AppText className="text-xs font-bold text-sky-800 uppercase tracking-wider">
               {t("sentence.averageScore", "Điểm trung bình")}
-            </Text>
-            <Text className="text-5xl font-black text-[#0a2644]">
+            </AppText>
+            <AppText className="text-5xl font-black text-[#0a2644]">
               {avgScore}%
-            </Text>
-            <Text className="text-xs text-slate-500 font-medium">
+            </AppText>
+            <AppText className="text-xs text-slate-500 font-medium">
               {t("sentence.sentencesDone", { count: totalSentences, total: totalSentences })}
-            </Text>
+            </AppText>
           </View>
 
           <View className="w-full gap-3 mt-3">
@@ -349,9 +349,9 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
               onPress={() => navigation.goBack()}
               className="w-full py-4 rounded-2xl bg-[#0a2644] items-center justify-center active:opacity-90 shadow-sm"
             >
-              <Text className="text-base font-extrabold text-white">
+              <AppText className="text-base font-extrabold text-white">
                 {t("common.back", "Quay lại")}
-              </Text>
+              </AppText>
             </TouchableOpacity>
           </View>
         </View>
@@ -379,22 +379,15 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
 
         {/* Center Title & Counter */}
         <View className="flex-1 items-center mx-3">
-          <Text numberOfLines={1} className="text-base font-bold text-[#0c2340]">
+          <AppText numberOfLines={1} className="text-base font-bold text-[#0c2340]">
             {lessonTitle}
-          </Text>
-          <Text className="text-xs font-semibold text-slate-500 mt-0.5">
+          </AppText>
+          <AppText className="text-xs font-semibold text-slate-500 mt-0.5">
             {t("sentence.progressIndicator", "Câu {{current}} / {{total}}", {
               current: currentIndex + 1,
               total: totalSentences,
             })}
-          </Text>
-        </View>
-
-        {/* Dialect Accent Badge */}
-        <View className="flex-row items-center px-2.5 py-1 rounded-xl bg-sky-50 border border-sky-200">
-          <Text className="text-xs font-extrabold text-sky-800">
-            {dialect === "us" ? "US 🇺🇸" : "UK 🇬🇧"}
-          </Text>
+          </AppText>
         </View>
       </View>
 
@@ -442,36 +435,16 @@ export default function SentencePracticeScreen({ navigation, route }: Props) {
         ) : null}
 
         {/* HERO SENTENCE CARD */}
-        <View className="bg-white rounded-3xl p-6 border border-slate-200 gap-4 shadow-sm">
-          {/* Card Top Tag Row */}
-          <View className="flex-row items-center justify-between">
-            <View className="px-2.5 py-1 rounded-lg bg-sky-50 border border-sky-200">
-              <Text className="text-xs font-bold text-sky-700 uppercase tracking-wider">
-                {t("sentence.sentenceLabel", "CÂU {{index}}", { index: currentIndex + 1 })}
-              </Text>
-            </View>
-
-            {storedResult ? (
-              <View className="flex-row items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-50 border border-emerald-200">
-                <CheckCircle2 size={13} color="#059669" />
-                <Text className="text-xs font-bold text-emerald-700">
-                  {t("sentence.tested", "Đã luyện")}
-                </Text>
-              </View>
-            ) : null}
-          </View>
-
-          {/* Practice Prompt Card */}
-          <PracticePromptCard
-            text={currentSentence?.text}
-            words={displayWords}
-            alignment={storedResult?.char_alignment}
-            showResultDetails={scorePct != null}
-            loadingIpa={!displayWords.some((w: any) => w.ipa)}
-            onPlaySample={handleSampleAudio}
-            samplePlaying={samplePlaying}
-          />
-        </View>
+        {/* Practice Prompt Card */}
+        <PracticePromptCard
+          text={currentSentence?.text}
+          words={displayWords}
+          alignment={storedResult?.char_alignment}
+          showResultDetails={scorePct != null}
+          loadingIpa={!displayWords.some((w: any) => w.ipa)}
+          onPlaySample={handleSampleAudio}
+          samplePlaying={samplePlaying}
+        />
         {/* ERROR / MIC ISSUE ALERT CARD */}
         <MicErrorCard micError={micError} error={error} />
         {/* Practice Feedback Card */}

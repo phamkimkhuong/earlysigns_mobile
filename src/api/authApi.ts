@@ -2,6 +2,7 @@ import { httpClient } from "./client";
 import { API_ENDPOINTS } from "@/core/config";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useBillingStore } from "@/store/useBillingStore";
+import type { FacebookCredential } from "@/types/facebookAuth";
 
 export const authApi = {
   /**
@@ -108,30 +109,26 @@ export const authApi = {
   /**
    * Sign in with Facebook
    */
-  async loginFacebook(params: {
-    token?: string;
-    accessToken?: string;
-    deviceId?: string;
-  }): Promise<any> {
+  async loginFacebook(params: FacebookCredential & { deviceId?: string }): Promise<any> {
+    const credential = params.tokenType === "id_token"
+      ? { token_type: "id_token", id_token: params.idToken, nonce: params.nonce }
+      : { token_type: "access_token", access_token: params.accessToken };
+    if (params.tokenType === "id_token" ? !params.idToken || !params.nonce : !params.accessToken) {
+      throw new Error("Invalid Facebook credential");
+    }
     const data = await httpClient.post(
       API_ENDPOINTS.AUTH.FACEBOOK,
       {
-        token: params.token || params.accessToken,
-        access_token: params.accessToken || params.token,
+        ...credential,
         device_id: params.deviceId || useAuthStore.getState().deviceId,
       },
       { skipAuth: true }
     );
-    if (data?.token || data?.access_token) {
-      useAuthStore.getState().setAuth({
-        token: data.token || data.access_token,
-        email: data.email,
-        userId: data.user_id,
-      });
-      import("@/services/notifications")
-        .then(({ syncPushTokenWithBackend }) => syncPushTokenWithBackend())
-        .catch(() => {});
+    const sessionToken = data?.token || data?.access_token;
+    if (typeof sessionToken !== "string" || !sessionToken.trim()) {
+      throw new Error("Facebook authentication did not return an app session");
     }
+    // The login controller completes the session through AuthProvider once.
     return data;
   },
 

@@ -86,6 +86,8 @@ function notificationHarness(options = {}) {
     },
   };
   for (const name of ["react-native-gesture-handler", "./global.css", "expo-status-bar", "react-native-safe-area-context", "@tanstack/react-query", "@/core/queryClient", "react-native-toast-message", "@/services/Auth", "@react-navigation/native", "@/navigation/RootNavigator", "@/components/ui/CustomAlertModal", "@/components/ui/CustomToast", "@/components/ui/AppUpdateModal"]) mocks[name] = {};
+  mocks["@/components"] = { AppText: "Text", default: "Text" };
+  mocks["@/components/ui/AppText"] = { __esModule: true, default: "Text", AppText: "Text" };
   mocks["@/store/useAppUpdateStore"] = { useAppUpdateStore: { getState: () => ({ checkUpdate: async () => {} }) } };
   mocks["@expo-google-fonts/inter"] = {
     useFonts: () => [true, null],

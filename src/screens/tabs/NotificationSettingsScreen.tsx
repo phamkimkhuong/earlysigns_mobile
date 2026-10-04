@@ -4,12 +4,12 @@ import {
   Modal,
   ScrollView,
   Switch,
-  Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
+import { AppText } from "@/components/ui/AppText";
 import {
   Bell,
   BookOpen,
@@ -334,9 +334,9 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
         >
           <ChevronLeft size={22} color="#0c2340" strokeWidth={2.5} />
         </TouchableOpacity>
-        <Text className="text-base font-extrabold text-[#0f172a]">
+        <AppText className="text-base font-extrabold text-[#0f172a]">
           {t("notifications.title", "Cài đặt thông báo")}
-        </Text>
+        </AppText>
         <View className="w-10" />
       </View>
 
@@ -359,16 +359,16 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
               <ShieldAlert size={22} color="#dc2626" />
             )}
             <View className="flex-1">
-              <Text className="text-[15px] font-bold text-[#0f172a]">
+              <AppText className="text-[15px] font-bold text-[#0f172a]">
                 {permissionGranted
                   ? t("notifications.permissionGranted", "Thông báo hệ thống: Đã bật")
                   : t("notifications.permissionDenied", "Thông báo hệ thống: Đang tắt")}
-              </Text>
-              <Text className="text-[13px] text-slate-500 mt-0.5 leading-5">
+              </AppText>
+              <AppText className="text-[13px] text-slate-500 mt-0.5 leading-5">
                 {permissionGranted
                   ? t("notifications.permissionGrantedDesc", "Bạn sẽ nhận được lời nhắc luyện tập đúng giờ.")
                   : t("notifications.permissionDeniedDesc", "Bật thông báo trong Cài đặt thiết bị để không bỏ lỡ nhắc nhở học tập.")}
-              </Text>
+              </AppText>
             </View>
           </View>
 
@@ -380,9 +380,9 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
               accessibilityRole="button"
               accessibilityLabel={t("notifications.openSettings", "Mở Cài đặt")}
             >
-              <Text className="text-xs font-bold text-white">
+              <AppText className="text-xs font-bold text-white">
                 {t("notifications.openSettings", "Mở Cài đặt")}
-              </Text>
+              </AppText>
               <ExternalLink size={12} color="#ffffff" />
             </TouchableOpacity>
           ) : null}
@@ -393,9 +393,9 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
           style={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0" }}
           className="rounded-2xl p-4 border shadow-sm gap-3.5"
         >
-          <Text className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+          <AppText className="text-xs font-bold text-slate-500 uppercase tracking-wider">
             {t("notifications.studyRemindersSection", "Nhắc nhở luyện tập")}
-          </Text>
+          </AppText>
 
           {/* 1. Nhắc luyện tập hằng ngày */}
           <View className="flex-row items-center justify-between">
@@ -404,12 +404,12 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
                 <Bell size={20} color="#0284c7" />
               </View>
               <View className="flex-1">
-                <Text className="text-[15px] font-bold text-[#0f172a]">
+                <AppText className="text-[15px] font-bold text-[#0f172a]">
                   {t("notifications.dailyReminder", "Nhắc luyện tập hằng ngày")}
-                </Text>
-                <Text className="text-[13px] text-slate-500 leading-5 mt-0.5">
+                </AppText>
+                <AppText className="text-[13px] text-slate-500 leading-5 mt-0.5">
                   {t("notifications.dailyReminderDesc", "Nhắc luyện phát âm 5 phút mỗi ngày")}
-                </Text>
+                </AppText>
               </View>
             </View>
             <Switch
@@ -425,9 +425,9 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
             <View className="pt-2 border-t border-slate-100 gap-2">
               <View className="flex-row items-center gap-1.5">
                 <Clock size={14} color="#64748b" />
-                <Text className="text-[13px] font-bold text-slate-700">
+                <AppText className="text-[13px] font-bold text-slate-700">
                   {t("notifications.selectTime", "Chọn khung giờ nhắc:")}
-                </Text>
+                </AppText>
               </View>
 
               <View className="flex-row flex-wrap gap-2">
@@ -449,12 +449,12 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
                       accessibilityLabel={preset.label}
                       accessibilityState={{ selected: isSelected }}
                     >
-                      <Text
+                      <AppText
                         style={{ color: isSelected ? "#ffffff" : "#475569" }}
                         className="text-sm font-bold"
                       >
                         {preset.label}
-                      </Text>
+                      </AppText>
                     </TouchableOpacity>
                   );
                 })}
@@ -479,14 +479,14 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
                     size={13}
                     color={isCustomTimeSelected ? "#ffffff" : "#475569"}
                   />
-                  <Text
+                  <AppText
                     style={{ color: isCustomTimeSelected ? "#ffffff" : "#475569" }}
                     className="text-sm font-bold"
                   >
                     {isCustomTimeSelected
                       ? `${t("notifications.custom", "Tùy chỉnh")}: ${formattedCustomTime}`
                       : t("notifications.custom", "Tùy chỉnh...")}
-                  </Text>
+                  </AppText>
                 </TouchableOpacity>
               </View>
             </View>
@@ -501,15 +501,15 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
                 <PlayCircle size={20} color="#4f46e5" />
               </View>
               <View className="flex-1">
-                <Text className="text-[15px] font-bold text-[#0f172a]">
+                <AppText className="text-[15px] font-bold text-[#0f172a]">
                   {t("notifications.incompleteLesson", "Nhắc bài học đang dang dở")}
-                </Text>
-                <Text className="text-[13px] text-slate-500 leading-5 mt-0.5">
+                </AppText>
+                <AppText className="text-[13px] text-slate-500 leading-5 mt-0.5">
                   {t(
                     "notifications.incompleteLessonDesc",
                     "Nhắc tiếp tục khi bạn rời bài học giữa chừng"
                   )}
-                </Text>
+                </AppText>
               </View>
             </View>
             <Switch
@@ -529,15 +529,15 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
                 <Flame size={20} color="#ea580c" />
               </View>
               <View className="flex-1">
-                <Text className="text-[15px] font-bold text-[#0f172a]">
+                <AppText className="text-[15px] font-bold text-[#0f172a]">
                   {t("notifications.streakReminder", "Nhắc duy trì chuỗi Streak")}
-                </Text>
-                <Text className="text-[13px] text-slate-500 leading-5 mt-0.5">
+                </AppText>
+                <AppText className="text-[13px] text-slate-500 leading-5 mt-0.5">
                   {t(
                     "notifications.streakReminderDesc",
                     "Nhắc lúc 21:00 để bảo vệ chuỗi streak liên tục"
                   )}
-                </Text>
+                </AppText>
               </View>
             </View>
             <Switch
@@ -554,9 +554,9 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
           style={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0" }}
           className="rounded-2xl p-4 border shadow-sm gap-3"
         >
-          <Text className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+          <AppText className="text-xs font-bold text-slate-500 uppercase tracking-wider">
             {t("notifications.updatesAndOffersSection", "Nội dung & Khuyến mại")}
-          </Text>
+          </AppText>
 
           {/* Hàng: Thông báo nội dung mới */}
           <View className="flex-row items-center justify-between py-0.5">
@@ -564,9 +564,9 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
               <View style={{ backgroundColor: "#e0f2fe" }} className="w-10 h-10 rounded-xl items-center justify-center">
                 <BookOpen size={20} color="#0284c7" />
               </View>
-              <Text className="text-[15px] font-bold text-[#0f172a] flex-1">
+              <AppText className="text-[15px] font-bold text-[#0f172a] flex-1">
                 {t("notifications.contentUpdates", "Nội dung & bài học mới")}
-              </Text>
+              </AppText>
             </View>
             <Switch
               value={settings.contentUpdatesEnabled}
@@ -584,9 +584,9 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
               <View style={{ backgroundColor: "#fffbeb" }} className="w-10 h-10 rounded-xl items-center justify-center">
                 <Tag size={20} color="#d97706" />
               </View>
-              <Text className="text-[15px] font-bold text-[#0f172a] flex-1">
+              <AppText className="text-[15px] font-bold text-[#0f172a] flex-1">
                 {t("notifications.promotions", "Ưu đãi & Chương trình đặc biệt")}
-              </Text>
+              </AppText>
             </View>
             <Switch
               value={settings.promotionsEnabled}
@@ -609,24 +609,24 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
               </View>
               <View className="flex-1">
                 <View className="flex-row items-center gap-2">
-                  <Text className="text-[15px] font-bold text-[#0f172a]">
+                  <AppText className="text-[15px] font-bold text-[#0f172a]">
                     {t("notifications.systemSecurity", "Bảo mật & Giao dịch")}
-                  </Text>
+                  </AppText>
                   <View
                     style={{ backgroundColor: "#f0fdf4", borderColor: "#bbf7d0" }}
                     className="px-2 py-0.5 rounded-full border"
                   >
-                    <Text className="text-xs font-bold text-emerald-700">
+                    <AppText className="text-xs font-bold text-emerald-700">
                       {t("notifications.alwaysOn", "Luôn bật")}
-                    </Text>
+                    </AppText>
                   </View>
                 </View>
-                <Text className="text-[13px] text-slate-500 leading-5 mt-1">
+                <AppText className="text-[13px] text-slate-500 leading-5 mt-1">
                   {t(
                     "notifications.systemSecurityDesc",
                     "Thông báo xác nhận gói dịch vụ, biên lai và an toàn tài khoản"
                   )}
-                </Text>
+                </AppText>
               </View>
             </View>
           </View>
@@ -634,12 +634,12 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
 
         {/* Section 16.3 Lưu ý: Việc tắt marketing không làm tắt thông báo giao dịch/tài khoản */}
         <View className="px-2 pt-1">
-          <Text className="text-[13px] text-slate-500 text-center leading-5">
+          <AppText className="text-[13px] text-slate-500 text-center leading-5">
             {t(
               "notifications.systemNoticeFootnote",
               "Lưu ý: Việc tắt thông báo tiếp thị không làm ảnh hưởng đến các thông báo cần thiết về giao dịch hoặc tài khoản của bạn."
             )}
-          </Text>
+          </AppText>
         </View>
       </ScrollView>
 
@@ -671,12 +671,12 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
                   <Clock size={18} color="#0284c7" />
                 </View>
                 <View>
-                  <Text className="text-base font-black text-[#0f172a]">
+                  <AppText className="text-base font-black text-[#0f172a]">
                     {t("notifications.customTimeModalTitle", "Tùy chỉnh giờ nhắc")}
-                  </Text>
-                  <Text className="text-xs text-slate-500">
+                  </AppText>
+                  <AppText className="text-xs text-slate-500">
                     {t("notifications.customTimeModalSubtitle", "Chọn giờ gửi thông báo hằng ngày cho bạn")}
-                  </Text>
+                  </AppText>
                 </View>
               </View>
               <TouchableOpacity
@@ -707,12 +707,12 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
                     style={{ backgroundColor: "#F7F6F2", borderColor: "#cbd5e1" }}
                     className="w-20 h-20 rounded-2xl border items-center justify-center shadow-xs"
                   >
-                    <Text className="text-3xl font-black text-[#0c2340]">
+                    <AppText className="text-3xl font-black text-[#0c2340]">
                       {String(tempHour).padStart(2, "0")}
-                    </Text>
-                    <Text className="text-2xs font-bold text-slate-400 uppercase mt-0.5">
+                    </AppText>
+                    <AppText className="text-xs font-bold text-slate-400 uppercase mt-0.5">
                       {t("notifications.hourUnit", "Giờ")}
-                    </Text>
+                    </AppText>
                   </View>
 
                   <TouchableOpacity
@@ -726,7 +726,7 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
                 </View>
 
                 {/* Separator Colon */}
-                <Text className="text-4xl font-black text-slate-400 pb-8">:</Text>
+                <AppText className="text-4xl font-black text-slate-400 pb-8">:</AppText>
 
                 {/* Minute Column */}
                 <View className="items-center gap-2">
@@ -743,12 +743,12 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
                     style={{ backgroundColor: "#F7F6F2", borderColor: "#cbd5e1" }}
                     className="w-20 h-20 rounded-2xl border items-center justify-center shadow-xs"
                   >
-                    <Text className="text-3xl font-black text-[#0c2340]">
+                    <AppText className="text-3xl font-black text-[#0c2340]">
                       {String(tempMinute).padStart(2, "0")}
-                    </Text>
-                    <Text className="text-2xs font-bold text-slate-400 uppercase mt-0.5">
+                    </AppText>
+                    <AppText className="text-xs font-bold text-slate-400 uppercase mt-0.5">
                       {t("notifications.minuteUnit", "Phút")}
-                    </Text>
+                    </AppText>
                   </View>
 
                   <TouchableOpacity
@@ -765,9 +765,9 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
 
             {/* Quick Suggestions Chips */}
             <View className="gap-2">
-              <Text className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              <AppText className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                 {t("notifications.quickSuggestions", "Gợi ý khung giờ vàng:")}
-              </Text>
+              </AppText>
               <View className="flex-row flex-wrap gap-2">
                 {[
                   { label: "06:30 (Sáng sớm)", h: 6, m: 30 },
@@ -792,7 +792,7 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
                     }}
                     className="px-3 py-1.5 rounded-full border active:opacity-80"
                   >
-                    <Text
+                    <AppText
                       style={{
                         color:
                           tempHour === item.h && tempMinute === item.m ? "#0284c7" : "#475569",
@@ -800,7 +800,7 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
                       className="text-xs font-semibold"
                     >
                       {item.label}
-                    </Text>
+                    </AppText>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -814,9 +814,9 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
                 onPress={() => setCustomTimeModalVisible(false)}
                 className="flex-1 py-3.5 rounded-2xl items-center justify-center bg-slate-100 active:bg-slate-200"
               >
-                <Text className="text-sm font-bold text-slate-600">
+                <AppText className="text-sm font-bold text-slate-600">
                   {t("common.cancel", "Hủy")}
-                </Text>
+                </AppText>
               </TouchableOpacity>
               <TouchableOpacity
                 accessibilityRole="button"
@@ -828,9 +828,9 @@ export default function NotificationSettingsScreen({ navigation }: { navigation:
                 style={{ backgroundColor: "#0284c7" }}
                 className="flex-1 py-3.5 rounded-2xl items-center justify-center shadow-sm active:opacity-90"
               >
-                <Text className="text-sm font-extrabold text-white">
+                <AppText className="text-sm font-extrabold text-white">
                   {t("notifications.applyTime", "Lưu giờ nhắc")}
-                </Text>
+                </AppText>
               </TouchableOpacity>
             </View>
           </TouchableOpacity>

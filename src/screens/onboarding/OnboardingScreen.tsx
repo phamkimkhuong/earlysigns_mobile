@@ -5,13 +5,13 @@ import {
   type ImageSourcePropType,
   Pressable,
   StyleSheet,
-  Text,
   TouchableOpacity,
   useWindowDimensions,
   View,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from "react-native";
+import { AppText } from "@/components/ui/AppText";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -249,14 +249,14 @@ export default function OnboardingScreen({ navigation }: Props) {
               />
             </View>
 
-            <Text className="text-2xl font-black text-slate-900 text-center tracking-tight mb-2">
+            <AppText className="text-2xl font-black text-slate-900 text-center tracking-tight mb-2">
               {t("onboarding.languageSelectionTitle") || "Chọn ngôn ngữ"}
-            </Text>
+            </AppText>
 
-            <Text className="text-sm text-slate-500 text-center px-4 leading-relaxed">
+            <AppText className="text-sm text-slate-500 text-center px-4 leading-relaxed">
               {t("onboarding.languageSelectionSubtitle") ||
                 "Bạn có thể thay đổi sau trong phần Cài đặt"}
-            </Text>
+            </AppText>
           </View>
 
           {/* Language Options Cards */}
@@ -281,15 +281,15 @@ export default function OnboardingScreen({ navigation }: Props) {
             >
               <View className="flex-row items-center gap-3.5 flex-1">
                 <View className="w-12 h-12 rounded-xl bg-white border border-slate-200 items-center justify-center">
-                  <Text className="text-2xl">🇻🇳</Text>
+                  <AppText className="text-2xl">🇻🇳</AppText>
                 </View>
                 <View className="flex-1">
-                  <Text className="text-base font-bold text-slate-900">
+                  <AppText className="text-base font-bold text-slate-900">
                     {t("onboarding.langViName", "Tiếng Việt")}
-                  </Text>
-                  <Text className="text-xs text-slate-500 mt-0.5">
+                  </AppText>
+                  <AppText className="text-xs text-slate-500 mt-0.5">
                     {t("onboarding.langViDesc", "Giao diện tiếng Việt")}
-                  </Text>
+                  </AppText>
                 </View>
               </View>
 
@@ -322,15 +322,15 @@ export default function OnboardingScreen({ navigation }: Props) {
             >
               <View className="flex-row items-center gap-3.5 flex-1">
                 <View className="w-12 h-12 rounded-xl bg-white border border-slate-200 items-center justify-center">
-                  <Text className="text-2xl">🇬🇧</Text>
+                  <AppText className="text-2xl">🇬🇧</AppText>
                 </View>
                 <View className="flex-1">
-                  <Text className="text-base font-bold text-slate-900">
+                  <AppText className="text-base font-bold text-slate-900">
                     {t("onboarding.langEnName", "English")}
-                  </Text>
-                  <Text className="text-xs text-slate-500 mt-0.5">
+                  </AppText>
+                  <AppText className="text-xs text-slate-500 mt-0.5">
                     {t("onboarding.langEnDesc", "UK English Interface")}
-                  </Text>
+                  </AppText>
                 </View>
               </View>
 
@@ -372,9 +372,9 @@ export default function OnboardingScreen({ navigation }: Props) {
                 </Svg>
               </View>
               <View className="flex-row items-center justify-center gap-2">
-                <Text className="text-white font-bold text-base">
+                <AppText className="text-white font-bold text-base">
                   {t("onboarding.continue") || "Tiếp tục"}
-                </Text>
+                </AppText>
                 <ArrowRight size={20} color="#ffffff" strokeWidth={2.5} />
               </View>
             </TouchableOpacity>
@@ -443,9 +443,9 @@ export default function OnboardingScreen({ navigation }: Props) {
               hitSlop={16}
               className="h-10 items-end justify-center"
             >
-              <Text className="text-[15px] font-medium text-slate-500">
+              <AppText className="text-[15px] font-medium text-slate-500">
                 {t("onboarding.skip") || "Bỏ qua"}
-              </Text>
+              </AppText>
             </TouchableOpacity>
           </View>
 
@@ -518,40 +518,40 @@ export default function OnboardingScreen({ navigation }: Props) {
                           color={item.tagColor}
                           strokeWidth={2.5}
                         />
-                        <Text
+                        <AppText
                           style={{ color: item.tagColor }}
                           className="text-[13px] font-bold tracking-tight"
                         >
                           {t(item.tagKey)}
-                        </Text>
+                        </AppText>
                       </View>
 
                       {/* Giant Two-tone Headline (Two stacked bold lines) */}
                       <View style={{ marginBottom: 10 }}>
-                        <Text
+                        <AppText
                           style={{
                             fontSize: titleSize,
                             lineHeight: titleLineHeight,
                             color: "#0c1a30",
-                            fontWeight: "900",
                           }}
+                          className="font-black"
                         >
                           {t(item.leadKey)}
-                        </Text>
-                        <Text
+                        </AppText>
+                        <AppText
                           style={{
                             fontSize: titleSize,
                             lineHeight: titleLineHeight,
                             color: "#0084ff",
-                            fontWeight: "900",
                           }}
+                          className="font-black"
                         >
                           {t(item.accentKey)}
-                        </Text>
+                        </AppText>
                       </View>
 
                       {/* Description Copy */}
-                      <Text
+                      <AppText
                         style={{
                           fontSize: descSize,
                           lineHeight: descLineHeight,
@@ -559,7 +559,7 @@ export default function OnboardingScreen({ navigation }: Props) {
                         className="font-normal text-slate-500 text-left max-w-[340px]"
                       >
                         {t(item.descKey)}
-                      </Text>
+                      </AppText>
                     </View>
 
                     {/* Elastic spacer to absorb remainder space */}
@@ -642,11 +642,11 @@ export default function OnboardingScreen({ navigation }: Props) {
                 </Svg>
               </View>
               <View className="flex-row items-center justify-center gap-2">
-                <Text className="text-white font-bold text-base">
+                <AppText className="text-white font-bold text-base">
                   {activeSlide < introSlides.length - 1
                     ? t("onboarding.continue") || "Tiếp tục"
                     : t("onboarding.startPractice") || "Bắt đầu luyện"}
-                </Text>
+                </AppText>
                 <ArrowRight size={20} color="#ffffff" strokeWidth={2.5} />
               </View>
             </TouchableOpacity>

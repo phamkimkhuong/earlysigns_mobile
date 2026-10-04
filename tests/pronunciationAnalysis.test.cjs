@@ -80,6 +80,8 @@ function practiceRouteHarness({ sentence = false, instructions = {} } = {}) {
     mocks['@/components/practice/' + name] = { __esModule: true, default: name };
   }
   mocks['@/components/ui/UpgradeProModal'] = { __esModule: true, default: 'UpgradeProModal' };
+  mocks['@/components'] = { AppText: 'Text', default: 'Text' };
+  mocks['@/components/ui/AppText'] = { __esModule: true, default: 'Text', AppText: 'Text' };
   const Screen = load(`src/screens/practice/${sentence ? 'Sentence' : 'Phoneme'}PracticeScreen.tsx`, mocks).default;
   const props = {
     route: { params: sentence ? { sentences: lesson.sentences, dialect: 'us' } : { phoneme: '/θ/', dialect: 'us' } },

@@ -4,7 +4,6 @@ import {
   Linking,
   Modal,
   ScrollView,
-  Text,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -23,6 +22,7 @@ import {
   User,
   X,
 } from "lucide-react-native";
+import { AppText } from "../ui/AppText";
 import { setStoredLanguage } from "@/core/i18n";
 import { colors } from "@/core/theme";
 import { useAuth } from "@/services/Auth";
@@ -95,12 +95,12 @@ export default function GuestProfileView({ navigation }: GuestProfileViewProps) 
             </View>
 
             <View className="gap-0.5">
-              <Text className="text-base font-extrabold text-[#0f172a]">
+              <AppText className="text-base font-extrabold text-[#0f172a]">
                 {t("profile.guestTitle") || "Khách"}
-              </Text>
-              <Text className="text-xs font-medium text-slate-400">
+              </AppText>
+              <AppText className="text-xs font-medium text-slate-400">
                 {t("profile.notLoggedIn") || "Chưa đăng nhập"}
-              </Text>
+              </AppText>
             </View>
           </View>
 
@@ -109,12 +109,12 @@ export default function GuestProfileView({ navigation }: GuestProfileViewProps) 
             style={{ backgroundColor: "#eff6ff", borderColor: "#bfdbfe" }}
             className="px-3 py-1 rounded-full border"
           >
-            <Text
+            <AppText
               style={{ color: "#0284c7" }}
-              className="text-[11px] font-black uppercase tracking-wider"
+              className="text-xs font-black uppercase tracking-wider"
             >
               {t("profile.guestBadge") || "GUEST"}
-            </Text>
+            </AppText>
           </View>
         </View>
 
@@ -167,18 +167,18 @@ export default function GuestProfileView({ navigation }: GuestProfileViewProps) 
                 style={{ backgroundColor: "rgba(255, 255, 255, 0.16)", borderColor: "rgba(255, 255, 255, 0.25)" }}
                 className="self-start px-2.5 py-0.5 rounded-full mb-3 border"
               >
-                <Text style={{ color: "#7dd3fc" }} className="text-[11px] font-bold">
+                <AppText style={{ color: "#7dd3fc" }} className="text-xs font-bold">
                   EarlySigns
-                </Text>
+                </AppText>
               </View>
 
-              <Text className="text-xl font-black text-white leading-tight">
+              <AppText className="text-xl font-black text-white leading-tight">
                 {t("profile.guestHeroTitle") || "Lưu hành trình luyện\nphát âm của bạn"}
-              </Text>
+              </AppText>
 
-              <Text className="text-xs text-sky-100 leading-relaxed mt-2 font-medium">
+              <AppText className="text-xs text-sky-100 leading-relaxed mt-2 font-medium">
                 {t("profile.guestHeroDesc") || "Đăng nhập để theo dõi tiến độ, lưu hồ sơ phát âm và nhận bài luyện cá nhân hóa."}
-              </Text>
+              </AppText>
             </View>
 
             {/* Right 3D Illustration Asset (Enlarged & Balanced) */}
@@ -200,9 +200,9 @@ export default function GuestProfileView({ navigation }: GuestProfileViewProps) 
               style={{ backgroundColor: "#ffffff" }}
               className="flex-1 py-3 rounded-full items-center justify-center shadow-xs"
             >
-              <Text style={{ color: colors.practiceHeader }} className="text-sm font-extrabold">
+              <AppText style={{ color: colors.practiceHeader }} className="text-sm font-extrabold">
                 {t("profile.loginBtn") || t("auth.login") || "Đăng nhập"}
-              </Text>
+              </AppText>
             </TouchableOpacity>
 
             {/* 2. Tạo tài khoản (Secondary Glass Button) */}
@@ -215,9 +215,9 @@ export default function GuestProfileView({ navigation }: GuestProfileViewProps) 
               }}
               className="flex-1 py-3 rounded-full items-center justify-center border"
             >
-              <Text className="text-sm font-bold text-white">
+              <AppText className="text-sm font-bold text-white">
                 {t("profile.registerBtn") || t("auth.register") || "Tạo tài khoản"}
-              </Text>
+              </AppText>
             </TouchableOpacity>
           </View>
         </View>
@@ -226,9 +226,9 @@ export default function GuestProfileView({ navigation }: GuestProfileViewProps) 
         <View className="gap-2.5">
           <View className="flex-row items-center gap-2 px-1">
             <Compass size={18} color="#0284c7" />
-            <Text className="text-sm font-bold text-[#0f172a]">
+            <AppText className="text-sm font-bold text-[#0f172a]">
               {t("profile.quickExplore") || "Khám phá nhanh"}
-            </Text>
+            </AppText>
           </View>
 
           <View
@@ -248,9 +248,9 @@ export default function GuestProfileView({ navigation }: GuestProfileViewProps) 
                 >
                   <Gift size={18} color="#4f46e5" />
                 </View>
-                <Text className="text-sm font-semibold text-[#0f172a]">
+                <AppText className="text-[15px] font-semibold text-[#0f172a]">
                   {t("profile.referralTitle") || "Chương trình giới thiệu"}
-                </Text>
+                </AppText>
               </View>
               <ChevronRight size={16} color="#94a3b8" />
             </TouchableOpacity>
@@ -267,15 +267,15 @@ export default function GuestProfileView({ navigation }: GuestProfileViewProps) 
                 >
                   <Globe size={18} color="#0284c7" />
                 </View>
-                <Text className="text-sm font-semibold text-[#0f172a]">
+                <AppText className="text-[15px] font-semibold text-[#0f172a]">
                   {t("language.label") || "Ngôn ngữ"}
-                </Text>
+                </AppText>
               </View>
 
               <View className="flex-row items-center gap-1.5">
-                <Text className="text-xs font-medium text-slate-500">
+                <AppText className="text-[13px] font-medium text-slate-500">
                   {currentLang === "vi" ? t("language.vi") || "Tiếng Việt" : t("language.en") || "English"}
-                </Text>
+                </AppText>
                 <ChevronRight size={16} color="#94a3b8" />
               </View>
             </TouchableOpacity>
@@ -286,9 +286,9 @@ export default function GuestProfileView({ navigation }: GuestProfileViewProps) 
         <View className="gap-2.5">
           <View className="flex-row items-center gap-2 px-1">
             <Info size={18} color="#0284c7" />
-            <Text className="text-sm font-bold text-[#0f172a]">
+            <AppText className="text-sm font-bold text-[#0f172a]">
               {t("profile.supportAndInfo") || "Hỗ trợ & thông tin"}
-            </Text>
+            </AppText>
           </View>
 
           <View
@@ -310,9 +310,9 @@ export default function GuestProfileView({ navigation }: GuestProfileViewProps) 
                 >
                   <Headphones size={18} color="#0284c7" />
                 </View>
-                <Text className="text-sm font-semibold text-[#0f172a]">
+                <AppText className="text-[15px] font-semibold text-[#0f172a]">
                   {t("profile.contactSupport") || "Liên hệ hỗ trợ"}
-                </Text>
+                </AppText>
               </View>
               <ChevronRight size={16} color="#94a3b8" />
             </TouchableOpacity>
@@ -330,9 +330,9 @@ export default function GuestProfileView({ navigation }: GuestProfileViewProps) 
                 >
                   <Info size={18} color="#10b981" />
                 </View>
-                <Text className="text-sm font-semibold text-[#0f172a]">
+                <AppText className="text-[15px] font-semibold text-[#0f172a]">
                   {t("profile.aboutApp") || "Về EarlySigns"}
-                </Text>
+                </AppText>
               </View>
               <ChevronRight size={16} color="#94a3b8" />
             </TouchableOpacity>
@@ -350,9 +350,9 @@ export default function GuestProfileView({ navigation }: GuestProfileViewProps) 
                 >
                   <FileText size={18} color="#0284c7" />
                 </View>
-                <Text className="text-sm font-semibold text-[#0f172a]">
+                <AppText className="text-[15px] font-semibold text-[#0f172a]">
                   {t("profile.termsOfUse") || "Điều khoản sử dụng"}
-                </Text>
+                </AppText>
               </View>
               <ChevronRight size={16} color="#94a3b8" />
             </TouchableOpacity>
@@ -370,9 +370,9 @@ export default function GuestProfileView({ navigation }: GuestProfileViewProps) 
                 >
                   <ShieldCheck size={18} color="#10b981" />
                 </View>
-                <Text className="text-sm font-semibold text-[#0f172a]">
+                <AppText className="text-[15px] font-semibold text-[#0f172a]">
                   {t("profile.privacyPolicy") || "Chính sách bảo mật"}
-                </Text>
+                </AppText>
               </View>
               <ChevronRight size={16} color="#94a3b8" />
             </TouchableOpacity>
@@ -399,9 +399,9 @@ export default function GuestProfileView({ navigation }: GuestProfileViewProps) 
             className="rounded-t-3xl p-5 pb-8 gap-4"
           >
             <View className="flex-row items-center justify-between pb-2 border-b border-slate-100">
-              <Text className="text-base font-extrabold text-[#0f172a]">
+              <AppText className="text-base font-extrabold text-[#0f172a]">
                 {t("profile.chooseLanguage") || "Chọn ngôn ngữ hiển thị"}
-              </Text>
+              </AppText>
               <TouchableOpacity
                 onPress={() => setLanguageModalVisible(false)}
                 className="w-8 h-8 rounded-full bg-slate-100 items-center justify-center"
@@ -421,13 +421,13 @@ export default function GuestProfileView({ navigation }: GuestProfileViewProps) 
               className="flex-row items-center justify-between p-4 rounded-2xl border"
             >
               <View className="flex-row items-center gap-3">
-                <Text className="text-xl">🇻🇳</Text>
-                <Text
+                <AppText className="text-xl">🇻🇳</AppText>
+                <AppText
                   style={{ color: currentLang === "vi" ? "#0284c7" : "#0f172a" }}
-                  className="text-sm font-bold"
+                  className="text-[15px] font-bold"
                 >
                   {t("language.vi") || "Tiếng Việt"}
-                </Text>
+                </AppText>
               </View>
               {currentLang === "vi" ? <Check size={18} color="#0284c7" strokeWidth={2.5} /> : null}
             </TouchableOpacity>
@@ -443,13 +443,13 @@ export default function GuestProfileView({ navigation }: GuestProfileViewProps) 
               className="flex-row items-center justify-between p-4 rounded-2xl border"
             >
               <View className="flex-row items-center gap-3">
-                <Text className="text-xl">🇬🇧</Text>
-                <Text
+                <AppText className="text-xl">🇬🇧</AppText>
+                <AppText
                   style={{ color: currentLang === "en" ? "#0284c7" : "#0f172a" }}
-                  className="text-sm font-bold"
+                  className="text-[15px] font-bold"
                 >
                   {t("language.en") || "English"}
-                </Text>
+                </AppText>
               </View>
               {currentLang === "en" ? <Check size={18} color="#0284c7" strokeWidth={2.5} /> : null}
             </TouchableOpacity>

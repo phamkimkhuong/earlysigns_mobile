@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
+import { AppText } from "@/components/ui/AppText";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AlertCircle, ChevronLeft, RotateCcw } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
@@ -149,9 +150,9 @@ export default function ScreeningScreen({ navigation, route }: Props) {
           >
             <ChevronLeft size={22} color="#0c2340" strokeWidth={2.5} />
           </TouchableOpacity>
-          <Text className="text-base font-bold text-[#0c2340]">
+          <AppText className="text-base font-bold text-[#0c2340]">
             {t("screeningPractice.title")}
-          </Text>
+          </AppText>
           <View className="w-10 h-10" />
         </View>
 
@@ -160,12 +161,12 @@ export default function ScreeningScreen({ navigation, route }: Props) {
             <AlertCircle size={32} color="#dc2626" />
           </View>
           <View className="gap-2 items-center">
-            <Text className="text-lg font-extrabold text-[#0c2340] text-center">
+            <AppText className="text-lg font-extrabold text-[#0c2340] text-center">
               {t("phonemesHome.startError")}
-            </Text>
-            <Text className="text-[14px] text-[#64748b] text-center leading-5 max-w-[300px]">
+            </AppText>
+            <AppText className="text-[15px] text-[#64748b] text-center leading-6 max-w-[300px]">
               {error || t("screeningPractice.unavailable")}
-            </Text>
+            </AppText>
           </View>
           <TouchableOpacity
             accessibilityRole="button"
@@ -174,9 +175,9 @@ export default function ScreeningScreen({ navigation, route }: Props) {
             className="min-h-[48px] px-6 py-3 rounded-2xl bg-[#2383E2] flex-row items-center gap-2"
           >
             <RotateCcw size={18} color="#ffffff" />
-            <Text className="text-sm font-bold text-white">
+            <AppText className="text-sm font-bold text-white">
               {t("common.retry", "Thử lại")}
-            </Text>
+            </AppText>
           </TouchableOpacity>
         </View>
       </SafeAreaView>

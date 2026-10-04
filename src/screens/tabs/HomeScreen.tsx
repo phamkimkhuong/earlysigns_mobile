@@ -3,7 +3,6 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
-  Text,
   View,
   useWindowDimensions,
 } from "react-native";
@@ -18,6 +17,7 @@ import {
 } from "lucide-react-native";
 import { useHomeViewModel } from "@/hooks/useHomeViewModel";
 import { BrandWaveform } from "@/components/ui/BrandWaveform";
+import { AppText } from "@/components/ui/AppText";
 
 /**
  * EarlySigns Official Brand Logo + Title
@@ -31,7 +31,7 @@ function EarlySignsBrandLogo() {
         className="w-7 h-7 rounded-lg"
         resizeMode="contain"
       />
-      <Text className="text-[20px] font-black text-[#0c2340] tracking-tight">EarlySigns</Text>
+      <AppText className="text-[20px] font-black text-[#0c2340] tracking-tight">EarlySigns</AppText>
     </View>
   );
 }
@@ -89,9 +89,9 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
                 onPress={() => navigation.navigate("Login", { next: "Home" })}
                 className="bg-[#2383E2] px-4 py-2 rounded-full active:opacity-85 shadow-xs"
               >
-                <Text className="text-white text-xs font-bold">
+                <AppText className="text-white text-xs font-bold">
                   {t("homeDesign.login", "Đăng nhập")}
-                </Text>
+                </AppText>
               </Pressable>
             ) : null}
           </View>
@@ -102,9 +102,9 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
             accessibilityLabel={`${t("homeDesign.headline")} ${t("homeDesign.headlineLead", "muốn")} ${t("homeDesign.headlineAccent", "luyện gì?")}`}
             className="gap-1 mt-1"
           >
-            <Text className="text-[32px] font-black text-[#0c2340] tracking-tight leading-[38px]">
+            <AppText className="text-[32px] font-black text-[#0c2340] tracking-tight leading-[38px]">
               {t("homeDesign.headline")}
-            </Text>
+            </AppText>
             <View className="h-10 justify-center -mt-0.5">
               <Svg height={42} width="100%">
                 <Defs>
@@ -133,9 +133,9 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
                 {streakDays != null && streakDays > 0 ? (
                   <View className="flex-row items-center gap-1 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200 shrink-0">
                     <Flame size={13} color="#b45309" />
-                    <Text numberOfLines={1} className="text-xs font-bold text-amber-800">
+                    <AppText numberOfLines={1} className="text-xs font-bold text-amber-800">
                       {t("homeDesign.streak", { count: streakDays })}
-                    </Text>
+                    </AppText>
                   </View>
                 ) : null}
 
@@ -148,7 +148,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
                       : "bg-slate-100 border-slate-200"
                     }`}
                 >
-                  <Text
+                  <AppText
                     numberOfLines={1}
                     className={`text-xs font-bold ${userTier === "pro"
                       ? "text-indigo-700"
@@ -162,19 +162,19 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
                       : userTier === "trial"
                         ? t("homeDesign.trialPlan")
                         : t("homeDesign.freePlan")}
-                  </Text>
+                  </AppText>
                 </View>
 
                 {/* Clarity Score Badge */}
                 {clarityPct != null ? (
                   <View className="bg-teal-50 border border-teal-200 px-2.5 py-1 rounded-full shrink-0">
-                    <Text
+                    <AppText
                       testID="home-clarity"
                       numberOfLines={1}
                       className="text-xs font-bold text-teal-800"
                     >
                       {t("homeDesign.clarity", { percent: clarityPct })}
-                    </Text>
+                    </AppText>
                   </View>
                 ) : null}
               </View>
@@ -241,26 +241,26 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
             {/* Left Card Content with Real Progress from API */}
             <View className="w-[56%] z-30 justify-between">
               <View>
-                <Text className="text-[10px] font-bold text-sky-200 tracking-[1.6px] uppercase">
+                <AppText className="text-xs font-bold text-sky-200 tracking-[1.6px] uppercase">
                   {videoProgress?.topic || t("homeDesign.videoCategory")}
-                </Text>
-                <Text className="text-[23px] font-black text-white mt-1 leading-7">
+                </AppText>
+                <AppText className="text-[23px] font-black text-white mt-1 leading-7">
                   {t("homeDesign.videoTitle")}
-                </Text>
-                <Text
+                </AppText>
+                <AppText
                   numberOfLines={1}
                   className="text-xs text-sky-100 mt-1"
                 >
                   {videoProgress?.title || t("homeDesign.videoSubtitle")}
-                </Text>
+                </AppText>
               </View>
 
               <View className="mt-4">
                 {videoProgress ? (
                   <>
-                    <Text className="text-xs font-medium text-sky-200">
-                      Câu <Text className="font-bold text-white">{videoProgress.played}/{videoProgress.total}</Text>
-                    </Text>
+                    <AppText className="text-xs font-medium text-sky-200">
+                      Câu <AppText className="font-bold text-white">{videoProgress.played}/{videoProgress.total}</AppText>
+                    </AppText>
                     <View className="w-[130px] h-[5px] bg-sky-950 rounded-full overflow-hidden mt-1.5">
                       <View
                         className="h-full bg-[#2dd4bf] rounded-full"
@@ -269,16 +269,16 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
                     </View>
                   </>
                 ) : (
-                  <Text className="text-xs font-medium text-sky-200">
+                  <AppText className="text-xs font-medium text-sky-200">
                     {t("homeDesign.videoCatalogSummary")}
-                  </Text>
+                  </AppText>
                 )}
               </View>
 
               <View className="bg-white rounded-full py-2.5 px-4 self-start flex-row items-center gap-1.5 mt-4 shadow-sm">
-                <Text className="text-xs font-bold text-[#0c2340]">
+                <AppText className="text-xs font-bold text-[#0c2340]">
                   {videoProgress ? t("homeDesign.videoAction") : t("homeDesign.videoActionExplore")}
-                </Text>
+                </AppText>
                 <ArrowRight size={14} color="#0c2340" />
               </View>
             </View>
@@ -286,9 +286,9 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
 
           {/* 4. SECTION 2: LUYỆN VỚI VĂN BẢN TỰ DO (ĐẶC TẢ §7) */}
           <View testID="home-text-section" className="gap-2.5">
-            <Text accessibilityRole="header" className="text-[19px] font-extrabold text-[#0c2340] tracking-tight">
+            <AppText accessibilityRole="header" className="text-[19px] font-extrabold text-[#0c2340] tracking-tight">
               {t("homeDesign.textTitle")}
-            </Text>
+            </AppText>
             <View className={stackActions ? "flex-col gap-2.5" : "flex-row gap-2.5"}>
               {/* Card 1: Nhập văn bản */}
               <Pressable
@@ -303,12 +303,12 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
                     <FileText size={17} color="#0284c7" />
                   </View>
                   <View className="flex-1 min-w-0 justify-center">
-                    <Text numberOfLines={1} className="text-[13px] font-bold text-[#0c2340]">
+                    <AppText numberOfLines={1} className="text-[15px] font-bold text-[#0c2340]">
                       {t("homeDesign.inputTitle")}
-                    </Text>
-                    <Text numberOfLines={1} className="text-[11px] text-[#64748b] mt-0.5">
+                    </AppText>
+                    <AppText numberOfLines={1} className="text-xs text-[#64748b] mt-0.5">
                       {t("homeDesign.inputDescription")}
-                    </Text>
+                    </AppText>
                   </View>
                 </View>
                 <ChevronRight size={14} color="#94a3b8" />
@@ -327,12 +327,12 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
                     <Camera size={17} color="#0d9488" />
                   </View>
                   <View className="flex-1 min-w-0 justify-center">
-                    <Text numberOfLines={1} className="text-[13px] font-bold text-[#0c2340]">
+                    <AppText numberOfLines={1} className="text-[15px] font-bold text-[#0c2340]">
                       {t("homeDesign.scanTitle")}
-                    </Text>
-                    <Text numberOfLines={1} className="text-[11px] text-[#64748b] mt-0.5">
+                    </AppText>
+                    <AppText numberOfLines={1} className="text-xs text-[#64748b] mt-0.5">
                       {t("homeDesign.scanDescription")}
-                    </Text>
+                    </AppText>
                   </View>
                 </View>
                 <ChevronRight size={14} color="#94a3b8" />
@@ -342,9 +342,9 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
 
           {/* 5. SECTION 3: LUYỆN NGỮ ÂM (ĐẶC TẢ §7) */}
           <View testID="home-phonemes-section" className="gap-2.5">
-            <Text accessibilityRole="header" className="text-[19px] font-extrabold text-[#0c2340] tracking-tight">
+            <AppText accessibilityRole="header" className="text-[19px] font-extrabold text-[#0c2340] tracking-tight">
               {t("homeDesign.phonemesTitle")}
-            </Text>
+            </AppText>
             <Pressable
               testID="home-phonemes"
               accessibilityRole="button"
@@ -387,25 +387,25 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
                       key={`${sound}-${index}`}
                       className="bg-[#e0effe] min-w-[38px] h-[26px] px-2.5 rounded-full border border-sky-200 items-center justify-center"
                     >
-                      <Text
+                      <AppText
                         numberOfLines={1}
                         className="text-xs font-bold text-[#0284c7] text-center"
                         style={{ includeFontPadding: false }}
                       >
                         {`/${sound}/`}
-                      </Text>
+                      </AppText>
                     </View>
                   ))}
                 </View>
 
                 {/* Phoneme Headline & Subtitle */}
                 <View>
-                  <Text className="text-[17px] font-black text-[#0c2340] leading-6">
+                  <AppText className="text-[17px] font-black text-[#0c2340] leading-6">
                     {t("homeDesign.phonemeHeadline")}
-                  </Text>
-                  <Text className="text-xs text-[#64748b] leading-4 mt-0.5">
+                  </AppText>
+                  <AppText className="text-xs text-[#64748b] leading-4 mt-0.5">
                     {t("homeDesign.phonemeDescription")}
-                  </Text>
+                  </AppText>
                 </View>
 
               </View>

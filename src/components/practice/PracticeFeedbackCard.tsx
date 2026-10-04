@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
-import { Pressable, Text, TouchableOpacity, View } from "react-native";
+import { Pressable, TouchableOpacity, View } from "react-native";
+import { AppText } from "../ui/AppText";
 import { Play, Square } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import Svg, { Circle } from "react-native-svg";
@@ -165,7 +166,7 @@ export default function PracticeFeedbackCard({
               flexDirection: "row",
             }}
           >
-            <Text
+            <AppText
               style={{
                 fontSize: 22,
                 fontWeight: "900",
@@ -174,8 +175,8 @@ export default function PracticeFeedbackCard({
               }}
             >
               {displayScore}
-            </Text>
-            <Text
+            </AppText>
+            <AppText
               style={{
                 fontSize: 12,
                 fontWeight: "800",
@@ -185,14 +186,14 @@ export default function PracticeFeedbackCard({
               }}
             >
               %
-            </Text>
+            </AppText>
           </View>
         </View>
 
         {/* RIGHT WING: Pronunciation Score Label + Voice Replay Pill */}
         <View style={{ flex: 1, gap: 8, justifyContent: "center" }}>
           {/* Row 1: Pronunciation Score Label */}
-          <Text
+          <AppText
             style={{
               fontSize: 14,
               fontWeight: "700",
@@ -201,7 +202,7 @@ export default function PracticeFeedbackCard({
             numberOfLines={1}
           >
             {t("result.pronunciationScore", "Điểm phát âm")}
-          </Text>
+          </AppText>
 
           {/* Row 2: Replay Voice Pill Card (Cùng 1 hàng, không bao giờ ngắt dòng) */}
           {onReplayVoice ? (
@@ -244,7 +245,7 @@ export default function PracticeFeedbackCard({
                 )}
               </View>
 
-              <Text
+              <AppText
                 numberOfLines={1}
                 ellipsizeMode="tail"
                 style={{
@@ -257,7 +258,7 @@ export default function PracticeFeedbackCard({
                 {replayPlaying
                   ? t("sentence.replaying", "Đang phát giọng bạn...")
                   : t("sentence.listenToRecording", "Nghe lại bản ghi âm")}
-              </Text>
+              </AppText>
             </TouchableOpacity>
           ) : null}
         </View>
@@ -284,9 +285,9 @@ export default function PracticeFeedbackCard({
             borderColor: "rgba(15,23,42,0.08)",
           })}
         >
-          <Text style={{ fontSize: 13, fontWeight: "700", color: "#475569" }}>
+          <AppText style={{ fontSize: 13, fontWeight: "700", color: "#475569" }}>
             {t("result.soundAnalysis.viewDetails", "Xem phân tích chi tiết")}
-          </Text>
+          </AppText>
         </Pressable>
       ) : null}
     </View>

@@ -1,5 +1,6 @@
 import React from "react";
-import { ActivityIndicator, Pressable, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, TouchableOpacity, View } from "react-native";
+import { AppText } from "@/components/ui/AppText";
 import { AlertCircle, Check, ChevronLeft, Mic, RotateCcw, Square, Volume2 } from "lucide-react-native";
 import type { TFunction } from "i18next";
 import type { LessonSentence, MicError } from "@/types/domain";
@@ -68,15 +69,15 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
               <ChevronLeft size={22} color="#0c2340" strokeWidth={2.5} />
             </Pressable>
 
-            <Text accessibilityRole="header" className="text-base font-bold text-[#0c2340]">
+            <AppText accessibilityRole="header" className="text-base font-bold text-[#0c2340]">
               {t("screeningPractice.title")}
-            </Text>
+            </AppText>
 
             {/* Step Counter Pill */}
             <View className="px-2.5 py-1 rounded-xl bg-sky-50 border border-sky-200 items-center justify-center">
-              <Text className="text-xs font-extrabold text-sky-800 shrink-0" numberOfLines={1}>
+              <AppText className="text-xs font-extrabold text-sky-800 shrink-0" numberOfLines={1}>
                 {p.current + 1}/{SCREENING_SENTENCE_COUNT}
-              </Text>
+              </AppText>
             </View>
           </View>
 
@@ -101,11 +102,11 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
               );
             })}
           </View>
-          <Text
+          <AppText
             className="text-xs font-medium mt-1.5 text-slate-500"
           >
             {t("screeningPractice.progress", { count: p.completed.length, total: SCREENING_SENTENCE_COUNT })}
-          </Text>
+          </AppText>
         </View>
 
         {/* 2. MAIN CONTENT SHEET */}
@@ -117,7 +118,7 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
           >
             {/* HERO SENTENCE CARD */}
             <View
-              className="bg-white rounded-[26px] p-6 border border-[#e8f1f8]"
+              className="bg-white rounded-[26px] p-4 border border-[#e8f1f8]"
               style={{
                 shadowColor: "#0c2340",
                 shadowOffset: { width: 0, height: 4 },
@@ -126,27 +127,19 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
                 elevation: 2,
               }}
             >
-              {/* Category / Instruction Tag */}
-              <View className="flex-row items-center gap-2 mb-2">
-                <View className="w-2 h-2 rounded-full bg-[#0284c7]" />
-                <Text className="text-xs font-bold uppercase tracking-wider text-[#0284c7]">
-                  {t("screeningPractice.instruction")}
-                </Text>
-              </View>
-
               {/* The Target Sentence */}
-              <Text
+              <AppText
                 testID="screening-sentence"
                 className="text-[26px] leading-[38px] font-extrabold text-[#0c2340] mt-2 mb-1.5"
               >
                 {p.sentence.text}
-              </Text>
+              </AppText>
 
               {/* IPA Transcript directly under sentence */}
               {ipa ? (
-                <Text className="text-[16px] leading-6 font-medium text-[#64748b] mb-3">
+                <AppText className="text-[16px] leading-6 font-medium text-[#64748b] mb-3">
                   {`/${ipa}/`}
-                </Text>
+                </AppText>
               ) : null}
 
               {/* Native Speaker Audio Sample Button */}
@@ -165,9 +158,9 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
                     }}
                   >
                     <Volume2 size={16} color="#0369a1" />
-                    <Text className="text-xs font-bold text-[#0369a1]">
+                    <AppText className="text-xs font-bold text-[#0369a1]">
                       {t(p.samplePlaying ? "screeningPractice.stopAudio" : "screeningPractice.sample")}
-                    </Text>
+                    </AppText>
                   </Pressable>
                 </View>
               ) : null}
@@ -190,12 +183,12 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
                       <View className="w-1 h-4 rounded-full bg-[#dc2626]" />
                     </View>
                   </View>
-                  <Text className="flex-1 text-[15px] font-bold text-[#991b1b]">
+                  <AppText className="flex-1 text-[15px] font-bold text-[#991b1b]">
                     {t("screeningPractice.recording")}
-                  </Text>
-                  <Text className="text-base font-extrabold font-mono text-[#dc2626]">
+                  </AppText>
+                  <AppText className="text-base font-extrabold font-mono text-[#dc2626]">
                     {String(Math.floor(p.seconds / 60)).padStart(2, "0")}:{String(p.seconds % 60).padStart(2, "0")} / 00:25
-                  </Text>
+                  </AppText>
                 </View>
               ) : null}
 
@@ -206,9 +199,9 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
                   style={{ backgroundColor: "#f0f9ff", borderColor: "#bae6fd" }}
                 >
                   <ActivityIndicator color="#0284c7" />
-                  <Text className="flex-1 text-[14px] font-semibold text-[#0369a1]">
+                  <AppText className="flex-1 text-[14px] font-semibold text-[#0369a1]">
                     {t(`screeningPractice.${phase}`)}
-                  </Text>
+                  </AppText>
                 </View>
               ) : null}
 
@@ -216,20 +209,20 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
               {phase === "recorded" ? (
                 <View
                   testID="screening-recorded"
-                  className="gap-3 rounded-2xl p-4.5 border"
+                  className="gap-3 rounded-2xl p-2 border"
                   style={{ backgroundColor: "#ecfdf5", borderColor: "#a7f3d0" }}
                 >
                   <View className="flex-row gap-3 items-center">
                     <View className="w-7 h-7 rounded-full bg-[#10b981] items-center justify-center">
                       <Check size={16} color="#ffffff" strokeWidth={3} />
                     </View>
-                    <Text className="flex-1 text-base font-extrabold text-[#065f46]">
+                    <AppText className="flex-1 text-base font-extrabold text-[#065f46]">
                       {t("screeningPractice.recorded", { current: p.current + 1 })}
-                    </Text>
+                    </AppText>
                   </View>
-                  <Text className="text-[13px] leading-5 font-medium text-[#047857]">
+                  <AppText className="text-[13px] leading-5 font-medium text-[#047857]">
                     {t(last ? "screeningPractice.allRecorded" : "screeningPractice.continueHint")}
-                  </Text>
+                  </AppText>
 
                   {/* Audio Review Actions */}
                   <View className="flex-row flex-wrap gap-2 pt-2 border-t border-[#d1fae5]">
@@ -241,9 +234,9 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
                         style={{ backgroundColor: "#ffffff", borderColor: "#a7f3d0" }}
                       >
                         <Volume2 size={15} color="#059669" />
-                        <Text className="text-xs font-bold text-[#059669]">
+                        <AppText className="text-xs font-bold text-[#059669]">
                           {t(p.replayPlaying ? "screeningPractice.stopAudio" : "screeningPractice.replay")}
-                        </Text>
+                        </AppText>
                       </Pressable>
                     ) : null}
 
@@ -254,9 +247,9 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
                       style={{ backgroundColor: "#ffffff", borderColor: "#a7f3d0" }}
                     >
                       <RotateCcw size={14} color="#059669" />
-                      <Text className="text-xs font-bold text-[#059669]">
+                      <AppText className="text-xs font-bold text-[#059669]">
                         {t("screeningPractice.rerecord")}
-                      </Text>
+                      </AppText>
                     </Pressable>
 
                     {p.score !== null ? (
@@ -267,18 +260,18 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
                         className="min-h-[38px] px-3.5 py-1.5 rounded-full border flex-row items-center gap-1.5"
                         style={{ backgroundColor: "#ffffff", borderColor: "#a7f3d0" }}
                       >
-                        <Text className="text-xs font-bold text-[#047857]">
+                        <AppText className="text-xs font-bold text-[#047857]">
                           {t(p.showScore ? "screeningPractice.hideScore" : "screeningPractice.showScore")}
-                        </Text>
+                        </AppText>
                       </Pressable>
                     ) : null}
                   </View>
 
                   {p.showScore && p.score !== null ? (
                     <View className="p-3 rounded-xl bg-white border border-[#a7f3d0]">
-                      <Text className="text-sm font-bold text-[#065f46]">
+                      <AppText className="text-sm font-bold text-[#065f46]">
                         {t("screeningPractice.score", { score: Math.round(p.score * 100) })}
-                      </Text>
+                      </AppText>
                     </View>
                   ) : null}
                 </View>
@@ -296,13 +289,13 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
                   style={{ backgroundColor: "#fef2f2", borderColor: "#fecaca" }}
                 >
                   <AlertCircle size={18} color="#dc2626" />
-                  <Text
+                  <AppText
                     testID="screening-error"
                     accessibilityRole="alert"
                     className="text-[14px] leading-5 font-medium text-[#b91c1c] flex-1"
                   >
                     {p.error}
-                  </Text>
+                  </AppText>
                 </View>
               ) : null}
             </View>
@@ -332,10 +325,10 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
                   phase === "recording"
                     ? "#E03E3E"
                     : phase === "recorded"
-                    ? last
-                      ? "#059669"
-                      : "#2383E2"
-                    : "#2383E2",
+                      ? last
+                        ? "#059669"
+                        : "#2383E2"
+                      : "#2383E2",
                 opacity: waiting ? 0.65 : 1,
               }}
               className="min-h-[54px] rounded-2xl px-5 py-3.5 flex-row items-center justify-center gap-2.5"
@@ -349,9 +342,9 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
               ) : (
                 <Check size={20} color="#ffffff" strokeWidth={2.5} />
               )}
-              <Text className="text-base font-extrabold text-white text-center shrink">
+              <AppText className="text-base font-extrabold text-white text-center shrink">
                 {t(`screeningPractice.${primaryKey}`)}
-              </Text>
+              </AppText>
             </TouchableOpacity>
 
             {/* Secondary Controls / Previous Button */}
@@ -366,14 +359,14 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
                 className="min-h-[44px] flex-row gap-1.5 items-center justify-center"
               >
                 <ChevronLeft size={18} color="#53677a" />
-                <Text className="text-sm font-bold text-[#53677a]">
+                <AppText className="text-sm font-bold text-[#53677a]">
                   {t("screeningPractice.previous")}
-                </Text>
+                </AppText>
               </Pressable>
             ) : (
-              <Text className="text-xs text-center text-[#64748b] py-1.5">
+              <AppText className="text-xs text-center text-[#64748b] py-1.5">
                 {t(playing ? "screeningPractice.playingHint" : "screeningPractice.recordHint")}
-              </Text>
+              </AppText>
             )}
           </View>
         </View>
@@ -400,12 +393,12 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
               <View className="w-12 h-12 rounded-full bg-[#fef2f2] items-center justify-center">
                 <AlertCircle size={26} color="#dc2626" />
               </View>
-              <Text accessibilityRole="header" className="text-lg font-extrabold text-[#0c2340] text-center">
+              <AppText accessibilityRole="header" className="text-lg font-extrabold text-[#0c2340] text-center">
                 {t("screeningPractice.exitTitle")}
-              </Text>
-              <Text className="text-[14px] leading-6 text-[#53677a] text-center">
+              </AppText>
+              <AppText className="text-[15px] leading-6 text-[#53677a] text-center">
                 {t("screeningPractice.exitDescription")}
-              </Text>
+              </AppText>
             </View>
 
             <Pressable
@@ -413,9 +406,9 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
               onPress={p.onStay}
               className="bg-[#0c2340] rounded-2xl min-h-[50px] p-3 items-center justify-center active:opacity-90"
             >
-              <Text className="text-base font-extrabold text-white">
+              <AppText className="text-base font-extrabold text-white">
                 {t("screeningPractice.stay")}
-              </Text>
+              </AppText>
             </Pressable>
 
             <Pressable
@@ -423,9 +416,9 @@ export default function ScreeningPracticeView(p: ScreeningPracticeViewProps) {
               onPress={p.onDiscard}
               className="min-h-[44px] items-center justify-center active:opacity-75"
             >
-              <Text className="text-sm font-bold text-[#dc2626]">
+              <AppText className="text-sm font-bold text-[#dc2626]">
                 {t("screeningPractice.exit")}
-              </Text>
+              </AppText>
             </Pressable>
           </View>
         </View>

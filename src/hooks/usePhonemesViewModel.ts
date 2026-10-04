@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/services/Auth";
@@ -31,9 +32,14 @@ export function usePhonemesViewModel(navigation: any) {
     authLoading,
     userDialect,
     screeningCompleted,
+    showScreeningPrompt: authShowScreeningPrompt,
     refreshScreeningStatus,
   } = useAuth();
   const dialect: Dialect = userDialect || "uk";
+
+  useFocusEffect(useCallback(() => {
+    if (authToken && !authLoading) void refreshScreeningStatus();
+  }, [authToken, authLoading, refreshScreeningStatus]));
 
   // TanStack Query: Home summary, Billing usage & 44 sounds progress
   const summaryQuery = useHomeSummaryQuery(dialect, Boolean(authToken && !authLoading));
@@ -272,12 +278,24 @@ export function usePhonemesViewModel(navigation: any) {
   }, [soundRecords, homeSummary]);
 
   const journey = journeyLessonProgress || homeSummary?.journey || null;
+  const hasCompletedScreening = Boolean(authToken && (
+    screeningCompleted || screeningConfirmed || homeSummary?.screening_completed === true
+  ));
+  // Prompt visibility is a server decision, separate from score unlock/completion.
+  const showScreeningPrompt = !authToken || Boolean(
+    !authLoading && !hasCompletedScreening && (
+      homeSummary?.show_screening_prompt ??
+      homeSummary?.requires_screening ??
+      authShowScreeningPrompt ?? true
+    )
+  );
 
   return {
     authToken,
     t,
     dialect,
-    screeningCompleted: Boolean(screeningCompleted || screeningConfirmed),
+    screeningCompleted: hasCompletedScreening,
+    showScreeningPrompt,
     summaryLoading: summaryQuery.isLoading,
     summaryError: summaryQuery.isError,
     retrySummary: () => { void summaryQuery.refetch(); },

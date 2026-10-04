@@ -1,9 +1,9 @@
 import React, { useEffect, useRef } from "react";
 import {
-  Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { AppText } from "@/components/ui/AppText";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ChevronLeft } from "lucide-react-native";
 import PhonemesHome from "@/components/practice/PhonemesHome";
@@ -14,7 +14,7 @@ import type { RootStackParamList } from "@/types/navigation";
 
 export default function PhonemesScreen({ navigation, route }: NativeStackScreenProps<RootStackParamList, "Phonemes">) {
   const {
-    t, dialect, screeningCompleted, screeningLoading, screeningError, startScreeningTest,
+    t, dialect, showScreeningPrompt, screeningLoading, screeningError, startScreeningTest,
     summaryLoading, summaryError, retrySummary, journey, lessonLoading, lessonError, startPersonalizedLesson,
     weakestPhonemes, dailyMissionPhonemes, phonemeLoading,
     screeningResult, setScreeningResult, authToken,
@@ -80,9 +80,9 @@ export default function PhonemesScreen({ navigation, route }: NativeStackScreenP
           <ChevronLeft size={22} color="#0c2340" strokeWidth={2.5} />
         </TouchableOpacity>
 
-        <Text className="text-base font-bold text-[#0c2340]">
+        <AppText className="text-base font-bold text-[#0c2340]">
           {t("nav.phonemes")}
-        </Text>
+        </AppText>
 
         <View className="w-10 h-10" />
       </View>
@@ -92,7 +92,7 @@ export default function PhonemesScreen({ navigation, route }: NativeStackScreenP
         <PhonemesHome
           t={t}
           dialect={dialect}
-          screeningCompleted={screeningCompleted}
+          showScreeningPrompt={showScreeningPrompt}
           weakestPhonemes={weakestPhonemes}
           dailyMissionPhonemes={dailyMissionPhonemes}
           summaryLoading={summaryLoading}

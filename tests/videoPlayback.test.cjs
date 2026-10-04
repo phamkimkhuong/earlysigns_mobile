@@ -29,6 +29,8 @@ function catalogHarness(fetchCards) {
     '@/services/Auth': {}, '@/utils/errors': { topicLabel: topic => topic },
     '@tanstack/react-query': { useQueryClient: () => queryClient },
     '@/components/ui/Skeleton': {}, '@/hooks/usePullToRefresh': {},
+    '@/components': { AppText: 'Text' },
+    '@/components/ui/AppText': { AppText: 'Text' },
     '@/hooks/queries/useVideoQueries': {
       videoKeys: { topicVideos: (topic, level) => ['videos', topic, level] },
       fetchVideoCards: async (_, ids) => { requests.push([...ids]); return fetchCards ? fetchCards([...ids], requests.length) : ids.map(youtube_id => ({ youtube_id })); },
@@ -172,9 +174,10 @@ function harness({ frame = false, stored, initialIndex, segments, playedCount = 
     '@/services/storage': { getItem: key => store.get(key), setItem: (key, value) => store.set(key, value) },
     '@/core/theme': { colors: { practiceHeader: '#1a5f91' } },
     './YoutubePlayer': { __esModule: true, default: 'YoutubePlayer' },
+    '@/components': { AppText: 'Text' },
   };
   for (const name of ['VideoPlayerFrame', 'IPAChecking', 'ScoreWords', 'VideoRecordingHub']) mocks['@/components/practice/' + name] = { __esModule: true, default: name };
-  for (const name of ['DialectToggle', 'UpgradeProModal']) mocks['@/components/ui/' + name] = { __esModule: true, default: name };
+  for (const name of ['DialectToggle', 'UpgradeProModal', 'AppText']) mocks['@/components/ui/' + name] = { __esModule: true, default: 'Text', AppText: 'Text' };
   const file = path.resolve(__dirname, '..', frame ? 'src/components/practice/VideoPlayerFrame.tsx' : 'src/screens/practice/VideoPracticeScreen.tsx');
   const source = ts.transpileModule(fs.readFileSync(file, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true } }).outputText;
   const module = { exports: {} };

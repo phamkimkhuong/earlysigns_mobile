@@ -1,5 +1,6 @@
 import React from "react";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, View } from "react-native";
+import { AppText } from "../ui/AppText";
 import { Volume2 } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import ScoreWords from "./ScoreWords";
@@ -62,7 +63,7 @@ export default function PracticePromptCard({
         />
       ) : text ? (
         /* Fallback if words list is not yet ready */
-        <Text
+        <AppText
           style={{
             fontSize: 22,
             fontWeight: "800",
@@ -73,7 +74,7 @@ export default function PracticePromptCard({
           }}
         >
           {text}
-        </Text>
+        </AppText>
       ) : null}
 
       {/* 2. Sample Audio Playback Action */}
@@ -118,9 +119,9 @@ export default function PracticePromptCard({
             marginTop: 4,
           }}
         >
-          <Text style={{ fontSize: 13, color: "#475569", textAlign: "center" }}>
+          <AppText style={{ fontSize: 13, color: "#475569", textAlign: "center" }}>
             {translationVi}
-          </Text>
+          </AppText>
         </View>
       ) : null}
     </View>

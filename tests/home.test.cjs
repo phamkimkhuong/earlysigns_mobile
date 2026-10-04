@@ -35,7 +35,7 @@ function loadSource(relativePath, mocks = {}) {
       if (name.startsWith("@assets/") || name.endsWith(".jpg") || name.endsWith(".png")) return 1;
       if (name.startsWith("@/")) {
         const candidate = path.resolve(__dirname, "..", "src", name.slice(2));
-        for (const ext of [".ts", ".tsx", ".js", ".jsx"]) {
+        for (const ext of [".ts", ".tsx", ".js", ".jsx", "/index.ts", "/index.tsx", "/index.js"]) {
           if (fs.existsSync(candidate + ext)) {
             return loadSource(path.relative(path.resolve(__dirname, ".."), candidate + ext), mocks);
           }
@@ -226,7 +226,7 @@ test("pronunciation main prioritizes screening without gating practice, sounds o
   for (const completed of [false, true]) {
     const calls = [];
     const tree = flatten(PhonemesHome({
-      t: key => key, dialect: "uk", screeningCompleted: completed, weakestPhonemes: [{ sound: "θ" }],
+      t: key => key, dialect: "uk", showScreeningPrompt: !completed, weakestPhonemes: [{ sound: "θ" }],
       onScreening: () => calls.push("screening"), onLesson: () => calls.push("lesson"),
       onPhoneme: sound => calls.push(sound), onJourney: () => calls.push("journey"),
       onCatalog: () => calls.push("catalog"), onRetry: () => {},
@@ -250,7 +250,7 @@ test("pronunciation main prioritizes screening without gating practice, sounds o
 test("pronunciation main labels generic suggestions as exploration even after screening", () => {
   const { default: PhonemesHome } = loadSource("src/components/practice/PhonemesHome.tsx", { "react-native": nativeMocks });
   for (const completed of [false, true]) {
-    const tree = flatten(PhonemesHome({ t: key => key, dialect: "uk", screeningCompleted: completed, weakestPhonemes: [] }));
+    const tree = flatten(PhonemesHome({ t: key => key, dialect: "uk", showScreeningPrompt: !completed, weakestPhonemes: [] }));
     assert.ok(tree.some(node => node.props.testID === "phonemes-explore-sounds"));
     assert.ok(!tree.some(node => node.props.testID === "phonemes-weak-sounds"));
   }
@@ -260,6 +260,18 @@ test("pronunciation data keeps screening independent, filters unassessed sounds,
   const slots = [];
   let cursor = 0;
   let completionFails = false;
+  let onFocus;
+  let statusRefreshes = 0;
+  const auth = {
+    authToken: "test", authLoading: false, screeningCompleted: false, scoreUnlocked: true,
+    showScreeningPrompt: true,
+    refreshScreeningStatus: async () => {
+      statusRefreshes++;
+      auth.screeningCompleted = true;
+      auth.showScreeningPrompt = false;
+      return { screening_completed: true, score_unlocked: true, requires_screening: false, show_screening_prompt: false };
+    },
+  };
   const requests = [];
   const summary = { weakest_phonemes: [
     { sound: "n", accuracy: null }, { sound: "t", accuracy: "" },
@@ -276,8 +288,9 @@ test("pronunciation data keeps screening independent, filters unassessed sounds,
       },
     },
     "react-i18next": { useTranslation: () => ({ t: key => key, i18n: { language: "vi" } }) },
+    "@react-navigation/native": { useFocusEffect: effect => { onFocus = effect; } },
     "@tanstack/react-query": { useQueryClient: () => ({ invalidateQueries: async () => {} }) },
-    "@/services/Auth": { useAuth: () => ({ authToken: "test", screeningCompleted: false, scoreUnlocked: true, refreshScreeningStatus: async () => null }) },
+    "@/services/Auth": { useAuth: () => auth },
     "@/services/usageLimits": { resolveUserKey: () => "test", resolveUserTier: () => "free" },
     "@/store/useBillingStore": { useBillingStore: select => select({ usage: null }) },
     "@/hooks/queries/useLessonQueries": { useHomeSummaryQuery: () => ({ data: summary, refetch: async () => ({ data: summary }) }), lessonKeys: { homeSummary: () => [] } },
@@ -293,6 +306,26 @@ test("pronunciation data keeps screening independent, filters unassessed sounds,
   const render = () => { cursor = 0; return usePhonemesViewModel({ navigate: () => assert.fail("Unexpected login gate") }); };
   let model = render();
   assert.equal(model.screeningCompleted, false);
+  assert.equal(model.showScreeningPrompt, true, "An unlocked score alone does not mean screening was completed");
+  summary.show_screening_prompt = false;
+  assert.equal(render().showScreeningPrompt, false, "Honor home-summary's explicit instruction to hide the prompt");
+  delete summary.show_screening_prompt;
+  summary.requires_screening = false;
+  assert.equal(render().showScreeningPrompt, false, "Support the API's legacy prompt flag");
+  delete summary.requires_screening;
+  onFocus(); await Promise.resolve();
+  assert.equal(statusRefreshes, 1, "Entering the screen refreshes /auth/me status");
+  summary.show_screening_prompt = true;
+  model = render();
+  assert.equal(model.screeningCompleted, true);
+  assert.equal(model.showScreeningPrompt, false, "Confirmed completion wins over an older summary cache");
+  auth.authToken = ""; render(); onFocus();
+  assert.equal(statusRefreshes, 1, "Guests do not request authenticated screening status");
+  auth.authToken = "test"; auth.authLoading = true; render(); onFocus();
+  assert.equal(statusRefreshes, 1, "Wait until session initialization finishes");
+  auth.authLoading = false; auth.screeningCompleted = false; auth.showScreeningPrompt = true;
+  delete summary.show_screening_prompt;
+  model = render();
   assert.deepEqual(model.weakestPhonemes.map(item => item.sound), ["θ", "r"]);
   await model.startPersonalizedLesson();
   await model.startPhoneme("θ");

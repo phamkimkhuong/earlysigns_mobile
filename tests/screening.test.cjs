@@ -54,7 +54,7 @@ function flatten(node) {
 }
 const native = { View: 'View', Text: 'Text', Pressable: 'Pressable', ScrollView: 'ScrollView', ActivityIndicator: 'ActivityIndicator', Modal: 'Modal', TouchableOpacity: 'TouchableOpacity', Linking: { openSettings: () => {} }, AppState: { addEventListener: () => ({ remove() {} }) } };
 const icons = new Proxy({}, { get: (_, key) => String(key) });
-const baseMocks = { '@react-navigation/native': { useIsFocused: () => true }, 'react-native': native, 'lucide-react-native': icons, 'react-native-safe-area-context': { SafeAreaView: 'SafeAreaView' }, 'react-i18next': { useTranslation: () => ({ t: key => key }) } };
+const baseMocks = { '@react-navigation/native': { useIsFocused: () => true }, 'react-native': native, 'lucide-react-native': icons, 'react-native-safe-area-context': { SafeAreaView: 'SafeAreaView' }, 'react-i18next': { useTranslation: () => ({ t: key => key }) }, '@/components/ui/AppText': { AppText: 'Text' }, '@/components': { AppText: 'Text' } };
 const { default: View } = load('src/components/practice/ScreeningPracticeView.tsx', baseMocks);
 
 test('screening UI shows one sentence and changes its main action without score gating', () => {
@@ -94,6 +94,7 @@ test('recording flow keeps results on save failure and never submits automatical
       useReducer: (reducer, initial) => { const [value, set] = state(initial); return [value, action => set(prev => reducer(prev, action))]; },
       useRef: value => { const slot = index++; return slots[slot] ??= { current: value }; },
       useCallback: fn => fn,
+      forwardRef: fn => fn,
       useEffect: (fn, deps) => {
         const slot = index++;
         const previous = slots[slot];

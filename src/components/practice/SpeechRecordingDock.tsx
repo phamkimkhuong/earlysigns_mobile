@@ -3,10 +3,10 @@ import {
   ActivityIndicator,
   Animated,
   Pressable,
-  Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { AppText } from "../ui/AppText";
 import { CheckCircle2, ChevronLeft, ChevronRight, Mic, Square } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import { hapticFeedback } from "@/utils/haptics";
@@ -288,9 +288,9 @@ export default function SpeechRecordingDock({
           style={{ backgroundColor: "#eff6ff", borderColor: "#bfdbfe" }}
         >
           <ActivityIndicator size={11} color="#2383e2" />
-          <Text className="text-xs font-bold text-blue-800">
+          <AppText className="text-xs font-bold text-blue-800">
             {t("videos.practice.startingMic", "Đang khởi động micro...")}
-          </Text>
+          </AppText>
         </View>
       ) : isRecording ? (
         <View
@@ -314,7 +314,7 @@ export default function SpeechRecordingDock({
               backgroundColor: isNearLimit ? "#ea580c" : "#f43f5e",
             }}
           />
-          <Text
+          <AppText
             style={{
               fontSize: 12,
               fontWeight: "800",
@@ -324,7 +324,7 @@ export default function SpeechRecordingDock({
             {isNearLimit
               ? `${t("videos.practice.endingSoon", "Sắp hết giờ")} (${remainingSeconds}s) • ${formattedTime} / ${maxTimeFormatted}`
               : `${t("videos.practice.record", "Đang ghi âm")} • ${formattedTime} / ${maxTimeFormatted}`}
-          </Text>
+          </AppText>
         </View>
       ) : checking ? (
         <View
@@ -332,9 +332,9 @@ export default function SpeechRecordingDock({
           style={{ backgroundColor: "#eff6ff", borderColor: "#bfdbfe" }}
         >
           <ActivityIndicator size={11} color="#2383e2" />
-          <Text className="text-xs font-bold text-blue-800">
+          <AppText className="text-xs font-bold text-blue-800">
             {t("sentence.checking", "Đang phân tích...")}
-          </Text>
+          </AppText>
         </View>
       ) : null}
 
@@ -512,9 +512,9 @@ export default function SpeechRecordingDock({
 
       {/* 3. SUBTLE STATUS HINT LABEL */}
       {!isRecording && !checking && !isStarting ? (
-        <Text style={{ fontSize: 13, fontWeight: "600", color: "#64748b" }}>
+        <AppText style={{ fontSize: 13, fontWeight: "600", color: "#64748b" }}>
           {statusHint || t("sentence.tapToRecord", "Chạm micro để bắt đầu nói")}
-        </Text>
+        </AppText>
       ) : null}
     </View>
   );

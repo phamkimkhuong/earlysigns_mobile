@@ -2,11 +2,11 @@ import React, { useCallback, useMemo, useState } from "react";
 import {
   FlatList,
   Pressable,
-  Text,
   TouchableOpacity,
   View,
   useWindowDimensions,
 } from "react-native";
+import { AppText } from "@/components";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { ChevronLeft } from "lucide-react-native";
@@ -52,21 +52,6 @@ export default function PhonemeCatalogScreen({ navigation, route }: Props) {
     return map;
   }, [soundRecords]);
 
-  // Compute mastered and practiced counts
-  const catalogStats = useMemo(() => {
-    let practiced = 0;
-    let mastered = 0;
-    ALL_44_IPA_SOUNDS.forEach((s) => {
-      const clean = s.sound.replace(/^\/+|\/+$/g, "").trim().toLowerCase();
-      const info = soundsAccuracyMap.get(clean);
-      if (info && info.accuracyPct != null) {
-        practiced++;
-        if (info.accuracyPct >= 70) mastered++;
-      }
-    });
-    return { practiced, mastered };
-  }, [soundsAccuracyMap]);
-
   // Filter 44 sounds by active category
   const filteredCatalog = useMemo(
     () =>
@@ -99,19 +84,19 @@ export default function PhonemeCatalogScreen({ navigation, route }: Props) {
               elevation: 1,
             }}
           >
-            <Text
+            <AppText
               className="text-[22px] font-extrabold text-[#0c2340] text-center"
               style={{ includeFontPadding: false }}
               numberOfLines={1}
             >
               {`/${item.sound}/`}
-            </Text>
-            <Text
+            </AppText>
+            <AppText
               numberOfLines={1}
               className="text-xs text-[#64748b] font-medium text-center"
             >
               {item.example.split(" /", 1)[0]}
-            </Text>
+            </AppText>
             {hasScore ? (
               <View
                 className="px-2.5 py-0.5 rounded-full mt-0.5 shrink-0 border"
@@ -120,17 +105,17 @@ export default function PhonemeCatalogScreen({ navigation, route }: Props) {
                     accuracyPct >= 70
                       ? "#ecfdf5"
                       : accuracyPct >= 50
-                      ? "#fffbeb"
-                      : "#fef2f2",
+                        ? "#fffbeb"
+                        : "#fef2f2",
                   borderColor:
                     accuracyPct >= 70
                       ? "#a7f3d0"
                       : accuracyPct >= 50
-                      ? "#fde68a"
-                      : "#fecaca",
+                        ? "#fde68a"
+                        : "#fecaca",
                 }}
               >
-                <Text
+                <AppText
                   numberOfLines={1}
                   className="text-xs font-bold text-center"
                   style={{
@@ -138,21 +123,21 @@ export default function PhonemeCatalogScreen({ navigation, route }: Props) {
                       accuracyPct >= 70
                         ? "#047857"
                         : accuracyPct >= 50
-                        ? "#b45309"
-                        : "#dc2626",
+                          ? "#b45309"
+                          : "#dc2626",
                   }}
                 >
                   {`${accuracyPct}%`}
-                </Text>
+                </AppText>
               </View>
             ) : (
               <View className="px-2.5 py-0.5 rounded-full mt-0.5 shrink-0 bg-appBg border border-[#e2e8f0]">
-                <Text
+                <AppText
                   numberOfLines={1}
                   className="text-xs font-medium text-[#94a3b8] text-center"
                 >
                   {t("phonemesHome.notPracticed", "Chưa học")}
-                </Text>
+                </AppText>
               </View>
             )}
           </Pressable>
@@ -166,54 +151,6 @@ export default function PhonemeCatalogScreen({ navigation, route }: Props) {
   const renderHeader = useMemo(
     () => (
       <View className="pb-3 gap-3.5">
-        {/* Summary Card with Mastered Progress */}
-        <View
-          className="bg-white rounded-[20px] p-4 border border-[#e2eaf2] gap-3"
-          style={{
-            shadowColor: "#0c2340",
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.04,
-            shadowRadius: 6,
-            elevation: 1,
-          }}
-        >
-          <View className="flex-row items-center justify-between">
-            <View className="flex-row items-center gap-2 flex-1 mr-2">
-              <View
-                className="w-2.5 h-2.5 rounded-full shrink-0"
-                style={{ backgroundColor: catalogStats.mastered > 0 ? "#10b981" : "#0284c7" }}
-              />
-              <Text className="text-sm font-bold text-[#0c2340]" numberOfLines={1}>
-                {t("phonemesHome.catalogProgress", {
-                  practiced: catalogStats.practiced,
-                  current: catalogStats.practiced,
-                  total: 44,
-                })}
-              </Text>
-            </View>
-            {catalogStats.mastered > 0 ? (
-              <View
-                className="px-2.5 py-0.5 rounded-full shrink-0 border"
-                style={{ backgroundColor: "#ecfdf5", borderColor: "#a7f3d0" }}
-              >
-                <Text className="text-xs font-bold text-[#047857]" numberOfLines={1}>
-                  {t("phonemesHome.catalogMastered", { count: catalogStats.mastered })}
-                </Text>
-              </View>
-            ) : null}
-          </View>
-
-          {/* Progress bar track */}
-          <View className="w-full h-1.5 bg-[#f1f5f9] rounded-full overflow-hidden">
-            <View
-              className="h-full rounded-full"
-              style={{
-                width: `${Math.max(catalogStats.practiced > 0 ? 5 : 0, Math.min(100, Math.round((catalogStats.practiced / 44) * 100)))}%`,
-                backgroundColor: catalogStats.mastered > 0 ? "#10b981" : "#0284c7",
-              }}
-            />
-          </View>
-        </View>
 
         {/* Category Filter Pills */}
         <View className="flex-row flex-wrap gap-2">
@@ -231,53 +168,40 @@ export default function PhonemeCatalogScreen({ navigation, route }: Props) {
                   borderColor: isSelected ? "#0c2340" : "#e2eaf2",
                 }}
               >
-                <Text
+                <AppText
                   className="text-[13px] font-bold"
                   style={{ color: isSelected ? "#ffffff" : "#53677a" }}
                 >
                   {t(`phonemesHome.categories.${category}`)}
-                </Text>
+                </AppText>
               </Pressable>
             );
           })}
         </View>
       </View>
     ),
-    [catalogStats, selectedCategory, t]
+    [selectedCategory, t]
   );
 
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-appBg">
       {/* 1. TOP NAV BAR */}
-      <View className="bg-appBg px-4 py-3 border-b border-slate-200">
-        <View className="flex-row items-center justify-between mb-2">
-          <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityLabel={t("common.back", "Quay lại")}
-            activeOpacity={0.7}
-            onPress={() => navigation.goBack()}
-            className="w-10 h-10 rounded-full bg-white border border-slate-200 items-center justify-center active:opacity-70"
-          >
-            <ChevronLeft size={22} color="#0c2340" strokeWidth={2.5} />
-          </TouchableOpacity>
+      <View className="bg-appBg flex-row items-center justify-between px-4 py-3 border-b border-slate-200">
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel={t("common.back", "Quay lại")}
+          activeOpacity={0.7}
+          onPress={() => navigation.goBack()}
+          className="w-10 h-10 rounded-full bg-white border border-slate-200 items-center justify-center active:opacity-70"
+        >
+          <ChevronLeft size={22} color="#0c2340" strokeWidth={2.5} />
+        </TouchableOpacity>
 
-          <Text className="text-base font-bold text-[#0c2340]">
-            {t("phonemesHome.catalogTitle", "Kho 44 âm IPA")}
-          </Text>
+        <AppText className="text-base flex-1 text-center font-bold text-[#0c2340]">
+          {t("phonemesHome.catalogTitle", "Kho 44 âm IPA")}
+        </AppText>
 
-          <View className="flex-row items-center px-2.5 py-1 rounded-xl bg-sky-50 border border-sky-200">
-            <Text className="text-xs font-extrabold text-sky-800">
-              {dialect.toUpperCase()} {dialect.toLowerCase() === "uk" ? "🇬🇧" : "🇺🇸"}
-            </Text>
-          </View>
-        </View>
-
-        <Text className="text-xs font-medium text-slate-500 leading-relaxed">
-          {t(
-            "phonemesHome.catalogSubtitle",
-            "Toàn bộ hệ thống phiên âm chuẩn quốc tế IPA với bảng phân loại chi tiết."
-          )}
-        </Text>
+        <View className="w-10 h-10" />
       </View>
 
       {/* 2. VIRTUALIZED FLATLIST GRID CANVAS */}

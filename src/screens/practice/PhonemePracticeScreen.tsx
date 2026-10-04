@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
+import { AppText } from "@/components";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
@@ -215,19 +216,19 @@ export default function PhonemePracticeScreen({ navigation, route }: Props) {
           </TouchableOpacity>
 
           <View style={{ flex: 1, marginHorizontal: 12 }}>
-            <Text
+            <AppText
               style={{ fontSize: 16, fontWeight: "700", color: "#0f172a" }}
               numberOfLines={1}
             >
               {displayTitle}
-            </Text>
+            </AppText>
             {soundMeta.example ? (
-              <Text
+              <AppText
                 style={{ fontSize: 13, fontWeight: "500", color: "#64748b", marginTop: 1 }}
                 numberOfLines={1}
               >
                 {t("phonemesHome.exampleWord", "Từ mẫu")}: {soundMeta.example.split(" /", 1)[0]}
-              </Text>
+              </AppText>
             ) : null}
           </View>
         </View>
@@ -273,12 +274,12 @@ export default function PhonemePracticeScreen({ navigation, route }: Props) {
           </TouchableOpacity>
 
           <View style={{ flex: 1, marginHorizontal: 12 }}>
-            <Text
+            <AppText
               style={{ fontSize: 16, fontWeight: "700", color: "#0f172a" }}
               numberOfLines={1}
             >
               {displayTitle}
-            </Text>
+            </AppText>
           </View>
         </View>
 
@@ -286,12 +287,12 @@ export default function PhonemePracticeScreen({ navigation, route }: Props) {
           <View className="w-16 h-16 rounded-full bg-rose-100 items-center justify-center">
             <AlertCircle size={32} color="#e11d48" />
           </View>
-          <Text className="text-base font-extrabold text-slate-900 text-center">
+          <AppText className="text-base font-extrabold text-slate-900 text-center">
             {t("common.loadFailed", "Không thể tải bài học")}
-          </Text>
-          <Text className="text-[14px] text-slate-600 text-center leading-relaxed max-w-[280px]">
+          </AppText>
+          <AppText className="text-[14px] text-slate-600 text-center leading-relaxed max-w-[280px]">
             {error || t("lesson.empty", "Chưa có bài học khả dụng cho âm này")}
-          </Text>
+          </AppText>
 
           <View className="flex-row items-center gap-3 mt-2">
             <TouchableOpacity
@@ -301,9 +302,9 @@ export default function PhonemePracticeScreen({ navigation, route }: Props) {
               onPress={() => navigation.goBack()}
               className="py-3 px-5 rounded-2xl border border-slate-300 bg-white"
             >
-              <Text className="text-sm font-bold text-slate-700">
+              <AppText className="text-sm font-bold text-slate-700">
                 {t("common.back", "Quay lại")}
-              </Text>
+              </AppText>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -315,9 +316,9 @@ export default function PhonemePracticeScreen({ navigation, route }: Props) {
               style={{ backgroundColor: "#0284c7" }}
             >
               <RefreshCw size={16} color="#ffffff" />
-              <Text className="text-sm font-bold text-white">
+              <AppText className="text-sm font-bold text-white">
                 {t("common.retry", "Thử lại")}
-              </Text>
+              </AppText>
             </TouchableOpacity>
           </View>
         </View>

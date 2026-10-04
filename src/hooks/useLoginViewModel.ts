@@ -11,6 +11,7 @@ import { showToast } from "@/utils/toast";
 import { hapticFeedback } from "@/utils/haptics";
 import { navigateAfterLogin } from "@/navigation/nav";
 import { getFriendlyErrorMessage } from "@/core/errorManager";
+import type { FacebookCredential } from "@/types/facebookAuth";
 
 export interface UseLoginViewModelProps {
   navigation: any;
@@ -126,15 +127,18 @@ export function useLoginViewModel({
   });
 
   const handleFacebookSuccess = useCallback(
-    async (result: any) => {
+    async (result: FacebookCredential) => {
       setAuthError("");
       try {
-        if (!result.accessToken) {
-          throw new Error(t("login.facebookMissingToken"));
-        }
         const data = await authApi.loginFacebook({
-          accessToken: result.accessToken,
-          deviceId: useAuthStore.getState().deviceId,
+          ...result,
+          deviceId,
+        });
+
+        await finishLogin({
+          token: data.token || data.access_token,
+          email: data.email,
+          userId: data.user_id,
         });
 
         if (data?.is_new_user) {
@@ -151,7 +155,7 @@ export function useLoginViewModel({
         showToast.error(friendlyMsg);
       }
     },
-    [t]
+    [deviceId, finishLogin, t]
   );
 
   const { signIn: signInFacebook, loading: facebookLoading } = useFacebookAuth({

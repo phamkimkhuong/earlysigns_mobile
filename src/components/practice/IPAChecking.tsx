@@ -5,10 +5,10 @@ import {
   Modal,
   Pressable,
   ScrollView,
-  Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { AppText } from "../ui/AppText";
 import { createAudioPlayer } from "expo-audio";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
@@ -377,19 +377,19 @@ export default function IPAChecking({
         </Pressable>
 
         <View style={{ flex: 1, marginHorizontal: 12, justifyContent: "center" }}>
-          <Text
+          <AppText
             style={{ fontSize: 17, fontWeight: "800", color: "#0c2340" }}
             numberOfLines={1}
           >
             {lessonTitle || t("sentence.current", { current: currentIndex + 1, total: totalSentences })}
-          </Text>
+          </AppText>
           {journeyData?.current_module != null ? (
-            <Text style={{ fontSize: 13, fontWeight: "500", color: "#64748b", marginTop: 2 }}>
+            <AppText style={{ fontSize: 13, fontWeight: "500", color: "#64748b", marginTop: 2 }}>
               {t("home.journey.moduleOf", {
                 current: journeyData.current_module,
                 total: journeyData.total_modules || journeyData.current_module,
               })}
-            </Text>
+            </AppText>
           ) : null}
         </View>
 
@@ -416,7 +416,7 @@ export default function IPAChecking({
             }}
           >
             <BookOpen size={16} color="#0284c7" />
-            <Text
+            <AppText
               numberOfLines={1}
               style={{
                 fontSize: 13,
@@ -425,7 +425,7 @@ export default function IPAChecking({
               }}
             >
               {t("phonemeGuide.guideBtn", "Hướng dẫn")}
-            </Text>
+            </AppText>
           </TouchableOpacity>
         ) : null}
       </View>

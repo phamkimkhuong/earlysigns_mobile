@@ -1,14 +1,9 @@
 import { Platform } from "react-native";
-import { AccessToken, LoginManager } from "react-native-fbsdk-next";
+import { randomUUID } from "expo-crypto";
+import { AccessToken, AuthenticationToken, LoginManager } from "react-native-fbsdk-next";
 import i18n from "@/core/i18n";
-
-export interface FacebookLoginResult {
-  success: boolean;
-  cancelled?: boolean;
-  accessToken?: string;
-  userId?: string;
-  error?: string;
-}
+import type { FacebookLoginResult } from "@/types/facebookAuth";
+export type { FacebookLoginResult } from "@/types/facebookAuth";
 
 const isNativeMobile = Platform.OS === "android" || Platform.OS === "ios";
 
@@ -22,16 +17,26 @@ export async function loginWithFacebook(): Promise<FacebookLoginResult> {
     };
   }
   try {
+    // Clear cached credentials so a previous account cannot satisfy this attempt.
     LoginManager.logOut();
-    const result = await LoginManager.logInWithPermissions([
-      "public_profile",
-      "email",
-    ]);
+    const nonce = Platform.OS === "ios" ? randomUUID() : undefined;
+    const permissions = ["public_profile", "email"];
+    const result = nonce
+      ? await LoginManager.logInWithPermissions(permissions, "limited", nonce)
+      : await LoginManager.logInWithPermissions(permissions);
     if (result.isCancelled) {
       return { success: false, cancelled: true };
     }
+    if (nonce) {
+      const credential = await AuthenticationToken.getAuthenticationTokenIOS();
+      if (!credential?.authenticationToken || credential.nonce !== nonce) {
+        return { success: false, error: i18n.t("login.facebookSignInFailed") };
+      }
+      // The backend must verify the JWT signature, claims, nonce and replay protection.
+      return { success: true, tokenType: "id_token", idToken: credential.authenticationToken, nonce };
+    }
     const currentToken = await AccessToken.getCurrentAccessToken();
-    if (!currentToken) {
+    if (!currentToken?.accessToken) {
       return {
         success: false,
         error:
@@ -41,8 +46,8 @@ export async function loginWithFacebook(): Promise<FacebookLoginResult> {
     }
     return {
       success: true,
+      tokenType: "access_token",
       accessToken: currentToken.accessToken,
-      userId: currentToken.userID,
     };
   } catch (err: any) {
     return {

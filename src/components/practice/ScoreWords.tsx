@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import { AppText } from "../ui/AppText";
 import { buildWordScores, tokenizeIpa } from "@/utils/pronunciationAnalysis";
 import { colors } from "@/core/theme";
 import { WordAlignmentItem } from "@/types";
@@ -80,7 +81,7 @@ export default function ScoreWords({
             }}
           >
             {showWord ? (
-              <Text
+              <AppText
                 numberOfLines={1}
                 style={{
                   fontSize: currentSize.wordSize,
@@ -90,7 +91,7 @@ export default function ScoreWords({
                 }}
               >
                 {w.word || ""}
-              </Text>
+              </AppText>
             ) : null}
             {showIpa ? (
               <View
@@ -101,7 +102,7 @@ export default function ScoreWords({
                   marginTop: 2,
                 }}
               >
-                <Text
+                <AppText
                   numberOfLines={1}
                   style={{
                     fontSize: currentSize.ipaSize,
@@ -112,20 +113,20 @@ export default function ScoreWords({
                   {"/"}
                   {w.ipa ? (
                     phones.map((phone, phoneIndex) => (
-                      <Text
+                      <AppText
                         key={`${w.word}-${i}-${phoneIndex}`}
                         style={{
                           color: PHONE_COLORS[phone?.status || ""] || PHONE_COLORS.neutral,
                         }}
                       >
                         {phone?.char || ""}
-                      </Text>
+                      </AppText>
                     ))
                   ) : (
                     loadingIpa ? "…" : "—"
                   )}
                   {"/"}
-                </Text>
+                </AppText>
               </View>
             ) : null}
           </View>

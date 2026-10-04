@@ -1,5 +1,6 @@
 import React from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import { AppText } from "../ui/AppText";
 import { AlertCircle } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import type { MicError } from "@/types/domain";
@@ -28,9 +29,9 @@ export default function MicErrorCard({ micError, error, testID }: MicErrorCardPr
       <View testID={testID} className="bg-rose-50 border border-rose-200 rounded-2xl p-3.5 w-full gap-2 my-1">
         <View className="flex-row items-center gap-2">
           <AlertCircle size={18} color="#e11d48" />
-          <Text className="flex-1 text-[15px] font-bold text-rose-900">{title}</Text>
+          <AppText className="flex-1 text-[15px] font-bold text-rose-900">{title}</AppText>
         </View>
-        <Text className="text-[13px] text-rose-800 leading-relaxed pl-6">{body}</Text>
+        <AppText className="text-[13px] text-rose-800 leading-relaxed pl-6">{body}</AppText>
       </View>
     );
   }
@@ -39,7 +40,7 @@ export default function MicErrorCard({ micError, error, testID }: MicErrorCardPr
     return (
       <View testID={testID} className="flex-row items-center gap-2 bg-rose-50 border border-rose-200 rounded-2xl p-3.5 w-full my-1">
         <AlertCircle size={18} color="#e11d48" />
-        <Text testID={testID ? `${testID}-text` : undefined} className="flex-1 text-xs font-semibold text-rose-800">{error}</Text>
+        <AppText testID={testID ? `${testID}-text` : undefined} className="flex-1 text-xs font-semibold text-rose-800">{error}</AppText>
       </View>
     );
   }

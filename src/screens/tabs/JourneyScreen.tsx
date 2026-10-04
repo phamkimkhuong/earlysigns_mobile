@@ -2,10 +2,10 @@ import React, { useCallback, useMemo } from "react";
 import {
   FlatList,
   RefreshControl,
-  Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { AppText } from "@/components";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   AlertCircle,
@@ -53,9 +53,8 @@ export default function JourneyScreen({ navigation }: { navigation?: any }) {
       const isLast = index === items.length - 1;
       return (
         <View
-          className={`mx-4 bg-white px-4 border-x border-slate-200 ${
-            isFirst ? "rounded-t-3xl border-t pt-3" : ""
-          } ${isLast ? "rounded-b-3xl border-b pb-4 shadow-sm mb-16" : ""}`}
+          className={`mx-4 bg-white px-4 border-x border-slate-200 ${isFirst ? "rounded-t-3xl border-t pt-3" : ""
+            } ${isLast ? "rounded-b-3xl border-b pb-4 shadow-sm mb-16" : ""}`}
         >
           <JourneyPathItem
             item={item}
@@ -104,26 +103,11 @@ export default function JourneyScreen({ navigation }: { navigation?: any }) {
               <ChevronLeft size={22} color="#0c2340" strokeWidth={2.5} />
             </TouchableOpacity>
 
-            <Text className="text-base font-bold text-[#0c2340]">
+            <AppText className="text-base font-bold text-[#0c2340]">
               {t("journeyPage.title", "Lộ trình học tập")}
-            </Text>
+            </AppText>
 
             <View className="w-10 h-10" />
-          </View>
-
-          {/* Hero Content */}
-          <View className="flex-row items-center gap-3.5 mt-1 p-3 rounded-2xl bg-slate-50 border border-slate-200">
-            <View className="w-10 h-10 rounded-xl items-center justify-center bg-sky-100">
-              <Compass size={20} color="#0284c7" />
-            </View>
-            <View className="flex-1">
-              <Text className="text-xs text-slate-500 leading-relaxed font-medium">
-                {t(
-                  "journeyPage.heroSubtitle",
-                  "Lộ trình thích ứng thông minh tự động tối ưu theo từng âm bạn cần cải thiện."
-                )}
-              </Text>
-            </View>
           </View>
         </View>
 
@@ -135,9 +119,9 @@ export default function JourneyScreen({ navigation }: { navigation?: any }) {
               <View className="flex-row items-center justify-between">
                 <View className="flex-row items-center gap-2 flex-1 mr-2">
                   <Trophy size={18} color="#d97706" />
-                  <Text numberOfLines={1} className="text-[15px] font-extrabold text-slate-900">
+                  <AppText numberOfLines={1} className="text-[15px] font-extrabold text-slate-900">
                     {t("journeyPage.progressTitle", "Tiến độ lộ trình")}
-                  </Text>
+                  </AppText>
                 </View>
 
                 {streakDays > 0 ? (
@@ -146,7 +130,7 @@ export default function JourneyScreen({ navigation }: { navigation?: any }) {
                     style={{ backgroundColor: "#fff7ed", borderColor: "#fed7aa" }}
                   >
                     <Flame size={14} color="#ea580c" />
-                    <Text
+                    <AppText
                       numberOfLines={1}
                       className="text-xs font-bold text-orange-700"
                       style={{ includeFontPadding: false }}
@@ -155,7 +139,7 @@ export default function JourneyScreen({ navigation }: { navigation?: any }) {
                         count: streakDays,
                         defaultValue: `${streakDays} ${t("profile.streakDaysUnit", "ngày")}`,
                       })}
-                    </Text>
+                    </AppText>
                   </View>
                 ) : null}
               </View>
@@ -163,18 +147,18 @@ export default function JourneyScreen({ navigation }: { navigation?: any }) {
               {/* Progress Bar */}
               <View className="gap-1.5">
                 <View className="flex-row justify-between items-center">
-                  <Text className="text-[13px] text-slate-500 font-semibold">
+                  <AppText className="text-[13px] text-slate-500 font-semibold">
                     {t("home.journey.moduleOf", {
                       current: currentModule,
                       total: totalModules || currentModule,
                     })}
-                  </Text>
-                  <Text className="text-sm font-bold text-[#0284c7]">
+                  </AppText>
+                  <AppText className="text-sm font-bold text-[#0284c7]">
                     {t("journeyPage.percentCompleted", {
                       percent: progressPct,
                       defaultValue: `${progressPct}% hoàn thành`,
                     })}
-                  </Text>
+                  </AppText>
                 </View>
 
                 <View className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
@@ -191,12 +175,12 @@ export default function JourneyScreen({ navigation }: { navigation?: any }) {
                 style={{ backgroundColor: "#f0f9ff", borderColor: "#bae6fd" }}
               >
                 <TrendingUp size={18} color="#0284c7" />
-                <Text className="flex-1 text-[13px] text-[#0c2340] leading-snug font-medium">
+                <AppText className="flex-1 text-[13px] text-[#0c2340] leading-snug font-medium">
                   {t(
                     "journeyPage.adaptiveNote",
                     "Hệ thống sẽ cập nhật độ khó và thứ tự bài học tiếp theo dựa trên kết quả phát âm của bạn."
                   )}
-                </Text>
+                </AppText>
               </View>
             </View>
           ) : null}
@@ -205,9 +189,9 @@ export default function JourneyScreen({ navigation }: { navigation?: any }) {
           {error || lessonError ? (
             <View className="bg-rose-50 p-4 rounded-2xl border border-rose-200 flex-row items-center gap-2.5">
               <AlertCircle size={18} color="#e11d48" />
-              <Text className="flex-1 text-xs text-rose-800 font-medium leading-relaxed">
+              <AppText className="flex-1 text-xs text-rose-800 font-medium leading-relaxed">
                 {error || lessonError}
-              </Text>
+              </AppText>
             </View>
           ) : null}
 

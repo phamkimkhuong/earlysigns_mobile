@@ -2,11 +2,11 @@ import React from "react";
 import {
   ActivityIndicator,
   ScrollView,
-  Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { AppText } from "@/components/ui/AppText";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   AlertCircle,
@@ -69,18 +69,18 @@ export default function TextPracticeScreen({ navigation, route }: NativeStackScr
   const ocrActions = (
     <View testID="text-ocr-actions" className="gap-2.5">
       <View className="flex-row items-center justify-between">
-        <Text className="text-sm font-semibold text-slate-600">
+        <AppText className="text-sm font-semibold text-slate-600">
           {isOcrEntry ? t("homeDesign.chooseImage") : t("textPractice.ocr.title", "Quét ảnh OCR")}
-        </Text>
+        </AppText>
         {!isPro ? (
           <View
             className="flex-row items-center gap-1 px-2.5 py-0.5 rounded-full border border-amber-300 shrink-0"
             style={{ backgroundColor: "#fef3c7" }}
           >
             <Crown size={12} color="#b45309" />
-            <Text className="text-xs font-bold text-amber-900" numberOfLines={1}>
+            <AppText className="text-xs font-bold text-amber-900" numberOfLines={1}>
               {t("textPractice.ocr.proBadge", "PRO")}
-            </Text>
+            </AppText>
           </View>
         ) : null}
       </View>
@@ -94,15 +94,15 @@ export default function TextPracticeScreen({ navigation, route }: NativeStackScr
           style={{ opacity: ocrLoading ? 0.6 : 1 }}
         >
           <Camera size={16} color="#0284c7" />
-          <Text className="text-sm font-bold text-sky-800 flex-shrink">
+          <AppText className="text-sm font-bold text-sky-800 flex-shrink">
             {t("textPractice.ocr.camera")}
-          </Text>
+          </AppText>
           {!isPro ? (
             <View
               className="px-1.5 py-0.5 rounded-md shrink-0"
               style={{ backgroundColor: "#0a2644" }}
             >
-              <Text className="text-xs font-black text-amber-300" numberOfLines={1}>PRO</Text>
+              <AppText className="text-xs font-black text-amber-300" numberOfLines={1}>PRO</AppText>
             </View>
           ) : null}
         </TouchableOpacity>
@@ -115,15 +115,15 @@ export default function TextPracticeScreen({ navigation, route }: NativeStackScr
           style={{ opacity: ocrLoading ? 0.6 : 1 }}
         >
           <ImageIcon size={16} color="#4f46e5" />
-          <Text className="text-sm font-bold text-indigo-800 flex-shrink">
+          <AppText className="text-sm font-bold text-indigo-800 flex-shrink">
             {t("textPractice.ocr.gallery")}
-          </Text>
+          </AppText>
           {!isPro ? (
             <View
               className="px-1.5 py-0.5 rounded-md shrink-0"
               style={{ backgroundColor: "#0a2644" }}
             >
-              <Text className="text-xs font-black text-amber-300" numberOfLines={1}>PRO</Text>
+              <AppText className="text-xs font-black text-amber-300" numberOfLines={1}>PRO</AppText>
             </View>
           ) : null}
         </TouchableOpacity>
@@ -175,9 +175,9 @@ export default function TextPracticeScreen({ navigation, route }: NativeStackScr
               <ChevronLeft size={22} color="#0c2340" strokeWidth={2.5} />
             </TouchableOpacity>
 
-            <Text className="text-base font-bold text-[#0c2340]">
+            <AppText className="text-base font-bold text-[#0c2340]">
               {t("textPractice.title")}
-            </Text>
+            </AppText>
 
             <View className="w-10 h-10" />
           </View>
@@ -192,14 +192,14 @@ export default function TextPracticeScreen({ navigation, route }: NativeStackScr
             {/* Toolbar Header */}
             <View className="flex-row items-center justify-between">
               <View className="flex-row items-center gap-2">
-                <Text className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                <AppText className="text-xs font-bold text-slate-900 uppercase tracking-wider">
                   {t("textPractice.practiceContent")}
-                </Text>
+                </AppText>
                 {wordCount > 0 ? (
                   <View className="bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
-                    <Text className="text-xs font-bold text-slate-600">
+                    <AppText className="text-xs font-bold text-slate-600">
                       {wordCount} {t("common.words", "từ")}
-                    </Text>
+                    </AppText>
                   </View>
                 ) : null}
               </View>
@@ -227,9 +227,9 @@ export default function TextPracticeScreen({ navigation, route }: NativeStackScr
                   className="flex-row items-center gap-1 py-1.5 px-2.5 rounded-xl bg-slate-100 active:bg-slate-200 border border-slate-200"
                 >
                   <ClipboardPaste size={13} color="#475569" />
-                  <Text className="text-sm font-bold text-slate-700">
+                  <AppText className="text-sm font-bold text-slate-700">
                     {t("textPractice.paste", "Dán")}
-                  </Text>
+                  </AppText>
                 </TouchableOpacity>
               </View>
             </View>
@@ -242,12 +242,12 @@ export default function TextPracticeScreen({ navigation, route }: NativeStackScr
               <View className="flex-row items-center gap-3 p-3.5 rounded-2xl bg-indigo-50 border border-indigo-200">
                 <ActivityIndicator size="small" color="#4f46e5" />
                 <View className="flex-1">
-                  <Text className="text-sm font-bold text-indigo-900">
+                  <AppText className="text-sm font-bold text-indigo-900">
                     {t("textPractice.ocr.working", "Đang đọc và nhận diện văn bản...")}
-                  </Text>
-                  <Text className="text-[13px] text-indigo-700 mt-0.5">
+                  </AppText>
+                  <AppText className="text-[13px] text-indigo-700 mt-0.5">
                     {t("textPractice.ocr.readingTip", "Hệ thống AI đang trích xuất chữ tiếng Anh từ hình ảnh...")}
-                  </Text>
+                  </AppText>
                 </View>
               </View>
             ) : null}
@@ -273,7 +273,7 @@ export default function TextPracticeScreen({ navigation, route }: NativeStackScr
             {error ? (
               <View className="flex-row items-center gap-2 p-3 bg-rose-50 border border-rose-200 rounded-2xl">
                 <AlertCircle size={16} color="#e11d48" />
-                <Text className="flex-1 text-[13px] text-rose-700 font-semibold leading-5">{error}</Text>
+                <AppText className="flex-1 text-[13px] text-rose-700 font-semibold leading-5">{error}</AppText>
               </View>
             ) : null}
 
@@ -300,9 +300,9 @@ export default function TextPracticeScreen({ navigation, route }: NativeStackScr
                   <View className="flex-row items-center justify-between">
                     <View className="flex-row items-center gap-1.5">
                       <Save size={14} color="#0a2644" />
-                      <Text className="text-sm font-bold text-[#0a2644]">
+                      <AppText className="text-sm font-bold text-[#0a2644]">
                         {t("textPractice.saveToCollection")}
-                      </Text>
+                      </AppText>
                     </View>
                     <TouchableOpacity
                       accessibilityRole="button"
@@ -310,9 +310,9 @@ export default function TextPracticeScreen({ navigation, route }: NativeStackScr
                       activeOpacity={0.7}
                       onPress={() => setShowSaveForm(false)}
                     >
-                      <Text className="text-sm font-semibold text-slate-500">
+                      <AppText className="text-sm font-semibold text-slate-500">
                         {t("common.cancel", "Huỷ")}
-                      </Text>
+                      </AppText>
                     </TouchableOpacity>
                   </View>
                   <View className="flex-row gap-2">
@@ -340,7 +340,7 @@ export default function TextPracticeScreen({ navigation, route }: NativeStackScr
                       ) : (
                         <>
                           <Check size={14} color="#ffffff" strokeWidth={3} />
-                          <Text className="text-sm font-bold text-white">{t("textPractice.save")}</Text>
+                          <AppText className="text-sm font-bold text-white">{t("textPractice.save")}</AppText>
                         </>
                       )}
                     </TouchableOpacity>
@@ -357,16 +357,16 @@ export default function TextPracticeScreen({ navigation, route }: NativeStackScr
                     className="flex-row items-center gap-1.5 py-1 px-1 rounded-lg"
                   >
                     <Save size={14} color="#0a2644" />
-                    <Text className="text-sm font-bold text-[#0a2644]">
+                    <AppText className="text-sm font-bold text-[#0a2644]">
                       {t("textPractice.saveToCollection", "Lưu bài này vào bộ sưu tập")}
-                    </Text>
+                    </AppText>
                   </TouchableOpacity>
                   {saveSuccess ? (
                     <View className="flex-row items-center gap-1">
                       <Check size={13} color="#16a34a" strokeWidth={3} />
-                      <Text className="text-[13px] font-bold text-emerald-600">
+                      <AppText className="text-[13px] font-bold text-emerald-600">
                         {t("common.saved", "Đã lưu thành công")}
-                      </Text>
+                      </AppText>
                     </View>
                   ) : null}
                 </View>
@@ -381,9 +381,9 @@ export default function TextPracticeScreen({ navigation, route }: NativeStackScr
             <View className="gap-2.5">
               <View className="flex-row items-center gap-1.5 px-1">
                 <Bookmark size={15} color="#475569" />
-                <Text className="text-[15px] font-bold text-slate-800">
+                <AppText className="text-[15px] font-bold text-slate-800">
                   {t("textPractice.savedPassagesCount", { count: passages.length })}
-                </Text>
+                </AppText>
               </View>
               <View className="gap-2.5">
                 {passages.map((item) => (
@@ -404,12 +404,12 @@ export default function TextPracticeScreen({ navigation, route }: NativeStackScr
                     }}
                   >
                     <View className="flex-1 pr-3 gap-1">
-                      <Text className="text-[15px] font-bold text-slate-900" numberOfLines={1}>
+                      <AppText className="text-[15px] font-bold text-slate-900" numberOfLines={1}>
                         {item.title || t("textPractice.untitledPassage")}
-                      </Text>
-                      <Text className="text-[13px] text-slate-500 leading-relaxed" numberOfLines={2}>
+                      </AppText>
+                      <AppText className="text-[13px] text-slate-500 leading-relaxed" numberOfLines={2}>
                         {previewText(item.text)}
-                      </Text>
+                      </AppText>
                     </View>
                     <ChevronRight size={18} color="#94a3b8" />
                   </TouchableOpacity>

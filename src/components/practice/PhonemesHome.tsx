@@ -12,7 +12,7 @@ const primaryBlue = "#0284c7";
 type Props = {
   t: TFunction;
   dialect: string;
-  screeningCompleted: boolean;
+  showScreeningPrompt: boolean;
   weakestPhonemes: { sound: string; accuracy?: number }[];
   dailyMissionPhonemes?: string[];
   summaryLoading?: boolean;
@@ -127,7 +127,7 @@ function Hero({ children }: { children: React.ReactNode }) {
 }
 
 export default function PhonemesHome(props: Props) {
-  const { t, screeningCompleted, weakestPhonemes, lessonLoading, screeningLoading, phonemeLoading } = props;
+  const { t, showScreeningPrompt, weakestPhonemes, lessonLoading, screeningLoading, phonemeLoading } = props;
   const busy = Boolean(lessonLoading || screeningLoading || phonemeLoading);
 
   // Normalize weak sounds and ensure empty or invalid strings fall back to standard core phonemes
@@ -205,7 +205,7 @@ export default function PhonemesHome(props: Props) {
       showsVerticalScrollIndicator={false}
     >
       {/* ── 1. Hero Card ── */}
-      {!screeningCompleted ? (
+      {showScreeningPrompt ? (
         <View
           testID="phonemes-screening-card"
           style={{
@@ -336,7 +336,7 @@ export default function PhonemesHome(props: Props) {
       )}
 
       {/* ── 2. Practice Section ("Bài luyện hôm nay") ── */}
-      {!screeningCompleted ? (
+      {showScreeningPrompt ? (
         <View className="gap-2.5">
           <View className="flex-row items-center justify-between">
             <Text

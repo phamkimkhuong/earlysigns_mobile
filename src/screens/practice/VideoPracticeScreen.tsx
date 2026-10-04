@@ -2,10 +2,10 @@ import { useIsFocused } from "@react-navigation/native";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ScrollView,
-  Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { AppText } from "@/components";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   ChevronLeft,
@@ -487,18 +487,18 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
 
             {/* Video Title / Topic Header */}
             <View className="flex-1 px-3 items-center">
-              <Text
+              <AppText
                 className="text-xs font-bold text-slate-500 uppercase tracking-wider"
                 numberOfLines={1}
               >
                 {video ? topicLabel(video.topic, t) : t("videos.breadcrumb.videos")}
-              </Text>
-              <Text
+              </AppText>
+              <AppText
                 className="text-[15px] font-bold text-[#0c2340] text-center mt-0.5"
                 numberOfLines={1}
               >
                 {video?.title || t("videos.practice.mainAria")}
-              </Text>
+              </AppText>
             </View>
 
             {/* Right placeholder to keep Title centered */}
@@ -509,15 +509,15 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
           {video && segments.length > 0 ? (
             <View className="gap-1.5 pt-1">
               <View className="flex-row items-center justify-between px-1">
-                <Text className="text-xs font-semibold text-slate-500">
+                <AppText className="text-xs font-semibold text-slate-500">
                   {t("videos.practice.sentenceProgress", {
                     current: activeIndex + 1,
                     total: segments.length || 1,
                   })}
-                </Text>
-                <Text className="text-xs font-bold text-[#0c2340]">
+                </AppText>
+                <AppText className="text-xs font-bold text-[#0c2340]">
                   {progressPercent}%
-                </Text>
+                </AppText>
               </View>
               <View className="h-1.5 rounded-full overflow-hidden bg-slate-200">
                 <View
@@ -535,7 +535,7 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
 
           {error ? (
             <View className="bg-rose-50 border border-rose-200 rounded-3xl p-4 items-center gap-2">
-              <Text className="text-danger font-bold text-sm text-center">{error}</Text>
+              <AppText className="text-danger font-bold text-sm text-center">{error}</AppText>
             </View>
           ) : null}
 
@@ -634,9 +634,9 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                     size={16}
                     color={activeIndex === 0 ? "#94a3b8" : "#334155"}
                   />
-                  <Text className="text-xs font-bold text-slate-700">
+                  <AppText className="text-xs font-bold text-slate-700">
                     {t("videos.practice.prevSentence")}
-                  </Text>
+                  </AppText>
                 </TouchableOpacity>
 
                 {/* Replay Video Sentence (Hero Action) */}
@@ -665,9 +665,9 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                   }}
                 >
                   <RotateCcw size={16} color="#ffffff" />
-                  <Text className="text-xs font-black text-white tracking-wide">
+                  <AppText className="text-xs font-black text-white tracking-wide">
                     {t("videos.practice.replaySentence")}
-                  </Text>
+                  </AppText>
                 </TouchableOpacity>
 
                 {/* Next Sentence */}
@@ -695,9 +695,9 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                     elevation: activeIndex >= segments.length - 1 ? 0 : 1,
                   }}
                 >
-                  <Text className="text-xs font-bold text-slate-700">
+                  <AppText className="text-xs font-bold text-slate-700">
                     {t("videos.practice.nextSentence")}
-                  </Text>
+                  </AppText>
                   <ChevronRight
                     size={16}
                     color={activeIndex >= segments.length - 1 ? "#94a3b8" : "#334155"}
@@ -751,12 +751,12 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                       ) : (
                         <Eye size={13} color="#64748b" />
                       )}
-                      <Text
+                      <AppText
                         className={`text-xs font-bold ${showTranslation ? "text-indigo-700" : "text-slate-600"
                           }`}
                       >
                         {t("videos.practice.toggleTranslation")}
-                      </Text>
+                      </AppText>
                     </TouchableOpacity>
                   </View>
                 ) : null}
@@ -775,15 +775,15 @@ export default function VideoPracticeScreen({ route, navigation }: { route: any;
                     {/* Collapsible Vietnamese Translation */}
                     {showTranslation && current.translation_vi ? (
                       <View className="bg-indigo-50 border border-indigo-100 rounded-2xl p-3.5 mt-1">
-                        <Text className="text-xs text-indigo-950 font-medium leading-relaxed italic">
+                        <AppText className="text-xs text-indigo-950 font-medium leading-relaxed italic">
                           💡 {current.translation_vi}
-                        </Text>
+                        </AppText>
                       </View>
                     ) : null}
                   </View>
                 ) : null}
                 {segmentIpaError ? (
-                  <Text className="text-danger text-xs">{segmentIpaError}</Text>
+                  <AppText className="text-danger text-xs">{segmentIpaError}</AppText>
                 ) : null}
               </VideoRecordingHub>
             </>
